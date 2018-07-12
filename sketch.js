@@ -2,12 +2,15 @@ const DIAMETER = 20;
 const TRACK_RESOLUTION = 10;
 const TRACK_AGELIMIT = 800;
 const CAT_COLORS = {};
+const PERLIN_ZOOM = 100;
+const CENTER_OCEAN_FACTOR = 0.15;
+
 
 class Cane{
     constructor(x,y){
         this.pos = createVector(x,y);
         this.heading = p5.Vector.random2D();
-        this.strength = floor(random(25,51));
+        this.strength = random(25,50);
         this.rotation = random(TAU);
         this.dead = false;
         this.formationTime = time;
@@ -20,7 +23,7 @@ class Cane{
         if(!this.dead){
             this.pos.add(this.heading);
             this.heading.rotate(random(-PI/16,PI/16));
-            this.strength += random()>.9 ? floor(random(-15,16)) : 0;
+            this.strength += random(-5,5.2) - getLand(this.pos.x,this.pos.y)*random(5)*pow(1.7,(this.strength-50)/40);
             this.rotation -= 0.03*pow(1.01,this.strength);
             if(this.strength > 215) this.strength = 215;
             if(this.strength < 20) this.dead = true;
@@ -45,11 +48,38 @@ class Cane{
     }
 }
 
+function getLand(x,y){
+    noiseDetail(9);
+    let n = noise(x/PERLIN_ZOOM+landXOff,y/PERLIN_ZOOM+landYOff);
+    let centerOceanBias = map(abs(x-width/2),0,width/2,-CENTER_OCEAN_FACTOR,CENTER_OCEAN_FACTOR);
+    let lh = n + centerOceanBias;
+    return lh > 0.5 ? lh : 0;
+}
+
+function createLand(){
+    land = createGraphics(width,height);
+    land.noStroke();
+    land.fill(0,200,0);
+    landXOff = random(512);
+    landYOff = random(512);
+    for(let i=0;i<width;i++){
+        for(let j=0;j<height;j++){
+            if(getLand(i,j)) land.rect(i,j,1,1);
+        }
+    }
+}
+
 function setup(){
+    setVersion("Very Sad HHW Thing v","20180712a");
+
     canes = [];
     createCanvas(800,600);
     colorMode(RGB);
     time = 0;
+    strokeWeight(2);
+    stormIcons = createGraphics(width,height);
+
+    createLand();
 
     CAT_COLORS[-1] = color(20,20,230);
     CAT_COLORS[0] = color(20,230,20);
@@ -62,7 +92,17 @@ function setup(){
 
 function draw(){
     background(0,127,255);
-    if(random()>0.99) canes.push(new Cane(random(0,width),random(0,height)));
+    stormIcons.clear();
+    image(land,0,0);
+    if(random()>0.99){
+        let spawnX;
+        let spawnY;
+        do{
+            spawnX = random(0,width);
+            spawnY = random(0,height);
+        }while(getLand(spawnX,spawnY));
+        canes.push(new Cane(spawnX,spawnY));
+    }
     for(let s of canes){
         s.update();
         for(let n=0;n<s.track.length-1;n++){
@@ -73,28 +113,29 @@ function draw(){
             line(pos.x,pos.y,nextPos.x,nextPos.y);
         }
         if(!s.dead){
-            push();
-            noStroke();
-            fill(0);
-            fill(CAT_COLORS[s.cat]);
-            translate(s.pos.x,s.pos.y);
-            ellipse(0,0,DIAMETER);
+            stormIcons.push();
+            stormIcons.noStroke();
+            stormIcons.fill(0);
+            stormIcons.fill(CAT_COLORS[s.cat]);
+            stormIcons.translate(s.pos.x,s.pos.y);
+            stormIcons.ellipse(0,0,DIAMETER);
             if(s.cat>-1){
-                push();
-                rotate(s.rotation);
-                beginShape();
-                vertex(DIAMETER*5/8,-DIAMETER);
-                bezierVertex(-DIAMETER*3/2,-DIAMETER*5/8,DIAMETER*3/2,DIAMETER*5/8,-DIAMETER*5/8,DIAMETER);
-                bezierVertex(DIAMETER*5/8,0,-DIAMETER*5/8,0,DIAMETER*5/8,-DIAMETER);
-                endShape();
-                pop();
+                stormIcons.push();
+                stormIcons.rotate(s.rotation);
+                stormIcons.beginShape();
+                stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
+                stormIcons.bezierVertex(-DIAMETER*3/2,-DIAMETER*5/8,DIAMETER*3/2,DIAMETER*5/8,-DIAMETER*5/8,DIAMETER);
+                stormIcons.bezierVertex(DIAMETER*5/8,0,-DIAMETER*5/8,0,DIAMETER*5/8,-DIAMETER);
+                stormIcons.endShape();
+                stormIcons.pop();
             }
-            fill(0);
-            textAlign(CENTER,CENTER);
-            text(s.cat>0 ? s.cat : s.cat===0 ? "S" : "D", 0, 0);
-            pop();
+            stormIcons.fill(0);
+            stormIcons.textAlign(CENTER,CENTER);
+            stormIcons.text(s.cat>0 ? s.cat : s.cat===0 ? "S" : "D", 0, 0);
+            stormIcons.pop();
         }
     }
+    image(stormIcons,0,0);
     for(let i=0;i<canes.length;i++){
         if(canes[i].dead && time-canes[i].dissipationTime>TRACK_AGELIMIT){
             canes.splice(i,1);

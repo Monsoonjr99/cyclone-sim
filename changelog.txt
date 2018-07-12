@@ -1,0 +1,11 @@
+About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
+
+v20180712a:
+    + Added land, which weakens storms
+    * Made tracks thicker
+    * Actually added the CSS and version number to make this consistent with my other experiments
+    * Changed rendering so storm symbols always render above tracks
+    * Slight tweak to storm strength calculation besides land interaction
+v20180709a:
+    + Initially created a simple hurricane simulator without much regard to realism, nor any land
+    * Using p5.js for the first time for any of my experiments
