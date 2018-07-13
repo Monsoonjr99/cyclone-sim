@@ -1,5 +1,21 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180713a:
+    + Added pausing using "space"
+    + Added a date counter; currently serves no purpose
+    + Added spawning using the keyboard and mouse:
+        > Hold "D" and click to spawn a tropical depression
+        > Hold "S" and click to spawn a tropical storm
+        > Hold "1" and click to spawn a category 1 hurricane
+        > So on for keys "2" through "5"
+    + Added stepping one frame (30 sim-minutes) at a time while paused using "A"
+    + Added a method to display storms' windspeeds underneath them, enabled using "W"
+    * Changed land rendering to better show height
+    * Fixed(?) issues involving higher-definition display devices
+    * Tracks of dead storms now disappear whenever the framerate drops below 25 fps, not just after their timeout
+    * Changed canvas dimensions to 1100x500
+    * Tweaked land generation
+    % Added moment.js for date and time calculations and display
 v20180712a:
     + Added land, which weakens storms
     * Made tracks thicker
@@ -8,4 +24,4 @@ v20180712a:
     * Slight tweak to storm strength calculation besides land interaction
 v20180709a:
     + Initially created a simple hurricane simulator without much regard to realism, nor any land
-    * Using p5.js for the first time for any of my experiments
+    % Using p5.js for the first time for any of my experiments
