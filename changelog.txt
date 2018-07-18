@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180718b:
+    * Storms are for now named with a continuously looping 2022 Atlantic hurricane name list (Will be changed)
+    * Tracks are no longer rendered every frame, but only when needed, making the sim run faster
+    - Removed tracks dissappearing when the framerate drops below 25 fps, as it's no longer needed thanks to the improvement above
 v20180718a:
     + Added names:
         > Depressions recieve a number with the suffix "H" for "Hypothetical"

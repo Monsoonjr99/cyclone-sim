@@ -12,9 +12,32 @@ const LAND_BIAS_FACTORS = [
     -0.3,       // Bias factor for the "center" (as defined by LAND_BIAS_FACTORS[0])
     0.1         // Bias factor for the east edge
 ];
+const LIST_2 = [        // Temporary Hardcoded Name List
+    'Alex',
+    'Bonnie',
+    'Colin',
+    'Danielle',
+    'Earl',
+    'Fiona',
+    'Gaston',
+    'Hermine',
+    'Ian',
+    'Julia',
+    'Karl',
+    'Lisa',
+    'Martin',
+    'Nicole',
+    'Owen',
+    'Paula',
+    'Richard',
+    'Shary',
+    'Tobias',
+    'Virginie',
+    'Walter'
+];
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180718a");
+    setVersion("Very Sad HHW Thing v","20180718b");
 
     // stormHistory = [];
     // activeStorms = [];
@@ -26,7 +49,8 @@ function setup(){
     showStrength = false;
     depressionCount = 0;
     namedCount = 0;
-    strokeWeight(2);
+    tracks = createGraphics(width,height);
+    tracks.strokeWeight(2);
     stormIcons = createGraphics(width,height);
     stormIcons.noStroke();
     
@@ -60,13 +84,6 @@ function draw(){
     if(!paused) advanceSim();
     for(let s of canes){
         s.spin();
-        for(let n=0;n<s.track.length-1;n++){
-            let col = CAT_COLORS[s.track[n].cat];
-            stroke(col);
-            let pos = s.track[n].pos;
-            let nextPos = s.track[n+1].pos;
-            line(pos.x,pos.y,nextPos.x,nextPos.y);
-        }
         if(!s.dead){
             stormIcons.push();
             stormIcons.fill(CAT_COLORS[s.cat]);
@@ -110,6 +127,7 @@ function draw(){
         image(testGraphics,0,0,width,height);
     }
 
+    image(tracks,0,0,width,height);
     image(stormIcons,0,0,width,height);
     fill(200,200,200,100);
     noStroke();
@@ -118,12 +136,15 @@ function draw(){
     textAlign(LEFT,TOP);
     textSize(18);
     text(moment.utc(START_TIME+tick*TICK_DURATION).format(TIME_FORMAT),5,5);
+    let stormKilled = false;
     for(let i=0;i<canes.length;i++){
-        if(canes[i].dead && (tick-canes[i].dissipationTime>TRACK_AGELIMIT || frameRate()<25)){
+        if(canes[i].dead && tick-canes[i].dissipationTime>TRACK_AGELIMIT){
             canes.splice(i,1);
             i--;
+            stormKilled = true;
         }
     }
+    if(stormKilled) refreshTracks();
 }
 
 class Cane{
@@ -133,8 +154,7 @@ class Cane{
         this.heading = p5.Vector.random2D().mult(2);
         this.strength = s || random(25,50);
         if(this.cat >= 0){
-            this.name = "Unnamed";
-            namedCount++;
+            this.name = LIST_2[namedCount++ % LIST_2.length];
             this.named = true;
         }else{
             this.name = depressionCount + "H";
@@ -154,9 +174,8 @@ class Cane{
             this.heading.rotate(random(-PI/16,PI/16));
             this.strength += random(-5,5.4) - getLand(this.pos.x,this.pos.y)*random(5)*pow(1.7,(this.strength-50)/40);
             if(!this.named && this.cat >= 0){
-                this.name = "Unnamed";
+                this.name = LIST_2[namedCount++ % LIST_2.length];
                 this.named = true;
-                namedCount++;
             }
             if(this.strength > 215) this.strength = 215;
             if(this.strength < 20) this.dead = true;
@@ -171,7 +190,25 @@ class Cane{
     }
 
     trackPoint(){
-        this.track.push({pos:createVector(this.pos.x,this.pos.y),cat:this.cat});
+        let p = {pos:createVector(this.pos.x,this.pos.y),cat:this.cat};
+        let n = this.track.length-1;
+        if(n>0){
+            let col = CAT_COLORS[this.track[n].cat];
+            tracks.stroke(col);
+            let prevPos = this.track[n].pos;
+            tracks.line(prevPos.x,prevPos.y,p.pos.x,p.pos.y);
+        }
+        this.track.push(p);
+    }
+
+    renderTrack(){
+        for(let n=0;n<this.track.length-1;n++){
+            let col = CAT_COLORS[this.track[n].cat];
+            tracks.stroke(col);
+            let pos = this.track[n].pos;
+            let nextPos = this.track[n+1].pos;
+            tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+        }
     }
 
     get cat(){
@@ -272,6 +309,11 @@ class Environment{
         this.resetForecast();
         for(let i=0;i<n;i++) this.wobble();
     }
+}
+
+function refreshTracks(){
+    tracks.clear();
+    for(let s of canes) s.renderTrack();
 }
 
 function getLand(x,y){
