@@ -1,5 +1,15 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180718a:
+    + Added names:
+        > Depressions recieve a number with the suffix "H" for "Hypothetical"
+        > Named storms are all named "Unnamed", as this is incomplete
+    + Added code for environment factors such as "shear" and "SSTAnomaly", but are not in use yet
+    * Changed each simulation tick from 30 minutes to an hour:
+        > Storms now move twice as fast as seen by the viewer, although they move at the same speed in simulation time
+        > Strengthening/weakening code is still the same per-tick, so behavior has changed somewhat
+    * The time in the upper left uses a slightly different format now
+    * Fixed keyboard events blocking default browser actions like "F5" for reload or "F12" for javascript console, except in cases involving keys used for the simulation ("space" doesn't scroll the page down)
 v20180713a:
     + Added pausing using "space"
     + Added a date counter; currently serves no purpose
