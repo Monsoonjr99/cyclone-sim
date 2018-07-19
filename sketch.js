@@ -37,7 +37,7 @@ const LIST_2 = [        // Temporary Hardcoded Name List
 ];
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180718b");
+    setVersion("Very Sad HHW Thing v","20180719a");
 
     // stormHistory = [];
     // activeStorms = [];
@@ -192,7 +192,7 @@ class Cane{
     trackPoint(){
         let p = {pos:createVector(this.pos.x,this.pos.y),cat:this.cat};
         let n = this.track.length-1;
-        if(n>0){
+        if(n>=0){
             let col = CAT_COLORS[this.track[n].cat];
             tracks.stroke(col);
             let prevPos = this.track[n].pos;
@@ -377,24 +377,26 @@ function mouseInCanvas(){
 }
 
 function mouseClicked(){
-    if(mouseInCanvas() && keyIsPressed) {
-        if(key === "d" || key === "D"){
-            canes.push(new Cane(mouseX,mouseY,30));
-        }else if(key === "s" || key === "S"){
-            canes.push(new Cane(mouseX,mouseY,50));
-        }else if(key === "1"){
-            canes.push(new Cane(mouseX,mouseY,80));
-        }else if(key === "2"){
-            canes.push(new Cane(mouseX,mouseY,105));
-        }else if(key === "3"){
-            canes.push(new Cane(mouseX,mouseY,120));
-        }else if(key === "4"){
-            canes.push(new Cane(mouseX,mouseY,145));
-        }else if(key === "5"){
-            canes.push(new Cane(mouseX,mouseY,170));
+    if(mouseInCanvas()){
+        if(keyIsPressed) {
+            if(key === "d" || key === "D"){
+                canes.push(new Cane(mouseX,mouseY,30));
+            }else if(key === "s" || key === "S"){
+                canes.push(new Cane(mouseX,mouseY,50));
+            }else if(key === "1"){
+                canes.push(new Cane(mouseX,mouseY,80));
+            }else if(key === "2"){
+                canes.push(new Cane(mouseX,mouseY,105));
+            }else if(key === "3"){
+                canes.push(new Cane(mouseX,mouseY,120));
+            }else if(key === "4"){
+                canes.push(new Cane(mouseX,mouseY,145));
+            }else if(key === "5"){
+                canes.push(new Cane(mouseX,mouseY,170));
+            }
         }
+        return false;
     }
-    return false;
 }
 
 function keyPressed(){

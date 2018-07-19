@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180719a:
+    * Fixed mouse events blocking default browser actions when cursor is outside the canvas, which made it impossible to access the changelog using the link (sorry)
+    * Fixed first segment of tracks not rendering immediately
 v20180718b:
     * Storms are for now named with a continuously looping 2022 Atlantic hurricane name list (Will be changed)
     * Tracks are no longer rendered every frame, but only when needed, making the sim run faster
