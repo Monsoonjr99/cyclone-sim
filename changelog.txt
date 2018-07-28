@@ -1,5 +1,16 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180728a:
+    + Added subtropical and extratropical storms
+        > Spawn extratropical systems with "x"; subtropical storms cannot yet be spawned
+    + Added pressure; wind speed is now based on pressure
+    + Added a temporary environmental gradient for determining extratropical vs. subtropical vs. tropical
+    + Added clicking storms to select them; selected storms appear with a white outline and display info in the upper-right
+    + Added all 6 name lists plus Greek alphabet, which should rotate appropriately through a 6-year cycle
+    * Big refactor to make more-efficient classes for future saving and loading basins
+    * "Lows" are now specifically "tropical waves" as opposed to extratropical lows
+    * Storms now spawn in one of two locations based on if they're extratropical or a tropical wave
+    * Strengthening/weakening algorithm changed significantly for handling new extratropical and subtropical systems
 v20180721a:
     + Added analysis, allowing you to see history of the sim by pausing and pressing the left and right arrow keys to move forward and backward through time
         > Unpause (or press "A" for single-tick advance) to return the time to the present without spamming the right arrow key
