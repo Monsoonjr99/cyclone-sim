@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180728b:
+    + Added 5 different simulation speed levels: Full-Speed, Half-Speed, 1/3 Speed, 1/4 Speed, and 1/5 Speed
+        > Press "[" to slow the simulation down and "]" to speed the simulation up
+    + Added indicator in the upper-right (when a storm is not selected) for simulation speed and if the sim is paused
 v20180728a:
     + Added subtropical and extratropical storms
         > Spawn extratropical systems with "x"; subtropical storms cannot yet be spawned

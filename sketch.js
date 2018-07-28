@@ -27,9 +27,11 @@ const NAMES = [        // Temporary Hardcoded Name List
     ['Arthur','Bertha','Cristobal','Dolly','Edouard','Fay','Gonzalo','Hanna','Isaias','Josephine','Kyle','Laura','Marco','Nana','Omar','Paulette','Rene','Sally','Teddy','Vicky','Wilfred'],
     ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu','Nu','Xi','Omicron','Pi','Rho','Sigma','Tau','Upsilon','Phi','Chi','Psi','Omega']
 ];
+const KEY_LEFT_BRACKET = 219;
+const KEY_RIGHT_BRACKET = 221;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180728a");
+    setVersion("Very Sad HHW Thing v","20180728b");
 
     seasons = {};
     activeSystems = [];
@@ -47,6 +49,8 @@ function setup(){
     godMode = true;
     SHem = false;
     selectedStorm = undefined;
+    simSpeed = 1; // The divisor for the simulation speed (1 is full-speed, 2 is half-speed, etc.)
+    frameCounter = 0; // Counts frames of draw() while unpaused; modulo simSpeed to advance sim when 0
     
     Env = new Environment();
     Env.addField("shear",5,0.5,100,40,1.5,2);
@@ -81,7 +85,11 @@ function draw(){
     background(0,127,255);
     stormIcons.clear();
     image(land,0,0,width,height);
-    if(!paused) advanceSim();
+    if(!paused){
+        frameCounter++;
+        frameCounter%=simSpeed;
+        if(frameCounter===0) advanceSim();
+    }
     if(viewingPresent()) for(let s of activeSystems) s.renderIcon();
     else for(let s of seasons[getSeason(viewTick)].systems) s.renderIcon();
 
@@ -118,19 +126,18 @@ function draw(){
     textAlign(LEFT,TOP);
     textSize(18);
     text(tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]'),5,5);
+    textAlign(RIGHT,TOP);
     if(selectedStorm){
-        textAlign(RIGHT,TOP);
         let sName = selectedStorm.getFullNameByTick(viewTick);
         let sData = selectedStorm.getStormDataByTick(viewTick);
         if(sData){
-            let sCat = sData.cat;
             let sKts = sData ? sData.windSpeed : 0;
             let sMph = ktsToMph(sKts,WINDSPEED_ROUNDING);
             let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
             let sPrsr = sData ? sData.pressure: 1031;
             text(sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa",width-5,5);
         }else text(sName || "Unnamed",width-5,5);
-    }
+    }else text(paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed",width-5,5);
 }
 
 class Season{
@@ -885,6 +892,7 @@ function mouseClicked(){
 }
 
 function keyPressed(){
+    // console.log(key + " / " + keyCode);
     switch(key){
         case " ":
         paused = !paused;
@@ -905,6 +913,14 @@ function keyPressed(){
             if(paused && viewTick<tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
             else viewTick = tick;
             refreshTracks();
+            break;
+            case KEY_LEFT_BRACKET:
+            simSpeed++;
+            if(simSpeed>5) simSpeed=5;
+            break;
+            case KEY_RIGHT_BRACKET:
+            simSpeed--;
+            if(simSpeed<1) simSpeed=1;
             break;
             default:
             return;
