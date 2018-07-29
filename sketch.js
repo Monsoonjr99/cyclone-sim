@@ -29,9 +29,11 @@ const NAMES = [        // Temporary Hardcoded Name List
 ];
 const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
+const KEY_REPEAT_COOLDOWN = 15;
+const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180728b");
+    setVersion("Very Sad HHW Thing v","20180729a");
 
     seasons = {};
     activeSystems = [];
@@ -50,9 +52,10 @@ function setup(){
     SHem = false;
     selectedStorm = undefined;
     simSpeed = 1; // The divisor for the simulation speed (1 is full-speed, 2 is half-speed, etc.)
-    frameCounter = 0; // Counts frames of draw() while unpaused; modulo simSpeed to advance sim when 0
+    simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo simSpeed to advance sim when 0
+    keyRepeatFrameCounter = 0;
     
-    Env = new Environment();
+    Env = new Environment();    // Sad environmental stuff that isn't even used yet
     Env.addField("shear",5,0.5,100,40,1.5,2);
     Env.addField("steering",4,0.5,80,100,1,3);
     Env.addField("steeringMag",4,0.5,80,100,1,3);
@@ -86,9 +89,22 @@ function draw(){
     stormIcons.clear();
     image(land,0,0,width,height);
     if(!paused){
-        frameCounter++;
-        frameCounter%=simSpeed;
-        if(frameCounter===0) advanceSim();
+        simSpeedFrameCounter++;
+        simSpeedFrameCounter%=simSpeed;
+        if(simSpeedFrameCounter===0) advanceSim();
+    }
+    keyRepeatFrameCounter++;
+    if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
+        if(paused){
+            if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
+                viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
+                refreshTracks();
+            }else if(keyCode===RIGHT_ARROW){
+                if(viewTick<tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                else viewTick = tick;
+                refreshTracks();
+            }
+        }
     }
     if(viewingPresent()) for(let s of activeSystems) s.renderIcon();
     else for(let s of seasons[getSeason(viewTick)].systems) s.renderIcon();
@@ -136,8 +152,12 @@ function draw(){
             let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
             let sPrsr = sData ? sData.pressure: 1031;
             text(sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa",width-5,5);
-        }else text(sName || "Unnamed",width-5,5);
+        }else{
+            sName = selectedStorm.getFullNameByTick("peak");
+            text(sName + " - ACE: " + selectedStorm.ACE,width-5,5);
+        }
     }else text(paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed",width-5,5);
+    // if(keyIsPressed) console.log("draw: " + key + " / " + keyCode);
 }
 
 class Season{
@@ -348,6 +368,8 @@ class Storm{
         this.namedTime = undefined;
 
         this.record = [];
+        this.peak = undefined;
+        this.ACE = 0;
         if(isNewStorm && tick%ADVISORY_TICKS===0) this.current.advisory();
     }
 
@@ -369,8 +391,8 @@ class Storm{
     }
 
     getFullNameByTick(t){
-        let data = this.getStormDataByTick(t);
-        let name = this.getNameByTick(t);
+        let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
+        let name = t==="peak" ? this.name : this.getNameByTick(t);
         let ty = data ? data.type : null;
         let cat = data ? data.cat : null;
         return ty===TROP ?
@@ -472,7 +494,11 @@ class Storm{
         }
     }
 
-    updateStats(w,type){
+    updateStats(data){
+        let w = data.windSpeed;
+        let p = data.pressure;
+        let type = data.type;
+        let cat = getCat(w);
         let cSeason = seasons[curSeason];
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
@@ -482,24 +508,33 @@ class Storm{
             this.TC = true;
             this.formationTime = tick;
             this.depressionNum = ++cSeason.depressions;
+            this.peak = undefined;
             this.name = this.depressionNum + DEPRESSION_LETTER;
             if(getSeason(this.birthTime)<curSeason) seasons[curSeason-1].systems.push(this); // Register precursor if it formed in previous season, but crossed into current season before becoming tropical
         }
-        if(!this.named && isTropical && getCat(w)>=0){
-            this.name = getNewName(curSeason,cSeason.namedStorms++); //LIST_2[cSeason.namedStorms++ % LIST_2.length];
-            this.named = true;
-            this.namedTime = tick;
+        if(isTropical && cat>=0){
+            if(!this.named){
+                this.name = getNewName(curSeason,cSeason.namedStorms++); //LIST_2[cSeason.namedStorms++ % LIST_2.length];
+                this.named = true;
+                this.namedTime = tick;
+            }
+            this.ACE += pow(w,2)/10000;
+            this.ACE = round(this.ACE*10000)/10000;
         }
-        if(!this.hurricane && isTropical && getCat(w)>=1){
+        if(!this.hurricane && isTropical && cat>=1){
             cSeason.hurricanes++;
             this.hurricane = true;
         }
-        if(!this.major && isTropical && getCat(w)>=3){
+        if(!this.major && isTropical && cat>=3){
             cSeason.majors++;
             this.major = true;
         }
         if(wasTCB4Update && !isTropical) this.dissipationTime = tick;
         if(!wasTCB4Update && isTropical) this.dissipationTime = undefined;
+        if(!this.TC || isTropical){
+            if(!this.peak) this.peak = data;
+            else if(p<this.peak.pressure) this.peak = data;
+        }
     }
 }
 
@@ -583,8 +618,9 @@ class ActiveSystem extends StormData{
         let p = round(this.pressure);
         let w = round(this.windSpeed/WINDSPEED_ROUNDING)*WINDSPEED_ROUNDING;
         let ty = this.type;
-        this.storm.record.push(new StormData(x,y,p,w,ty));
-        this.storm.updateStats(w,ty);
+        let adv = new StormData(x,y,p,w,ty);
+        this.storm.updateStats(adv);
+        this.storm.record.push(adv);
         this.storm.renderTrack(true);
     }
 }
@@ -892,7 +928,8 @@ function mouseClicked(){
 }
 
 function keyPressed(){
-    // console.log(key + " / " + keyCode);
+    // console.log("keyPressed: " + key + " / " + keyCode);
+    keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
         paused = !paused;
@@ -905,15 +942,6 @@ function keyPressed(){
         break;
         default:
         switch(keyCode){
-            case LEFT_ARROW:
-            if(paused && viewTick>=ADVISORY_TICKS) viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
-            refreshTracks();
-            break;
-            case RIGHT_ARROW:
-            if(paused && viewTick<tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-            else viewTick = tick;
-            refreshTracks();
-            break;
             case KEY_LEFT_BRACKET:
             simSpeed++;
             if(simSpeed>5) simSpeed=5;

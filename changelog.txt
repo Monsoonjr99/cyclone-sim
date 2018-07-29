@@ -1,5 +1,10 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180729a:
+    + Storms now keep track of their peak intensity (by pressure), including all associated data at the point of peak intensity
+    + Added ACE
+    * Inactive selected storms now display their full name as of peak intensity, plus ACE
+    * You can now hold down the arrow keys in analysis to quickly move backwards and forwards
 v20180728b:
     + Added 5 different simulation speed levels: Full-Speed, Half-Speed, 1/3 Speed, 1/4 Speed, and 1/5 Speed
         > Press "[" to slow the simulation down and "]" to speed the simulation up
