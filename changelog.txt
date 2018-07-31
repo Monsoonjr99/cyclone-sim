@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180731a:
+    + Added environmental steering; may need some work
+    * Some adjustments to storm strength algorithm
+    * Spawning frequency and ranges adjusted
 v20180729a:
     + Storms now keep track of their peak intensity (by pressure), including all associated data at the point of peak intensity
     + Added ACE

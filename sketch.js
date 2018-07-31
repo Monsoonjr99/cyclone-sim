@@ -33,7 +33,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180729a");
+    setVersion("Very Sad HHW Thing v","20180731a");
 
     seasons = {};
     activeSystems = [];
@@ -55,12 +55,16 @@ function setup(){
     simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
     
-    Env = new Environment();    // Sad environmental stuff that isn't even used yet
-    Env.addField("shear",5,0.5,100,40,1.5,2);
-    Env.addField("steering",4,0.5,80,100,1,3);
-    Env.addField("steeringMag",4,0.5,80,100,1,3);
-    Env.addField("SSTAnomaly",6,0.5,150,1000,0.2,2);
-    Env.addField("moisture",4,0.5,130,100,1,2);
+    Env = new Environment();    // Sad environmental stuff that is barely even used so far
+    Env.addField("shear",new NoiseChannel(5,0.5,100,40,1.5,2));
+    Env.addField("steering",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
+        return map(cbrt(map(y,0,height,1,-1)),1,-1,0,-PI)+map(this.noise.get(x,y,z),0,1,-PI,PI)*map(y,0,height,7/8,1/4);
+    },true);
+    Env.addField("steeringMag",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
+        return map(y,0,height,4,2)*map(this.noise.get(x,y,z),0,1,0.7,1.3);
+    },true);
+    Env.addField("SSTAnomaly",new NoiseChannel(6,0.5,150,1000,0.2,2));
+    Env.addField("moisture",new NoiseChannel(4,0.5,130,100,1,2));
 
     testNoise = undefined;
     testNoiseLine = 0;
@@ -114,7 +118,7 @@ function draw(){
             testGraphics.push();
             let q = testNoise.get(k,testNoiseLine,tick);
             testGraphics.colorMode(HSB);
-            testGraphics.fill(q*300,100,100);
+            testGraphics.fill(/*map(q,-PI,0,0,300)*/q*300,100,100);
             testGraphics.rect(k,testNoiseLine,10,10);
             testGraphics.pop();
         }
@@ -169,177 +173,6 @@ class Season{
         this.majors = 0;
     }
 }
-
-// class StormSystem{                  // Old Class (being replaced by "Storm", "StormData", and "ActiveSystem")
-//     constructor(x,y,s){
-//         this.pos = createVector(x,y);
-//         this.heading = p5.Vector.random2D().mult(2);
-//         this.strength = s || random(15,50);
-//         this.TC = this.isTropical;        // If the system has been a TC at any point in its life, not necessarily at present
-//         this.depressionNum = undefined;
-//         this.name = undefined;
-//         this.named = false;
-//         if(this.TC){
-//             seasons[curSeason].systems.push(this);
-//             this.depressionNum = ++seasons[curSeason].depressions;
-//             if(this.isNameable){
-//                 this.name = LIST_2[seasons[curSeason].namedStorms++ % LIST_2.length];
-//                 this.named = true;
-//             }else this.name = this.depressionNum + DEPRESSION_LETTER;
-//         }
-//         this.hurricane = this.isHurricane;
-//         this.major = this.isMajor;
-//         this.rotation = random(TAU);
-//         this.dead = false;
-//         this.birthTime = tick;                                      // Time formed as a disturbance/low
-//         this.formationTime = this.TC ? tick : undefined;            // Time formed as a TC
-//         this.dissipationTime = undefined;                           // Time degenerated/dissipated as a TC
-//         this.deathTime = undefined;                                 // Time completely dissipated
-//         this.namedTime = this.named ? tick : undefined;
-//         this.record = [];
-//         if(tick%ADVISORY_TICKS===0) this.advisory();
-//     }
-
-//     update(){
-//         if(!this.dead){
-//             let cSeason = seasons[curSeason];
-//             let wasTCB4Update = this.isTropical;
-//             this.pos.add(this.heading);
-//             this.heading.rotate(random(-PI/16,PI/16));
-//             this.strength += random(-5,5.4) - getLand(this.pos.x,this.pos.y)*random(5)*pow(1.7,(this.strength-50)/40);
-//             if(!this.TC && this.isTropical){
-//                 cSeason.systems.push(this);
-//                 this.TC = true;
-//                 this.formationTime = tick;
-//                 this.depressionNum = ++cSeason.depressions;
-//                 this.name = this.depressionNum + DEPRESSION_LETTER;
-//                 if(getSeason(this.birthTime)<curSeason) seasons[curSeason-1].systems.push(this); // Register precursor if it formed in previous season, but crossed into current season before becoming tropical
-//             }
-//             if(!this.named && this.isNameable){
-//                 this.name = LIST_2[cSeason.namedStorms++ % LIST_2.length];
-//                 this.named = true;
-//                 this.namedTime = tick;
-//             }
-//             if(!this.hurricane && this.isHurricane){
-//                 cSeason.hurricanes++;
-//                 this.hurricane = true;
-//             }
-//             if(!this.major && this.isMajor){
-//                 cSeason.majors++;
-//                 this.major = true;
-//             }
-//             if(wasTCB4Update && !this.isTropical) this.dissipationTime = tick;
-//             if(!wasTCB4Update && this.isTropical) this.dissipationTime = undefined;
-//             if(this.strength > 215) this.strength = 215;
-//             if(this.strength < 0) this.dead = true;
-//             if(this.pos.x > width+DIAMETER*2 || this.pos.x < 0-DIAMETER*2 || this.pos.y > height+DIAMETER*2 || this.pos.y < 0-DIAMETER*2) this.dead = true;
-//             if(!this.dead && tick%ADVISORY_TICKS===0) this.advisory();
-//             if(this.dead){
-//                 if(wasTCB4Update) this.dissipationTime = tick;
-//                 this.deathTime = tick;
-//             }
-//         }
-//     }
-
-//     aliveAt(t){
-//         return t >= this.birthTime && (!this.dead || t < this.deathTime);
-//     }
-
-//     renderIcon(){
-//         if(this.aliveAt(viewTick)){
-//             let vp = viewingPresent();
-//             let trAdv = vp ? undefined : this.record[floor(viewTick/ADVISORY_TICKS)-ceil(this.birthTime/ADVISORY_TICKS)];
-//             let st = vp ? this.strength : trAdv.strength;
-//             let pos = vp ? this.pos : trAdv.pos;
-//             let cat = vp ? this.cat : trAdv.cat;
-//             let name = vp ? this.name : viewTick<this.formationTime ? undefined : viewTick<this.namedTime ? this.depressionNum+DEPRESSION_LETTER : this.name;
-//             this.rotation -= 0.03*pow(1.01,st);
-//             stormIcons.push();
-//             stormIcons.fill(CAT_COLORS[cat]);
-//             stormIcons.translate(pos.x,pos.y);
-//             stormIcons.ellipse(0,0,DIAMETER);
-//             if(cat>-1){
-//                 stormIcons.push();
-//                 stormIcons.rotate(this.rotation);
-//                 stormIcons.beginShape();
-//                 stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
-//                 stormIcons.bezierVertex(-DIAMETER*3/2,-DIAMETER*5/8,DIAMETER*3/2,DIAMETER*5/8,-DIAMETER*5/8,DIAMETER);
-//                 stormIcons.bezierVertex(DIAMETER*5/8,0,-DIAMETER*5/8,0,DIAMETER*5/8,-DIAMETER);
-//                 stormIcons.endShape();
-//                 stormIcons.pop();
-//             }
-//             stormIcons.fill(0);
-//             stormIcons.textAlign(CENTER,CENTER);
-//             stormIcons.text(cat>0 ? cat : cat===0 ? "S" : cat===-1 ? "D" : "L", 0, 0);
-//             if(showStrength){
-//                 stormIcons.textSize(10);
-//                 stormIcons.text(floor(st), 0, DIAMETER);
-//             }
-//             if(name){
-//                 stormIcons.textAlign(LEFT,CENTER);
-//                 stormIcons.textSize(14);
-//                 stormIcons.text(name,DIAMETER,0);
-//             }
-//             stormIcons.pop();
-//         }
-//     }
-
-//     advisory(){
-//         let p = {};
-//         p.pos = {};
-//         p.pos.x = floor(this.pos.x);
-//         p.pos.y = floor(this.pos.y);
-//         p.strength = this.strength;
-//         p.cat = this.cat;
-//         let n = this.record.length-1;
-//         if(n>=0){
-//             let col = CAT_COLORS[this.record[n].cat];
-//             tracks.stroke(col);
-//             let prevPos = this.record[n].pos;
-//             tracks.line(prevPos.x,prevPos.y,p.pos.x,p.pos.y);
-//         }
-//         this.record.push(p);
-//     }
-
-//     renderTrack(){
-//         if(this.aliveAt(viewTick)){
-//             for(let n=0;n<this.record.length-1;n++){
-//                 let col = CAT_COLORS[this.record[n].cat];
-//                 tracks.stroke(col);
-//                 let pos = this.record[n].pos;
-//                 let nextPos = this.record[n+1].pos;
-//                 tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
-//             }
-//         }
-//     }
-
-//     get cat(){
-//         if(this.strength<20) return -2;
-//         if(this.strength<39) return -1;
-//         if(this.strength<74) return 0;
-//         if(this.strength<96) return 1;
-//         if(this.strength<111) return 2;
-//         if(this.strength<130) return 3;
-//         if(this.strength<157) return 4;
-//         return 5;
-//     }
-
-//     get isTropical(){
-//         return this.cat > -2;
-//     }
-
-//     get isNameable(){
-//         return this.cat > -1;
-//     }
-
-//     get isHurricane(){
-//         return this.cat > 0;
-//     }
-
-//     get isMajor(){
-//         return this.cat > 2;
-//     }
-// }
 
 class Storm{
     constructor(extropical,godModeSpawn){
@@ -553,7 +386,7 @@ class ActiveSystem extends StormData{
         let sType = spawn ? spawn.sType : undefined;
         if(sType==="x") ext = true;
         let x = spawn ? spawn.x : ext ? 0 : width;
-        let y = spawn ? spawn.y : ext ? random(0,height/3) : random(2*height/3,height);
+        let y = spawn ? spawn.y : ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9);
         let p = spawn ?
             sType==="x" ? 1005 :
             sType==="l" ? 1015 :
@@ -584,22 +417,28 @@ class ActiveSystem extends StormData{
         this.organization = ext ? 0 : spawn ? sType==="l" ? 20 : 100 : random(0,40);
         this.coreTemp = ext ? 10 : 28;
         this.heading = createVector(ext ? 1 : -1,0).mult(2); // Heading is temporary for testing and will be replaced with environmental steering
+        this.steering = createVector(0); // A vector that will update with the environmental steering; will replace heading
     }
 
     update(){
-        this.pos.add(this.heading);
-        this.heading.rotate(random(-PI/16,PI/16));
+        // this.pos.add(this.heading);
+        // this.heading.rotate(random(-PI/16,PI/16));
+        this.getSteering();
+        this.pos.add(this.steering);
         let envTemp = map(sqrt(map(this.pos.y,0,height,0,9)),0,3,5,30); // Temporary environmentel latitude distinction for extratropical vs. tropical
         let coreTempDiff = envTemp-this.coreTemp;
         if(abs(coreTempDiff)>0.5) this.coreTemp += random(coreTempDiff/25);
         else this.coreTemp += random(-0.1,0.1);
-        this.organization += random(-3,3) + random(map(this.coreTemp,20,30,-3,3));
+        let tropicalness = constrain(map(this.coreTemp,15,30,0,1),0,1);
+        let nontropicalness = constrain(map(this.coreTemp,20,5,0,1),0,1);
+        this.organization += random(-3,3) + random(pow(7,map(this.coreTemp,5,30,0,1))-4);
         this.organization -= getLand(this.pos.x,this.pos.y)*random(7);
+        this.organization -= pow(2,4-((height-this.pos.y)/(height*0.01)));
         this.organization = constrain(this.organization,0,100);
         this.pressure -= random(-3,5);
-        this.pressure += random(100-this.organization)*pow(map(this.pressure,1030,970,0,1),2)*constrain(map(this.coreTemp,15,30,0,1),0,1);
-        this.pressure += random(constrain(970-this.pressure,0,40))*constrain(map(this.coreTemp,20,5,0,1),0,1);
-        if(this.pressure<870) this.pressure = 870;
+        this.pressure += random(100-this.organization)*pow(map(this.pressure,1025,970,0,1),2)*tropicalness;
+        this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
+        if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
         this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.coreTemp,30,5,1,0.6);
         this.type = this.coreTemp<20 ? EXTROP : (this.organization<45 && this.windSpeed<50) ? this.coreTemp<25 ? EXTROP : TROPWAVE : this.coreTemp<25 ? SUBTROP : TROP;
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER)){
@@ -622,6 +461,14 @@ class ActiveSystem extends StormData{
         this.storm.updateStats(adv);
         this.storm.record.push(adv);
         this.storm.renderTrack(true);
+    }
+
+    getSteering(){
+        let dir = Env.get("steering",this.pos.x,this.pos.y,tick);
+        let mag = Env.get("steeringMag",this.pos.x,this.pos.y,tick);
+        this.steering.set(1);
+        this.steering.rotate(dir);
+        this.steering.mult(mag);
     }
 }
 
@@ -677,13 +524,40 @@ class NoiseChannel{
     }
 }
 
+class EnvField{
+    constructor(noiseC,mapFunc,dependent){
+        if(noiseC instanceof NoiseChannel) this.noise = noiseC;
+        if(mapFunc instanceof Function) this.mapFunc = mapFunc;
+        this.dependent = dependent;
+    }
+
+    get(x,y,z){
+        let val = 0;
+        if(this.mapFunc) val += this.mapFunc(x,y,z);
+        if(this.noise && (!this.dependent || !this.mapFunc)) val += this.noise.get(x,y,z);
+        return val;
+    }
+
+    wobble(){
+        if(this.noise) this.noise.wobble();
+    }
+
+    save(){
+        if(this.noise) this.noise.save();
+    }
+
+    load(){
+        if(this.noise) this.noise.load();
+    }
+}
+
 class Environment{
     constructor(){
         this.fields = {};
     }
 
     addField(name,...fieldArgs){
-        this.fields[name] = new NoiseChannel(...fieldArgs);
+        this.fields[name] = new EnvField(...fieldArgs);
     }
 
     wobble(){
@@ -838,22 +712,14 @@ function advanceSim(){
     }
     Env.wobble();
     for(let s of activeSystems){
-        // s.update();
         s.current.update();
     }
-    if(random()>/*0.99*/0.98){
-        // let spawnX;
-        // let spawnY;
-        // do{
-        //     spawnX = random(0,width);
-        //     spawnY = random(0,height);
-        // }while(getLand(spawnX,spawnY));
-        // activeSystems.push(new StormSystem(spawnX,spawnY));
+    if(random()<0.015){
         activeSystems.push(new Storm(random()>0.5));
     }
     let stormKilled = false;
     for(let i=activeSystems.length-1;i>=0;i--){
-        if(!activeSystems[i].active /*activeSystems[i].dead*/){
+        if(!activeSystems[i].active){
             activeSystems.splice(i,1);
             stormKilled = true;
         }
@@ -962,4 +828,8 @@ function createBuffer(w,h){
     w = w || width;
     h = h || height;
     return createGraphics(w*d,h*d);
+}
+
+function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
+    return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
 }
