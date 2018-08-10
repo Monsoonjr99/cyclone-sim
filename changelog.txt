@@ -1,5 +1,14 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20180810a:
+    + Added clickable UI elements/buttons, opening the door for more possibilities in this sim along with better mobile compatibility
+    + Added a pause button, which works alongside the existing "space"
+        > The indicator text also functions as an extension of the pause button when a storm isn't selected
+    + Added a date navigator UI, which can be accessed by clicking the time in the upper left
+        > Using the arrow buttons, you can jump through analysis by the year, month, day, or advisory increment (6 hours)
+        > The arrow keys still work alongside this new UI
+    + Added rudimentary seasonal activity; storms should now be more common and stronger in September than in January
+    * Some tweaks to steering
 v20180731a:
     + Added environmental steering; may need some work
     * Some adjustments to storm strength algorithm

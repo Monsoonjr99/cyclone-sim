@@ -4,6 +4,7 @@ const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const START_TIME = moment.utc().startOf('year').valueOf();      // Unix timestamp for beginning of current year
+const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
 const TIME_FORMAT = "HH[z] MMM DD Y";
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
@@ -33,7 +34,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180731a");
+    setVersion("Very Sad HHW Thing v","20180810a");
 
     seasons = {};
     activeSystems = [];
@@ -58,7 +59,11 @@ function setup(){
     Env = new Environment();    // Sad environmental stuff that is barely even used so far
     Env.addField("shear",new NoiseChannel(5,0.5,100,40,1.5,2));
     Env.addField("steering",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        return map(cbrt(map(y,0,height,1,-1)),1,-1,0,-PI)+map(this.noise.get(x,y,z),0,1,-PI,PI)*map(y,0,height,7/8,1/4);
+        let h = map(y,0,height,1,-1);
+        let mainDir = map(h<0?-sqrt(-h):sqrt(h),1,-1,0,-PI);
+        let noiseDir = map(this.noise.get(x,y,z),0,1,-PI,PI);
+        let noiseMult = map(y,0,height,3/4,1/4)/*-1/2*sq(h)+1/2*/;
+        return mainDir+noiseDir*noiseMult;
     },true);
     Env.addField("steeringMag",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
         return map(y,0,height,4,2)*map(this.noise.get(x,y,z),0,1,0.7,1.3);
@@ -86,6 +91,126 @@ function setup(){
     CAT_COLORS[SUBTROP] = {};
     CAT_COLORS[SUBTROP][-1] = color(60,60,220);
     CAT_COLORS[SUBTROP][0] = color(60,220,60);
+
+    // UI
+
+    topBar = new UI(null,0,0,width,30,function(){
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        textSize(18);
+    });
+
+    dateUI = topBar.append(false,5,3,100,24,function(){
+        let txtStr = tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
+        this.setBox(undefined,undefined,textWidth(txtStr)+6);
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(LEFT,TOP);
+        text(txtStr,3,3);
+    },function(){
+        dateNavigator.toggleShow();
+    });
+
+    dateNavigator = new UI(null,0,30,140,50,function(){
+        fill(200,200,200,140);
+        noStroke();
+        this.fullRect();
+    },true,false);
+
+    for(let i=0;i<8;i++){
+        let x = floor(i/2)*30+15;
+        let y = i%2===0 ? 10 : 30;
+        let rend = function(){
+            if(this.isHovered()){
+                fill(200,200,200,100);
+                this.fullRect();
+            }
+            if(paused) fill(0);
+            else fill(130);
+            if(this.metadata%2===0) triangle(2,8,10,2,18,8);
+            else triangle(2,2,18,2,10,8);
+        };
+        let clck = function(){
+            if(paused){
+                let m = tickMoment(viewTick);
+                switch(this.metadata){
+                    case 0:
+                    m.add(TICK_DURATION*ADVISORY_TICKS,"ms");
+                    break;
+                    case 1:
+                    m.subtract(TICK_DURATION*ADVISORY_TICKS,"ms");
+                    break;
+                    case 2:
+                    m.add(1,"M");
+                    break;
+                    case 3:
+                    m.subtract(1,"M");
+                    break;
+                    case 4:
+                    m.add(1,"d");
+                    break;
+                    case 5:
+                    m.subtract(1,"d");
+                    break;
+                    case 6:
+                    m.add(1,"y");
+                    break;
+                    case 7:
+                    m.subtract(1,"y");
+                    break;
+                }
+                let t = floor((m.valueOf()-START_TIME)/TICK_DURATION);
+                if(this.metadata%2===0 && t%ADVISORY_TICKS!==0) t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+                if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+                if(t>tick) t = tick;
+                if(t<0) t = 0;
+                viewTick = t;
+                refreshTracks();
+            }
+        };
+        let button = dateNavigator.append(false,x,y,20,10,rend,clck);
+        button.metadata = i;
+    }
+
+    pauseButton = topBar.append(false,width-29,3,24,24,function(){
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        if(paused) triangle(3,3,21,12,3,21);
+        else{
+            rect(5,3,5,18);
+            rect(14,3,5,18);
+        }
+    },function(){
+        paused = !paused;
+    });
+
+    stormSelectUI = pauseButton.append(false,-105,0,100,24,function(){
+        let txtStr = "";
+        if(selectedStorm){
+            let sName = selectedStorm.getFullNameByTick(viewTick);
+            let sData = selectedStorm.getStormDataByTick(viewTick);
+            if(sData){
+                let sKts = sData ? sData.windSpeed : 0;
+                let sMph = ktsToMph(sKts,WINDSPEED_ROUNDING);
+                let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
+                let sPrsr = sData ? sData.pressure: 1031;
+                txtStr = sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa";
+            }else{
+                sName = selectedStorm.getFullNameByTick("peak");
+                txtStr = sName + " - ACE: " + selectedStorm.ACE;
+            }
+        }else txtStr = paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed";
+        let newW = textWidth(txtStr)+6;
+        this.setBox(-newW-5,undefined,newW);
+        fill(200,200,200,100);
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(RIGHT,TOP);
+        text(txtStr,this.width-3,3);
+    },function(){
+        if(!selectedStorm) paused = !paused;
+    });
 }
 
 function draw(){
@@ -139,28 +264,30 @@ function draw(){
 
     image(tracks,0,0,width,height);
     image(stormIcons,0,0,width,height);
-    fill(200,200,200,100);
-    noStroke();
-    rect(0,0,width,30);
-    fill(0);
-    textAlign(LEFT,TOP);
-    textSize(18);
-    text(tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]'),5,5);
-    textAlign(RIGHT,TOP);
-    if(selectedStorm){
-        let sName = selectedStorm.getFullNameByTick(viewTick);
-        let sData = selectedStorm.getStormDataByTick(viewTick);
-        if(sData){
-            let sKts = sData ? sData.windSpeed : 0;
-            let sMph = ktsToMph(sKts,WINDSPEED_ROUNDING);
-            let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
-            let sPrsr = sData ? sData.pressure: 1031;
-            text(sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa",width-5,5);
-        }else{
-            sName = selectedStorm.getFullNameByTick("peak");
-            text(sName + " - ACE: " + selectedStorm.ACE,width-5,5);
-        }
-    }else text(paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed",width-5,5);
+    // fill(200,200,200,100);
+    // noStroke();
+    // rect(0,0,width,30);
+    // fill(0);
+    // textAlign(LEFT,TOP);
+    // textSize(18);
+    // text(tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]'),5,5);
+    UI.updateMouseOver();
+    UI.renderAll();
+    // textAlign(RIGHT,TOP);
+    // if(selectedStorm){
+    //     let sName = selectedStorm.getFullNameByTick(viewTick);
+    //     let sData = selectedStorm.getStormDataByTick(viewTick);
+    //     if(sData){
+    //         let sKts = sData ? sData.windSpeed : 0;
+    //         let sMph = ktsToMph(sKts,WINDSPEED_ROUNDING);
+    //         let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
+    //         let sPrsr = sData ? sData.pressure: 1031;
+    //         text(sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa",width-5,5);
+    //     }else{
+    //         sName = selectedStorm.getFullNameByTick("peak");
+    //         text(sName + " - ACE: " + selectedStorm.ACE,width-5,5);
+    //     }
+    // }else text(paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed",width-5,5);
     // if(keyIsPressed) console.log("draw: " + key + " / " + keyCode);
 }
 
@@ -425,18 +552,19 @@ class ActiveSystem extends StormData{
         // this.heading.rotate(random(-PI/16,PI/16));
         this.getSteering();
         this.pos.add(this.steering);
-        let envTemp = map(sqrt(map(this.pos.y,0,height,0,9)),0,3,5,30); // Temporary environmentel latitude distinction for extratropical vs. tropical
+        let seasSin = seasonalSine(tick);
+        let envTemp = map(sqrt(map(this.pos.y,0,height,0,9)),0,3,5,29+1.5*seasSin); // Temporary environmentel latitude distinction for extratropical vs. tropical
         let coreTempDiff = envTemp-this.coreTemp;
         if(abs(coreTempDiff)>0.5) this.coreTemp += random(coreTempDiff/25);
         else this.coreTemp += random(-0.1,0.1);
         let tropicalness = constrain(map(this.coreTemp,15,30,0,1),0,1);
         let nontropicalness = constrain(map(this.coreTemp,20,5,0,1),0,1);
-        this.organization += random(-3,3) + random(pow(7,map(this.coreTemp,5,30,0,1))-4);
+        this.organization += random(-3,3+seasSin) + random(pow(7,map(this.coreTemp,5,30,0,1))-4);
         this.organization -= getLand(this.pos.x,this.pos.y)*random(7);
         this.organization -= pow(2,4-((height-this.pos.y)/(height*0.01)));
         this.organization = constrain(this.organization,0,100);
-        this.pressure -= random(-3,5);
-        this.pressure += random(100-this.organization)*pow(map(this.pressure,1025,970,0,1),2)*tropicalness;
+        this.pressure -= random(-3,4.3+seasSin);
+        this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
         if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
         this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.coreTemp,30,5,1,0.6);
@@ -471,6 +599,174 @@ class ActiveSystem extends StormData{
         this.steering.mult(mag);
     }
 }
+
+class UI{
+    constructor(parent,x,y,w,h,renderer,onclick,showing){
+        if(parent instanceof UI){
+            this.parent = parent;
+            this.parent.children.push(this);
+        }
+        this.relX = x;
+        this.relY = y;
+        this.width = w;
+        this.height = h;
+        if(renderer instanceof Function) this.renderFunc = renderer;
+        this.clickFunc = onclick;
+        this.children = [];
+        this.showing = showing===undefined ? true : showing;
+        if(!this.parent) UI.elements.push(this);
+    }
+
+    getX(){
+        if(this.parent) return this.parent.getX() + this.relX;
+        return this.relX;
+    }
+
+    getY(){
+        if(this.parent) return this.parent.getY() + this.relY;
+        return this.relY;
+    }
+
+    render(){
+        if(this.showing){
+            translate(this.relX,this.relY);
+            if(this.renderFunc) this.renderFunc();
+            if(this.children.length===1){
+                this.children[0].render();
+            }else{
+                for(let c of this.children){
+                    push();
+                    c.render();
+                    pop();
+                }
+            }
+        }
+    }
+
+    fullRect(){
+        rect(0,0,this.width,this.height);   // Easy method for use in the render function
+    }
+
+    setBox(x,y,w,h){    // Should be used inside of the renderer function
+        if(x===undefined) x = this.relX;
+        if(y===undefined) y = this.relY;
+        if(w===undefined) w = this.width;
+        if(h===undefined) h = this.height;
+        translate(x-this.relX,y-this.relY);
+        this.relX = x;
+        this.relY = y;
+        this.width = w;
+        this.height = h;
+    }
+
+    append(chain,...opts){
+        if(chain!==false && this.children.length>chain) return this.children[chain].append(0,...opts);
+        return new UI(this,...opts);
+    }
+
+    checkMouseOver(){
+        if(this.showing){
+            if(this.children.length>0){
+                let cmo = null;
+                for(let i=this.children.length-1;i>=0;i--){
+                    cmo = this.children[i].checkMouseOver();
+                    if(cmo) return cmo;
+                }
+            }
+            let left = this.getX();
+            let right = left + this.width;
+            let top = this.getY();
+            let bottom = top + this.height;
+            if(this.clickFunc && mouseX>=left && mouseX<right && mouseY>=top && mouseY<bottom) return this;
+        }
+        return null;
+    }
+
+    isHovered(){
+        return UI.mouseOver===this;     // onclick parameter in constructor is required in order for hovering to work; use any truthy non-function value if clicking the UI does nothing
+    }
+
+    clicked(){
+        if(this.clickFunc instanceof Function) this.clickFunc();
+    }
+
+    show(){
+        this.showing = true;
+    }
+
+    hide(){
+        this.showing = false;
+    }
+
+    toggleShow(){
+        this.showing = !this.showing;
+    }
+
+    remove(){
+        let mouseIsHere = false;
+        if(this.checkMouseOver()){
+            UI.mouseOver = undefined;
+            mouseIsHere = true;
+        }
+        if(this.parent){
+            for(let i=this.parent.children.length-1;i>=0;i--){
+                if(this.parent.children[i]===this){
+                    this.parent.children.splice(i,1);
+                    break;
+                }
+            }
+        }else{
+            for(let i=UI.elements.length-1;i>=0;i--){
+                if(UI.elements[i]===this){
+                    UI.elements.splice(i,1);
+                    break;
+                }
+            }
+        }
+        if(mouseIsHere) UI.updateMouseOver();
+    }
+
+    dropChildren(){
+        let mouseIsHere = false;
+        if(this.checkMouseOver()){
+            UI.mouseOver = undefined;
+            mouseIsHere = true;
+        }
+        this.children = [];
+        if(mouseIsHere) UI.updateMouseOver();
+    }
+}
+
+UI.elements = [];
+UI.renderAll = function(){
+    for(let u of UI.elements){
+        push();
+        u.render();
+        pop();
+    }
+};
+UI.mouseOver = undefined;
+UI.updateMouseOver = function(){
+    if(UI.mouseOver && UI.mouseOver.checkMouseOver()===UI.mouseOver) return UI.mouseOver;
+    for(let i=UI.elements.length-1;i>=0;i--){
+        let u = UI.elements[i];
+        let mo = u.checkMouseOver();
+        if(mo){
+            UI.mouseOver = mo;
+            return mo;
+        }
+    }
+    UI.mouseOver = null;
+    return null;
+};
+UI.click = function(){
+    UI.updateMouseOver();
+    if(UI.mouseOver){
+        UI.mouseOver.clicked();
+        return true;
+    }
+    return false;
+};
 
 class NoiseChannel{
     constructor(octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
@@ -586,6 +882,10 @@ class Environment{
         this.resetForecast();
         for(let i=0;i<n;i++) this.wobble();
     }
+}
+
+function seasonalSine(t){
+    return sin((TAU*(t-(5*YEAR_LENGTH/12)))/YEAR_LENGTH);
 }
 
 function viewingPresent(){
@@ -715,7 +1015,7 @@ function advanceSim(){
         s.current.update();
     }
     if(random()<0.015){
-        activeSystems.push(new Storm(random()>0.5));
+        activeSystems.push(new Storm(random()>0.5+0.1*seasonalSine(tick)));
     }
     let stormKilled = false;
     for(let i=activeSystems.length-1;i>=0;i--){
@@ -733,6 +1033,7 @@ function mouseInCanvas(){
 
 function mouseClicked(){
     if(mouseInCanvas()){
+        if(UI.click()) return false;
         if(godMode && keyIsPressed && viewingPresent()) {
             let g = {x: mouseX, y: mouseY};
             if(key === "l" || key === "L"){
