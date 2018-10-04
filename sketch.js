@@ -34,11 +34,11 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20180810a");
+    setVersion("Very Sad HHW Thing v","20181004a");
 
     seasons = {};
     activeSystems = [];
-    createCanvas(1100,500);
+    createCanvas(960,540); // 16:9 Aspect Ratio
     colorMode(RGB);
     tick = 0;
     viewTick = 0;
@@ -59,15 +59,25 @@ function setup(){
     Env = new Environment();    // Sad environmental stuff that is barely even used so far
     Env.addField("shear",new NoiseChannel(5,0.5,100,40,1.5,2));
     Env.addField("steering",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        let h = map(y,0,height,1,-1);
-        let mainDir = map(h<0?-sqrt(-h):sqrt(h),1,-1,0,-PI);
-        let noiseDir = map(this.noise.get(x,y,z),0,1,-PI,PI);
-        let noiseMult = map(y,0,height,3/4,1/4)/*-1/2*sq(h)+1/2*/;
-        return mainDir+noiseDir*noiseMult;
+        // let h = map(y,0,height,1,-1);
+        // let mainDir = map(h<0?-sqrt(-h):sqrt(h),1,-1,0,-PI);
+        // let noiseDir = map(this.noise.get(x,y,z),0,1,-PI,PI);
+        // let noiseMult = map(y,0,height,3/4,1/4)/*-1/2*sq(h)+1/2*/;
+        // return mainDir+noiseDir*noiseMult;
+        return map(this.noise.get(x,y,z),0,1,0,TAU*2);
     },true);
     Env.addField("steeringMag",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        return map(y,0,height,4,2)*map(this.noise.get(x,y,z),0,1,0.7,1.3);
+        // return map(y,0,height,4,2)*map(this.noise.get(x,y,z),0,1,0.7,1.3);
+        return pow(1.5,map(this.noise.get(x,y,z),0,1,-4,4))*2;
     },true);
+    Env.addField("westerlies",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
+        let h = cos(map(y,0,height,0,PI))/2+0.5;
+        return constrain(pow(h+map(this.noise.get(x,y,z),0,1,-0.3,0.3),2)*4,0,4);
+    });
+    Env.addField("trades",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
+        let h = cos(map(y,0,height,PI,0))/2+0.5;
+        return constrain(pow(h+map(this.noise.get(x,y,z),0,1,-0.3,0.3),2)*3,0,3);
+    });
     Env.addField("SSTAnomaly",new NoiseChannel(6,0.5,150,1000,0.2,2));
     Env.addField("moisture",new NoiseChannel(4,0.5,130,100,1,2));
 
@@ -568,7 +578,7 @@ class ActiveSystem extends StormData{
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
         if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
         this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.coreTemp,30,5,1,0.6);
-        this.type = this.coreTemp<20 ? EXTROP : (this.organization<45 && this.windSpeed<50) ? this.coreTemp<25 ? EXTROP : TROPWAVE : this.coreTemp<25 ? SUBTROP : TROP;
+        this.type = this.coreTemp<20 ? EXTROP : (this.organization<45 && this.windSpeed<50) ? this.coreTemp<25 ? EXTROP : TROPWAVE : this.coreTemp<25 ? /*SUBTROP*/ EXTROP : TROP; // Subtropical storms temporarily removed
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER)){
             this.storm.deathTime = tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = tick;
@@ -592,11 +602,19 @@ class ActiveSystem extends StormData{
     }
 
     getSteering(){
-        let dir = Env.get("steering",this.pos.x,this.pos.y,tick);
-        let mag = Env.get("steeringMag",this.pos.x,this.pos.y,tick);
+        // let dir = Env.get("steering",this.pos.x,this.pos.y,tick);
+        // let mag = Env.get("steeringMag",this.pos.x,this.pos.y,tick);
+        // this.steering.set(1);
+        // this.steering.rotate(dir);
+        // this.steering.mult(mag);
         this.steering.set(1);
-        this.steering.rotate(dir);
-        this.steering.mult(mag);
+        let west = Env.get("westerlies",this.pos.x,this.pos.y,tick);
+        let trades = Env.get("trades",this.pos.x,this.pos.y,tick);
+        let eDir = Env.get("steering",this.pos.x,this.pos.y,tick);
+        let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,tick);
+        this.steering.rotate(eDir);
+        this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give northward bias depending on the strength of the trades
+        this.steering.add(west-trades);
     }
 }
 

@@ -1,5 +1,10 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181004a:
+    * Made steering completely drunk for the moment (will be fixed)
+    * Changed canvas dimensions to 960x540 as to fit a 16:9 aspect ratio
+    - Temporarily removed subtropical storms
+        > System behavior hasn't yet changed, but they're just classified as extratropical, thus expect E5s
 v20180810a:
     + Added clickable UI elements/buttons, opening the door for more possibilities in this sim along with better mobile compatibility
     + Added a pause button, which works alongside the existing "space"
