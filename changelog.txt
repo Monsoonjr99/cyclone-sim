@@ -1,5 +1,11 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181013a:
+    + Readded subtropical storms, using different mechanics
+    + Added fujiwhara interaction (Might need tweaking)
+    * Changed C4 and C5 colors
+    * Analysis now shows all systems, tropical and not, throughout a season
+    * Only TCs now show tracks, including precursors and remnants
 v20181004a:
     * Made steering completely drunk for the moment (will be fixed)
     * Changed canvas dimensions to 960x540 as to fit a 16:9 aspect ratio

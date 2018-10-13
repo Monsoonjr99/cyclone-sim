@@ -34,7 +34,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181004a");
+    setVersion("Very Sad HHW Thing v","20181013a");
 
     seasons = {};
     activeSystems = [];
@@ -96,8 +96,8 @@ function setup(){
     CAT_COLORS[1] = color(230,230,20);
     CAT_COLORS[2] = color(240,170,20);
     CAT_COLORS[3] = color(240,20,20);
-    CAT_COLORS[4] = color(240,20,240);
-    CAT_COLORS[5] = color(230,100,230);
+    CAT_COLORS[4] = color(250,40,250);
+    CAT_COLORS[5] = color(250,140,250);
     CAT_COLORS[SUBTROP] = {};
     CAT_COLORS[SUBTROP][-1] = color(60,60,220);
     CAT_COLORS[SUBTROP][0] = color(60,220,60);
@@ -319,6 +319,7 @@ class Storm{
         if(isNewStorm){
             this.current = new ActiveSystem(this,extropical,godModeSpawn);
             this.active = true;
+            seasons[curSeason].systems.push(this);
         }
 
         this.TC = false;
@@ -443,23 +444,25 @@ class Storm{
     }
 
     renderTrack(newestSegment){
-        if(newestSegment){
-            if(this.record.length>1){
-                let adv = this.record[this.record.length-2];
-                let col = getColor(adv.cat,adv.type);
-                tracks.stroke(col);
-                let pos = adv.pos;
-                let nextPos = this.record[this.record.length-1].pos;
-                tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
-            }
-        }else if(this.aliveAt(viewTick)){
-            for(let n=0;n<this.record.length-1;n++){
-                let adv = this.record[n];
-                let col = getColor(adv.cat,adv.type); //CAT_COLORS[tropOrSub(adv.type) ? adv.cat : -2];
-                tracks.stroke(col);
-                let pos = adv.pos;
-                let nextPos = this.record[n+1].pos;
-                tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+        if(this.TC){
+            if(newestSegment){
+                if(this.record.length>1){
+                    let adv = this.record[this.record.length-2];
+                    let col = getColor(adv.cat,adv.type);
+                    tracks.stroke(col);
+                    let pos = adv.pos;
+                    let nextPos = this.record[this.record.length-1].pos;
+                    tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                }
+            }else if(this.aliveAt(viewTick)){
+                for(let n=0;n<this.record.length-1;n++){
+                    let adv = this.record[n];
+                    let col = getColor(adv.cat,adv.type); //CAT_COLORS[tropOrSub(adv.type) ? adv.cat : -2];
+                    tracks.stroke(col);
+                    let pos = adv.pos;
+                    let nextPos = this.record[n+1].pos;
+                    tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                }
             }
         }
     }
@@ -474,13 +477,14 @@ class Storm{
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
         if(!this.TC && isTropical){
-            cSeason.systems.push(this);
+            // cSeason.systems.push(this);
             this.TC = true;
             this.formationTime = tick;
             this.depressionNum = ++cSeason.depressions;
             this.peak = undefined;
             this.name = this.depressionNum + DEPRESSION_LETTER;
-            if(getSeason(this.birthTime)<curSeason) seasons[curSeason-1].systems.push(this); // Register precursor if it formed in previous season, but crossed into current season before becoming tropical
+            refreshTracks();
+            // if(getSeason(this.birthTime)<curSeason) seasons[curSeason-1].systems.push(this); // Register precursor if it formed in previous season, but crossed into current season before becoming tropical
         }
         if(isTropical && cat>=0){
             if(!this.named){
@@ -552,24 +556,26 @@ class ActiveSystem extends StormData{
         super(x,y,p,w,ty);
         this.storm = storm;
         this.organization = ext ? 0 : spawn ? sType==="l" ? 20 : 100 : random(0,40);
-        this.coreTemp = ext ? 10 : 28;
-        this.heading = createVector(ext ? 1 : -1,0).mult(2); // Heading is temporary for testing and will be replaced with environmental steering
-        this.steering = createVector(0); // A vector that will update with the environmental steering; will replace heading
+        this.lowerWarmCore = ext ? 0 : 1;
+        this.upperWarmCore = ext ? 0 : 1;
+        this.steering = createVector(0); // A vector that updates with the environmental steering
+        this.interaction = createVector(0); // A vector that responds to interaction with other storms (e.g. fujiwhara)
+        this.interactStatic = createVector(0); // A vector for 'static' use in the 'interact' method
     }
 
     update(){
-        // this.pos.add(this.heading);
-        // this.heading.rotate(random(-PI/16,PI/16));
         this.getSteering();
         this.pos.add(this.steering);
+        this.interaction.set(0);
         let seasSin = seasonalSine(tick);
-        let envTemp = map(sqrt(map(this.pos.y,0,height,0,9)),0,3,5,29+1.5*seasSin); // Temporary environmentel latitude distinction for extratropical vs. tropical
-        let coreTempDiff = envTemp-this.coreTemp;
-        if(abs(coreTempDiff)>0.5) this.coreTemp += random(coreTempDiff/25);
-        else this.coreTemp += random(-0.1,0.1);
-        let tropicalness = constrain(map(this.coreTemp,15,30,0,1),0,1);
-        let nontropicalness = constrain(map(this.coreTemp,20,5,0,1),0,1);
-        this.organization += random(-3,3+seasSin) + random(pow(7,map(this.coreTemp,5,30,0,1))-4);
+        let latTrop = map(sqrt(constrain(this.pos.y,0,height)),0,sqrt(height),0,1+0.1*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
+        this.lowerWarmCore = lerp(this.lowerWarmCore,latTrop,0.04);
+        this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.02 : 0.3);
+        this.lowerWarmCore = constrain(this.lowerWarmCore+random(-0.005,0.005),0,1);
+        this.upperWarmCore = constrain(this.upperWarmCore+random(-0.005,0.005),0,1);
+        let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
+        let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
+        this.organization += random(-3,3+seasSin) + random(pow(7,this.upperWarmCore)-4);
         this.organization -= getLand(this.pos.x,this.pos.y)*random(7);
         this.organization -= pow(2,4-((height-this.pos.y)/(height*0.01)));
         this.organization = constrain(this.organization,0,100);
@@ -577,8 +583,8 @@ class ActiveSystem extends StormData{
         this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
         if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
-        this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.coreTemp,30,5,1,0.6);
-        this.type = this.coreTemp<20 ? EXTROP : (this.organization<45 && this.windSpeed<50) ? this.coreTemp<25 ? EXTROP : TROPWAVE : this.coreTemp<25 ? /*SUBTROP*/ EXTROP : TROP; // Subtropical storms temporarily removed
+        this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
+        this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.5 ? EXTROP : TROPWAVE : this.upperWarmCore<0.5 ? SUBTROP : TROP;
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER)){
             this.storm.deathTime = tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = tick;
@@ -615,6 +621,20 @@ class ActiveSystem extends StormData{
         this.steering.rotate(eDir);
         this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give northward bias depending on the strength of the trades
         this.steering.add(west-trades);
+        this.steering.add(0,map(this.pressure,1030,900,0.3,-1.5)); // Quick and dirty method of giving stronger storms a northward bias
+        this.steering.add(this.interaction); // Fujiwhara
+    }
+
+    interact(that,first){   // Quick and sloppy fujiwhara implementation
+        this.interactStatic.set(this.pos);
+        this.interactStatic.sub(that.pos);
+        let m = this.interactStatic.mag();
+        if(m<100 && m>0){
+            this.interactStatic.rotate(-TAU/4+((5/m)*TAU/16));
+            this.interactStatic.setMag((((1030-this.pressure)+(1030-that.pressure))/70)*20/m);
+            this.interaction.add(this.interactStatic);
+        }
+        if(first) that.interact(this);
     }
 }
 
@@ -1024,13 +1044,16 @@ function advanceSim(){
     if(!seasons[curSeason]){
         let e = new Season();
         for(let s of activeSystems){
-            if(s.TC) e.systems.push(s);
+            e.systems.push(s);
         }
         seasons[curSeason] = e;
     }
     Env.wobble();
-    for(let s of activeSystems){
-        s.current.update();
+    for(let i=0;i<activeSystems.length;i++){
+        for(let j=i+1;j<activeSystems.length;j++){
+            activeSystems[i].current.interact(activeSystems[j].current,true);
+        }
+        activeSystems[i].current.update();
     }
     if(random()<0.015){
         activeSystems.push(new Storm(random()>0.5+0.1*seasonalSine(tick)));
