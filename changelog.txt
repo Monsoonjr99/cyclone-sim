@@ -1,5 +1,10 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181014a:
+    * Fujiwhara tweaked to make stronger storms and extratropical systems more "dominant" in the interaction
+    * Simulation speed now works in powers of 2, with a 6th speed option added
+        > Full-Speed, Half-Speed, 1/4 Speed, 1/8 Speed, 1/16 Speed, and 1/32 Speed
+    * When a storm is selected, only the selected storm's track shows
 v20181013a:
     + Readded subtropical storms, using different mechanics
     + Added fujiwhara interaction (Might need tweaking)

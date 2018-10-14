@@ -34,7 +34,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181013a");
+    setVersion("Very Sad HHW Thing v","20181014a");
 
     seasons = {};
     activeSystems = [];
@@ -52,8 +52,8 @@ function setup(){
     godMode = true;
     SHem = false;
     selectedStorm = undefined;
-    simSpeed = 1; // The divisor for the simulation speed (1 is full-speed, 2 is half-speed, etc.)
-    simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo simSpeed to advance sim when 0
+    simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
+    simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
     
     Env = new Environment();    // Sad environmental stuff that is barely even used so far
@@ -210,7 +210,7 @@ function setup(){
                 sName = selectedStorm.getFullNameByTick("peak");
                 txtStr = sName + " - ACE: " + selectedStorm.ACE;
             }
-        }else txtStr = paused ? "Paused" : (simSpeed===1 ? "Full-" : simSpeed===2 ? "Half-" : "1/" + simSpeed + " ") + "Speed";
+        }else txtStr = paused ? "Paused" : (simSpeed===0 ? "Full-" : simSpeed===1 ? "Half-" : "1/" + pow(2,simSpeed) + " ") + "Speed";
         let newW = textWidth(txtStr)+6;
         this.setBox(-newW-5,undefined,newW);
         fill(200,200,200,100);
@@ -229,7 +229,7 @@ function draw(){
     image(land,0,0,width,height);
     if(!paused){
         simSpeedFrameCounter++;
-        simSpeedFrameCounter%=simSpeed;
+        simSpeedFrameCounter%=pow(2,simSpeed);
         if(simSpeedFrameCounter===0) advanceSim();
     }
     keyRepeatFrameCounter++;
@@ -444,7 +444,7 @@ class Storm{
     }
 
     renderTrack(newestSegment){
-        if(this.TC){
+        if(this.TC && (selectedStorm===undefined || selectedStorm===this)){
             if(newestSegment){
                 if(this.record.length>1){
                     let adv = this.record[this.record.length-2];
@@ -454,7 +454,7 @@ class Storm{
                     let nextPos = this.record[this.record.length-1].pos;
                     tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
                 }
-            }else if(this.aliveAt(viewTick)){
+            }else if(this.aliveAt(viewTick) || selectedStorm===this){
                 for(let n=0;n<this.record.length-1;n++){
                     let adv = this.record[n];
                     let col = getColor(adv.cat,adv.type); //CAT_COLORS[tropOrSub(adv.type) ? adv.cat : -2];
@@ -629,9 +629,9 @@ class ActiveSystem extends StormData{
         this.interactStatic.set(this.pos);
         this.interactStatic.sub(that.pos);
         let m = this.interactStatic.mag();
-        if(m<100 && m>0){
-            this.interactStatic.rotate(-TAU/4+((5/m)*TAU/16));
-            this.interactStatic.setMag((((1030-this.pressure)+(1030-that.pressure))/70)*20/m);
+        if(m<200 && m>0){
+            this.interactStatic.rotate(-TAU/4+((10/m)*TAU/16));
+            this.interactStatic.setMag(((1030-that.pressure)/35)*(30/m)*(4-3*that.lowerWarmCore));
             this.interaction.add(this.interactStatic);
         }
         if(first) that.interact(this);
@@ -1112,10 +1112,12 @@ function mouseClicked(){
                 let p = s.getStormDataByTick(viewTick,true).pos;
                 if(p.dist(mVector)<DIAMETER){
                     selectedStorm = s;
+                    refreshTracks();
                     return false;
                 }
             }
             selectedStorm = undefined;
+            refreshTracks();
         }else{
             let vSeason = seasons[getSeason(viewTick)];
             let mVector = createVector(mouseX,mouseY);
@@ -1125,11 +1127,13 @@ function mouseClicked(){
                     let p = s.getStormDataByTick(viewTick).pos;
                     if(p.dist(mVector)<DIAMETER){
                         selectedStorm = s;
+                        refreshTracks();
                         return false;
                     }
                 }
             }
             selectedStorm = undefined;
+            refreshTracks();
         }
         return false;
     }
@@ -1156,7 +1160,7 @@ function keyPressed(){
             break;
             case KEY_RIGHT_BRACKET:
             simSpeed--;
-            if(simSpeed<1) simSpeed=1;
+            if(simSpeed<0) simSpeed=0;
             break;
             default:
             return;
