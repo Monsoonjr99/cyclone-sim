@@ -34,7 +34,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181014a");
+    setVersion("Very Sad HHW Thing v","20181015a");
 
     seasons = {};
     activeSystems = [];
@@ -49,6 +49,9 @@ function setup(){
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
     stormIcons.noStroke();
+    forecastTracks = createBuffer();
+    forecastTracks.strokeWeight(3);
+    forecastTracks.stroke(240,240,0);
     godMode = true;
     SHem = false;
     selectedStorm = undefined;
@@ -273,6 +276,7 @@ function draw(){
     // if(stormKilled) refreshTracks();
 
     image(tracks,0,0,width,height);
+    image(forecastTracks,0,0,width,height);
     image(stormIcons,0,0,width,height);
     // fill(200,200,200,100);
     // noStroke();
@@ -465,6 +469,13 @@ class Storm{
                 }
             }
         }
+        if(selectedStorm===this && viewingPresent() && this.active){
+            forecastTracks.clear();
+            let p = this.current.trackForecast.points;
+            for(let n=0;n<p.length;n++){
+                forecastTracks.point(p[n].x,p[n].y);
+            }
+        }
     }
 
     updateStats(data){
@@ -561,6 +572,10 @@ class ActiveSystem extends StormData{
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = createVector(0); // A vector that responds to interaction with other storms (e.g. fujiwhara)
         this.interactStatic = createVector(0); // A vector for 'static' use in the 'interact' method
+        this.trackForecast = {}; // Simple track forecast for now
+        this.trackForecast.stVec = createVector(0);
+        this.trackForecast.pVec = createVector(0);
+        this.trackForecast.points = [];
     }
 
     update(){
@@ -604,6 +619,7 @@ class ActiveSystem extends StormData{
         let adv = new StormData(x,y,p,w,ty);
         this.storm.updateStats(adv);
         this.storm.record.push(adv);
+        this.doTrackForecast();
         this.storm.renderTrack(true);
     }
 
@@ -635,6 +651,26 @@ class ActiveSystem extends StormData{
             this.interaction.add(this.interactStatic);
         }
         if(first) that.interact(this);
+    }
+
+    doTrackForecast(){
+        let p = this.trackForecast.pVec;
+        let s = this.trackForecast.stVec;
+        this.trackForecast.points = [];
+        p.set(this.pos);
+        for(let f=0;f<120;f++){
+            s.set(1);                                       // Copy-paste from getSteering (will do something better in future)
+            let t = tick+f;
+            let west = Env.get("westerlies",p.x,p.y,t);
+            let trades = Env.get("trades",p.x,p.y,t);
+            let eDir = Env.get("steering",p.x,p.y,t);
+            let eMag = Env.get("steeringMag",p.x,p.y,t);
+            s.rotate(eDir);
+            s.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));
+            s.add(west-trades);
+            p.add(s);
+            if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
+        }
     }
 }
 
@@ -932,6 +968,7 @@ function viewingPresent(){
 
 function refreshTracks(){
     tracks.clear();
+    forecastTracks.clear();
     if(viewingPresent()) for(let s of activeSystems) s.renderTrack();
     else for(let s of seasons[getSeason(viewTick)].systems) s.renderTrack();
 }

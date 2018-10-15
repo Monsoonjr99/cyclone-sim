@@ -1,5 +1,7 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181015a:
+    + Added a makeshift "track forecast" to selected storms; yellow dots show where the storm might go (is often wrong!)
 v20181014a:
     * Fujiwhara tweaked to make stronger storms and extratropical systems more "dominant" in the interaction
     * Simulation speed now works in powers of 2, with a 6th speed option added
