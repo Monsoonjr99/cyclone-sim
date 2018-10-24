@@ -1,5 +1,12 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181024a:
+    * Changed land colors to make land look better
+    * Changed how selected storm outlines are drawn to make them look better
+    * Split the code into multiple files to begin some cleanup and refactoring
+    * Some attempt at fixing subtropical cyclones so they're less nonexistant
+    * Slightly lowered spawn rate
+    * Land generation is now seeded with the time, which is stored in a "seed" variable
 v20181015a:
     + Added a makeshift "track forecast" to selected storms; yellow dots show where the storm might go (is often wrong!)
 v20181014a:
