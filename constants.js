@@ -1,5 +1,4 @@
 const DIAMETER = 20;    // Storm icon diameter
-const CAT_COLORS = {};      // Category color scheme
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
@@ -32,3 +31,36 @@ const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
+const SNOW_LAYERS = 40;
+const SNOW_SEASON_OFFSET = 5/6;
+
+const COLORS = {};      // For storing all colors used in the graphics
+
+function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
+    COLORS.storm = {};
+    COLORS.storm[EXTROP] = color(220,220,220);
+    COLORS.storm[TROPWAVE] = color(130,130,240);
+    COLORS.storm[-2] = color(130,130,240);
+    COLORS.storm[-1] = color(20,20,230);
+    COLORS.storm[0] = color(20,230,20);
+    COLORS.storm[1] = color(230,230,20);
+    COLORS.storm[2] = color(240,170,20);
+    COLORS.storm[3] = color(240,20,20);
+    COLORS.storm[4] = color(250,40,250);
+    COLORS.storm[5] = color(250,140,250);
+    COLORS.storm[SUBTROP] = {};
+    COLORS.storm[SUBTROP][-1] = color(60,60,220);
+    COLORS.storm[SUBTROP][0] = color(60,220,60);
+    COLORS.storm.extL = "red";
+    COLORS.land = [];
+    COLORS.land.push([0.85, color(190,190,190)]);
+    COLORS.land.push([0.8, color(160,160,160)]);
+    COLORS.land.push([0.75, color(145,115,90)]);
+    COLORS.land.push([0.7, color(160,125,100)]);
+    COLORS.land.push([0.65, color(30,160,30)]);
+    COLORS.land.push([0.6, color(20,175,20)]);
+    COLORS.land.push([0.55, color(0,200,0)]);
+    COLORS.land.push([0.53, color(220,220,110)]);
+    COLORS.land.push([0.5, color(250,250,90)]);
+    COLORS.snow = color(240);
+}

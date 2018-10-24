@@ -1,10 +1,11 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181024a");
+    setVersion("Very Sad HHW Thing v","20181024b");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
-    colorMode(RGB);
+    defineColors(); // Set the values of COLORS since color() can't be used before setup()
     paused = false;
     showStrength = false;
+
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
@@ -12,6 +13,15 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
+    land = createBuffer();
+    land.noStroke();
+    snow = [];
+    for(let i=0;i<SNOW_LAYERS;i++){
+        snow[i] = createBuffer();
+        snow[i].noStroke();
+        snow[i].fill(COLORS.snow);
+    }
+
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
     simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
@@ -21,20 +31,6 @@ function setup(){
     testGraphics = createBuffer();
     testGraphics.noStroke();
 
-    CAT_COLORS[EXTROP] = color(220,220,220);
-    CAT_COLORS[TROPWAVE] = color(130,130,240);
-    CAT_COLORS[-2] = color(130,130,240);
-    CAT_COLORS[-1] = color(20,20,230);
-    CAT_COLORS[0] = color(20,230,20);
-    CAT_COLORS[1] = color(230,230,20);
-    CAT_COLORS[2] = color(240,170,20);
-    CAT_COLORS[3] = color(240,20,20);
-    CAT_COLORS[4] = color(250,40,250);
-    CAT_COLORS[5] = color(250,140,250);
-    CAT_COLORS[SUBTROP] = {};
-    CAT_COLORS[SUBTROP][-1] = color(60,60,220);
-    CAT_COLORS[SUBTROP][0] = color(60,220,60);
-
     initUI();
     init();
 }
@@ -43,6 +39,7 @@ function draw(){
     background(0,127,255);
     stormIcons.clear();
     image(land,0,0,width,height);
+    image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
     if(!paused){
         simSpeedFrameCounter++;
         simSpeedFrameCounter%=pow(2,simSpeed);
@@ -185,15 +182,15 @@ function tropOrSub(ty){
 function getColor(c,ty){
     switch(ty){
         case EXTROP:
-            return CAT_COLORS[EXTROP];
+            return COLORS.storm[EXTROP];
         case SUBTROP:
-            if(c<1) return CAT_COLORS[SUBTROP][c];
-            else return CAT_COLORS[c];
+            if(c<1) return COLORS.storm[SUBTROP][c];
+            else return COLORS.storm[c];
             break; // Don't need this because of "return", but this shuts jshint up
         case TROP:
-            return CAT_COLORS[c];
+            return COLORS.storm[c];
         case TROPWAVE:
-            return CAT_COLORS[TROPWAVE];
+            return COLORS.storm[TROPWAVE];
     }
 }
 

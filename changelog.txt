@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181024b:
+    + Added snow that changes with the time of year for aesthetics
+        > Snow depends on both elevation and latitude to give a realistic look
+    * Cleaned up code for colors so they're actually defined in constants.js, and made land colors less hardcoded
 v20181024a:
     * Changed land colors to make land look better
     * Changed how selected storm outlines are drawn to make them look better

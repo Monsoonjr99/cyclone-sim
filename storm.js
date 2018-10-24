@@ -111,9 +111,13 @@ class Storm{
                 stormIcons.endShape();
                 stormIcons.pop();
             }
-            stormIcons.fill(ty===EXTROP ? "red" : 0);
-            if(ty===EXTROP) stormIcons.textSize(18);
-            else stormIcons.textSize(12);
+            if(ty===EXTROP){
+                stormIcons.fill(COLORS.storm.extL);
+                stormIcons.textSize(18);
+            }else{
+                stormIcons.fill(0);
+                stormIcons.textSize(12);
+            }
             stormIcons.textStyle(NORMAL);
             stormIcons.text(tropOrSub(ty) ? cat>0 ? (ty===SUBTROP ? "S" : "") + cat : cat===0 ? ty===SUBTROP ? "SS" : "S" : ty===SUBTROP ? "SD" : "D" : "L", 0, 0);
             stormIcons.fill(0);

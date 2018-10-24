@@ -114,8 +114,9 @@ class Environment{
     }
 }
 
-function seasonalSine(t){
-    return sin((TAU*(t-(5*YEAR_LENGTH/12)))/YEAR_LENGTH);
+function seasonalSine(t,off){
+    off = off===undefined ? 5/12 : off;
+    return sin((TAU*(t-YEAR_LENGTH*off))/YEAR_LENGTH);
 }
 
 function getLand(x,y){
@@ -129,8 +130,6 @@ function getLand(x,y){
 }
 
 function createLand(){
-    land = createBuffer();
-    land.noStroke();
     landNoise = new NoiseChannel(9,0.5,100);
     landNoise.xOff = 0;
     landNoise.yOff = 0;
@@ -139,26 +138,19 @@ function createLand(){
         for(let j=0;j<height;j++){
             let landVal = getLand(i,j);
             if(landVal){
-                if(landVal > 0.85){
-                    land.fill(190,190,190);
-                }else if(landVal > 0.8){
-                    land.fill(160,160,160);
-                }else if(landVal > 0.75){
-                    land.fill(145,115,90);
-                }else if(landVal > 0.7){
-                    land.fill(160,125,100);
-                }else if(landVal > 0.65){
-                    land.fill(30,160,30);
-                }else if(landVal > 0.6){
-                    land.fill(20,175,20);
-                }else if(landVal > 0.55){
-                    land.fill(0,200,0);
-                }else if(landVal > 0.53){
-                    land.fill(220,220,110);
-                }else{
-                    land.fill(250,250,90);
+                for(let k=0;k<COLORS.land.length;k++){
+                    if(landVal > COLORS.land[k][0]){
+                        land.fill(COLORS.land[k][1]);
+                        land.rect(i,j,1,1);
+                        break;
+                    }
                 }
-                land.rect(i,j,1,1);
+                for(let k=0;k<SNOW_LAYERS;k++){
+                    let p = k/SNOW_LAYERS;
+                    let l = 1-j/height;
+                    let h = 0.95-l*map(p,0,1,0.15,0.45);
+                    if(landVal > h) snow[k].rect(i,j,1,1);
+                }
             }
         }
     }
