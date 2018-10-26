@@ -325,9 +325,10 @@ class ActiveSystem extends StormData{
         let eDir = Env.get("steering",this.pos.x,this.pos.y,basin.tick);
         let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,basin.tick);
         this.steering.rotate(eDir);
-        this.steering.mult(eMag/(1+(hem(sin(eDir))/2+0.5)*trades));  // Uses the sine of the direction to give poleward bias depending on the strength of the trades
+        this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give poleward bias depending on the strength of the trades
         this.steering.add(west-trades);
-        this.steering.add(0,hem(map(this.pressure,1030,900,0.3,-1.5))); // Quick and dirty method of giving stronger storms a poleward bias
+        this.steering.add(0,map(this.pressure,1030,900,0.3,-1.5)); // Quick and dirty method of giving stronger storms a poleward bias
+        this.steering.y = hem(this.steering.y);
         this.steering.add(this.interaction); // Fujiwhara
     }
 

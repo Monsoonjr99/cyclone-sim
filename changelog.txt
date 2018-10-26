@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181026b:
+    * Fixed SHem steering behaving even more drunk than the NHem already is
+        > Both hemispheres still drunk; just SHem isn't as drunk
 v20181026a:
     + Crikey mate! Added the southern hemisphere
         > No whole-world added yet, so a basin is just one hemisphere or the other; 50/50 chance at generation
