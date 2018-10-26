@@ -59,6 +59,7 @@ class EnvField{
 
     get(x,y,z){
         let val = 0;
+        y = hemY(y);
         if(this.mapFunc) val += this.mapFunc(x,y,z);
         if(this.noise && (!this.dependent || !this.mapFunc)) val += this.noise.get(x,y,z);
         return val;
@@ -134,6 +135,9 @@ function createLand(){
     landNoise.xOff = 0;
     landNoise.yOff = 0;
     landNoise.zOff = 0;
+}
+
+function renderLand(){
     for(let i=0;i<width;i++){
         for(let j=0;j<height;j++){
             let landVal = getLand(i,j);
@@ -147,7 +151,7 @@ function createLand(){
                 }
                 for(let k=0;k<SNOW_LAYERS;k++){
                     let p = k/SNOW_LAYERS;
-                    let l = 1-j/height;
+                    let l = 1-hemY(j)/height;
                     let h = 0.95-l*map(p,0,1,0.15,0.45);
                     if(landVal > h) snow[k].rect(i,j,1,1);
                 }

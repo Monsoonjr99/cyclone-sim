@@ -1,5 +1,10 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181026a:
+    + Crikey mate! Added the southern hemisphere
+        > No whole-world added yet, so a basin is just one hemisphere or the other; 50/50 chance at generation
+    + Added a 'basin' object and moved some variables there for future saving/loading and user management of basin settings
+    * Now displays "Land rendering..." while the land is rendering instead of holding the page in a loading cycle
 v20181024b:
     + Added snow that changes with the time of year for aesthetics
         > Snow depends on both elevation and latitude to give a realistic look

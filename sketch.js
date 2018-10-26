@@ -1,8 +1,9 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181024b");
+    setVersion("Very Sad HHW Thing v","20181026a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
+    background(COLORS.bg);
     paused = false;
     showStrength = false;
 
@@ -36,7 +37,21 @@ function setup(){
 }
 
 function draw(){
-    background(0,127,255);
+    if(landRendered===0){
+        push();
+        textSize(48);
+        textAlign(CENTER,CENTER);
+        text("Rendering land...",width/2,height/2);
+        pop();
+        landRendered++;
+        return;
+    }
+    if(landRendered<2){
+        renderLand();
+        landRendered++;
+        return;
+    }
+    background(COLORS.bg);
     stormIcons.clear();
     image(land,0,0,width,height);
     image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
@@ -52,19 +67,19 @@ function draw(){
                 viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
                 refreshTracks();
             }else if(keyCode===RIGHT_ARROW){
-                if(viewTick<tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-                else viewTick = tick;
+                if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                else viewTick = basin.tick;
                 refreshTracks();
             }
         }
     }
-    if(viewingPresent()) for(let s of activeSystems) s.renderIcon();
-    else for(let s of seasons[getSeason(viewTick)].systems) s.renderIcon();
+    if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
+    else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderIcon();
 
     if(testNoise){
         for(let k=0;k<width;k+=10){
             testGraphics.push();
-            let q = testNoise.get(k,testNoiseLine,tick);
+            let q = testNoise.get(k,testNoiseLine,basin.tick);
             testGraphics.colorMode(HSB);
             testGraphics.fill(/*map(q,-PI,0,0,300)*/q*300,100,100);
             testGraphics.rect(k,testNoiseLine,10,10);
@@ -84,18 +99,14 @@ function draw(){
 }
 
 function init(){
-    seasons = {};
-    activeSystems = [];
-    tick = 0;
+    basin = new Basin(random()<0.5,true);
+
     viewTick = 0;
-    curSeason = getSeason(tick);
-    godMode = true;
-    SHem = false;
+    curSeason = getSeason(basin.tick);
     selectedStorm = undefined;
-    seed = moment().valueOf();
     // seed = 1540279062465;
 
-    noiseSeed(seed);
+    noiseSeed(basin.seed);
 
     Env = new Environment();    // Sad environmental stuff that is barely even used so far
     Env.addField("shear",new NoiseChannel(5,0.5,100,40,1.5,2));
@@ -122,6 +133,7 @@ function init(){
     Env.addField("SSTAnomaly",new NoiseChannel(6,0.5,150,1000,0.2,2));
     Env.addField("moisture",new NoiseChannel(4,0.5,130,100,1,2));
 
+    landRendered = 0;
     createLand();
 }
 
@@ -136,14 +148,14 @@ class Season{
 }
 
 function viewingPresent(){
-    return viewTick === tick;
+    return viewTick === basin.tick;
 }
 
 function refreshTracks(){
     tracks.clear();
     forecastTracks.clear();
-    if(viewingPresent()) for(let s of activeSystems) s.renderTrack();
-    else for(let s of seasons[getSeason(viewTick)].systems) s.renderTrack();
+    if(viewingPresent()) for(let s of basin.activeSystems) s.renderTrack();
+    else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderTrack();
 }
 
 function getNewName(season,sNum){
@@ -158,10 +170,17 @@ function getNewName(season,sNum){
 }
 
 function tickMoment(t){
-    return moment.utc(START_TIME+t*TICK_DURATION);
+    return moment.utc(basin.startTime+t*TICK_DURATION);
 }
 
 function getSeason(t){
+    if(basin.SHem){
+        let tm = tickMoment(t);
+        let m = tm.month();
+        let y = tm.year();
+        if(m>=6) return y+1;
+        return y;
+    }
     return tickMoment(t).year();
 }
 
@@ -173,6 +192,14 @@ function getCat(w){     // windspeed in knots
     if(w<113) return 3;
     if(w<137) return 4;
     return 5;
+}
+
+function hem(v){
+    return basin.SHem ? -v : v;
+}
+
+function hemY(y){
+    return basin.SHem ? height-y : y;
 }
 
 function tropOrSub(ty){
@@ -208,31 +235,31 @@ function ktsToKmh(k,rnd){
 
 function advanceSim(){
     let vp = viewingPresent();
-    tick++;
-    viewTick = tick;
+    basin.tick++;
+    viewTick = basin.tick;
     if(!vp) refreshTracks();
-    curSeason = getSeason(tick);
-    if(!seasons[curSeason]){
+    curSeason = getSeason(basin.tick);
+    if(!basin.seasons[curSeason]){
         let e = new Season();
-        for(let s of activeSystems){
+        for(let s of basin.activeSystems){
             e.systems.push(s);
         }
-        seasons[curSeason] = e;
+        basin.seasons[curSeason] = e;
     }
     Env.wobble();
-    for(let i=0;i<activeSystems.length;i++){
-        for(let j=i+1;j<activeSystems.length;j++){
-            activeSystems[i].current.interact(activeSystems[j].current,true);
+    for(let i=0;i<basin.activeSystems.length;i++){
+        for(let j=i+1;j<basin.activeSystems.length;j++){
+            basin.activeSystems[i].current.interact(basin.activeSystems[j].current,true);
         }
-        activeSystems[i].current.update();
+        basin.activeSystems[i].current.update();
     }
     if(random()<0.012){
-        activeSystems.push(new Storm(random()>0.5+0.1*seasonalSine(tick)));
+        basin.activeSystems.push(new Storm(random()>0.5+0.1*seasonalSine(basin.tick)));
     }
     let stormKilled = false;
-    for(let i=activeSystems.length-1;i>=0;i--){
-        if(!activeSystems[i].active){
-            activeSystems.splice(i,1);
+    for(let i=basin.activeSystems.length-1;i>=0;i--){
+        if(!basin.activeSystems[i].active){
+            basin.activeSystems.splice(i,1);
             stormKilled = true;
         }
     }
@@ -246,7 +273,7 @@ function mouseInCanvas(){
 function mouseClicked(){
     if(mouseInCanvas()){
         if(UI.click()) return false;
-        if(godMode && keyIsPressed && viewingPresent()) {
+        if(basin.godMode && keyIsPressed && viewingPresent()) {
             let g = {x: mouseX, y: mouseY};
             if(key === "l" || key === "L"){
                 // activeSystems.push(new StormSystem(mouseX,mouseY,10));
@@ -275,11 +302,11 @@ function mouseClicked(){
             }else if(key === "x" || key === "X"){
                 g.sType = "x";
             }else return;
-            activeSystems.push(new Storm(false,g));
+            basin.activeSystems.push(new Storm(false,g));
         }else if(viewingPresent()){
             let mVector = createVector(mouseX,mouseY);
-            for(let i=activeSystems.length-1;i>=0;i--){
-                let s = activeSystems[i];
+            for(let i=basin.activeSystems.length-1;i>=0;i--){
+                let s = basin.activeSystems[i];
                 let p = s.getStormDataByTick(viewTick,true).pos;
                 if(p.dist(mVector)<DIAMETER){
                     selectedStorm = s;
@@ -290,7 +317,7 @@ function mouseClicked(){
             selectedStorm = undefined;
             refreshTracks();
         }else{
-            let vSeason = seasons[getSeason(viewTick)];
+            let vSeason = basin.seasons[getSeason(viewTick)];
             let mVector = createVector(mouseX,mouseY);
             for(let i=vSeason.systems.length-1;i>=0;i--){
                 let s = vSeason.systems[i];

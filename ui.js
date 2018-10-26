@@ -233,10 +233,10 @@ function initUI(){
                     m.subtract(1,"y");
                     break;
                 }
-                let t = floor((m.valueOf()-START_TIME)/TICK_DURATION);
+                let t = floor((m.valueOf()-basin.startTime)/TICK_DURATION);
                 if(this.metadata%2===0 && t%ADVISORY_TICKS!==0) t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
                 if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
-                if(t>tick) t = tick;
+                if(t>basin.tick) t = basin.tick;
                 if(t<0) t = 0;
                 viewTick = t;
                 refreshTracks();

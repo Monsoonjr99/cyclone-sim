@@ -6,7 +6,7 @@ class Storm{
         if(isNewStorm){
             this.current = new ActiveSystem(this,extropical,godModeSpawn);
             this.active = true;
-            seasons[curSeason].systems.push(this);
+            basin.seasons[curSeason].systems.push(this);
         }
 
         this.TC = false;
@@ -19,7 +19,7 @@ class Storm{
         this.depressionNum = undefined;
         this.name = undefined;
 
-        this.birthTime = isNewStorm ? tick : undefined;             // Time formed as a disturbance/low
+        this.birthTime = isNewStorm ? basin.tick : undefined;             // Time formed as a disturbance/low
         this.formationTime = undefined;                             // Time formed as a TC
         this.dissipationTime = undefined;                           // Time degenerated/dissipated as a TC
         this.deathTime = undefined;                                 // Time completely dissipated
@@ -28,7 +28,7 @@ class Storm{
         this.record = [];
         this.peak = undefined;
         this.ACE = 0;
-        if(isNewStorm && tick%ADVISORY_TICKS===0) this.current.advisory();
+        if(isNewStorm && basin.tick%ADVISORY_TICKS===0) this.current.advisory();
     }
 
     aliveAt(t){
@@ -37,7 +37,7 @@ class Storm{
 
     getStormDataByTick(t,allowCurrent){
         if(!this.aliveAt(t)) return null;
-        if(t===tick){
+        if(t===basin.tick){
             if(allowCurrent) return this.current;
             return this.record.length>0 ? this.record[this.record.length-1] : null;
         }
@@ -89,6 +89,7 @@ class Storm{
                 }else stormIcons.ellipse(0,0,DIAMETER);
                 if(cat>=0 && tropOrSub(ty)){
                     stormIcons.push();
+                    if(basin.SHem) stormIcons.scale(1,-1);
                     stormIcons.rotate(this.rotation);
                     stormIcons.beginShape();
                     stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
@@ -103,6 +104,7 @@ class Storm{
             if(ty!==EXTROP) stormIcons.ellipse(0,0,DIAMETER);
             if(cat>=0 && tropOrSub(ty)){
                 stormIcons.push();
+                if(basin.SHem) stormIcons.scale(1,-1);
                 stormIcons.rotate(this.rotation);
                 stormIcons.beginShape();
                 stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
@@ -170,14 +172,14 @@ class Storm{
         let p = data.pressure;
         let type = data.type;
         let cat = getCat(w);
-        let cSeason = seasons[curSeason];
+        let cSeason = basin.seasons[curSeason];
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
         if(!this.TC && isTropical){
             // cSeason.systems.push(this);
             this.TC = true;
-            this.formationTime = tick;
+            this.formationTime = basin.tick;
             this.depressionNum = ++cSeason.depressions;
             this.peak = undefined;
             this.name = this.depressionNum + DEPRESSION_LETTER;
@@ -188,7 +190,7 @@ class Storm{
             if(!this.named){
                 this.name = getNewName(curSeason,cSeason.namedStorms++); //LIST_2[cSeason.namedStorms++ % LIST_2.length];
                 this.named = true;
-                this.namedTime = tick;
+                this.namedTime = basin.tick;
             }
             this.ACE += pow(w,2)/10000;
             this.ACE = round(this.ACE*10000)/10000;
@@ -201,7 +203,7 @@ class Storm{
             cSeason.majors++;
             this.major = true;
         }
-        if(wasTCB4Update && !isTropical) this.dissipationTime = tick;
+        if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
         if(!wasTCB4Update && isTropical) this.dissipationTime = undefined;
         if(!this.TC || isTropical){
             if(!this.peak) this.peak = data;
@@ -225,7 +227,7 @@ class ActiveSystem extends StormData{
         let sType = spawn ? spawn.sType : undefined;
         if(sType==="x") ext = true;
         let x = spawn ? spawn.x : ext ? 0 : width;
-        let y = spawn ? spawn.y : ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9);
+        let y = spawn ? spawn.y : hemY(ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9));
         let p = spawn ?
             sType==="x" ? 1005 :
             sType==="l" ? 1015 :
@@ -269,8 +271,8 @@ class ActiveSystem extends StormData{
         this.getSteering();
         this.pos.add(this.steering);
         this.interaction.set(0);
-        let seasSin = seasonalSine(tick);
-        let latTrop = map(sqrt(constrain(this.pos.y,0,height)),0,sqrt(height),0,1+0.1*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
+        let seasSin = seasonalSine(basin.tick);
+        let latTrop = map(sqrt(constrain(hemY(this.pos.y),0,height)),0,sqrt(height),0,1+0.1*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
         this.lowerWarmCore = lerp(this.lowerWarmCore,latTrop,this.lowerWarmCore>latTrop ? 0.06 : 0.04);
         this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.007 : 0.4);
         this.lowerWarmCore = constrain(this.lowerWarmCore,0,1);
@@ -279,7 +281,7 @@ class ActiveSystem extends StormData{
         let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
         this.organization += random(-3,3+seasSin) + random(pow(7,this.lowerWarmCore)-4) + 2.7*nontropicalness;
         this.organization -= getLand(this.pos.x,this.pos.y)*random(7);
-        this.organization -= pow(2,4-((height-this.pos.y)/(height*0.01)));
+        this.organization -= pow(2,4-((height-hemY(this.pos.y))/(height*0.01)));
         this.organization = constrain(this.organization,0,100);
         this.pressure -= random(-3,4.3+seasSin)*tropicalness;
         this.pressure -= random(-3,3)*nontropicalness;
@@ -289,13 +291,13 @@ class ActiveSystem extends StormData{
         this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
         this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER)){
-            this.storm.deathTime = tick;
-            if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = tick;
+            this.storm.deathTime = basin.tick;
+            if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;
             this.storm.active = false;
             this.storm.current = undefined;
             return;
         }
-        if(tick%ADVISORY_TICKS===0) this.advisory();
+        if(basin.tick%ADVISORY_TICKS===0) this.advisory();
     }
 
     advisory(){
@@ -318,14 +320,14 @@ class ActiveSystem extends StormData{
         // this.steering.rotate(dir);
         // this.steering.mult(mag);
         this.steering.set(1);
-        let west = Env.get("westerlies",this.pos.x,this.pos.y,tick);
-        let trades = Env.get("trades",this.pos.x,this.pos.y,tick);
-        let eDir = Env.get("steering",this.pos.x,this.pos.y,tick);
-        let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,tick);
+        let west = Env.get("westerlies",this.pos.x,this.pos.y,basin.tick);
+        let trades = Env.get("trades",this.pos.x,this.pos.y,basin.tick);
+        let eDir = Env.get("steering",this.pos.x,this.pos.y,basin.tick);
+        let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,basin.tick);
         this.steering.rotate(eDir);
-        this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give northward bias depending on the strength of the trades
+        this.steering.mult(eMag/(1+(hem(sin(eDir))/2+0.5)*trades));  // Uses the sine of the direction to give poleward bias depending on the strength of the trades
         this.steering.add(west-trades);
-        this.steering.add(0,map(this.pressure,1030,900,0.3,-1.5)); // Quick and dirty method of giving stronger storms a northward bias
+        this.steering.add(0,hem(map(this.pressure,1030,900,0.3,-1.5))); // Quick and dirty method of giving stronger storms a poleward bias
         this.steering.add(this.interaction); // Fujiwhara
     }
 
@@ -334,7 +336,7 @@ class ActiveSystem extends StormData{
         this.interactStatic.sub(that.pos);
         let m = this.interactStatic.mag();
         if(m<200 && m>0){
-            this.interactStatic.rotate(-TAU/4+((10/m)*TAU/16));
+            this.interactStatic.rotate(hem(-TAU/4+((10/m)*TAU/16)));
             this.interactStatic.setMag(((1030-that.pressure)/35)*(30/m)*(4-3*that.lowerWarmCore));
             this.interaction.add(this.interactStatic);
         }
@@ -348,13 +350,13 @@ class ActiveSystem extends StormData{
         p.set(this.pos);
         for(let f=0;f<120;f++){
             s.set(1);                                       // Copy-paste from getSteering (will do something better in future)
-            let t = tick+f;
+            let t = basin.tick+f;
             let west = Env.get("westerlies",p.x,p.y,t);
             let trades = Env.get("trades",p.x,p.y,t);
             let eDir = Env.get("steering",p.x,p.y,t);
             let eMag = Env.get("steeringMag",p.x,p.y,t);
             s.rotate(eDir);
-            s.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));
+            s.mult(eMag/(1+(hem(sin(eDir))/2+0.5)*trades));
             s.add(west-trades);
             p.add(s);
             if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
