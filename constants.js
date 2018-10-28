@@ -33,6 +33,7 @@ const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 const SNOW_LAYERS = 40;
 const SNOW_SEASON_OFFSET = 5/6;
+const ENV_LAYER_TILE_SIZE = 20;
 
 const COLORS = {};      // For storing all colors used in the graphics
 

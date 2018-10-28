@@ -319,17 +319,22 @@ class ActiveSystem extends StormData{
         // this.steering.set(1);
         // this.steering.rotate(dir);
         // this.steering.mult(mag);
-        this.steering.set(1);
-        let west = Env.get("westerlies",this.pos.x,this.pos.y,basin.tick);
-        let trades = Env.get("trades",this.pos.x,this.pos.y,basin.tick);
-        let eDir = Env.get("steering",this.pos.x,this.pos.y,basin.tick);
-        let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,basin.tick);
-        this.steering.rotate(eDir);
-        this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give poleward bias depending on the strength of the trades
-        this.steering.add(west-trades);
-        this.steering.add(0,map(this.pressure,1030,900,0.3,-1.5)); // Quick and dirty method of giving stronger storms a poleward bias
-        this.steering.y = hem(this.steering.y);
+        
+        // this.steering.set(1);
+        // let west = Env.get("westerlies",this.pos.x,this.pos.y,basin.tick);
+        // let trades = Env.get("trades",this.pos.x,this.pos.y,basin.tick);
+        // let eDir = Env.get("steering",this.pos.x,this.pos.y,basin.tick);
+        // let eMag = Env.get("steeringMag",this.pos.x,this.pos.y,basin.tick);
+        // this.steering.rotate(eDir);
+        // this.steering.mult(eMag/(1+(sin(eDir)/2+0.5)*trades));  // Uses the sine of the direction to give poleward bias depending on the strength of the trades
+        // this.steering.add(west-trades);
+        // this.steering.y = hem(this.steering.y);
+
+        this.steering.set(Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick));
+        this.steering.add(0,hem(map(this.pressure,1030,900,0.3,-1.5))); // Quick and dirty method of giving stronger storms a poleward bias
         this.steering.add(this.interaction); // Fujiwhara
+
+        // this.steering.set(Env.get("test",this.pos.x,this.pos.y,basin.tick));
     }
 
     interact(that,first){   // Quick and sloppy fujiwhara implementation
@@ -350,15 +355,17 @@ class ActiveSystem extends StormData{
         this.trackForecast.points = [];
         p.set(this.pos);
         for(let f=0;f<120;f++){
-            s.set(1);                                       // Copy-paste from getSteering (will do something better in future)
             let t = basin.tick+f;
-            let west = Env.get("westerlies",p.x,p.y,t);
-            let trades = Env.get("trades",p.x,p.y,t);
-            let eDir = Env.get("steering",p.x,p.y,t);
-            let eMag = Env.get("steeringMag",p.x,p.y,t);
-            s.rotate(eDir);
-            s.mult(eMag/(1+(hem(sin(eDir))/2+0.5)*trades));
-            s.add(west-trades);
+            // s.set(1);                                       // Copy-paste from getSteering (will do something better in future)
+            // let west = Env.get("westerlies",p.x,p.y,t);
+            // let trades = Env.get("trades",p.x,p.y,t);
+            // let eDir = Env.get("steering",p.x,p.y,t);
+            // let eMag = Env.get("steeringMag",p.x,p.y,t);
+            // s.rotate(eDir);
+            // s.mult(eMag/(1+(hem(sin(eDir))/2+0.5)*trades));
+            // s.add(west-trades);
+
+            s.set(Env.get("LLSteering",p.x,p.y,t));
             p.add(s);
             if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
         }

@@ -136,6 +136,7 @@ class UI{
 }
 
 UI.elements = [];
+
 UI.renderAll = function(){
     for(let u of UI.elements){
         push();
@@ -143,7 +144,9 @@ UI.renderAll = function(){
         pop();
     }
 };
+
 UI.mouseOver = undefined;
+
 UI.updateMouseOver = function(){
     if(UI.mouseOver && UI.mouseOver.checkMouseOver()===UI.mouseOver) return UI.mouseOver;
     for(let i=UI.elements.length-1;i>=0;i--){
@@ -157,6 +160,7 @@ UI.updateMouseOver = function(){
     UI.mouseOver = null;
     return null;
 };
+
 UI.click = function(){
     UI.updateMouseOver();
     if(UI.mouseOver){
@@ -166,13 +170,27 @@ UI.click = function(){
     return false;
 };
 
-function initUI(){
+UI.init = function(){
+    startButton = new UI(null,width/2-100,height/2-40,200,80,function(){
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(CENTER,CENTER);
+        textSize(24);
+        text("Start",100,40);
+    },function(){
+        init();
+        this.hide();
+    });
+
     topBar = new UI(null,0,0,width,30,function(){
         fill(200,200,200,100);
         noStroke();
         this.fullRect();
         textSize(18);
-    });
+    },false,false);
 
     dateUI = topBar.append(false,5,3,100,24,function(){
         let txtStr = tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
@@ -240,6 +258,7 @@ function initUI(){
                 if(t<0) t = 0;
                 viewTick = t;
                 refreshTracks();
+                Env.displayLayer();
             }
         };
         let button = dateNavigator.append(false,x,y,20,10,rend,clck);

@@ -1,5 +1,14 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181028a:
+    + Added a "Start" button when the sim loads, which will initialize the sim upon being clicked
+        > This is to help make things load faster, but is also for future user-customizable basin UI
+    + Added graphical rendering for environmental fields
+        > Both plain-value and vector-based fields supported, rendering with colored tiles and arrows respectively
+        > Press "E" to rotate through the environmental fields, and back to "none"
+        > Currently, steering is the only environmental field, so "E" is more of a toggle for now
+    * Optimized the environmental field code for future environmental factors, including adding vector support for current steering
+        > Steering may have gotten yet more drunk for now
 v20181026b:
     * Fixed SHem steering behaving even more drunk than the NHem already is
         > Both hemispheres still drunk; just SHem isn't as drunk

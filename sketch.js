@@ -1,11 +1,13 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181026b");
+    setVersion("Very Sad HHW Thing v","20181028a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
     showStrength = false;
+    basin = undefined;
+    landRendered = 2;
 
     tracks = createBuffer();
     tracks.strokeWeight(2);
@@ -16,6 +18,10 @@ function setup(){
     forecastTracks.stroke(240,240,0);
     land = createBuffer();
     land.noStroke();
+    envLayer = createBuffer();
+    envLayer.colorMode(HSB);
+    envLayer.strokeWeight(2);
+    envLayer.noStroke();
     snow = [];
     for(let i=0;i<SNOW_LAYERS;i++){
         snow[i] = createBuffer();
@@ -27,16 +33,17 @@ function setup(){
     simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
 
-    testNoise = undefined;
-    testNoiseLine = 0;
-    testGraphics = createBuffer();
-    testGraphics.noStroke();
+    // testNoise = undefined;
+    // testNoiseLine = 0;
+    // testGraphics = createBuffer();
+    // testGraphics.noStroke();
 
-    initUI();
-    init();
+    UI.init();
+    // init();
 }
 
 function draw(){
+    background(COLORS.bg);
     if(landRendered===0){
         push();
         textSize(48);
@@ -51,48 +58,53 @@ function draw(){
         landRendered++;
         return;
     }
-    background(COLORS.bg);
-    stormIcons.clear();
-    image(land,0,0,width,height);
-    image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
-    if(!paused){
-        simSpeedFrameCounter++;
-        simSpeedFrameCounter%=pow(2,simSpeed);
-        if(simSpeedFrameCounter===0) advanceSim();
-    }
-    keyRepeatFrameCounter++;
-    if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
-        if(paused){
-            if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
-                viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
-                refreshTracks();
-            }else if(keyCode===RIGHT_ARROW){
-                if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-                else viewTick = basin.tick;
-                refreshTracks();
+    if(basin){
+        stormIcons.clear();
+        image(land,0,0,width,height);
+        image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
+        if(!paused){
+            simSpeedFrameCounter++;
+            simSpeedFrameCounter%=pow(2,simSpeed);
+            if(simSpeedFrameCounter===0) advanceSim();
+        }
+        keyRepeatFrameCounter++;
+        if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
+            if(paused){
+                if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
+                    viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
+                    refreshTracks();
+                    Env.displayLayer();
+                }else if(keyCode===RIGHT_ARROW){
+                    if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                    else viewTick = basin.tick;
+                    refreshTracks();
+                    Env.displayLayer();
+                }
             }
         }
-    }
-    if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
-    else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderIcon();
+        if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
+        else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderIcon();
 
-    if(testNoise){
-        for(let k=0;k<width;k+=10){
-            testGraphics.push();
-            let q = testNoise.get(k,testNoiseLine,basin.tick);
-            testGraphics.colorMode(HSB);
-            testGraphics.fill(/*map(q,-PI,0,0,300)*/q*300,100,100);
-            testGraphics.rect(k,testNoiseLine,10,10);
-            testGraphics.pop();
-        }
-        testNoiseLine+=10;
-        testNoiseLine%=height;
-        image(testGraphics,0,0,width,height);
+        // if(testNoise){
+        //     for(let k=0;k<width;k+=10){
+        //         testGraphics.push();
+        //         let q = testNoise.get(k,testNoiseLine,basin.tick);
+        //         testGraphics.colorMode(HSB);
+        //         testGraphics.fill(/*map(q,-PI,0,0,300)*/q*300,100,100);
+        //         testGraphics.rect(k,testNoiseLine,10,10);
+        //         testGraphics.pop();
+        //     }
+        //     testNoiseLine+=10;
+        //     testNoiseLine%=height;
+        //     image(testGraphics,0,0,width,height);
+        // }
+
+        image(envLayer,0,0,width,height);
+        image(tracks,0,0,width,height);
+        image(forecastTracks,0,0,width,height);
+        image(stormIcons,0,0,width,height);
     }
 
-    image(tracks,0,0,width,height);
-    image(forecastTracks,0,0,width,height);
-    image(stormIcons,0,0,width,height);
 
     UI.updateMouseOver();
     UI.renderAll();
@@ -105,36 +117,11 @@ function init(){
     curSeason = getSeason(basin.tick);
     selectedStorm = undefined;
     // seed = 1540279062465;
-
     noiseSeed(basin.seed);
-
-    Env = new Environment();    // Sad environmental stuff that is barely even used so far
-    Env.addField("shear",new NoiseChannel(5,0.5,100,40,1.5,2));
-    Env.addField("steering",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        // let h = map(y,0,height,1,-1);
-        // let mainDir = map(h<0?-sqrt(-h):sqrt(h),1,-1,0,-PI);
-        // let noiseDir = map(this.noise.get(x,y,z),0,1,-PI,PI);
-        // let noiseMult = map(y,0,height,3/4,1/4)/*-1/2*sq(h)+1/2*/;
-        // return mainDir+noiseDir*noiseMult;
-        return map(this.noise.get(x,y,z),0,1,0,TAU*2);
-    },true);
-    Env.addField("steeringMag",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        // return map(y,0,height,4,2)*map(this.noise.get(x,y,z),0,1,0.7,1.3);
-        return pow(1.5,map(this.noise.get(x,y,z),0,1,-4,4))*2;
-    },true);
-    Env.addField("westerlies",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        let h = cos(map(y,0,height,0,PI))/2+0.5;
-        return constrain(pow(h+map(this.noise.get(x,y,z),0,1,-0.3,0.3),2)*4,0,4);
-    });
-    Env.addField("trades",new NoiseChannel(4,0.5,80,100,1,3),function(x,y,z){
-        let h = cos(map(y,0,height,PI,0))/2+0.5;
-        return constrain(pow(h+map(this.noise.get(x,y,z),0,1,-0.3,0.3),2)*3,0,3);
-    });
-    Env.addField("SSTAnomaly",new NoiseChannel(6,0.5,150,1000,0.2,2));
-    Env.addField("moisture",new NoiseChannel(4,0.5,130,100,1,2));
-
+    Environment.init();
     landRendered = 0;
     createLand();
+    topBar.show();
 }
 
 class Season{
@@ -264,6 +251,7 @@ function advanceSim(){
         }
     }
     if(stormKilled) refreshTracks();
+    if(basin.tick%ADVISORY_TICKS==0) Env.displayLayer();
 }
 
 function mouseInCanvas(){
@@ -349,6 +337,9 @@ function keyPressed(){
         break;
         case "W":
         showStrength = !showStrength;
+        break;
+        case "E":
+        Env.displayNext();
         break;
         default:
         switch(keyCode){
