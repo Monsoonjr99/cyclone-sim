@@ -259,8 +259,11 @@ class ActiveSystem extends StormData{
         this.lowerWarmCore = ext ? 0 : 1;
         this.upperWarmCore = ext ? 0 : 1;
         this.steering = createVector(0); // A vector that updates with the environmental steering
-        this.interaction = createVector(0); // A vector that responds to interaction with other storms (e.g. fujiwhara)
-        this.interactStatic = createVector(0); // A vector for 'static' use in the 'interact' method
+        this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
+        this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
+        this.interaction.fujiStatic = createVector(0); // A vector for 'static' use in the 'interact' method for Fujiwhara interaction
+        this.interaction.shear = 0;
+        this.interaction.kill = false;
         this.trackForecast = {}; // Simple track forecast for now
         this.trackForecast.stVec = createVector(0);
         this.trackForecast.pVec = createVector(0);
@@ -270,7 +273,6 @@ class ActiveSystem extends StormData{
     update(){
         this.getSteering();
         this.pos.add(this.steering);
-        this.interaction.set(0);
         let seasSin = seasonalSine(basin.tick);
         let latTrop = map(sqrt(constrain(hemY(this.pos.y),0,height)),0,sqrt(height),0,1+0.1*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
         this.lowerWarmCore = lerp(this.lowerWarmCore,latTrop,this.lowerWarmCore>latTrop ? 0.06 : 0.04);
@@ -287,16 +289,18 @@ class ActiveSystem extends StormData{
         this.pressure -= random(-3,3)*nontropicalness;
         this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
+        this.pressure += this.interaction.shear;
         if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
         this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
         this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
-        if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER)){
+        if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER) || this.interaction.kill){
             this.storm.deathTime = basin.tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;
             this.storm.active = false;
             this.storm.current = undefined;
             return;
         }
+        this.resetInteraction();
         if(basin.tick%ADVISORY_TICKS===0) this.advisory();
     }
 
@@ -319,7 +323,7 @@ class ActiveSystem extends StormData{
         // this.steering.set(1);
         // this.steering.rotate(dir);
         // this.steering.mult(mag);
-        
+
         // this.steering.set(1);
         // let west = Env.get("westerlies",this.pos.x,this.pos.y,basin.tick);
         // let trades = Env.get("trades",this.pos.x,this.pos.y,basin.tick);
@@ -332,21 +336,32 @@ class ActiveSystem extends StormData{
 
         this.steering.set(Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick));
         this.steering.add(0,hem(map(this.pressure,1030,900,0.3,-1.5))); // Quick and dirty method of giving stronger storms a poleward bias
-        this.steering.add(this.interaction); // Fujiwhara
+        this.steering.add(this.interaction.fuji); // Fujiwhara
 
         // this.steering.set(Env.get("test",this.pos.x,this.pos.y,basin.tick));
     }
 
     interact(that,first){   // Quick and sloppy fujiwhara implementation
-        this.interactStatic.set(this.pos);
-        this.interactStatic.sub(that.pos);
-        let m = this.interactStatic.mag();
-        if(m<200 && m>0){
-            this.interactStatic.rotate(hem(-TAU/4+((10/m)*TAU/16)));
-            this.interactStatic.setMag(((1030-that.pressure)/35)*(30/m)*(4-3*that.lowerWarmCore));
-            this.interaction.add(this.interactStatic);
+        let v = this.interaction.fujiStatic;
+        v.set(this.pos);
+        v.sub(that.pos);
+        let m = v.mag();
+        let r = map(that.lowerWarmCore,0,1,150,50);
+        if(m<r && m>0){
+            v.rotate(hem(-TAU/4+((3/m)*TAU/16)));
+            // v.setMag(((1030-that.pressure)/35)*(30/m)*(4-3*that.lowerWarmCore));
+            v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
+            this.interaction.fuji.add(v);
+            this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,4));
+            if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.interaction.kill = true;
         }
         if(first) that.interact(this);
+    }
+
+    resetInteraction(){
+        let i = this.interaction;
+        i.fuji.set(0);
+        i.shear = 0;
     }
 
     doTrackForecast(){

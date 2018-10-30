@@ -193,21 +193,24 @@ Environment.init = function(){
         // return map(this.noise[0].get(x,y,z),0,1,0,TAU*2);
 
         this.vec.set(1);    // reset vector
+        // Cosine curve from 0 at poleward side of map to 1 at equatorward side
+        let h = map(cos(map(y,0,height,0,PI)),-1,1,1,0);
         // westerlies
-        let h = cos(map(y,0,height,0,PI))/2+0.5;
-        let west = constrain(pow(h+map(this.noise[0].get(x,y,z),0,1,-0.3,0.3),2)*4,0,4);
-        // trades
-        h = cos(map(y,0,height,PI,0))/2+0.5;
-        let trades = constrain(pow(h+map(this.noise[1].get(x,y,z),0,1,-0.3,0.3),2)*3,0,3);
+        let west = constrain(pow(1-h+map(this.noise[0].get(x,y,z),0,1,-0.3,0.3),2)*4,0,4);
+        // ridging, trades and weakness
+        let ridging = this.noise[1].get(x,y,z);
+        let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
+        let weakness = pow(map(h,0,1,1.01,1.21),map(ridging,0,1,0,-8))*map(west,0,4,1,0);
         // noise angle
         let a = map(this.noise[3].get(x,y,z),0,1,0,4*TAU);
         // noise magnitude
-        let m = pow(1.5,map(this.noise[2].get(x,y,z),0,1,-4,4))*2;
+        let m = pow(1.5,map(this.noise[2].get(x,y,z),0,1,-8,4));
 
         // apply to vector
         this.vec.rotate(a);
-        this.vec.mult(m/(1+(sin(a)/2+0.5)*trades));  // Uses the sine of the angle to give poleward bias depending on the strength of the trades
-        this.vec.add(west-trades);
+        // this.vec.mult(m/(1+(sin(a)/2+0.5)*trades));  // Uses the sine of the angle to give poleward bias depending on the strength of the trades -- deprecated in favor of weakness
+        this.vec.mult(m);
+        this.vec.add(west-trades,-weakness);
         this.vec.y = hem(this.vec.y);
         return this.vec;
     },{vector:true,magMap:[0,3,0,16]},[4,0.5,80,100,1,3],'','',[4,0.5,170,300,1,3]);

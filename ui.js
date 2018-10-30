@@ -303,4 +303,4 @@ UI.init = function(){
     },function(){
         if(!selectedStorm) paused = !paused;
     });
-}
+};

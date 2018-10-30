@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181030a:
+    * Steering is now much less drunk
+    * Fujiwhara improvements
 v20181028a:
     + Added a "Start" button when the sim loads, which will initialize the sim upon being clicked
         > This is to help make things load faster, but is also for future user-customizable basin UI
