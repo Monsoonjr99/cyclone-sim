@@ -303,4 +303,29 @@ UI.init = function(){
     },function(){
         if(!selectedStorm) paused = !paused;
     });
+
+    bottomBar = new UI(null,0,height-30,width,30,function(){
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        textSize(18);
+    },false,false);
+
+    envUI = bottomBar.append(false,5,3,100,24,function(){
+        let txtStr = "Map Layer: ";
+        if(Env.displaying!==-1){
+            let f = Env.fieldList[Env.displaying];
+            txtStr += f + " -- ";
+            let v = Env.get(f,mouseX,mouseY,viewTick);
+            if(Env.fields[f].isVectorField){
+                let m = v.mag();
+                let h = v.heading();
+                txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
+            }else txtStr += round(v*1000)/1000;
+        }else txtStr += "none";
+        this.setBox(undefined,undefined,textWidth(txtStr)+6);
+        fill(0);
+        textAlign(LEFT,TOP);
+        text(txtStr,3,3);
+    },false);
 };

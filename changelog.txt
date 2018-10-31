@@ -1,5 +1,14 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181031a:
+    + Added sea surface temperature
+    + Added sea surface temperature anomaly
+    + Added some UI at the bottom for environmental fields and map layers
+    * Fixed an accidental two "v"s in the version number
+    * Storm strength algorithm now takes SST into account
+    * Storms weaken faster upon landfall
+    * Steering tweaks
+    * "E" now rotates through 3 environmental fields: LLSteering, SSTAnomaly, and SST
 v20181030a:
     * Steering is now much less drunk
     * Fujiwhara improvements

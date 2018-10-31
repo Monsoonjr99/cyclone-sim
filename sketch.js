@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","v20181030a");
+    setVersion("Very Sad HHW Thing v","--DEV--");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -122,6 +122,7 @@ function init(){
     landRendered = 0;
     createLand();
     topBar.show();
+    bottomBar.show();
 }
 
 class Season{
@@ -233,7 +234,7 @@ function advanceSim(){
         }
         basin.seasons[curSeason] = e;
     }
-    Env.wobble();
+    // Env.wobble();    // random change in environment for future forecast realism
     for(let i=0;i<basin.activeSystems.length;i++){
         for(let j=i+1;j<basin.activeSystems.length;j++){
             basin.activeSystems[i].current.interact(basin.activeSystems[j].current,true);
