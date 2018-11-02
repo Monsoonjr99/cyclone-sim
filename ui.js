@@ -316,16 +316,35 @@ UI.init = function(){
         if(Env.displaying!==-1){
             let f = Env.fieldList[Env.displaying];
             txtStr += f + " -- ";
-            let v = Env.get(f,mouseX,mouseY,viewTick);
-            if(Env.fields[f].isVectorField){
-                let m = v.mag();
-                let h = v.heading();
-                txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
-            }else txtStr += round(v*1000)/1000;
+            let x;
+            let y;
+            let s = selectedStorm && selectedStorm.aliveAt(viewTick);
+            if(s){
+                let p = selectedStorm.getStormDataByTick(viewTick,true).pos;
+                x = p.x;
+                y = p.y;
+            }else{
+                x = mouseX;
+                y = mouseY;
+            }
+            if(x >= width || x < 0 || y >= height || y < 0 || (Env.fields[f].oceanic && land.get(x,y))){
+                txtStr += "N/A";
+            }else{
+                let v = Env.get(f,x,y,viewTick);
+                if(Env.fields[f].isVectorField){
+                    let m = v.mag();
+                    let h = v.heading();
+                    txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
+                }else txtStr += round(v*1000)/1000;
+            }
+            txtStr += " @ " + (s ? "selected storm" : "mouse pointer / finger");
         }else txtStr += "none";
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
+        if(this.isHovered()) this.fullRect();
         fill(0);
         textAlign(LEFT,TOP);
         text(txtStr,3,3);
-    },false);
+    },function(){
+        Env.displayNext();
+    });
 };

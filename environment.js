@@ -13,7 +13,7 @@ class NoiseChannel{
         this.zWobbleMax = zWMax || this.wobbleMax;
         this.wobbleRotFactor = wRFac || PI/16;
         this.wobbleSave = {};
-        this.save();
+        // this.save();
     }
 
     get(x,y,z){
@@ -26,40 +26,48 @@ class NoiseChannel{
         return noise(x/this.zoom+this.xOff,y/this.zoom+this.yOff,z/this.zZoom+this.zOff);
     }
 
-    wobble(){
-        this.wobbleVector.setMag(random(0.0001,this.wobbleMax));
-        this.xOff += this.wobbleVector.x/this.zoom;
-        this.yOff += this.wobbleVector.y/this.zoom;
-        this.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
-        this.wobbleVector.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
-    }
+    // wobble(){
+    //     this.wobbleVector.setMag(random(0.0001,this.wobbleMax));
+    //     this.xOff += this.wobbleVector.x/this.zoom;
+    //     this.yOff += this.wobbleVector.y/this.zoom;
+    //     this.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
+    //     this.wobbleVector.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+    // }
 
-    save(){
-        let m = this.wobbleSave;
-        m.wobbleX = this.wobbleVector.x;
-        m.wobbleY = this.wobbleVector.y;
-        m.xOff = this.xOff;
-        m.yOff = this.yOff;
-        m.zOff = this.zOff;
-    }
+    // save(){
+    //     let m = this.wobbleSave;
+    //     m.wobbleX = this.wobbleVector.x;
+    //     m.wobbleY = this.wobbleVector.y;
+    //     m.xOff = this.xOff;
+    //     m.yOff = this.yOff;
+    //     m.zOff = this.zOff;
+    // }
 
-    load(){
-        let m = this.wobbleSave;
-        this.wobbleVector.set(m.wobbleX,m.wobbleY);
-        this.xOff = m.xOff;
-        this.yOff = m.yOff;
-        this.zOff = m.zOff;
+    // load(){
+    //     let m = this.wobbleSave;
+    //     this.wobbleVector.set(m.wobbleX,m.wobbleY);
+    //     this.xOff = m.xOff;
+    //     this.yOff = m.yOff;
+    //     this.zOff = m.zOff;
+    // }
+}
+
+class NCWobbler{
+    constructor(){
+        this.wobbleVector = p5.Vector.random2D();
     }
 }
 
 class EnvField{
-    constructor(mapFunc,opts,...noiseC){
+    constructor(name,mapFunc,opts,...noiseC){
+        this.name = name;
         this.noise = [];
         this.isVectorField = opts.vector;
         this.noWobble = opts.noWobble;
         this.hueMap = opts.hueMap || [0,1,0,300];
         this.magMap = opts.magMap || [0,1,0,10];
         this.invisible = opts.invisible;
+        this.oceanic = opts.oceanic;
         if(this.isVectorField) this.vec = createVector();
         if(mapFunc instanceof Function) this.mapFunc = mapFunc;
         let a = null;
@@ -95,13 +103,13 @@ class EnvField{
         return this.noise[0].get(x,y,z);
     }
 
-    wobble(){
-        if(!this.noWobble){
-            for(let i=0;i<this.noise.length;i++){
-                this.noise[i].wobble();
-            }
-        }
-    }
+    // wobble(){
+    //     if(!this.noWobble){
+    //         for(let i=0;i<this.noise.length;i++){
+    //             this.noise[i].wobble();
+    //         }
+    //     }
+    // }
 
     render(){
         envLayer.noFill();
@@ -109,37 +117,58 @@ class EnvField{
             for(let j=0;j<height;j+=ENV_LAYER_TILE_SIZE){
                 let x = i+ENV_LAYER_TILE_SIZE/2;
                 let y = j+ENV_LAYER_TILE_SIZE/2;
-                let v = this.get(x,y,viewTick);
-                if(this.isVectorField){
-                    envLayer.push();
-                    envLayer.stroke(0);
-                    envLayer.translate(x,y);
-                    envLayer.rotate(v.heading());
-                    let mg = v.mag();
-                    let mp = this.magMap;
-                    let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
-                    envLayer.line(0,0,l,0);
-                    envLayer.noStroke();
-                    envLayer.fill(0);
-                    envLayer.triangle(l+5,0,l,3,l,-3);
-                    envLayer.pop();
-                }else{
-                    let h = this.hueMap;
-                    if(h instanceof Function) envLayer.fill(h(v));
-                    else envLayer.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
-                    if(getLand(x,y)<0.5) envLayer.rect(i,j,ENV_LAYER_TILE_SIZE,ENV_LAYER_TILE_SIZE);
+                if(!this.oceanic || land.tileContainsOcean(x,y)){
+                    let v = this.get(x,y,viewTick);
+                    if(this.isVectorField){
+                        envLayer.push();
+                        envLayer.stroke(0);
+                        envLayer.translate(x,y);
+                        envLayer.rotate(v.heading());
+                        let mg = v.mag();
+                        let mp = this.magMap;
+                        let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
+                        envLayer.line(0,0,l,0);
+                        envLayer.noStroke();
+                        envLayer.fill(0);
+                        envLayer.triangle(l+5,0,l,3,l,-3);
+                        envLayer.pop();
+                    }else{
+                        let h = this.hueMap;
+                        if(h instanceof Function) envLayer.fill(h(v));
+                        else envLayer.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
+                        envLayer.rect(i,j,ENV_LAYER_TILE_SIZE,ENV_LAYER_TILE_SIZE);
+                    }
                 }
+                
             }
         }
     }
 
-    save(){
-        if(this.noise) this.noise.save();
-    }
+    // save(){
+    //     if(this.noise) this.noise.save();
+    // }
 
-    load(){
-        if(this.noise) this.noise.load();
-    }
+    // load(){
+    //     if(this.noise) this.noise.load();
+    // }
+
+    // saveWobbleHist(){
+    //     if(!this.noWobble){
+    //         let b = basin.envWobbleHist;
+    //         let n = this.name;
+    //         if(!b[n]) b[n] = {};
+    //         let h = b[n];
+    //         for(let i=0;i<f.noise.length;i++){
+    //             let c = this.noise[i];
+    //             if(!h[i]) h[i] = {};
+    //             let p = {};
+    //             p.x = c.xOff;
+    //             p.y = c.yOff;
+    //             p.z = c.zOff;
+    //             h[i][basin.tick] = p;
+    //         }
+    //     }
+    // }
 }
 
 class Environment{
@@ -147,24 +176,25 @@ class Environment{
         this.fields = {};
         this.fieldList = [];
         this.displaying = -1;
+        this.layerIsOceanic = false;
     }
 
     addField(name,...fieldArgs){
-        this.fields[name] = new EnvField(...fieldArgs);
+        this.fields[name] = new EnvField(name,...fieldArgs);
         this.fieldList.push(name);
     }
 
-    wobble(){
-        for(let i in this.fields) this.fields[i].wobble();
-    }
+    // wobble(){
+    //     for(let i in this.fields) this.fields[i].wobble();
+    // }
 
-    startForecast(){
-        for(let i in this.fields) this.fields[i].save();
-    }
+    // startForecast(){
+    //     for(let i in this.fields) this.fields[i].save();
+    // }
 
-    resetForecast(){
-        for(let i in this.fields) this.fields[i].load();
-    }
+    // resetForecast(){
+    //     for(let i in this.fields) this.fields[i].load();
+    // }
 
     get(field,x,y,z,noHem){
         return this.fields[field].get(x,y,z,noHem);
@@ -185,13 +215,14 @@ class Environment{
         do this.displaying++;
         while(this.displaying<this.fieldList.length && this.fields[this.fieldList[this.displaying]].invisible);
         if(this.displaying>=this.fieldList.length) this.displaying = -1;
+        else this.layerIsOceanic = this.fields[this.fieldList[this.displaying]].oceanic;
         this.displayLayer();
     }
 
-    testChaos(n){
-        this.resetForecast();
-        for(let i=0;i<n;i++) this.wobble();
-    }
+    // testChaos(n){
+    //     this.resetForecast();
+    //     for(let i=0;i<n;i++) this.wobble();
+    // }
 
     // saveWobbleHist(){
     //     for(let i=0;i<this.fieldList.length;i++){
@@ -279,7 +310,8 @@ Environment.init = function(){
                 else c = lerpColor(hNeutral,hot,map(v,0,5,0,1));
                 colorMode(RGB);
                 return c;
-            }
+            },
+            oceanic: true
         },
         [6,0.5,150,1000,0.2,2]
     );
@@ -308,7 +340,8 @@ Environment.init = function(){
                 else c = lerpColor(color(0,100,70),color(0,5,100),map(v,29,34,0,1));
                 colorMode(RGB);
                 return c;
-            }
+            },
+            oceanic: true
         }
     );
 
@@ -334,47 +367,126 @@ Environment.init = function(){
     // },{vector:true,magMap:[0,3,0,16]},[4,0.5,170,200,0.7,1],'');
 };
 
+class Land{
+    constructor(){
+        this.noise = new NoiseChannel(9,0.5,100);
+        this.noise.xOff = 0;
+        this.noise.yOff = 0;
+        this.noise.zOff = 0;
+        this.map = [];
+        this.oceanTile = [];
+    }
+
+    get(x,y){
+        x = floor(x);
+        y = floor(y);
+        if(this.map[x] && this.map[x][y]){
+            let v = this.map[x][y];
+            return v > 0.5 ? v : 0;
+        }else return 0;
+    }
+
+    *init(){
+        yield "Calculating land...";
+        for(let i=0;i<width;i++){
+            this.map[i] = [];
+            for(let j=0;j<height;j++){
+                let n = this.noise.get(i,j);
+                let landBiasAnchor = width * LAND_BIAS_FACTORS[0];
+                let landBias = i < landBiasAnchor ?
+                    map(i,0,landBiasAnchor,LAND_BIAS_FACTORS[1],LAND_BIAS_FACTORS[2]) :
+                    map(i-landBiasAnchor,0,width-landBiasAnchor,LAND_BIAS_FACTORS[2],LAND_BIAS_FACTORS[3]);
+                this.map[i][j] = n + landBias;
+                let ox = floor(i/ENV_LAYER_TILE_SIZE);
+                let oy = floor(j/ENV_LAYER_TILE_SIZE);
+                if(!this.oceanTile[ox]) this.oceanTile[ox] = [];
+                if(this.map[i][j]<=0.5) this.oceanTile[ox][oy] = true;
+            }
+        }
+        yield "Rendering land...";
+        for(let i=0;i<width;i++){
+            for(let j=0;j<height;j++){
+                let landVal = this.get(i,j);
+                if(landVal){
+                    for(let k=0;k<COLORS.land.length;k++){
+                        if(landVal > COLORS.land[k][0]){
+                            landBuffer.fill(COLORS.land[k][1]);
+                            landBuffer.rect(i,j,1,1);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        yield "Rendering snow...";
+        for(let i=0;i<width;i++){
+            for(let j=0;j<height;j++){
+                let landVal = this.get(i,j);
+                if(landVal){
+                    for(let k=0;k<SNOW_LAYERS;k++){
+                        let p = k/SNOW_LAYERS;
+                        let l = 1-hemY(j)/height;
+                        let h = 0.95-l*map(p,0,1,0.15,0.45);
+                        if(landVal > h) snow[k].rect(i,j,1,1);
+                    }
+                }
+            }
+        }
+    }
+
+    tileContainsOcean(x,y){
+        x = floor(x/ENV_LAYER_TILE_SIZE);
+        y = floor(y/ENV_LAYER_TILE_SIZE);
+        return this.oceanTile[x][y];
+    }
+
+    clear(){
+        landBuffer.clear();
+        for(let i=0;i<SNOW_LAYERS;i++) snow[i].clear();
+    }
+}
+
 function seasonalSine(t,off){
     off = off===undefined ? 5/12 : off;
     return sin((TAU*(t-YEAR_LENGTH*off))/YEAR_LENGTH);
 }
 
-function getLand(x,y){
-    let n = landNoise.get(x,y);
-    let landBiasAnchor = width * LAND_BIAS_FACTORS[0];
-    let landBias = x < landBiasAnchor ?
-        map(x,0,landBiasAnchor,LAND_BIAS_FACTORS[1],LAND_BIAS_FACTORS[2]) :
-        map(x-landBiasAnchor,0,width-landBiasAnchor,LAND_BIAS_FACTORS[2],LAND_BIAS_FACTORS[3]);
-    let lh = n + landBias;
-    return lh > 0.5 ? lh : 0;
-}
+// function getLand(x,y){
+//     let n = landNoise.get(x,y);
+//     let landBiasAnchor = width * LAND_BIAS_FACTORS[0];
+//     let landBias = x < landBiasAnchor ?
+//         map(x,0,landBiasAnchor,LAND_BIAS_FACTORS[1],LAND_BIAS_FACTORS[2]) :
+//         map(x-landBiasAnchor,0,width-landBiasAnchor,LAND_BIAS_FACTORS[2],LAND_BIAS_FACTORS[3]);
+//     let lh = n + landBias;
+//     return lh > 0.5 ? lh : 0;
+// }
 
-function createLand(){
-    landNoise = new NoiseChannel(9,0.5,100);
-    landNoise.xOff = 0;
-    landNoise.yOff = 0;
-    landNoise.zOff = 0;
-}
+// function createLand(){
+//     landNoise = new NoiseChannel(9,0.5,100);
+//     landNoise.xOff = 0;
+//     landNoise.yOff = 0;
+//     landNoise.zOff = 0;
+// }
 
-function renderLand(){
-    for(let i=0;i<width;i++){
-        for(let j=0;j<height;j++){
-            let landVal = getLand(i,j);
-            if(landVal){
-                for(let k=0;k<COLORS.land.length;k++){
-                    if(landVal > COLORS.land[k][0]){
-                        land.fill(COLORS.land[k][1]);
-                        land.rect(i,j,1,1);
-                        break;
-                    }
-                }
-                for(let k=0;k<SNOW_LAYERS;k++){
-                    let p = k/SNOW_LAYERS;
-                    let l = 1-hemY(j)/height;
-                    let h = 0.95-l*map(p,0,1,0.15,0.45);
-                    if(landVal > h) snow[k].rect(i,j,1,1);
-                }
-            }
-        }
-    }
-}
+// function renderLand(){
+//     for(let i=0;i<width;i++){
+//         for(let j=0;j<height;j++){
+//             let landVal = getLand(i,j);
+//             if(landVal){
+//                 for(let k=0;k<COLORS.land.length;k++){
+//                     if(landVal > COLORS.land[k][0]){
+//                         land.fill(COLORS.land[k][1]);
+//                         land.rect(i,j,1,1);
+//                         break;
+//                     }
+//                 }
+//                 for(let k=0;k<SNOW_LAYERS;k++){
+//                     let p = k/SNOW_LAYERS;
+//                     let l = 1-hemY(j)/height;
+//                     let h = 0.95-l*map(p,0,1,0.15,0.45);
+//                     if(landVal > h) snow[k].rect(i,j,1,1);
+//                 }
+//             }
+//         }
+//     }
+// }

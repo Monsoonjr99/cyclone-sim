@@ -278,7 +278,7 @@ class ActiveSystem extends StormData{
         let SST = Env.get("SST",this.pos.x,this.pos.y,basin.tick);
         let tempTrop = constrain(map(SST,5,20,0,1),0,1);
         if(latTrop>tempTrop) latTrop = tempTrop;
-        let land = getLand(this.pos.x,this.pos.y);
+        let lnd = land.get(this.pos.x,this.pos.y);
         this.lowerWarmCore = lerp(this.lowerWarmCore,latTrop,this.lowerWarmCore>latTrop ? 0.06 : 0.04);
         this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.007 : 0.4);
         this.lowerWarmCore = constrain(this.lowerWarmCore,0,1);
@@ -286,11 +286,11 @@ class ActiveSystem extends StormData{
         let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
         let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
         this.organization += random(-3,3+seasSin/2) + random(pow(7,this.lowerWarmCore)-4) + 2.7*nontropicalness;
-        if(!land) this.organization += random(constrain(map(SST,26,29,0,1),0,1));
-        this.organization -= land*random(7);
+        if(!lnd) this.organization += random(constrain(map(SST,26,29,0,1),0,1));
+        this.organization -= lnd*random(7);
         this.organization -= pow(2,4-((height-hemY(this.pos.y))/(height*0.01)));
         this.organization = constrain(this.organization,0,100);
-        this.pressure -= random(-3,3.6+seasSin/4+(land?-0.5:pow(1.22,SST-26)*sq(this.organization/100)))*sqrt(tropicalness);
+        this.pressure -= random(-3,3.6+seasSin/4+(lnd?-0.5:pow(1.22,SST-26)*sq(this.organization/100)))*sqrt(tropicalness);
         this.pressure -= random(-3,3)*nontropicalness;
         this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;

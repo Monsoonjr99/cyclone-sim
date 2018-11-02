@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181031a");
+    setVersion("Very Sad HHW Thing v","20181102a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -7,7 +7,7 @@ function setup(){
     paused = false;
     showStrength = false;
     basin = undefined;
-    landRendered = 2;
+    // landRendered = 2;
 
     tracks = createBuffer();
     tracks.strokeWeight(2);
@@ -16,8 +16,10 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    land = createBuffer();
-    land.noStroke();
+    // land = createBuffer();
+    // land.noStroke();
+    landBuffer = createBuffer();
+    landBuffer.noStroke();
     envLayer = createBuffer();
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
@@ -44,24 +46,35 @@ function setup(){
 
 function draw(){
     background(COLORS.bg);
-    if(landRendered===0){
-        push();
-        textSize(48);
-        textAlign(CENTER,CENTER);
-        text("Rendering land...",width/2,height/2);
-        pop();
-        landRendered++;
-        return;
-    }
-    if(landRendered<2){
-        renderLand();
-        landRendered++;
-        return;
-    }
+    // if(landRendered===0){
+    //     push();
+    //     textSize(48);
+    //     textAlign(CENTER,CENTER);
+    //     text("Rendering land...",width/2,height/2);
+    //     pop();
+    //     landRendered++;
+    //     return;
+    // }
+    // if(landRendered<2){
+    //     renderLand();
+    //     landRendered++;
+    //     return;
+    // }
     if(basin){
+        if(finisher){
+            let t = finisher.next();
+            if(t.done){
+                finisher = undefined;
+                return;
+            }
+            push();
+            textSize(48);
+            textAlign(CENTER,CENTER);
+            text(t.value,width/2,height/2);
+            pop();
+            return;
+        }
         stormIcons.clear();
-        image(land,0,0,width,height);
-        image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
         if(!paused){
             simSpeedFrameCounter++;
             simSpeedFrameCounter%=pow(2,simSpeed);
@@ -99,7 +112,11 @@ function draw(){
         //     image(testGraphics,0,0,width,height);
         // }
 
-        image(envLayer,0,0,width,height);
+        if(Env.layerIsOceanic) image(envLayer,0,0,width,height);
+        // image(land,0,0,width,height);
+        image(landBuffer,0,0,width,height);
+        image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
+        if(!Env.layerIsOceanic) image(envLayer,0,0,width,height);
         image(tracks,0,0,width,height);
         image(forecastTracks,0,0,width,height);
         image(stormIcons,0,0,width,height);
@@ -119,10 +136,16 @@ function init(){
     // seed = 1540279062465;
     noiseSeed(basin.seed);
     Environment.init();
-    landRendered = 0;
-    createLand();
+    // landRendered = 0;
+    land = new Land();
+    // createLand();
     topBar.show();
     bottomBar.show();
+    finisher = finishInit();
+}
+
+function* finishInit(){
+    yield* land.init();
 }
 
 class Season{

@@ -1,5 +1,12 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181102a:
+    * Reworked land to work more efficiently with cleaner code
+    * SST map layers now render more nicely with the land and are now less laggy when the sim is running
+    * Clicking the map layer text/button in the bottom now rotates through the map layers
+    * The data displayed in the map layer button now shows that at the position of the selected storm if one is selected
+        > includes indicator for if the data is "@ mouse pointer / finger" or "@ selected storm"
+        > if the selected storm is not active at the time viewed in analysis, data for the mouse pointer / finger is displayed
 v20181031a:
     + Added sea surface temperature
     + Added sea surface temperature anomaly
