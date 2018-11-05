@@ -1,5 +1,10 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181105a:
+    + Added code for a graphical shader that gives land some shadows and visible depth
+        > Disabled until user settings are added since it increases render times
+    * Adjustments to SST anomalies to use a more logarithmic system, and have greater anomalies closer to the poles
+    * Definition SST values for equatorward and poleward edges at peak-season and peak-off-season moved to constants.js
 v20181102a:
     * Reworked land to work more efficiently with cleaner code
     * SST map layers now render more nicely with the land and are now less laggy when the sim is running

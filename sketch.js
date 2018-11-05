@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181102a");
+    setVersion("Very Sad HHW Thing v","20181105a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -7,6 +7,7 @@ function setup(){
     paused = false;
     showStrength = false;
     basin = undefined;
+    useShader = false;
     // landRendered = 2;
 
     tracks = createBuffer();
@@ -20,6 +21,8 @@ function setup(){
     // land.noStroke();
     landBuffer = createBuffer();
     landBuffer.noStroke();
+    shader = createBuffer();
+    shader.noStroke();
     envLayer = createBuffer();
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
@@ -116,6 +119,7 @@ function draw(){
         // image(land,0,0,width,height);
         image(landBuffer,0,0,width,height);
         image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
+        if(useShader) image(shader,0,0,width,height);
         if(!Env.layerIsOceanic) image(envLayer,0,0,width,height);
         image(tracks,0,0,width,height);
         image(forecastTracks,0,0,width,height);

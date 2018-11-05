@@ -35,6 +35,11 @@ const SNOW_LAYERS = 40;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 
+const OFF_SEASON_POLAR_TEMP = -3;
+const PEAK_SEASON_POLAR_TEMP = 10;
+const OFF_SEASON_TROPICS_TEMP = 26;
+const PEAK_SEASON_TROPICS_TEMP = 29;
+
 const COLORS = {};      // For storing all colors used in the graphics
 
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()

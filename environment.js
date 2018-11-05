@@ -295,8 +295,18 @@ Environment.init = function(){
 
     Env.addField(
         "SSTAnomaly",
-        function(n){
-            return map(n(0),0,1,-5,5);
+        function(n,x,y){
+            let v = n(0);
+            v = v*2;
+            let i = v<1 ? -1 : 1;
+            v = 1-abs(1-v);
+            if(v===0) v = 0.000001;
+            v = log(v);
+            let r = map(y,0,height,6,3);
+            v = -r*v;
+            v = v*i;
+            return v;
+            // return map(n(0),0,1,-5,5);
         },
         {
             hueMap: function(v){
@@ -327,7 +337,7 @@ Environment.init = function(){
             let h1 = (sqrt(h0)+h0)/2;
             let h2 = sqrt(sqrt(h0));
             let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
-            let t = lerp(map(s,-1,1,-3,10),map(s,-1,1,27,29),h);
+            let t = lerp(map(s,-1,1,OFF_SEASON_POLAR_TEMP,PEAK_SEASON_POLAR_TEMP),map(s,-1,1,OFF_SEASON_TROPICS_TEMP,PEAK_SEASON_TROPICS_TEMP),h);
             return t+anom;
         },
         {
@@ -428,6 +438,25 @@ class Land{
                         let l = 1-hemY(j)/height;
                         let h = 0.95-l*map(p,0,1,0.15,0.45);
                         if(landVal > h) snow[k].rect(i,j,1,1);
+                    }
+                }
+            }
+        }
+        if(useShader){
+            yield "Rendering shader...";
+            for(let i=0;i<width;i++){
+                for(let j=0;j<height;j++){
+                    let v = this.get(i,j);
+                    if(v===0) v = 0.5;
+                    let m = 0;
+                    for(let k=1;k<6;k++){
+                        let s = this.get(i-k,j-k)-v-k*0.0008;
+                        s = constrain(map(s,0,0.14,0,191),0,191);
+                        if(s>m) m = s;
+                    }
+                    if(m>0){
+                        shader.fill(0,m);
+                        shader.rect(i,j,1,1);
                     }
                 }
             }
