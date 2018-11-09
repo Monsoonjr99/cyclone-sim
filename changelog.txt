@@ -1,5 +1,7 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181109a:
+    * Changed snow-rendering algorithm for faster and more efficient rendering
 v20181105a:
     + Added code for a graphical shader that gives land some shadows and visible depth
         > Disabled until user settings are added since it increases render times

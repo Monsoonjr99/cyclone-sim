@@ -433,12 +433,10 @@ class Land{
             for(let j=0;j<height;j++){
                 let landVal = this.get(i,j);
                 if(landVal){
-                    for(let k=0;k<SNOW_LAYERS;k++){
-                        let p = k/SNOW_LAYERS;
-                        let l = 1-hemY(j)/height;
-                        let h = 0.95-l*map(p,0,1,0.15,0.45);
-                        if(landVal > h) snow[k].rect(i,j,1,1);
-                    }
+                    let l = 1-hemY(j)/height;
+                    let h = 0.95-landVal;
+                    let p = l>0 ? ceil(map(h/l,0.15,0.45,0,SNOW_LAYERS)) : h<0 ? 0 : SNOW_LAYERS;
+                    for(let k=max(p,0);k<SNOW_LAYERS;k++) snow[k].rect(i,j,1,1);
                 }
             }
         }
@@ -455,8 +453,8 @@ class Land{
                         if(s>m) m = s;
                     }
                     if(m>0){
-                        shader.fill(0,m);
-                        shader.rect(i,j,1,1);
+                        landShader.fill(0,m);
+                        landShader.rect(i,j,1,1);
                     }
                 }
             }
