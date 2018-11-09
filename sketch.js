@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181109a");
+    setVersion("Very Sad HHW Thing v","20181109b");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -261,7 +261,7 @@ function advanceSim(){
         }
         basin.seasons[curSeason] = e;
     }
-    // Env.wobble();    // random change in environment for future forecast realism
+    Env.wobble();    // random change in environment for future forecast realism
     for(let i=0;i<basin.activeSystems.length;i++){
         for(let j=i+1;j<basin.activeSystems.length;j++){
             basin.activeSystems[i].current.interact(basin.activeSystems[j].current,true);
@@ -279,7 +279,10 @@ function advanceSim(){
         }
     }
     if(stormKilled) refreshTracks();
-    if(basin.tick%ADVISORY_TICKS==0) Env.displayLayer();
+    if(basin.tick%ADVISORY_TICKS==0){
+        Env.displayLayer();
+        Env.record();
+    }
 }
 
 function mouseInCanvas(){

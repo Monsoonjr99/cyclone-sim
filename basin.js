@@ -16,6 +16,6 @@ class Basin{
             this.startTime = mo.startOf('year').valueOf();
         }
         this.seed = seed || moment().valueOf();
-        // this.envWobbleHist = {};
+        this.envData = {};
     }
 }

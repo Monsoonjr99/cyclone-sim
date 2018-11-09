@@ -1,18 +1,19 @@
 class NoiseChannel{
     constructor(octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
-        const OFFSET_RANDOM_FACTOR = 4096;
+        // const OFFSET_RANDOM_FACTOR = 4096;
         this.octaves = octaves || 4;
         this.falloff = falloff || 0.5;
         this.zoom = zoom || 100;
         this.zZoom = zZoom || this.zoom;
-        this.xOff = random(OFFSET_RANDOM_FACTOR);
-        this.yOff = random(OFFSET_RANDOM_FACTOR);
-        this.zOff = random(OFFSET_RANDOM_FACTOR);
-        this.wobbleVector = p5.Vector.random2D();
+        this.meta = undefined;
+        // this.xOff = random(OFFSET_RANDOM_FACTOR);
+        // this.yOff = random(OFFSET_RANDOM_FACTOR);
+        // this.zOff = random(OFFSET_RANDOM_FACTOR);
+        // this.wobbleVector = p5.Vector.random2D();
         this.wobbleMax = wMax || 1;
         this.zWobbleMax = zWMax || this.wobbleMax;
         this.wobbleRotFactor = wRFac || PI/16;
-        this.wobbleSave = {};
+        // this.wobbleSave = {};
         // this.save();
     }
 
@@ -22,17 +23,43 @@ class NoiseChannel{
         z = z || 0;
         // let p = viewingPresent();
         // let xo = p ? this.xOff : basin.envWobbleHist[];
+        let xo;
+        let yo;
+        let zo;
+        if(this.meta){
+            let m = this.meta.fetch(z);
+            if(!m) return 0;
+            xo = m.x;
+            yo = m.y;
+            zo = m.z;
+        }else{
+            xo = 0;
+            yo = 0;
+            zo = 0;
+        }
         noiseDetail(this.octaves,this.falloff);
-        return noise(x/this.zoom+this.xOff,y/this.zoom+this.yOff,z/this.zZoom+this.zOff);
+        return noise(x/this.zoom+xo,y/this.zoom+yo,z/this.zZoom+zo);
     }
 
-    // wobble(){
-    //     this.wobbleVector.setMag(random(0.0001,this.wobbleMax));
-    //     this.xOff += this.wobbleVector.x/this.zoom;
-    //     this.yOff += this.wobbleVector.y/this.zoom;
-    //     this.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
-    //     this.wobbleVector.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
-    // }
+    bind(meta){
+        if(meta instanceof NCMetadata) this.meta = meta;
+    }
+
+    wobble(){
+        if(this.meta){
+            let m = this.meta;
+            let v = m.wobbleVector;
+            v.setMag(random(0.0001,this.wobbleMax));
+            m.xOff += v.x/this.zoom;
+            m.yOff += v.y/this.zoom;
+            m.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
+            v.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+        }
+    }
+
+    record(){
+        if(this.meta) this.meta.record();
+    }
 
     // save(){
     //     let m = this.wobbleSave;
@@ -52,9 +79,47 @@ class NoiseChannel{
     // }
 }
 
-class NCWobbler{
-    constructor(){
-        this.wobbleVector = p5.Vector.random2D();
+class NCMetadata{
+    constructor(field,index,load){
+        this.field = field;
+        this.index = index;
+        this.channel = null;
+        this.wobbleVector = load ? createVector(load.vec.x,load.vec.y) : p5.Vector.random2D();
+        let r = NC_OFFSET_RANDOM_FACTOR;
+        this.xOff = load ? load.x : random(r);
+        this.yOff = load ? load.y : random(r);
+        this.zOff = load ? load.z : random(r);
+        this.history = {};
+        if(load) for(let i=0;i<load.hist.length;i++) this.history[load.hist[i].t] = load.hist[i].p;
+        if(!basin.envData[this.field]) basin.envData[this.field] = {};
+        basin.envData[this.field][this.index] = this;
+    }
+
+    init(){
+        if(Env){
+            this.channel = Env.fields[this.field].noise[this.index];
+            this.channel.bind(this);
+        }
+    }
+
+    fetch(t){
+        if(t>=basin.tick) return {
+            x: this.xOff,
+            y: this.yOff,
+            z: this.zOff
+        };
+        else{
+            t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+            return this.history[t];
+        }
+    }
+
+    record(){
+        this.history[basin.tick] = {
+            x: this.xOff,
+            y: this.yOff,
+            z: this.zOff
+        };
     }
 }
 
@@ -81,6 +146,10 @@ class EnvField{
                 this.noise.push(c);
             }
         }
+        for(let i=0;i<this.noise.length;i++){
+            if(!basin.envData[this.name]) basin.envData[this.name] = {};
+            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i);
+        }
     }
 
     get(x,y,z,noHem){
@@ -103,13 +172,13 @@ class EnvField{
         return this.noise[0].get(x,y,z);
     }
 
-    // wobble(){
-    //     if(!this.noWobble){
-    //         for(let i=0;i<this.noise.length;i++){
-    //             this.noise[i].wobble();
-    //         }
-    //     }
-    // }
+    wobble(){
+        if(!this.noWobble){
+            for(let i=0;i<this.noise.length;i++){
+                this.noise[i].wobble();
+            }
+        }
+    }
 
     render(){
         envLayer.noFill();
@@ -140,6 +209,14 @@ class EnvField{
                     }
                 }
                 
+            }
+        }
+    }
+
+    record(){
+        if(!this.noWobble){
+            for(let i=0;i<this.noise.length;i++){
+                this.noise[i].record();
             }
         }
     }
@@ -184,9 +261,13 @@ class Environment{
         this.fieldList.push(name);
     }
 
-    // wobble(){
-    //     for(let i in this.fields) this.fields[i].wobble();
-    // }
+    wobble(){
+        for(let i in this.fields) this.fields[i].wobble();
+    }
+
+    record(){
+        for(let i in this.fields) this.fields[i].record();
+    }
 
     // startForecast(){
     //     for(let i in this.fields) this.fields[i].save();
@@ -375,14 +456,20 @@ Environment.init = function(){
     //     this.vec.setMag(map(this.noise[1].get(x,y,z),0,1,0,3));
     //     return this.vec;
     // },{vector:true,magMap:[0,3,0,16]},[4,0.5,170,200,0.7,1],'');
+
+    for(let i in basin.envData){
+        for(let j in basin.envData[i]){
+            basin.envData[i][j].init();
+        }
+    }
 };
 
 class Land{
     constructor(){
         this.noise = new NoiseChannel(9,0.5,100);
-        this.noise.xOff = 0;
-        this.noise.yOff = 0;
-        this.noise.zOff = 0;
+        // this.noise.xOff = 0;
+        // this.noise.yOff = 0;
+        // this.noise.zOff = 0;
         this.map = [];
         this.oceanTile = [];
     }

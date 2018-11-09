@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181109b:
+    + Readded environmental wobble
+    * Optimized environmental fields for future saving & loading of basins
 v20181109a:
     * Changed snow-rendering algorithm for faster and more efficient rendering
 v20181105a:
