@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181110a:
+    + Added a currently-very-drunken upper-level steering field
+    * Storm steering algorithm changed to follow both upper and lower-level steering based on strength and if extratropical
+        > True "wind shear" not quite added yet as storms don't yet weaken
 v20181109b:
     + Readded environmental wobble
     * Optimized environmental fields for future saving & loading of basins

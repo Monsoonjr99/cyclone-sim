@@ -340,7 +340,10 @@ class ActiveSystem extends StormData{
         // this.steering.y = hem(this.steering.y);
 
         this.steering.set(Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick));
-        this.steering.add(0,hem(map(this.pressure,1030,900,0.4,-0.9))); // Quick and dirty method of giving stronger storms a poleward bias
+        // this.steering.add(0,hem(map(this.pressure,1030,900,0.4,-0.9))); // Quick and dirty method of giving stronger storms a poleward bias
+        let u = Env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
+        u.mult(map(this.upperWarmCore,0,1,0.8,map(this.pressure,1010,900,0.1,1,true))); // Deeper and more-extratropical storms feel more upper-level steering
+        this.steering.add(u);
         this.steering.add(this.interaction.fuji); // Fujiwhara
 
         // this.steering.set(Env.get("test",this.pos.x,this.pos.y,basin.tick));

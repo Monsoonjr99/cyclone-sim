@@ -329,7 +329,22 @@ class Environment{
 
 Environment.init = function(){
     Env = new Environment();    // Sad environmental stuff that is barely even used so far
-    // Env.addField("shear",undefined,{},[5,0.5,100,40,1.5,2]);
+
+    Env.addField(
+        "jetstream",
+        function(n,x,z){
+            let s = seasonalSine(z);
+            let l = map(s,-1,1,0.55,0.35);
+            let v = n(0,x-z*3,0,z);
+            let r = map(s,-1,1,0.5,0.35);
+            v = map(v,0,1,-r,r);
+            return lerp(0,height,l+v);
+        },
+        {
+            invisible: true
+        },
+        [4,0.5,160,300,1,2]
+    );
 
     Env.addField(
         "LLSteering",
@@ -343,14 +358,20 @@ Environment.init = function(){
             // return map(this.noise[0].get(x,y,z),0,1,0,TAU*2);
 
             this.vec.set(1);    // reset vector
-            // Cosine curve from 0 at poleward side of map to 1 at equatorward side
+
+            const dx = 5;
+
+            // Jetstream
+            let j = Env.get("jetstream",x,z,null,true);
+            // Cosine curve from 0 at poleward side of map to 1 at equatorward side; skewed to follow jetstream
             let h = map(cos(map(y,0,height,0,PI)),-1,1,1,0);
+            // let h = map(cos(lerp(0,PI,y<j?map(y,0,j,0,0.4):map(y,j,height,0.4,1))),-1,1,1,0);
             // westerlies
-            let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3),2)*4,0,4);
+            let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3)+map(j,0,height,-0.4,0.4),2)*4,0,4);
             // ridging, trades and weakness
-            let ridging = n(1);
+            let ridging = constrain(n(1)+map(j,0,height,0.3,-0.3),0,1);
             let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
-            let weakness = pow(map(h,0,1,1.01,1.28),map(ridging,0,1,0,-12))*constrain(map(west-trades,0,4,1,0),0,1);
+            // let weakness = pow(map(h,0,1,1.01,1.28),map(ridging,0,1,0,-12))*constrain(map(west-trades,0,4,1,0),0,1);
             // noise angle
             let a = map(n(3),0,1,0,4*TAU);
             // noise magnitude
@@ -360,7 +381,7 @@ Environment.init = function(){
             this.vec.rotate(a);
             // this.vec.mult(m/(1+(sin(a)/2+0.5)*trades));  // Uses the sine of the angle to give poleward bias depending on the strength of the trades -- deprecated in favor of weakness
             this.vec.mult(m);
-            this.vec.add(west-trades,-weakness);
+            this.vec.add(west-trades/*,-weakness*/);
             this.vec.y = hem(this.vec.y);
             return this.vec;
         },
@@ -372,6 +393,38 @@ Environment.init = function(){
         '',
         '',
         [4,0.5,170,300,1,3]
+    );
+
+    Env.addField(
+        "ULSteering",
+        function(n,x,y,z){
+            this.vec.set(1);
+
+            const dx = 5;
+
+            let j0 = Env.get("jetstream",x,z,null,true);
+            let j1 = Env.get("jetstream",x+dx,z,null,true);
+            let a = map(n(0),0,1,0,4*TAU);
+            let s = seasonalSine(z);
+            let m = pow(1.5,map(n(1),0,1,-3,6)-s);
+            let j = abs(y-j0);
+            let jet = pow(2,3-j/50);
+            let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/8,-PI/8,true);
+            let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(1.25,-j/80)/(jet>1?jet:1) : 0;
+            // let attr = pow(1.3,4-j/25)*(y>j?-1:1)/(jet>1?jet:1);
+
+            this.vec.rotate(a);
+            this.vec.mult(m);
+            this.vec.add(jet*cos(jAngle)+map(s,-1,1,2,0)+1,jet*sin(jAngle)-trof);
+            this.vec.y = hem(this.vec.y);
+            return this.vec;
+        },
+        {
+            vector: true,
+            magMap: [0,8,0,25]
+        },
+        [4,0.5,180,300,1,2],
+        [4,0.5,90,100,1,3]
     );
 
     Env.addField(
