@@ -1,5 +1,7 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181111a:
+    * Big improvement to upper-level steering to make it less drunk and more realistic
 v20181110a:
     + Added a currently-very-drunken upper-level steering field
     * Storm steering algorithm changed to follow both upper and lower-level steering based on strength and if extratropical

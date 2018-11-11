@@ -338,7 +338,7 @@ Environment.init = function(){
             let v = n(0,x-z*3,0,z);
             let r = map(s,-1,1,0.5,0.35);
             v = map(v,0,1,-r,r);
-            return lerp(0,height,l+v);
+            return (l+v)*height;
         },
         {
             invisible: true
@@ -359,11 +359,9 @@ Environment.init = function(){
 
             this.vec.set(1);    // reset vector
 
-            const dx = 5;
-
             // Jetstream
             let j = Env.get("jetstream",x,z,null,true);
-            // Cosine curve from 0 at poleward side of map to 1 at equatorward side; skewed to follow jetstream
+            // Cosine curve from 0 at poleward side of map to 1 at equatorward side
             let h = map(cos(map(y,0,height,0,PI)),-1,1,1,0);
             // let h = map(cos(lerp(0,PI,y<j?map(y,0,j,0,0.4):map(y,j,height,0.4,1))),-1,1,1,0);
             // westerlies
@@ -382,7 +380,7 @@ Environment.init = function(){
             // this.vec.mult(m/(1+(sin(a)/2+0.5)*trades));  // Uses the sine of the angle to give poleward bias depending on the strength of the trades -- deprecated in favor of weakness
             this.vec.mult(m);
             this.vec.add(west-trades/*,-weakness*/);
-            this.vec.y = hem(this.vec.y);
+            this.vec.y = hem(this.vec.y); // hemisphere flip
             return this.vec;
         },
         {
@@ -398,25 +396,39 @@ Environment.init = function(){
     Env.addField(
         "ULSteering",
         function(n,x,y,z){
-            this.vec.set(1);
+            this.vec.set(1);                                                                // reset vector
 
-            const dx = 5;
+            const dx = 10;                                                                  // delta for derivative
 
-            let j0 = Env.get("jetstream",x,z,null,true);
-            let j1 = Env.get("jetstream",x+dx,z,null,true);
-            let a = map(n(0),0,1,0,4*TAU);
             let s = seasonalSine(z);
-            let m = pow(1.5,map(n(1),0,1,-3,6)-s);
-            let j = abs(y-j0);
-            let jet = pow(2,3-j/50);
-            let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/8,-PI/8,true);
-            let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(1.25,-j/80)/(jet>1?jet:1) : 0;
-            // let attr = pow(1.3,4-j/25)*(y>j?-1:1)/(jet>1?jet:1);
+            let j0 = Env.get("jetstream",x,z,null,true);                                    // y-position of jetstream
+            let j1 = Env.get("jetstream",x+dx,z,null,true);                                 // y-position of jetstream dx to the east for derivative
+            let j = abs(y-j0);                                                              // distance of point north/south of jetstream
+            let jet = pow(2,3-j/40);                                                        // power of jetstream at point
+            let jOP = pow(0.7,jet);                                                         // factor for how strong other variables should be if 'overpowered' by jetstream
+            let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/4,-PI/4,true);                 // angle of jetstream at point
+            let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
+            let tAngle = -PI/16;                                                            // angle of push from jetstream dips
+            let ridging = 0.45-j0/height-map(s,-1,1,0.15,0);                                // how much 'ridge' or 'trough' there is from jetstream
+            let hadley = map(ridging,-0.3,0.2,5,1.5,true)*jOP*(y>j0?1:0);                   // power of winds equatorward of jetstream
+            let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);                       // angle of winds equatorward of jetstream
+            let ferrel = 2*jOP*(y<j0?1:0);                                                  // power of winds poleward of jetstream
+            let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
 
+            let a = map(n(0),0,1,0,4*TAU);                                                  // noise angle
+            let m = pow(1.5,map(n(1),0,1,-8,4))*jOP;                                        // noise magnitude
+
+            // apply noise
             this.vec.rotate(a);
             this.vec.mult(m);
-            this.vec.add(jet*cos(jAngle)+map(s,-1,1,2,0)+1,jet*sin(jAngle)-trof);
-            this.vec.y = hem(this.vec.y);
+
+            // apply UL winds
+            this.vec.add(jet*cos(jAngle),jet*sin(jAngle));                                  // apply jetstream
+            this.vec.add(trof*cos(tAngle),trof*sin(tAngle));                                // apply trough push
+            this.vec.add(hadley*cos(hAngle),hadley*sin(hAngle));                            // apply winds equatorward of jetstream
+            this.vec.add(ferrel*cos(fAngle),ferrel*sin(fAngle));                            // apply winds poleward of jetstream
+
+            this.vec.y = hem(this.vec.y);                                                   // hemisphere flip
             return this.vec;
         },
         {
@@ -425,6 +437,22 @@ Environment.init = function(){
         },
         [4,0.5,180,300,1,2],
         [4,0.5,90,100,1,3]
+    );
+
+    Env.addField(
+        "shear",
+        function(n,x,y,z){
+            let l = Env.get("LLSteering",x,y,z,true);
+            let u = Env.get("ULSteering",x,y,z,true);
+            this.vec.set(u);
+            this.vec.sub(l);
+            return this.vec;
+        },
+        {
+            vector: true,
+            magMap: [0,8,0,25],
+            invisible: true         // remove when wind shear is actually added to storm algorithm
+        }
     );
 
     Env.addField(
