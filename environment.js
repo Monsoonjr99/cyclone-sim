@@ -254,6 +254,7 @@ class Environment{
         this.fieldList = [];
         this.displaying = -1;
         this.layerIsOceanic = false;
+        this.layerIsVector = false;
     }
 
     addField(name,...fieldArgs){
@@ -296,7 +297,10 @@ class Environment{
         do this.displaying++;
         while(this.displaying<this.fieldList.length && this.fields[this.fieldList[this.displaying]].invisible);
         if(this.displaying>=this.fieldList.length) this.displaying = -1;
-        else this.layerIsOceanic = this.fields[this.fieldList[this.displaying]].oceanic;
+        else{
+            this.layerIsOceanic = this.fields[this.fieldList[this.displaying]].oceanic;
+            this.layerIsVector = this.fields[this.fieldList[this.displaying]].isVectorField;
+        }
         this.displayLayer();
     }
 
@@ -369,6 +373,7 @@ Environment.init = function(){
             // ridging, trades and weakness
             let ridging = constrain(n(1)+map(j,0,height,0.3,-0.3),0,1);
             let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
+            let tAngle = map(h,0.9,1,127*PI/128,17*PI/16); // trades angle
             // let weakness = pow(map(h,0,1,1.01,1.28),map(ridging,0,1,0,-12))*constrain(map(west-trades,0,4,1,0),0,1);
             // noise angle
             let a = map(n(3),0,1,0,4*TAU);
@@ -379,7 +384,7 @@ Environment.init = function(){
             this.vec.rotate(a);
             // this.vec.mult(m/(1+(sin(a)/2+0.5)*trades));  // Uses the sine of the angle to give poleward bias depending on the strength of the trades -- deprecated in favor of weakness
             this.vec.mult(m);
-            this.vec.add(west-trades/*,-weakness*/);
+            this.vec.add(west+trades*cos(tAngle),trades*sin(tAngle)/*-weakness*/);
             this.vec.y = hem(this.vec.y); // hemisphere flip
             return this.vec;
         },
@@ -400,6 +405,8 @@ Environment.init = function(){
 
             const dx = 10;                                                                  // delta for derivative
 
+            let m = n(1);
+
             let s = seasonalSine(z);
             let j0 = Env.get("jetstream",x,z,null,true);                                    // y-position of jetstream
             let j1 = Env.get("jetstream",x+dx,z,null,true);                                 // y-position of jetstream dx to the east for derivative
@@ -410,13 +417,14 @@ Environment.init = function(){
             let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
             let tAngle = -PI/16;                                                            // angle of push from jetstream dips
             let ridging = 0.45-j0/height-map(s,-1,1,0.15,0);                                // how much 'ridge' or 'trough' there is from jetstream
-            let hadley = map(ridging,-0.3,0.2,5,1.5,true)*jOP*(y>j0?1:0);                   // power of winds equatorward of jetstream
+            // power of winds equatorward of jetstream
+            let hadley = (map(ridging,-0.3,0.2,5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
             let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);                       // angle of winds equatorward of jetstream
             let ferrel = 2*jOP*(y<j0?1:0);                                                  // power of winds poleward of jetstream
             let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
 
             let a = map(n(0),0,1,0,4*TAU);                                                  // noise angle
-            let m = pow(1.5,map(n(1),0,1,-8,4))*jOP;                                        // noise magnitude
+            m = pow(1.5,map(m,0,1,-8,4))*jOP;                                               // noise magnitude
 
             // apply noise
             this.vec.rotate(a);
@@ -450,8 +458,8 @@ Environment.init = function(){
         },
         {
             vector: true,
-            magMap: [0,8,0,25],
-            invisible: true         // remove when wind shear is actually added to storm algorithm
+            magMap: [0,8,0,25]//,
+            // invisible: true         // remove when wind shear is actually added to storm algorithm
         }
     );
 
@@ -485,7 +493,7 @@ Environment.init = function(){
             },
             oceanic: true
         },
-        [6,0.5,150,1000,0.2,2]
+        [6,0.5,150,3000,0.05,1.5]
     );
 
     Env.addField(
@@ -506,8 +514,8 @@ Environment.init = function(){
             hueMap: function(v){
                 colorMode(HSB);
                 let c;
-                if(v<5) c = color(300,100,80);
-                else if(v<26) c = lerpColor(color(300,100,80),color(120,100,80),map(v,5,26,0,1));
+                /* if(v<5) c = color(300,100,80);
+                else  */if(v<26) c = lerpColor(color(300,100,80),color(120,100,80),map(v,5,26,0,1));
                 else if(v<29) c = lerpColor(color(60,100,100),color(0,100,70),map(v,26,29,0,1));
                 else c = lerpColor(color(0,100,70),color(0,5,100),map(v,29,34,0,1));
                 colorMode(RGB);
@@ -515,6 +523,31 @@ Environment.init = function(){
             },
             oceanic: true
         }
+    );
+
+    Env.addField(
+        "moisture",
+        function(n,x,y,z){
+            let v = n(0);
+            let s = seasonalSine(z);
+            let l = land.get(x,hemY(y));
+            let m = map(l,0.5,0.7,map(y,0,height,43,57),20,true);
+            m += map(s,-1,1,-8,8);
+            m += map(v,0,1,-30,30);
+            m = constrain(m,0,100);
+            return m;
+        },
+        {
+            hueMap: function(v){
+                colorMode(HSB);
+                let c;
+                if(v<50) c = lerpColor(color(45,100,30),color(45,1,90),map(v,0,50,0,1));
+                else c = lerpColor(color(180,1,90),color(180,100,30),map(v,50,100,0,1));
+                colorMode(RGB);
+                return c;
+            }
+        },
+        [4,0.5,120,120,0.3,2]
     );
 
     // Env.addField("steeringMag",function(x,y,z){
@@ -529,7 +562,6 @@ Environment.init = function(){
     //     let h = cos(map(y,0,height,PI,0))/2+0.5;
     //     return constrain(pow(h+map(this.noise[0].get(x,y,z),0,1,-0.3,0.3),2)*3,0,3);
     // },{},[4,0.5,80,100,1,3]);
-    // Env.addField("moisture",undefined,{},[4,0.5,130,100,1,2]);
     // Env.addField("test",function(x,y,z){
     //     this.vec.set(1);
     //     let n = this.noise[0].get(x,y,z);
@@ -593,6 +625,12 @@ class Land{
                             break;
                         }
                     }
+                    let touchingOcean = false;
+                    if(i>0 && !this.get(i-1,j)) touchingOcean = true;
+                    if(j>0 && !this.get(i,j-1)) touchingOcean = true;
+                    if(i<width-1 && !this.get(i+1,j)) touchingOcean = true;
+                    if(j<height-1 && !this.get(i,j+1)) touchingOcean = true;
+                    if(touchingOcean) coastLine.rect(i,j,1,1);
                 }
             }
         }

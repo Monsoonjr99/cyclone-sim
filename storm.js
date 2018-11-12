@@ -273,31 +273,54 @@ class ActiveSystem extends StormData{
     update(){
         this.getSteering();
         this.pos.add(this.steering);
-        let seasSin = seasonalSine(basin.tick);
-        let latTrop = map(sqrt(constrain(hemY(this.pos.y),0,height)),0,sqrt(height),0,1+0.09*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
-        let SST = Env.get("SST",this.pos.x,this.pos.y,basin.tick);
-        let tempTrop = constrain(map(SST,5,20,0,1),0,1);
-        if(latTrop>tempTrop) latTrop = tempTrop;
-        let lnd = land.get(this.pos.x,this.pos.y);
-        this.lowerWarmCore = lerp(this.lowerWarmCore,latTrop,this.lowerWarmCore>latTrop ? 0.06 : 0.04);
+        
+        let x = this.pos.x;
+        let y = this.pos.y;
+        let z = basin.tick;
+
+        let seasSin = seasonalSine(z);
+        // let latTrop = map(sqrt(constrain(hemY(this.pos.y),0,height)),0,sqrt(height),0,1+0.09*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
+        let SST = Env.get("SST",x,y,z);
+        let tropSideOfJet = y>Env.get("jetstream",x,z);
+        let lnd = land.get(x,y);
+        let moisture = Env.get("moisture",x,y,z);
+        let shear = Env.get("shear",x,y,z).mag()+this.interaction.shear;
+        
+        let targetWarmCore = tropSideOfJet ? lnd ? this.lowerWarmCore : pow(map(SST,10,25,0,1,true),3) : 0;
+        // if(latTrop>tempTrop) latTrop = tempTrop;
+        this.lowerWarmCore = lerp(this.lowerWarmCore,targetWarmCore,this.lowerWarmCore>targetWarmCore ? tropSideOfJet ? 0.06 : 0.15 : 0.04);
         this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.007 : 0.4);
         this.lowerWarmCore = constrain(this.lowerWarmCore,0,1);
         this.upperWarmCore = constrain(this.upperWarmCore,0,1);
         let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
         let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
-        this.organization += random(-3,3+seasSin/2) + random(pow(7,this.lowerWarmCore)-4) + 2.7*nontropicalness;
-        if(!lnd) this.organization += random(constrain(map(SST,26,29,0,1),0,1));
-        this.organization -= lnd*random(7);
-        this.organization -= pow(2,4-((height-hemY(this.pos.y))/(height*0.01)));
+
+        // this.organization += random(-3,3+seasSin/2) + random(pow(7,this.lowerWarmCore)-4) + 2.7*nontropicalness;
+        if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*4*tropicalness;
+        if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
+        if(lnd) this.organization -= pow(10,map(lnd,0.5,1,0,1));
+        this.organization -= pow(2,4-((height-hemY(y))/(height*0.01)));
+        this.organization -= (pow(map(this.organization,0,100,1.15,1.3),shear)-1)*map(this.organization,0,100,3.7,1.3);
+        this.organization -= map(moisture,0,65,3,0,true)*shear;
+        this.organization += sq(map(moisture,60,100,0,1,true))*4;
+        this.organization -= pow(1.3,26-SST)*tropicalness;
         this.organization = constrain(this.organization,0,100);
-        this.pressure -= random(-3,3.6+seasSin/4+(lnd?-0.5:pow(1.22,SST-26)*sq(this.organization/100)))*sqrt(tropicalness);
-        this.pressure -= random(-3,3)*nontropicalness;
-        this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
+
+        let targetPressure = 1010-25*log((lnd||SST<25)?1:map(SST,25,30,1,2))/log(1.17);
+        targetPressure = lerp(1010,targetPressure,pow(this.organization/100,3));
+        this.pressure = lerp(this.pressure,targetPressure,(this.pressure>targetPressure?0.05:0.08)*tropicalness);
+        // this.pressure -= random(-3,3.6+seasSin/4+(lnd?-0.5:pow(1.22,SST-26)*sq(this.organization/100)))*sqrt(tropicalness);
+        this.pressure -= random(-3,3.5)*nontropicalness;
+        // this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
+        if(this.organization<30) this.pressure += random(-2,2.5)*tropicalness;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
-        this.pressure += this.interaction.shear/(1+map(this.lowerWarmCore,0,1,3,0));
-        if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
-        this.windSpeed = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
-        this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        this.pressure += 0.5*this.interaction.shear/(1+map(this.lowerWarmCore,0,1,4,0));
+        // if(this.pressure<875) this.pressure = lerp(this.pressure,875,0.1);
+
+        let targetWind = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
+        this.windSpeed = lerp(this.windSpeed,targetWind,0.15);
+
+        this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && (this.windSpeed<50 || this.lowerWarmCore<0.85)) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER) || this.interaction.kill){
             this.storm.deathTime = basin.tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;
@@ -342,7 +365,7 @@ class ActiveSystem extends StormData{
         this.steering.set(Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick));
         // this.steering.add(0,hem(map(this.pressure,1030,900,0.4,-0.9))); // Quick and dirty method of giving stronger storms a poleward bias
         let u = Env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
-        u.mult(map(this.upperWarmCore,0,1,0.8,map(this.pressure,1010,900,0.1,1,true))); // Deeper and more-extratropical storms feel more upper-level steering
+        u.mult(map(this.upperWarmCore,0,1,0.8,map(this.pressure,1010,900,0.05,1,true))); // Deeper and more-extratropical storms feel more upper-level steering
         this.steering.add(u);
         this.steering.add(this.interaction.fuji); // Fujiwhara
 
@@ -360,7 +383,7 @@ class ActiveSystem extends StormData{
             // v.setMag(((1030-that.pressure)/35)*(30/m)*(4-3*that.lowerWarmCore));
             v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
             this.interaction.fuji.add(v);
-            this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,4));
+            this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
             if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.interaction.kill = true;
         }
         if(first) that.interact(this);

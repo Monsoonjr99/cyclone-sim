@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181112a:
+    * Large change to storm algorithm to make seasons less hyperactive and somewhat more realistic
+        > Looks to need to be ironed out quite a bit over the next few verisons
 v20181111a:
     * Big improvement to upper-level steering to make it less drunk and more realistic
 v20181110a:

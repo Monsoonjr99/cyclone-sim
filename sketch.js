@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181111a");
+    setVersion("Very Sad HHW Thing v","20181112a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -23,6 +23,9 @@ function setup(){
     landBuffer.noStroke();
     landShader = createBuffer();
     landShader.noStroke();
+    coastLine = createBuffer();
+    coastLine.fill(0);
+    coastLine.noStroke();
     envLayer = createBuffer();
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
@@ -115,12 +118,15 @@ function draw(){
         //     image(testGraphics,0,0,width,height);
         // }
 
-        if(Env.layerIsOceanic) image(envLayer,0,0,width,height);
+        if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
         // image(land,0,0,width,height);
         image(landBuffer,0,0,width,height);
         image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
         if(useShader) image(landShader,0,0,width,height);
-        if(!Env.layerIsOceanic) image(envLayer,0,0,width,height);
+        if(Env.displaying>=0 && !Env.layerIsOceanic){
+            image(envLayer,0,0,width,height);
+            if(!Env.layerIsVector) image(coastLine,0,0,width,height);
+        }
         image(tracks,0,0,width,height);
         image(forecastTracks,0,0,width,height);
         image(stormIcons,0,0,width,height);
@@ -134,12 +140,13 @@ function draw(){
 function init(){
     basin = new Basin(random()<0.5,true);
 
-    viewTick = 0;
+    viewTick = basin.tick;
     curSeason = getSeason(basin.tick);
     selectedStorm = undefined;
     // seed = 1540279062465;
     noiseSeed(basin.seed);
     Environment.init();
+    if(basin.tick===0) Env.record();
     // landRendered = 0;
     land = new Land();
     // createLand();
