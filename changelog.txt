@@ -1,6 +1,14 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181117a:
+    + Added "depth" to storm algorithm to help with steering and recurve
+    * Fixed forecast track (the yellow dots) to follow upper-level steering
+    * Tweaks to storm algorithm
+    * Fixed jetstream misbehavior in SHem
 v20181112a:
+    + Added moisture/dry air environmental field
+    + Added wind shear environmental field
+    + Added new "coast outline" rendering for land for moisture field
     * Large change to storm algorithm to make seasons less hyperactive and somewhat more realistic
         > Looks to need to be ironed out quite a bit over the next few verisons
 v20181111a:

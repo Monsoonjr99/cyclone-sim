@@ -336,7 +336,7 @@ Environment.init = function(){
 
     Env.addField(
         "jetstream",
-        function(n,x,z){
+        function(n,x,y,z){
             let s = seasonalSine(z);
             let l = map(s,-1,1,0.55,0.35);
             let v = n(0,x-z*3,0,z);
@@ -364,7 +364,7 @@ Environment.init = function(){
             this.vec.set(1);    // reset vector
 
             // Jetstream
-            let j = Env.get("jetstream",x,z,null,true);
+            let j = Env.get("jetstream",x,y,z,true);
             // Cosine curve from 0 at poleward side of map to 1 at equatorward side
             let h = map(cos(map(y,0,height,0,PI)),-1,1,1,0);
             // let h = map(cos(lerp(0,PI,y<j?map(y,0,j,0,0.4):map(y,j,height,0.4,1))),-1,1,1,0);
@@ -373,7 +373,7 @@ Environment.init = function(){
             // ridging, trades and weakness
             let ridging = constrain(n(1)+map(j,0,height,0.3,-0.3),0,1);
             let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
-            let tAngle = map(h,0.9,1,127*PI/128,17*PI/16); // trades angle
+            let tAngle = map(h,0.9,1,511*PI/512,17*PI/16); // trades angle
             // let weakness = pow(map(h,0,1,1.01,1.28),map(ridging,0,1,0,-12))*constrain(map(west-trades,0,4,1,0),0,1);
             // noise angle
             let a = map(n(3),0,1,0,4*TAU);
@@ -408,8 +408,8 @@ Environment.init = function(){
             let m = n(1);
 
             let s = seasonalSine(z);
-            let j0 = Env.get("jetstream",x,z,null,true);                                    // y-position of jetstream
-            let j1 = Env.get("jetstream",x+dx,z,null,true);                                 // y-position of jetstream dx to the east for derivative
+            let j0 = Env.get("jetstream",x,y,z,true);                                       // y-position of jetstream
+            let j1 = Env.get("jetstream",x+dx,y,z,true);                                    // y-position of jetstream dx to the east for derivative
             let j = abs(y-j0);                                                              // distance of point north/south of jetstream
             let jet = pow(2,3-j/40);                                                        // power of jetstream at point
             let jOP = pow(0.7,jet);                                                         // factor for how strong other variables should be if 'overpowered' by jetstream
