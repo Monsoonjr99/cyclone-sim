@@ -255,7 +255,8 @@ class ActiveSystem extends StormData{
         TROPWAVE;
         super(x,y,p,w,ty);
         this.storm = storm;
-        this.organization = ext ? 0 : spawn ? sType==="l" ? 20 : 100 : random(0,40);
+        this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
+        // this.entrainedMoisture = ext ? 0.3 : spawn ? sType==="l" ? 0.5 : 0.95 : random(0.35,0.65);
         this.lowerWarmCore = ext ? 0 : 1;
         this.upperWarmCore = ext ? 0 : 1;
         this.depth = ext ? 1 : 0;
@@ -279,7 +280,7 @@ class ActiveSystem extends StormData{
         let y = this.pos.y;
         let z = basin.tick;
 
-        let seasSin = seasonalSine(z);
+        // let seasSin = seasonalSine(z);
         // let latTrop = map(sqrt(constrain(hemY(this.pos.y),0,height)),0,sqrt(height),0,1+0.09*(seasSin-1)); // Temporary environmentel latitude distinction for extratropical vs. tropical
         let SST = Env.get("SST",x,y,z);
         let jet = Env.get("jetstream",x,y,z);
@@ -301,24 +302,35 @@ class ActiveSystem extends StormData{
         let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
         let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
 
+        // let convection = (lnd ? moisture : sq(map(SST,20,26,0,1,true)))*sqrt(tropicalness)*pow(map(cos(map(this.entrainedMoisture,0,1,PI,0)),-1,1,0,1),0.6);
+        // convection = convection*pow(map(this.depth,0,1,0.8,0.85),shear);
+        // let targetOrg = convection*(1-pow(0.96,map(hemY(y),0,height,1000,0)));
+        // this.organization = lerp(this.organization,targetOrg,0.1);
+
+        // let targetMoist = map(pow(0.8,shear),1,0,1-(1-this.entrainedMoisture)*pow(0.8,convection),moisture);
+        // this.entrainedMoisture = lerp(this.entrainedMoisture,targetMoist,0.1);
+
         // this.organization += random(-3,3+seasSin/2) + random(pow(7,this.lowerWarmCore)-4) + 2.7*nontropicalness;
+
+        this.organization *= 100;
         if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
         if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
         if(lnd) this.organization -= pow(10,map(lnd,0.5,1,0,1));
         this.organization -= pow(2,4-((height-hemY(y))/(height*0.01)));
         this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
-        this.organization -= map(moisture,0,65,3,0,true)*shear;
-        this.organization += sq(map(moisture,60,100,0,1,true))*4;
+        this.organization -= map(moisture,0,0.65,3,0,true)*shear;
+        this.organization += sq(map(moisture,0.6,1,0,1,true))*4;
         this.organization -= pow(1.3,20-SST)*tropicalness;
         this.organization = constrain(this.organization,0,100);
+        this.organization /= 100;
 
         let targetPressure = 1010-25*log((lnd||SST<25)?1:map(SST,25,30,1,2))/log(1.17);
-        targetPressure = lerp(1010,targetPressure,pow(this.organization/100,3));
+        targetPressure = lerp(1010,targetPressure,pow(this.organization,3));
         this.pressure = lerp(this.pressure,targetPressure,(this.pressure>targetPressure?0.05:0.08)*tropicalness);
         // this.pressure -= random(-3,3.6+seasSin/4+(lnd?-0.5:pow(1.22,SST-26)*sq(this.organization/100)))*sqrt(tropicalness);
         this.pressure -= random(-3,3.5)*nontropicalness;
         // this.pressure += random(sqrt(1-this.organization/100))*(1025-this.pressure)*tropicalness*0.6;
-        if(this.organization<30) this.pressure += random(-2,2.5)*tropicalness;
+        if(this.organization<0.3) this.pressure += random(-2,2.5)*tropicalness;
         this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
         this.pressure += 0.5*this.interaction.shear/(1+map(this.lowerWarmCore,0,1,4,0));
         this.pressure += map(jet,0,75,5*pow(1-this.depth,4),0,true);
@@ -332,13 +344,27 @@ class ActiveSystem extends StormData{
             0,1,
             1,map(
                 this.organization,
-                0,100,
+                0,1,
                 this.depth*pow(0.95,shear),max(map(this.pressure,1010,950,0,0.7,true),this.depth)
             )
         );
         this.depth = lerp(this.depth,targetDepth,0.05);
 
-        this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && (this.windSpeed<50 || this.lowerWarmCore<0.85)) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        switch(this.type){
+            case TROP:
+                this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+                break;
+            case SUBTROP:
+                this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+                break;
+            case TROPWAVE:
+                this.type = this.lowerWarmCore<0.55 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+                break;
+            default:
+                this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        }
+        // this.type = this.lowerWarmCore<0.6 ? EXTROP : ((this.organization<45 && (this.windSpeed<50 || this.lowerWarmCore<0.85)) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+
         if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER) || this.interaction.kill){
             this.storm.deathTime = basin.tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;

@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181118a:
+    + Added some now-commented-out bust attempt at improving the storm algorithm
+    * Tweaks to storm 'type' determination
+    * Normalized ranges for moisture field and storm organization to 0-1 rather than 0-100
 v20181117a:
     + Added "depth" to storm algorithm to help with steering and recurve
     * Fixed forecast track (the yellow dots) to follow upper-level steering

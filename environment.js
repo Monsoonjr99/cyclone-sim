@@ -531,18 +531,18 @@ Environment.init = function(){
             let v = n(0);
             let s = seasonalSine(z);
             let l = land.get(x,hemY(y));
-            let m = map(l,0.5,0.7,map(y,0,height,43,57),20,true);
-            m += map(s,-1,1,-8,8);
-            m += map(v,0,1,-30,30);
-            m = constrain(m,0,100);
+            let m = map(l,0.5,0.7,map(y,0,height,0.43,0.57),0.2,true);
+            m += map(s,-1,1,-0.08,0.08);
+            m += map(v,0,1,-0.3,0.3);
+            m = constrain(m,0,1);
             return m;
         },
         {
             hueMap: function(v){
                 colorMode(HSB);
                 let c;
-                if(v<50) c = lerpColor(color(45,100,30),color(45,1,90),map(v,0,50,0,1));
-                else c = lerpColor(color(180,1,90),color(180,100,30),map(v,50,100,0,1));
+                if(v<0.5) c = lerpColor(color(45,100,30),color(45,1,90),map(v,0,0.5,0,1));
+                else c = lerpColor(color(180,1,90),color(180,100,30),map(v,0.5,1,0,1));
                 colorMode(RGB);
                 return c;
             }
