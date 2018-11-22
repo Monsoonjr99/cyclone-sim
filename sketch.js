@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181118a");
+    setVersion("Very Sad HHW Thing v","20181122a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -150,8 +150,9 @@ function init(){
     // landRendered = 0;
     land = new Land();
     // createLand();
-    topBar.show();
-    bottomBar.show();
+    // topBar.show();
+    // bottomBar.show();
+    primaryWrapper.show();
     finisher = finishInit();
 }
 
@@ -299,65 +300,67 @@ function mouseInCanvas(){
 function mouseClicked(){
     if(mouseInCanvas()){
         if(UI.click()) return false;
-        if(basin.godMode && keyIsPressed && viewingPresent()) {
-            let g = {x: mouseX, y: mouseY};
-            if(key === "l" || key === "L"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,10));
-                g.sType = "l";
-            }else if(key === "d" || key === "D"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,30));
-                g.sType = "d";
-            }else if(key === "s" || key === "S"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,50));
-                g.sType = "s";
-            }else if(key === "1"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,80));
-                g.sType = "1";
-            }else if(key === "2"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,105));
-                g.sType = "2";
-            }else if(key === "3"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,120));
-                g.sType = "3";
-            }else if(key === "4"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,145));
-                g.sType = "4";
-            }else if(key === "5"){
-                // activeSystems.push(new StormSystem(mouseX,mouseY,170));
-                g.sType = "5";
-            }else if(key === "x" || key === "X"){
-                g.sType = "x";
-            }else return;
-            basin.activeSystems.push(new Storm(false,g));
-        }else if(viewingPresent()){
-            let mVector = createVector(mouseX,mouseY);
-            for(let i=basin.activeSystems.length-1;i>=0;i--){
-                let s = basin.activeSystems[i];
-                let p = s.getStormDataByTick(viewTick,true).pos;
-                if(p.dist(mVector)<DIAMETER){
-                    selectedStorm = s;
-                    refreshTracks();
-                    return false;
-                }
-            }
-            selectedStorm = undefined;
-            refreshTracks();
-        }else{
-            let vSeason = basin.seasons[getSeason(viewTick)];
-            let mVector = createVector(mouseX,mouseY);
-            for(let i=vSeason.systems.length-1;i>=0;i--){
-                let s = vSeason.systems[i];
-                if(s.aliveAt(viewTick)){
-                    let p = s.getStormDataByTick(viewTick).pos;
+        if(basin){
+            if(basin.godMode && keyIsPressed && viewingPresent()) {
+                let g = {x: mouseX, y: mouseY};
+                if(key === "l" || key === "L"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,10));
+                    g.sType = "l";
+                }else if(key === "d" || key === "D"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,30));
+                    g.sType = "d";
+                }else if(key === "s" || key === "S"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,50));
+                    g.sType = "s";
+                }else if(key === "1"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,80));
+                    g.sType = "1";
+                }else if(key === "2"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,105));
+                    g.sType = "2";
+                }else if(key === "3"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,120));
+                    g.sType = "3";
+                }else if(key === "4"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,145));
+                    g.sType = "4";
+                }else if(key === "5"){
+                    // activeSystems.push(new StormSystem(mouseX,mouseY,170));
+                    g.sType = "5";
+                }else if(key === "x" || key === "X"){
+                    g.sType = "x";
+                }else return;
+                basin.activeSystems.push(new Storm(false,g));
+            }else if(viewingPresent()){
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=basin.activeSystems.length-1;i>=0;i--){
+                    let s = basin.activeSystems[i];
+                    let p = s.getStormDataByTick(viewTick,true).pos;
                     if(p.dist(mVector)<DIAMETER){
                         selectedStorm = s;
                         refreshTracks();
                         return false;
                     }
                 }
+                selectedStorm = undefined;
+                refreshTracks();
+            }else{
+                let vSeason = basin.seasons[getSeason(viewTick)];
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=vSeason.systems.length-1;i>=0;i--){
+                    let s = vSeason.systems[i];
+                    if(s.aliveAt(viewTick)){
+                        let p = s.getStormDataByTick(viewTick).pos;
+                        if(p.dist(mVector)<DIAMETER){
+                            selectedStorm = s;
+                            refreshTracks();
+                            return false;
+                        }
+                    }
+                }
+                selectedStorm = undefined;
+                refreshTracks();
             }
-            selectedStorm = undefined;
-            refreshTracks();
         }
         return false;
     }

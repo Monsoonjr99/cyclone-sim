@@ -634,7 +634,7 @@ class Land{
                 }
             }
         }
-        yield "Rendering snow...";
+        yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
         for(let i=0;i<width;i++){
             for(let j=0;j<height;j++){
                 let landVal = this.get(i,j);
