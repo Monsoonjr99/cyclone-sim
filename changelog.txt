@@ -1,5 +1,7 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181125b:
+    * Adjusted jetstream and ULSteering fields slightly to make early and late-season a bit more active
 v20181125a:
     + Added hemisphere selection button in new basin settings
     * Made menu buttons shorter

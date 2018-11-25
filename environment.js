@@ -338,7 +338,7 @@ Environment.init = function(){
         "jetstream",
         function(n,x,y,z){
             let s = seasonalSine(z);
-            let l = map(s,-1,1,0.55,0.35);
+            let l = map(sqrt(map(s,-1,1,0,1)),0,1,0.55,0.35);
             let v = n(0,x-z*3,0,z);
             let r = map(s,-1,1,0.5,0.35);
             v = map(v,0,1,-r,r);
@@ -416,7 +416,7 @@ Environment.init = function(){
             let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/4,-PI/4,true);                 // angle of jetstream at point
             let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
             let tAngle = -PI/16;                                                            // angle of push from jetstream dips
-            let ridging = 0.45-j0/height-map(s,-1,1,0.15,0);                                // how much 'ridge' or 'trough' there is from jetstream
+            let ridging = 0.45-j0/height-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
             // power of winds equatorward of jetstream
             let hadley = (map(ridging,-0.3,0.2,5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
             let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);                       // angle of winds equatorward of jetstream

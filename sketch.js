@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181125a");
+    setVersion("Very Sad HHW Thing v","20181125b");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
