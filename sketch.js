@@ -1,5 +1,5 @@
 function setup(){
-    setVersion("Very Sad HHW Thing v","20181122a");
+    setVersion("Very Sad HHW Thing v","20181125a");
 
     createCanvas(960,540); // 16:9 Aspect Ratio
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
@@ -7,6 +7,7 @@ function setup(){
     paused = false;
     showStrength = false;
     basin = undefined;
+    newBasinSettings = {};
     useShader = false;
     // landRendered = 2;
 
@@ -138,7 +139,11 @@ function draw(){
 }
 
 function init(){
-    basin = new Basin(random()<0.5,true);
+    let hem;
+    if(newBasinSettings.hem===1) hem = false;
+    else if(newBasinSettings.hem===2) hem = true;
+    else hem = random()<0.5;
+    basin = new Basin(hem,true);
 
     viewTick = basin.tick;
     curSeason = getSeason(basin.tick);

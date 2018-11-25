@@ -192,32 +192,7 @@ UI.init = function(){
         text("*There will be a better name in the future",0,300);
     });
 
-    let stupid = [  // Yellow text stuff
-        "This yellow text totally isn't from MC",
-        "World's finest bad weather simulator",
-        "Monsoonjr99's latest piece of autism", // I am actually autistic don't judge me
-        "Not a tornado",
-        "Bugs guaranteed!",
-        "Category 5 tropical wave",
-        "Experimental!",
-        "Inspired by Scratch",
-        "Unlimited wind shear",
-        "Very sad",
-        "Contains sneaux"
-    ];
-
-    let yellowText = mainMenu.append(false,2*width/3,height/4-40,0,0,function(){ // Stupid yellow text (totally not MC inspired)
-        fill(240,240,0);
-        noStroke();
-        textAlign(CENTER,CENTER);
-        rotate(PI/16);
-        textSize(14+2*sin(TAU*millis()/750));
-        text(this.txt,0,0);
-    });
-
-    yellowText.txt = random(stupid).toUpperCase();
-
-    mainMenu.append(false,width/2-100,height/2-40,200,80,function(){    // "New Basin" button
+    mainMenu.append(false,width/2-100,height/2-20,200,40,function(){    // "New Basin" button
         fill(200,200,200,100);
         noStroke();
         this.fullRect();
@@ -225,7 +200,7 @@ UI.init = function(){
         fill(0);
         textAlign(CENTER,CENTER);
         textSize(24);
-        text("New Basin",100,40);
+        text("New Basin",100,20);
     },function(){
         // init();
         mainMenu.hide();
@@ -234,16 +209,36 @@ UI.init = function(){
 
     // basin creation menu
 
-    basinCreationMenu.append(false,width/2,height/4,0,0,function(){ // insert settings here
+    basinCreationMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
         fill(0);
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
-        textStyle(ITALIC);
-        text("[Insert settings here] WIP",0,0);
+        // textStyle(ITALIC);
+        text("New Basin Settings",0,0);
     });
 
-    basinCreationMenu.append(false,width/2-100,height/2-40,200,80,function(){    // "Start" button
+    basinCreationMenu.append(false,width/2-100,height/4-20,200,40,function(){
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let hem = "Random";
+        if(newBasinSettings.hem===1) hem = "Northern";
+        if(newBasinSettings.hem===2) hem = "Southern";
+        text("Hemisphere: "+hem,100,20);
+    },function(){
+        if(newBasinSettings.hem===undefined) newBasinSettings.hem = 1;
+        else{
+            newBasinSettings.hem++;
+            newBasinSettings.hem %= 3;
+        }
+    });
+
+    basinCreationMenu.append(false,width/2-100,7*height/8-20,200,40,function(){    // "Start" button
         fill(200,200,200,100);
         noStroke();
         this.fullRect();
@@ -251,7 +246,7 @@ UI.init = function(){
         fill(0);
         textAlign(CENTER,CENTER);
         textSize(24);
-        text("Start",100,40);
+        text("Start",100,20);
     },function(){
         init();
         basinCreationMenu.hide();

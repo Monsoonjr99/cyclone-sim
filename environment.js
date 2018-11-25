@@ -675,6 +675,8 @@ class Land{
 
     clear(){
         landBuffer.clear();
+        coastLine.clear();
+        landShader.clear();
         for(let i=0;i<SNOW_LAYERS;i++) snow[i].clear();
     }
 }

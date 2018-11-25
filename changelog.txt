@@ -1,5 +1,9 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181125a:
+    + Added hemisphere selection button in new basin settings
+    * Made menu buttons shorter
+    - Removed stupid yellow text
 v20181122a:
     + Added a main menu
         > Currently only has a "New Basin" button and some silly text
