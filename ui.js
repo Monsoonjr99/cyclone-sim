@@ -418,4 +418,35 @@ UI.init = function(){
     },function(){
         Env.displayNext();
     });
+
+    bottomBar.append(false,width-29,3,24,24,function(){  // Help button
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(CENTER,CENTER);
+        textSize(22);
+        text("?",12,12);
+    },function(){
+        helpBox.toggleShow();
+    });
+
+    helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        fill(0);
+        textAlign(LEFT,TOP);
+        textSize(18);
+        text(HELP_TEXT,10,10);
+    },true,false);
+
+    helpBox.append(false,helpBox.width-30,10,20,20,function(){
+        fill(200,200,200,100);
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(CENTER,CENTER);
+        textSize(22);
+        text("X",10,10);
+    },function(){
+        helpBox.hide();
+    });
 };

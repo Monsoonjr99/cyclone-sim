@@ -41,6 +41,22 @@ const PEAK_SEASON_POLAR_TEMP = 10;
 const OFF_SEASON_TROPICS_TEMP = 26;
 const PEAK_SEASON_TROPICS_TEMP = 29;
 
+const HELP_TEXT = "Keyboard Controls:\n" +
+    "\t\tSPACE - Pause/resume simulation\n" +
+    "\t\tA - Step simulation one hour while paused\n" +
+    "\t\tE - Cycle through map layers\n" +
+    "\t\tW - Toggle strength indicators below storm icons (kts / hPa)\n" +
+    "\t\t[ - Decrease simulation speed by half\n" +
+    "\t\t] - Increase simulation speed by double\n" +
+    "\t\tLEFT ARROW - Step backwards through analysis\n" +
+    "\t\tRIGHT ARROW - Step forewards through analysis\n" +
+    "\t\tCLICK + [special key] - Spawn [corresponding storm system]\n" +
+    "\t\t\t\tX - Extratropical cyclone\n" +
+    "\t\t\t\tL - Tropical Low/Wave\n" +
+    "\t\t\t\tD - Tropical Depression\n" +
+    "\t\t\t\tS - Tropical Storm\n" +
+    "\t\t\t\t[number key 1-5] - Category [1-5] Tropical Cyclone";
+
 const COLORS = {};      // For storing all colors used in the graphics
 
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
