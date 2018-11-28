@@ -1,3 +1,6 @@
+const TITLE = "Very Sad HHW Thing";
+const VERSION_NUMBER = "20181128a";
+
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)

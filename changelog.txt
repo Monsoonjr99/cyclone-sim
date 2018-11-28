@@ -1,5 +1,8 @@
 About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
 
+v20181128a:
+    + Added constants for title and version number
+    * Changed main menu title text to its final form for "Very Sad HHW Thing"/"Cyclone Simulator Classic"
 v20181127a:
     + Added a help button (?) in the bottom-right which toggles a box containing keyboard controls
 v20181125b:

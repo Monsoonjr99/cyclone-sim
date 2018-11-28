@@ -170,6 +170,8 @@ UI.click = function(){
     return false;
 };
 
+// Definitions for all UI elements
+
 UI.init = function(){
     // "scene" wrappers
 
@@ -184,12 +186,12 @@ UI.init = function(){
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
-        text("Very Sad HHW Thing*",0,0); // sad
+        text(TITLE + "*",0,0); // sad
         textSize(18);
         textStyle(ITALIC);
-        text("An experimental tropical cyclone simulator",0,40);
-        textSize(12);
-        text("*There will be a better name in the future",0,300);
+        text("*Cyclone Simulator Classic",0,40);
+        // textSize(15);
+        // text("*Cyclone Simulator Classic",0,300);
     });
 
     mainMenu.append(false,width/2-100,height/2-20,200,40,function(){    // "New Basin" button
