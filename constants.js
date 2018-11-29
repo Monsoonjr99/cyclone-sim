@@ -1,5 +1,5 @@
-const TITLE = "Very Sad HHW Thing";
-const VERSION_NUMBER = "20181128a";
+const TITLE = "Cyclone Simulator";
+const VERSION_NUMBER = "20181129a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise

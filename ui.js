@@ -186,12 +186,10 @@ UI.init = function(){
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
-        text(TITLE + "*",0,0); // sad
+        text(TITLE,0,0);
         textSize(18);
         textStyle(ITALIC);
-        text("*Cyclone Simulator Classic",0,40);
-        // textSize(15);
-        // text("*Cyclone Simulator Classic",0,300);
+        text("Simulate your own monster storms!",0,40);
     });
 
     mainMenu.append(false,width/2-100,height/2-20,200,40,function(){    // "New Basin" button

@@ -1,5 +1,11 @@
-About: A basic hurricane simulator made for the Hypothetical Hurricanes Wiki. Soon to be more advanced.
+About: A p5.js tropical cyclone simulation game
 
+v20181129a:
+    > Graduated /experiments!
+    * Renamed to "Cyclone Simulator"
+    * Appropriate adjustments to main menu
+    * Moved to new repository at a new URL
+    * Copied over required files from /experiments directly into this project's directory
 v20181128a:
     + Added constants for title and version number
     * Changed main menu title text to its final form for "Very Sad HHW Thing"/"Cyclone Simulator Classic"
