@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181201a:
+    + Added an "extended storm info" UI box accessible by clicking the info text in the upper right while a storm is selected
+        > Needs some work
 v20181129a:
     > Graduated /experiments!
     * Renamed to "Cyclone Simulator"

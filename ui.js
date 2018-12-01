@@ -373,6 +373,7 @@ UI.init = function(){
         text(txtStr,this.width-3,3);
     },function(){
         if(!selectedStorm) paused = !paused;
+        else stormInfoBox.toggleShow();
     });
 
     let bottomBar = primaryWrapper.append(false,0,height-30,width,30,function(){    // Bottom bar
@@ -427,6 +428,48 @@ UI.init = function(){
         text("?",12,12);
     },function(){
         helpBox.toggleShow();
+    });
+
+    stormInfoBox = primaryWrapper.append(false,3*width/4,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
+        if(selectedStorm===undefined){
+            this.hide();
+            return;
+        }
+        let s = selectedStorm;
+        fill(200,200,200,100);
+        noStroke();
+        this.fullRect();
+        fill(0);
+        textAlign(CENTER,TOP);
+        textSize(18);
+        text(s.getFullNameByTick("peak"),this.width/2,10);
+        textSize(15);
+        let txt = "";
+        let formTime;
+        let dissTime;
+        if(s.TC){
+            formTime = tickMoment(s.formationTime).format(TIME_FORMAT);
+            dissTime = tickMoment(s.dissipationTime).format(TIME_FORMAT);
+            txt += "Dates active:\n" + formTime + " -\n" + (s.dissipationTime ? dissTime : "currently active");
+        }else txt += "Dates active: N/A";
+        txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
+        txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
+        txt += "\nACE: " + s.ACE;
+        txt += "\nDamage: TBA";
+        txt += "\nDeaths: TBA";
+        text(txt,this.width/2,40);
+        rectMode(CORNER);
+    },true,false);
+
+    stormInfoBox.append(false,stormInfoBox.width-30,10,20,20,function(){
+        fill(200,200,200,100);
+        if(this.isHovered()) this.fullRect();
+        fill(0);
+        textAlign(CENTER,CENTER);
+        textSize(22);
+        text("X",10,10);
+    },function(){
+        stormInfoBox.hide();
     });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
