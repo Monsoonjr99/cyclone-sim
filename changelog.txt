@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181202a:
+    + Added text wrapping for storm info panel
+    * constant-ified UI colors (plus some color tweaks)
+    * Storm info panel no longer directly tied to selected storm
+        > Now has its own "target" storm that changes in tandem upon clicking a storm icon
+    * Fixed glitch with mouse-hover over overlapping UI elements
 v20181201a:
     + Added an "extended storm info" UI box accessible by clicking the info text in the upper right while a storm is selected
         > Needs some work

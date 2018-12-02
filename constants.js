@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181201a";
+const VERSION_NUMBER = "20181202a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -90,4 +90,11 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.land.push([0.53, color(220,220,110)]);
     COLORS.land.push([0.5, color(250,250,90)]);
     COLORS.snow = color(240);
+    COLORS.UI = {};
+    COLORS.UI.bar = color(200,100);
+    COLORS.UI.box = color(200,170);
+    COLORS.UI.buttonBox = color(200,170);
+    COLORS.UI.buttonHover = color(200);
+    COLORS.UI.text = color(0);
+    COLORS.UI.greyText = color(130);
 }

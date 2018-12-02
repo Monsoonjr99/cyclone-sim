@@ -343,12 +343,12 @@ function mouseClicked(){
                     let s = basin.activeSystems[i];
                     let p = s.getStormDataByTick(viewTick,true).pos;
                     if(p.dist(mVector)<DIAMETER){
-                        selectedStorm = s;
+                        selectStorm(s);
                         refreshTracks();
                         return false;
                     }
                 }
-                selectedStorm = undefined;
+                selectStorm();
                 refreshTracks();
             }else{
                 let vSeason = basin.seasons[getSeason(viewTick)];
@@ -358,18 +358,25 @@ function mouseClicked(){
                     if(s.aliveAt(viewTick)){
                         let p = s.getStormDataByTick(viewTick).pos;
                         if(p.dist(mVector)<DIAMETER){
-                            selectedStorm = s;
+                            selectStorm(s);
                             refreshTracks();
                             return false;
                         }
                     }
                 }
-                selectedStorm = undefined;
+                selectStorm();
                 refreshTracks();
             }
         }
         return false;
     }
+}
+
+function selectStorm(s){
+    if(s instanceof Storm){
+        selectedStorm = s;
+        stormInfoPanel.target = s;
+    }else selectedStorm = undefined;
 }
 
 function keyPressed(){
@@ -414,4 +421,52 @@ function createBuffer(w,h){
 
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
     return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
+}
+
+function wrapText(str,w){
+    let newStr = "";
+    for(let i = 0, j = 0;i<str.length;i=j){
+        if(str.charAt(i)==='\n'){
+            i++;
+            j++;
+            newStr += '\n';
+            continue;
+        }
+        j = str.indexOf('\n',i);
+        if(j===-1) j = str.length;
+        let line = str.slice(i,j);
+        while(textWidth(line)>w){
+            let k=0;
+            while(textWidth(line.slice(0,k))<=w) k++;
+            k--;
+            if(k<1){
+                newStr += line.charAt(0) + '\n';
+                line = line.slice(1);
+                continue;
+            }
+            let l = line.lastIndexOf(' ',k-1);
+            if(l!==-1){
+                newStr += line.slice(0,l) + '\n';
+                line = line.slice(l+1);
+                continue;
+            }
+            let sub = line.slice(0,k);
+            l = sub.search(/\W(?=\w*$)/);
+            if(l!==-1){
+                newStr += line.slice(0,l+1) + '\n';
+                line = line.slice(l+1);
+                continue;
+            }
+            newStr += sub + '\n';
+            line = line.slice(k);
+        }
+        newStr += line;
+    }
+    return newStr;
+}
+
+function countTextLines(str){
+    let l = 1;
+    for(let i=0;i<str.length;i++) if(str.charAt(i)==='\n') l++;
+    return l;
 }

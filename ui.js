@@ -148,7 +148,7 @@ UI.renderAll = function(){
 UI.mouseOver = undefined;
 
 UI.updateMouseOver = function(){
-    if(UI.mouseOver && UI.mouseOver.checkMouseOver()===UI.mouseOver) return UI.mouseOver;
+    // if(UI.mouseOver && UI.mouseOver.checkMouseOver()===UI.mouseOver) return UI.mouseOver;
     for(let i=UI.elements.length-1;i>=0;i--){
         let u = UI.elements[i];
         let mo = u.checkMouseOver();
@@ -182,7 +182,7 @@ UI.init = function(){
     // main menu
 
     mainMenu.append(false,width/2,height/4,0,0,function(){  // title text
-        fill(0);
+        fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
@@ -193,11 +193,14 @@ UI.init = function(){
     });
 
     mainMenu.append(false,width/2-100,height/2-20,200,40,function(){    // "New Basin" button
-        fill(200,200,200,100);
+        fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(24);
         text("New Basin",100,20);
@@ -210,7 +213,7 @@ UI.init = function(){
     // basin creation menu
 
     basinCreationMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
-        fill(0);
+        fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
@@ -219,11 +222,14 @@ UI.init = function(){
     });
 
     basinCreationMenu.append(false,width/2-100,height/4-20,200,40,function(){
-        fill(200,200,200,100);
+        fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(18);
         let hem = "Random";
@@ -239,11 +245,14 @@ UI.init = function(){
     });
 
     basinCreationMenu.append(false,width/2-100,7*height/8-20,200,40,function(){    // "Start" button
-        fill(200,200,200,100);
+        fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(24);
         text("Start",100,20);
@@ -255,7 +264,7 @@ UI.init = function(){
     // primary "in sim" scene
 
     let topBar = primaryWrapper.append(false,0,0,width,30,function(){   // Top bar
-        fill(200,200,200,100);
+        fill(COLORS.UI.bar);
         noStroke();
         this.fullRect();
         textSize(18);
@@ -264,8 +273,11 @@ UI.init = function(){
     topBar.append(false,5,3,100,24,function(){  // Date indicator
         let txtStr = tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
         text(txtStr,3,3);
     },function(){
@@ -273,18 +285,18 @@ UI.init = function(){
     });
 
     dateNavigator = primaryWrapper.append(false,0,30,140,50,function(){     // Analysis navigator panel
-        fill(200,200,200,140);
+        fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
     },true,false);
 
     let navButtonRend = function(){     // Navigator button render function
         if(this.isHovered()){
-            fill(200,200,200,100);
+            fill(COLORS.UI.buttonHover);
             this.fullRect();
         }
-        if(paused) fill(0);
-        else fill(130);
+        if(paused) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
         if(this.metadata%2===0) triangle(2,8,10,2,18,8);
         else triangle(2,2,18,2,10,8);
     };
@@ -337,8 +349,11 @@ UI.init = function(){
     }
 
     let pauseButton = topBar.append(false,width-29,3,24,24,function(){  // Pause/resume button
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         if(paused) triangle(3,3,21,12,3,21);
         else{
             rect(5,3,5,18);
@@ -366,18 +381,23 @@ UI.init = function(){
         }else txtStr = paused ? "Paused" : (simSpeed===0 ? "Full-" : simSpeed===1 ? "Half-" : "1/" + pow(2,simSpeed) + " ") + "Speed";
         let newW = textWidth(txtStr)+6;
         this.setBox(-newW-5,undefined,newW);
-        fill(200,200,200,100);
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(RIGHT,TOP);
         text(txtStr,this.width-3,3);
     },function(){
         if(!selectedStorm) paused = !paused;
-        else stormInfoBox.toggleShow();
+        else{
+            stormInfoPanel.target = selectedStorm;
+            stormInfoPanel.show();
+        }
     });
 
     let bottomBar = primaryWrapper.append(false,0,height-30,width,30,function(){    // Bottom bar
-        fill(200,200,200,100);
+        fill(COLORS.UI.bar);
         noStroke();
         this.fullRect();
         textSize(18);
@@ -412,8 +432,11 @@ UI.init = function(){
             txtStr += " @ " + (s ? "selected storm" : "mouse pointer / finger");
         }else txtStr += "none";
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
         text(txtStr,3,3);
     },function(){
@@ -421,8 +444,11 @@ UI.init = function(){
     });
 
     bottomBar.append(false,width-29,3,24,24,function(){  // Help button
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(22);
         text("?",12,12);
@@ -430,19 +456,23 @@ UI.init = function(){
         helpBox.toggleShow();
     });
 
-    stormInfoBox = primaryWrapper.append(false,3*width/4,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
-        if(selectedStorm===undefined){
-            this.hide();
-            return;
-        }
-        let s = selectedStorm;
-        fill(200,200,200,100);
+    stormInfoPanel = primaryWrapper.append(false,3*width/4,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
+        let s = this.target;
+        fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
-        fill(0);
+        fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
-        text(s.getFullNameByTick("peak"),this.width/2,10);
+        if(!(s instanceof Storm)){
+            text("NO TARGETED STORM",this.width/2,10);
+            return;
+        }
+        let n = s.getFullNameByTick("peak");
+        let txtW = 7*this.width/8;
+        n = wrapText(n,txtW);
+        let nameHeight = countTextLines(n)*textLeading();
+        text(n,this.width/2,10);
         textSize(15);
         let txt = "";
         let formTime;
@@ -450,42 +480,46 @@ UI.init = function(){
         if(s.TC){
             formTime = tickMoment(s.formationTime).format(TIME_FORMAT);
             dissTime = tickMoment(s.dissipationTime).format(TIME_FORMAT);
-            txt += "Dates active:\n" + formTime + " -\n" + (s.dissipationTime ? dissTime : "currently active");
+            txt += "Dates active: " + formTime + " - " + (s.dissipationTime ? dissTime : "currently active");
         }else txt += "Dates active: N/A";
         txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
         txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
         txt += "\nACE: " + s.ACE;
         txt += "\nDamage: TBA";
         txt += "\nDeaths: TBA";
-        text(txt,this.width/2,40);
-        rectMode(CORNER);
+        txt = wrapText(txt,txtW);
+        text(txt,this.width/2,10+nameHeight);
     },true,false);
 
-    stormInfoBox.append(false,stormInfoBox.width-30,10,20,20,function(){
-        fill(200,200,200,100);
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+    stormInfoPanel.append(false,stormInfoPanel.width-30,10,20,20,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(22);
         text("X",10,10);
     },function(){
-        stormInfoBox.hide();
+        stormInfoPanel.hide();
     });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
-        fill(200,200,200,100);
+        fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
-        fill(0);
+        fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
         textSize(18);
         text(HELP_TEXT,10,10);
     },true,false);
 
     helpBox.append(false,helpBox.width-30,10,20,20,function(){
-        fill(200,200,200,100);
-        if(this.isHovered()) this.fullRect();
-        fill(0);
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(22);
         text("X",10,10);
