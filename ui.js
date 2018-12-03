@@ -345,7 +345,18 @@ UI.init = function(){
         button.metadata = i;
     }
 
-    let pauseButton = topBar.append(false,width-29,3,24,24,function(){  // Pause/resume button
+    topBar.append(false,width-29,3,24,24,function(){    // Toggle button for storm info panel
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
+        else triangle(6,9,18,9,12,15);
+    },function(){
+        stormInfoPanel.target = selectedStorm || getSeason(viewTick);
+        stormInfoPanel.toggleShow();
+    }).append(false,-29,0,24,24,function(){  // Pause/resume button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -358,9 +369,7 @@ UI.init = function(){
         }
     },function(){
         paused = !paused;
-    });
-
-    pauseButton.append(false,-105,0,100,24,function(){  // Pause/speed/selected storm indicator
+    }).append(false,-105,0,100,24,function(){  // Pause/speed/selected storm indicator
         let txtStr = "";
         if(selectedStorm){
             let sName = selectedStorm.getFullNameByTick(viewTick);
@@ -461,45 +470,43 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
-        if(!(s instanceof Storm)){
-            text("NO TARGETED STORM",this.width/2,10);
-            return;
+        const txtW = 7*this.width/8;
+        if(s instanceof Storm){
+            let n = s.getFullNameByTick("peak");
+            n = wrapText(n,txtW);
+            let nameHeight = countTextLines(n)*textLeading();
+            text(n,this.width/2,10);
+            textSize(15);
+            let txt = "";
+            let formTime;
+            let dissTime;
+            if(s.TC){
+                formTime = tickMoment(s.formationTime).format(TIME_FORMAT);
+                dissTime = tickMoment(s.dissipationTime).format(TIME_FORMAT);
+                txt += "Dates active: " + formTime + " - " + (s.dissipationTime ? dissTime : "currently active");
+            }else txt += "Dates active: N/A";
+            txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
+            txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
+            txt += "\nACE: " + s.ACE;
+            txt += "\nDamage: TBA";
+            txt += "\nDeaths: TBA";
+            txt = wrapText(txt,txtW);
+            text(txt,this.width/2,10+nameHeight);
+        }else{
+            let n = seasonName(s);
+            n = wrapText(n,txtW);
+            let nh = countTextLines(n)*textLeading();
+            text(n,this.width/2,10);
+            textSize(15);
+            let se = basin.seasons[s];
+            let txt = "Depressions: " + se.depressions;
+            txt += "\nNamed storms: " + se.namedStorms;
+            txt += "\nHurricanes: " + se.hurricanes;
+            txt += "\nMajor Hurricanes: " + se.majors;
+            txt = wrapText(txt,txtW);
+            text(txt,this.width/2,10+nh);
         }
-        let n = s.getFullNameByTick("peak");
-        let txtW = 7*this.width/8;
-        n = wrapText(n,txtW);
-        let nameHeight = countTextLines(n)*textLeading();
-        text(n,this.width/2,10);
-        textSize(15);
-        let txt = "";
-        let formTime;
-        let dissTime;
-        if(s.TC){
-            formTime = tickMoment(s.formationTime).format(TIME_FORMAT);
-            dissTime = tickMoment(s.dissipationTime).format(TIME_FORMAT);
-            txt += "Dates active: " + formTime + " - " + (s.dissipationTime ? dissTime : "currently active");
-        }else txt += "Dates active: N/A";
-        txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
-        txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
-        txt += "\nACE: " + s.ACE;
-        txt += "\nDamage: TBA";
-        txt += "\nDeaths: TBA";
-        txt = wrapText(txt,txtW);
-        text(txt,this.width/2,10+nameHeight);
     },true,false);
-
-    stormInfoPanel.append(false,stormInfoPanel.width-30,10,20,20,function(){
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(22);
-        text("X",10,10);
-    },function(){
-        stormInfoPanel.hide();
-    });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);
@@ -688,4 +695,11 @@ function ktsToKmh(k,rnd){
     let val = k*1.852;
     if(rnd) val = round(val/rnd)*rnd;
     return val;
+}
+
+function seasonName(y){
+    if(basin.SHem){
+        return (y-1) + "-" + (y%100<10 ? "0" : "") + (y%100);
+    }
+    return y + "";
 }
