@@ -19,3 +19,24 @@ class Basin{
         this.envData = {};
     }
 }
+
+class Season{
+    constructor(){
+        this.systems = [];
+        this.depressions = 0;
+        this.namedStorms = 0;
+        this.hurricanes = 0;
+        this.majors = 0;
+    }
+}
+
+function getSeason(t){
+    if(basin.SHem){
+        let tm = tickMoment(t);
+        let m = tm.month();
+        let y = tm.year();
+        if(m>=6) return y+1;
+        return y;
+    }
+    return tickMoment(t).year();
+}

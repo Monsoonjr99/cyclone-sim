@@ -148,7 +148,6 @@ UI.renderAll = function(){
 UI.mouseOver = undefined;
 
 UI.updateMouseOver = function(){
-    // if(UI.mouseOver && UI.mouseOver.checkMouseOver()===UI.mouseOver) return UI.mouseOver;
     for(let i=UI.elements.length-1;i>=0;i--){
         let u = UI.elements[i];
         let mo = u.checkMouseOver();
@@ -205,7 +204,6 @@ UI.init = function(){
         textSize(24);
         text("New Basin",100,20);
     },function(){
-        // init();
         mainMenu.hide();
         basinCreationMenu.show();
     });
@@ -217,7 +215,6 @@ UI.init = function(){
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
-        // textStyle(ITALIC);
         text("New Basin Settings",0,0);
     });
 
@@ -268,7 +265,7 @@ UI.init = function(){
         noStroke();
         this.fullRect();
         textSize(18);
-    },false);//,false);
+    },false);
 
     topBar.append(false,5,3,100,24,function(){  // Date indicator
         let txtStr = tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
@@ -401,7 +398,7 @@ UI.init = function(){
         noStroke();
         this.fullRect();
         textSize(18);
-    },false);//,false);
+    },false);
 
     bottomBar.append(false,5,3,100,24,function(){   // Map layer/environmental field indicator
         let txtStr = "Map Layer: ";
@@ -527,3 +524,168 @@ UI.init = function(){
         helpBox.hide();
     });
 };
+
+function mouseInCanvas(){
+    return mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height;
+}
+
+function mouseClicked(){
+    if(mouseInCanvas()){
+        if(UI.click()) return false;
+        if(basin){
+            if(basin.godMode && keyIsPressed && viewingPresent()) {
+                let g = {x: mouseX, y: mouseY};
+                if(key === "l" || key === "L"){
+                    g.sType = "l";
+                }else if(key === "d" || key === "D"){
+                    g.sType = "d";
+                }else if(key === "s" || key === "S"){
+                    g.sType = "s";
+                }else if(key === "1"){
+                    g.sType = "1";
+                }else if(key === "2"){
+                    g.sType = "2";
+                }else if(key === "3"){
+                    g.sType = "3";
+                }else if(key === "4"){
+                    g.sType = "4";
+                }else if(key === "5"){
+                    g.sType = "5";
+                }else if(key === "x" || key === "X"){
+                    g.sType = "x";
+                }else return;
+                basin.activeSystems.push(new Storm(false,g));
+            }else if(viewingPresent()){
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=basin.activeSystems.length-1;i>=0;i--){
+                    let s = basin.activeSystems[i];
+                    let p = s.getStormDataByTick(viewTick,true).pos;
+                    if(p.dist(mVector)<DIAMETER){
+                        selectStorm(s);
+                        refreshTracks();
+                        return false;
+                    }
+                }
+                selectStorm();
+                refreshTracks();
+            }else{
+                let vSeason = basin.seasons[getSeason(viewTick)];
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=vSeason.systems.length-1;i>=0;i--){
+                    let s = vSeason.systems[i];
+                    if(s.aliveAt(viewTick)){
+                        let p = s.getStormDataByTick(viewTick).pos;
+                        if(p.dist(mVector)<DIAMETER){
+                            selectStorm(s);
+                            refreshTracks();
+                            return false;
+                        }
+                    }
+                }
+                selectStorm();
+                refreshTracks();
+            }
+        }
+        return false;
+    }
+}
+
+function selectStorm(s){
+    if(s instanceof Storm){
+        selectedStorm = s;
+        stormInfoPanel.target = s;
+    }else selectedStorm = undefined;
+}
+
+function keyPressed(){
+    // console.log("keyPressed: " + key + " / " + keyCode);
+    keyRepeatFrameCounter = -1;
+    switch(key){
+        case " ":
+        paused = !paused;
+        break;
+        case "A":
+        if(paused) advanceSim();
+        break;
+        case "W":
+        showStrength = !showStrength;
+        break;
+        case "E":
+        Env.displayNext();
+        break;
+        default:
+        switch(keyCode){
+            case KEY_LEFT_BRACKET:
+            simSpeed++;
+            if(simSpeed>5) simSpeed=5;
+            break;
+            case KEY_RIGHT_BRACKET:
+            simSpeed--;
+            if(simSpeed<0) simSpeed=0;
+            break;
+            default:
+            return;
+        }
+    }
+    return false;
+}
+
+function wrapText(str,w){
+    let newStr = "";
+    for(let i = 0, j = 0;i<str.length;i=j){
+        if(str.charAt(i)==='\n'){
+            i++;
+            j++;
+            newStr += '\n';
+            continue;
+        }
+        j = str.indexOf('\n',i);
+        if(j===-1) j = str.length;
+        let line = str.slice(i,j);
+        while(textWidth(line)>w){
+            let k=0;
+            while(textWidth(line.slice(0,k))<=w) k++;
+            k--;
+            if(k<1){
+                newStr += line.charAt(0) + '\n';
+                line = line.slice(1);
+                continue;
+            }
+            let l = line.lastIndexOf(' ',k-1);
+            if(l!==-1){
+                newStr += line.slice(0,l) + '\n';
+                line = line.slice(l+1);
+                continue;
+            }
+            let sub = line.slice(0,k);
+            l = sub.search(/\W(?=\w*$)/);
+            if(l!==-1){
+                newStr += line.slice(0,l+1) + '\n';
+                line = line.slice(l+1);
+                continue;
+            }
+            newStr += sub + '\n';
+            line = line.slice(k);
+        }
+        newStr += line;
+    }
+    return newStr;
+}
+
+function countTextLines(str){
+    let l = 1;
+    for(let i=0;i<str.length;i++) if(str.charAt(i)==='\n') l++;
+    return l;
+}
+
+function ktsToMph(k,rnd){
+    let val = k*1.15078;
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}
+
+function ktsToKmh(k,rnd){
+    let val = k*1.852;
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}

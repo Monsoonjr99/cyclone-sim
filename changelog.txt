@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181203a:
+    * Cleaned up the code:
+        > Deleted defunct commented-out code
+        > Moved various functions from sketch.js to more appropriate files (including the newly-added misc.js)
 v20181202a:
     + Added text wrapping for storm info panel
     * constant-ified UI colors (plus some color tweaks)

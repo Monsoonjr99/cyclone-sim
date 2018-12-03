@@ -1,11 +1,10 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181202a";
+const VERSION_NUMBER = "20181203a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
-// const START_TIME = moment.utc().startOf('year').valueOf();      // Unix timestamp for beginning of current year
 const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
 const TIME_FORMAT = "HH[z] MMM DD Y";
 const DEPRESSION_LETTER = "H";
