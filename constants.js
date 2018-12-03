@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181203b";
+const VERSION_NUMBER = "20181203c";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise

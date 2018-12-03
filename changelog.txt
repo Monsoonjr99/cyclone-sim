@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181203c:
+    + Added arrow buttons to side panel for navigating through season stats
+        > Greyed out when viewing storm stats or if there is no season to navigate to
 v20181203b:
     + Added viewing season stats in storm info side panel
         > Click drop arrow button without storm selected to access

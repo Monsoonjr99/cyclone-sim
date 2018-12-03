@@ -475,7 +475,7 @@ UI.init = function(){
             let n = s.getFullNameByTick("peak");
             n = wrapText(n,txtW);
             let nameHeight = countTextLines(n)*textLeading();
-            text(n,this.width/2,10);
+            text(n,this.width/2,35);
             textSize(15);
             let txt = "";
             let formTime;
@@ -491,12 +491,12 @@ UI.init = function(){
             txt += "\nDamage: TBA";
             txt += "\nDeaths: TBA";
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,10+nameHeight);
+            text(txt,this.width/2,35+nameHeight);
         }else{
             let n = seasonName(s);
             n = wrapText(n,txtW);
             let nh = countTextLines(n)*textLeading();
-            text(n,this.width/2,10);
+            text(n,this.width/2,35);
             textSize(15);
             let se = basin.seasons[s];
             let txt = "Depressions: " + se.depressions;
@@ -504,9 +504,45 @@ UI.init = function(){
             txt += "\nHurricanes: " + se.hurricanes;
             txt += "\nMajor Hurricanes: " + se.majors;
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,10+nh);
+            text(txt,this.width/2,35+nh);
         }
     },true,false);
+
+    stormInfoPanel.append(false,3,3,24,24,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.greyText);
+        let s = stormInfoPanel.target;
+        if(!(s instanceof Storm)){
+            if(s>getSeason(0)) fill(COLORS.UI.text);
+        }
+        triangle(19,5,19,19,5,12);
+    },function(){
+        let s = stormInfoPanel.target;
+        if(!(s instanceof Storm)){
+            if(s>getSeason(0)) stormInfoPanel.target--;
+        }
+    });
+    
+    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.greyText);
+        let s = stormInfoPanel.target;
+        if(!(s instanceof Storm)){
+            if(s<getSeason(basin.tick)) fill(COLORS.UI.text);
+        }
+        triangle(5,5,5,19,19,12);
+    },function(){
+        let s = stormInfoPanel.target;
+        if(!(s instanceof Storm)){
+            if(s<getSeason(basin.tick)) stormInfoPanel.target++;
+        }
+    });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);
