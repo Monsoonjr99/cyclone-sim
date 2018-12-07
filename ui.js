@@ -503,6 +503,7 @@ UI.init = function(){
             txt += "\nNamed storms: " + se.namedStorms;
             txt += "\nHurricanes: " + se.hurricanes;
             txt += "\nMajor Hurricanes: " + se.majors;
+            txt += "\nCategory 5s: " + se.c5s;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
         }
@@ -515,15 +516,11 @@ UI.init = function(){
         }
         fill(COLORS.UI.greyText);
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm)){
-            if(s>getSeason(0)) fill(COLORS.UI.text);
-        }
+        if(!(s instanceof Storm) && s>getSeason(0)) fill(COLORS.UI.text);
         triangle(19,5,19,19,5,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm)){
-            if(s>getSeason(0)) stormInfoPanel.target--;
-        }
+        if(!(s instanceof Storm) && s>getSeason(0)) stormInfoPanel.target--;
     });
     
     stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){
@@ -533,15 +530,11 @@ UI.init = function(){
         }
         fill(COLORS.UI.greyText);
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm)){
-            if(s<getSeason(basin.tick)) fill(COLORS.UI.text);
-        }
+        if(!(s instanceof Storm) && s<getSeason(basin.tick)) fill(COLORS.UI.text);
         triangle(5,5,5,19,19,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm)){
-            if(s<getSeason(basin.tick)) stormInfoPanel.target++;
-        }
+        if(!(s instanceof Storm) && s<getSeason(basin.tick)) stormInfoPanel.target++;
     });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){

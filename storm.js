@@ -13,6 +13,7 @@ class Storm{
         this.named = false;
         this.hurricane = false;
         this.major = false;
+        this.c5 = false;
 
         this.rotation = random(TAU);
 
@@ -200,6 +201,10 @@ class Storm{
         if(!this.major && isTropical && cat>=3){
             cSeason.majors++;
             this.major = true;
+        }
+        if(!this.c5 && isTropical && cat>=5){
+            cSeason.c5s++;
+            this.c5 = true;
         }
         if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
         if(!wasTCB4Update && isTropical) this.dissipationTime = undefined;

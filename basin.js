@@ -27,6 +27,7 @@ class Season{
         this.namedStorms = 0;
         this.hurricanes = 0;
         this.majors = 0;
+        this.c5s = 0;
     }
 }
 
