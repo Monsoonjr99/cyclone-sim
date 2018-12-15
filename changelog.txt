@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181215a:
+    + Added "Jump to" button to side panel, which (while paused) "jumps" analysis to a specific point
+        > In season stats, jumps to the beginning of the targeted year
+        > In storm stats, jumps to when the targeted system first formed as a disturbance
 v20181207a:
     + Added counter for category 5s in season stats
 v20181203c:

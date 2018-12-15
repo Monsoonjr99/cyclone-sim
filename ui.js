@@ -536,6 +536,34 @@ UI.init = function(){
         let s = stormInfoPanel.target;
         if(!(s instanceof Storm) && s<getSeason(basin.tick)) stormInfoPanel.target++;
     });
+    
+    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.greyText);
+        if(paused && stormInfoPanel.target!==undefined) fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Jump to",this.width/2,this.height/2);
+    },function(){
+        if(paused && stormInfoPanel.target!==undefined){
+            let s = stormInfoPanel.target;
+            let t;
+            if(s instanceof Storm){
+                t = s.birthTime;
+                t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+            }else{
+                let m = moment.utc(basin.SHem ? [s-1, 6, 1] : [s, 0, 1]);
+                t = floor((m.valueOf()-basin.startTime)/TICK_DURATION);
+                t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+            }
+            viewTick = t;
+            refreshTracks();
+            Env.displayLayer();
+        }
+    });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);
