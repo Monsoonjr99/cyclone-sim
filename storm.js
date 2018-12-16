@@ -191,8 +191,11 @@ class Storm{
                 this.named = true;
                 this.namedTime = basin.tick;
             }
-            this.ACE += pow(w,2)/10000;
+            let a = pow(w,2)/10000;
+            this.ACE += a;
+            cSeason.ACE += a;
             this.ACE = round(this.ACE*10000)/10000;
+            cSeason.ACE = round(cSeason.ACE*10000)/10000;
         }
         if(!this.hurricane && isTropical && cat>=1){
             cSeason.hurricanes++;

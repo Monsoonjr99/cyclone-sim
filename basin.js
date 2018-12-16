@@ -28,6 +28,7 @@ class Season{
         this.hurricanes = 0;
         this.majors = 0;
         this.c5s = 0;
+        this.ACE = 0;
     }
 }
 

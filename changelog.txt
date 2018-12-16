@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181216a:
+    + Added "Total ACE" counter to season stats
 v20181215a:
     + Added "Jump to" button to side panel, which (while paused) "jumps" analysis to a specific point
         > In season stats, jumps to the beginning of the targeted year

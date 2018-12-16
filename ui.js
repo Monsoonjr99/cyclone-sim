@@ -504,6 +504,7 @@ UI.init = function(){
             txt += "\nHurricanes: " + se.hurricanes;
             txt += "\nMajor Hurricanes: " + se.majors;
             txt += "\nCategory 5s: " + se.c5s;
+            txt += "\nTotal ACE: " + se.ACE;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
         }
