@@ -29,6 +29,8 @@ class Season{
         this.majors = 0;
         this.c5s = 0;
         this.ACE = 0;
+        this.deaths = 0;
+        this.damage = 0;
     }
 }
 

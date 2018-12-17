@@ -29,6 +29,8 @@ class Storm{
         this.record = [];
         this.peak = undefined;
         this.ACE = 0;
+        this.deaths = 0;
+        this.damage = 0;
         if(isNewStorm && basin.tick%ADVISORY_TICKS===0) this.current.advisory();
     }
 
@@ -208,6 +210,23 @@ class Storm{
         if(!this.c5 && isTropical && cat>=5){
             cSeason.c5s++;
             this.c5 = true;
+        }
+        if(isTropical){
+            let lnd = land.get(data.pos.x,data.pos.y);
+            let pop = lnd ? round(250000*(1+hemY(data.pos.y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
+            let damPot = pow(1.062,data.windSpeed)-1;   // damage potential
+            let dedPot = pow(1.02,data.windSpeed)-1;    // death potential
+            let m = pow(1.5,randomGaussian());      // modifier
+            damPot *= m;
+            dedPot *= m;
+            let dam = pop*damPot*20*pow(1.1,random(-1,1));
+            let ded = round(pop*dedPot*0.00001*pow(1.1,random(-1,1)));
+            this.damage += dam;
+            this.damage = round(this.damage*100)/100;
+            this.deaths += ded;
+            cSeason.damage += dam;
+            cSeason.damage = round(cSeason.damage*100)/100;
+            cSeason.deaths += ded;
         }
         if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
         if(!wasTCB4Update && isTropical) this.dissipationTime = undefined;

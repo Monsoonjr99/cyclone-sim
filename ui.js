@@ -488,8 +488,8 @@ UI.init = function(){
             txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
             txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
             txt += "\nACE: " + s.ACE;
-            txt += "\nDamage: TBA";
-            txt += "\nDeaths: TBA";
+            txt += "\nDamage: " + damageDisplayNumber(s.damage);
+            txt += "\nDeaths: " + s.deaths;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nameHeight);
         }else{
@@ -505,6 +505,8 @@ UI.init = function(){
             txt += "\nMajor Hurricanes: " + se.majors;
             txt += "\nCategory 5s: " + se.c5s;
             txt += "\nTotal ACE: " + se.ACE;
+            txt += "\nDamage: " + damageDisplayNumber(se.damage);
+            txt += "\nDeaths: " + se.deaths;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
         }
@@ -753,6 +755,13 @@ function ktsToKmh(k,rnd){
     let val = k*1.852;
     if(rnd) val = round(val/rnd)*rnd;
     return val;
+}
+
+function damageDisplayNumber(d){
+    if(d===0) return "none";
+    if(d<1000000) return "minimal";
+    if(d<1000000000) return "$ " + (round(d/1000)/1000) + " M";
+    return "$ " + (round(d/1000000)/1000) + " B";
 }
 
 function seasonName(y){
