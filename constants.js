@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181217a";
+const VERSION_NUMBER = "20181218a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -7,6 +7,8 @@ const TICK_DURATION = 3600000;  // How long in sim time does a tick last in mill
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
 const TIME_FORMAT = "HH[z] MMM DD Y";
+const NHEM_DEFAULT_YEAR = moment.utc().startOf('year').year();
+const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
 const LAND_BIAS_FACTORS = [

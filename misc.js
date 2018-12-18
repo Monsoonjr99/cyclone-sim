@@ -10,7 +10,7 @@ function refreshTracks(){
 }
 
 function tickMoment(t){
-    return moment.utc(basin.startTime+t*TICK_DURATION);
+    return moment.utc(basin.startTime()+t*TICK_DURATION);
 }
 
 function hem(v){

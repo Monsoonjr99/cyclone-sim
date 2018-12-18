@@ -218,7 +218,7 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    basinCreationMenu.append(false,width/2-100,height/4-20,200,40,function(){
+    let hemsel = basinCreationMenu.append(false,width/2-100,height/4-20,200,40,function(){   // hemisphere selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -239,6 +239,50 @@ UI.init = function(){
             newBasinSettings.hem++;
             newBasinSettings.hem %= 3;
         }
+    });
+
+    hemsel.append(false,0,60,0,40,function(){ // Year selector
+        let yName;
+        if(newBasinSettings.year===undefined) yName = "Current year";
+        else{
+            let y = newBasinSettings.year;
+            let h;
+            if(newBasinSettings.hem===1) h = false;
+            if(newBasinSettings.hem===2) h = true;
+            if(h===undefined){
+                yName = seasonName(y,false) + " or " + seasonName(y,true);
+            }else yName = seasonName(y,h);
+        }
+        textAlign(LEFT,CENTER);
+        text("Starting year: "+yName,0,20);
+    }).append(false,-25,5,20,10,function(){
+        fill(COLORS.UI.buttonBox);
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        triangle(2,8,10,2,18,8);
+    },function(){
+        if(newBasinSettings.year===undefined){
+            if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
+            else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
+        }else newBasinSettings.year++;
+    }).append(false,0,20,20,10,function(){
+        fill(COLORS.UI.buttonBox);
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        triangle(2,2,18,2,10,8);
+    },function(){
+        if(newBasinSettings.year===undefined){
+            if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
+            else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
+        }else newBasinSettings.year--;
     });
 
     basinCreationMenu.append(false,width/2-100,7*height/8-20,200,40,function(){    // "Start" button
@@ -327,7 +371,7 @@ UI.init = function(){
                 m.subtract(1,"y");
                 break;
             }
-            let t = floor((m.valueOf()-basin.startTime)/TICK_DURATION);
+            let t = floor((m.valueOf()-basin.startTime())/TICK_DURATION);
             if(this.metadata%2===0 && t%ADVISORY_TICKS!==0) t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(t>basin.tick) t = basin.tick;
@@ -559,7 +603,7 @@ UI.init = function(){
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
                 let m = moment.utc(basin.SHem ? [s-1, 6, 1] : [s, 0, 1]);
-                t = floor((m.valueOf()-basin.startTime)/TICK_DURATION);
+                t = floor((m.valueOf()-basin.startTime())/TICK_DURATION);
                 t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }
             viewTick = t;
@@ -764,8 +808,9 @@ function damageDisplayNumber(d){
     return "$ " + (round(d/1000000)/1000) + " B";
 }
 
-function seasonName(y){
-    if(basin.SHem){
+function seasonName(y,h){
+    if(h===undefined) h = basin.SHem;
+    if(h){
         return (y-1) + "-" + (y%100<10 ? "0" : "") + (y%100);
     }
     return y + "";

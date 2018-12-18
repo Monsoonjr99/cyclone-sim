@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181218a:
+    + Added a basin setting for the starting year of a simulation
+        > The default of "Current year" is the current Jan-Dec year for NHem and Jul-Jun year for SHem
 v20181217a:
     + Added damage and deaths, including counters in storm and season stats
         > The damage/deaths algorithm is rudimentary and may need change
