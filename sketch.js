@@ -107,7 +107,8 @@ function init(){
     else hem = random()<0.5;
     let year = hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
     if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
-    basin = new Basin(year,hem,true);
+    let seed = newBasinSettings.seed;
+    basin = new Basin(year,hem,true,seed);
 
     viewTick = basin.tick;
     curSeason = getSeason(basin.tick);

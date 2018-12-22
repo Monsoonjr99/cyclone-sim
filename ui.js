@@ -206,6 +206,25 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         basinCreationMenu.show();
+    }).append(false,0,60,200,40,function(){     // test load button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        text("\"Load\" From Seed (test)",100,20);
+    },function(){
+        let s = localStorage.getItem("testSeed");
+        if(s!==null){
+            newBasinSettings.seed = parseInt(s);
+            init();
+            mainMenu.hide();
+        }
     });
 
     // basin creation menu

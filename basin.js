@@ -8,6 +8,7 @@ class Basin{
         this.startYear = year;
         this.seed = seed || moment().valueOf();
         this.envData = {};
+        localStorage.setItem("testSeed",this.seed.toString());
     }
 
     startTime(){

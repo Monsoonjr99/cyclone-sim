@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181222a:
+    + Added a basic test for basin saving/loading
+        > Saves just the seed of the latest basin generated
+        > The "'Load' From Seed (test)" button uses the saved seed to generate a new basin (does nothing if no seed is saved)
 v20181218a:
     + Added a basin setting for the starting year of a simulation
         > The default of "Current year" is the current Jan-Dec year for NHem and Jul-Jun year for SHem
