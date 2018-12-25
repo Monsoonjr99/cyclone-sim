@@ -46,3 +46,45 @@ function getSeason(t){
     }
     return tickMoment(t).year();
 }
+
+// saving/loading helper functions
+
+function encodeB36StringArray(arr,fl){
+    const R = 36;
+    if(fl===undefined) fl = 0;
+    if(fl>R/2) fl = 0;
+    if(fl<=-R/2) fl = 0;
+    let nLen = floor(log(max(max(arr),abs(min(arr)))/pow(R,fl)*2+1)/log(R))+1;
+    nLen = constrain(nLen,1,R);
+    let str = (nLen-1).toString(R);
+    str += (fl<0 ? fl+R : fl).toString(R);
+    for(let i=0;i<arr.length;i++){
+        let n = arr[i];
+        n /= pow(R,fl);
+        n = round(n);
+        n = n<0 ? abs(n)*2+1 : n*2;
+        n = n.toString(R);
+        if(n.length>nLen) n = n.slice(0,nLen);
+        else n = n.padStart(nLen,"0");
+        str += n;
+    }
+    return str;
+}
+
+function decodeB36StringArray(str){
+    const R = 36;
+    let arr = [];
+    let nLen = str.slice(0,1);
+    let fl = str.slice(1,2);
+    nLen = parseInt(nLen,R)+1;
+    fl = parseInt(fl,R);
+    if(fl>R/2) fl -= R;
+    for(let i=2;i<str.length;i+=nLen){
+        let n = str.slice(i,i+nLen);
+        n = parseInt(n,R);
+        n = n%2===0 ? n/2 : -(n-1)/2;
+        n *= pow(R,fl);
+        arr.push(n);
+    }
+    return arr;
+}

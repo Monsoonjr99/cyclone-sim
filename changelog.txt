@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20181225a:
+    + Added a couple functions for data compression purposes for saving/loading
 v20181222a:
     + Added a basic test for basin saving/loading
         > Saves just the seed of the latest basin generated
