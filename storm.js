@@ -243,7 +243,7 @@ class StormData{
         this.pressure = p;
         this.windSpeed = w;
         this.cat = getCat(this.windSpeed);
-        this.type = !STORM_TYPES.includes(t) ? EXTROP : t;
+        this.type = t<STORM_TYPES ? t : EXTROP;//!STORM_TYPES.includes(t) ? EXTROP : t;
     }
 }
 
@@ -479,9 +479,9 @@ function getColor(c,ty){
             return COLORS.storm[EXTROP];
         case SUBTROP:
             if(c<1) return COLORS.storm[SUBTROP][c];
-            return COLORS.storm[c];
+            return COLORS.storm[TROP][c];
         case TROP:
-            return COLORS.storm[c];
+            return COLORS.storm[TROP][c];
         case TROPWAVE:
             return COLORS.storm[TROPWAVE];
     }

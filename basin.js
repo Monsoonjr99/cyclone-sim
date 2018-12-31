@@ -8,6 +8,7 @@ class Basin{
         this.startYear = year;
         this.seed = seed || moment().valueOf();
         this.envData = {};
+        this.saveSlot = 0;
         localStorage.setItem("testSeed",this.seed.toString());
     }
 
@@ -19,6 +20,10 @@ class Basin{
             mo.year(y-1);
         }
         return mo.valueOf();
+    }
+
+    save(){
+        // insert save code here
     }
 }
 
@@ -51,35 +56,50 @@ function getSeason(t){
 
 function encodeB36StringArray(arr,fl){
     const R = 36;
+    const numLen = n=>constrain(floor(log(abs(n)/pow(R,fl)*2+(n<0?1:0))/log(R))+1,1,R);
     if(fl===undefined) fl = 0;
     if(fl>R/2) fl = 0;
     if(fl<=-R/2) fl = 0;
-    let nLen = floor(log(max(max(arr),abs(min(arr)))/pow(R,fl)*2+1)/log(R))+1;
-    nLen = constrain(nLen,1,R);
-    let str = (nLen-1).toString(R);
-    str += (fl<0 ? fl+R : fl).toString(R);
+    let str = (fl<0 ? fl+R : fl).toString(R);
+    let nLen;
+    let lenRun;
+    let strpart = "";
     for(let i=0;i<arr.length;i++){
         let n = arr[i];
+        let newLen = numLen(n);
+        if(newLen!==nLen || lenRun>=R){
+            if(lenRun!==undefined){
+                str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
+                strpart = "";
+            }
+            nLen = newLen;
+            lenRun = 1;
+        }else lenRun++;
         n /= pow(R,fl);
         n = round(n);
         n = n<0 ? abs(n)*2+1 : n*2;
         n = n.toString(R);
-        if(n.length>nLen) n = n.slice(0,nLen);
-        else n = n.padStart(nLen,"0");
-        str += n;
+        if(n.length>R) n = n.slice(0,R);
+        strpart += n;
     }
+    if(lenRun!==undefined) str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
     return str;
 }
 
 function decodeB36StringArray(str){
     const R = 36;
     let arr = [];
-    let nLen = str.slice(0,1);
-    let fl = str.slice(1,2);
-    nLen = parseInt(nLen,R)+1;
+    let fl = str.slice(0,1);
     fl = parseInt(fl,R);
     if(fl>R/2) fl -= R;
-    for(let i=2;i<str.length;i+=nLen){
+    for(let i=1,runLen=0,run=0,nLen;i<str.length;i+=nLen,run++){
+        if(run>=runLen){
+            runLen = str.slice(i,++i);
+            nLen = str.slice(i,++i);
+            runLen = parseInt(runLen,R)+1;
+            nLen = parseInt(nLen,R)+1;
+            run = 0;
+        }
         let n = str.slice(i,i+nLen);
         n = parseInt(n,R);
         n = n%2===0 ? n/2 : -(n-1)/2;

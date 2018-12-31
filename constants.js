@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181225a";
+const VERSION_NUMBER = "20181231a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -17,11 +17,11 @@ const LAND_BIAS_FACTORS = [
     -0.3,       // Bias factor for the "center" (as defined by LAND_BIAS_FACTORS[0])
     0.1         // Bias factor for the east edge
 ];
-const EXTROP = "extratropical";
-const SUBTROP = "subtropical";
-const TROP = "tropical";
-const TROPWAVE = "tropical wave";
-const STORM_TYPES = [EXTROP,SUBTROP,TROP,TROPWAVE];
+const EXTROP = 0;//"extratropical";
+const SUBTROP = 1;//"subtropical";
+const TROP = 2;//"tropical";
+const TROPWAVE = 3;//"tropical wave";
+const STORM_TYPES = 4;//[EXTROP,SUBTROP,TROP,TROPWAVE];
 const NAMES = [        // Temporary Hardcoded Name List
     ['Ana','Bill','Claudette','Danny','Elsa','Fred','Grace','Henri','Ida','Julian','Kate','Larry','Mindy','Nicholas','Odette','Peter','Rose','Sam','Teresa','Victor','Wanda'],
     ['Alex','Bonnie','Colin','Danielle','Earl','Fiona','Gaston','Hermine','Ian','Julia','Karl','Lisa','Martin','Nicole','Owen','Paula','Richard','Shary','Tobias','Virginie','Walter'],
@@ -39,6 +39,8 @@ const SNOW_LAYERS = 40;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
+const LOCALSTORAGE_SAVE_PREFIX = "cyclone-sim-";
+const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 
 const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;
@@ -68,14 +70,15 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm = {};
     COLORS.storm[EXTROP] = color(220,220,220);
     COLORS.storm[TROPWAVE] = color(130,130,240);
-    COLORS.storm[-2] = color(130,130,240);
-    COLORS.storm[-1] = color(20,20,230);
-    COLORS.storm[0] = color(20,230,20);
-    COLORS.storm[1] = color(230,230,20);
-    COLORS.storm[2] = color(240,170,20);
-    COLORS.storm[3] = color(240,20,20);
-    COLORS.storm[4] = color(250,40,250);
-    COLORS.storm[5] = color(250,140,250);
+    COLORS.storm[TROP] = {};
+    COLORS.storm[TROP][-2] = color(130,130,240);
+    COLORS.storm[TROP][-1] = color(20,20,230);
+    COLORS.storm[TROP][0] = color(20,230,20);
+    COLORS.storm[TROP][1] = color(230,230,20);
+    COLORS.storm[TROP][2] = color(240,170,20);
+    COLORS.storm[TROP][3] = color(240,20,20);
+    COLORS.storm[TROP][4] = color(250,40,250);
+    COLORS.storm[TROP][5] = color(250,140,250);
     COLORS.storm[SUBTROP] = {};
     COLORS.storm[SUBTROP][-1] = color(60,60,220);
     COLORS.storm[SUBTROP][0] = color(60,220,60);
