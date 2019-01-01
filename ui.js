@@ -217,14 +217,11 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(18);
-        text("\"Load\" From Seed (test)",100,20);
+        text("Partial Load (test)",100,20);
     },function(){
-        let s = localStorage.getItem("testSeed");
-        if(s!==null){
-            newBasinSettings.seed = parseInt(s);
-            init();
-            mainMenu.hide();
-        }
+        newBasinSettings.load = true;
+        init();
+        mainMenu.hide();
     });
 
     // basin creation menu

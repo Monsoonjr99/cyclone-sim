@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20181231a";
+const VERSION_NUMBER = "20190101a";
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -41,6 +41,7 @@ const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
 const LOCALSTORAGE_SAVE_PREFIX = "cyclone-sim-";
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
+const AUTOSAVE_TICK_PERIOD = 240;
 
 const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;

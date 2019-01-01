@@ -1,5 +1,5 @@
 class Basin{
-    constructor(year,SHem,godMode,seed){
+    constructor(load,year,SHem,godMode,seed){
         this.seasons = {};
         this.activeSystems = [];
         this.tick = 0;
@@ -8,8 +8,9 @@ class Basin{
         this.startYear = year;
         this.seed = seed || moment().valueOf();
         this.envData = {};
-        this.saveSlot = 0;
-        localStorage.setItem("testSeed",this.seed.toString());
+        this.saveSlot = load ? load : 0;
+        if(load || load===0) this.load();
+        // localStorage.setItem("testSeed",this.seed.toString());
     }
 
     startTime(){
@@ -22,8 +23,41 @@ class Basin{
         return mo.valueOf();
     }
 
+    storagePrefix(){
+        return LOCALSTORAGE_SAVE_PREFIX + this.saveSlot + '-';
+    }
+
     save(){
-        // insert save code here
+        localStorage.setItem(this.storagePrefix()+'format',SAVE_FORMAT);
+        let key = this.storagePrefix() + 'basin';
+        let flags = 0;
+        flags |= this.godMode;
+        flags <<= 1;
+        flags |= this.SHem;
+        let arr = [this.tick,this.seed,this.startYear,flags];
+        arr = encodeB36StringArray(arr);
+        localStorage.setItem(key,arr);
+        // insert seasons and env saving here
+    }
+
+    load(){
+        let key = this.storagePrefix() + 'basin';
+        let arr = localStorage.getItem(key);
+        if(arr){
+            arr = decodeB36StringArray(arr);
+            this.tick = arr[0];
+            this.seed = arr[1];
+            this.startYear = arr[2];
+            let flags = arr[3];
+            this.SHem = flags & 1;
+            flags >>= 1;
+            this.godMode = flags & 1;
+            // insert seasons and env loading here
+            this.tick = 0; // temporary since saving seasons and env not yet added
+        }else{
+            this.godMode = true;
+            this.startYear = NHEM_DEFAULT_YEAR;
+        }
     }
 }
 

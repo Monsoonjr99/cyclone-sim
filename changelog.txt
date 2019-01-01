@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190101a:
+    * Saving/loading test now autosaves partial basin data such as hemisphere and start year
 v20181231a:
     * Optimized data compression functions
     * A few other preparations for adding saving/loading

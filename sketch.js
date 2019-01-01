@@ -108,7 +108,8 @@ function init(){
     let year = hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
     if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
     let seed = newBasinSettings.seed;
-    basin = new Basin(year,hem,true,seed);
+    if(newBasinSettings.load) basin = new Basin(0);
+    else basin = new Basin(false,year,hem,true,seed);
 
     viewTick = basin.tick;
     curSeason = getSeason(basin.tick);
@@ -160,4 +161,5 @@ function advanceSim(){
         Env.displayLayer();
         Env.record();
     }
+    if(basin.tick%AUTOSAVE_TICK_PERIOD===0) basin.save();
 }
