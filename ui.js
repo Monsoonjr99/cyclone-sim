@@ -166,6 +166,8 @@ UI.click = function(){
         UI.mouseOver.clicked();
         return true;
     }
+    helpBox.hide();
+    sideMenu.hide();
     return false;
 };
 
@@ -469,7 +471,18 @@ UI.init = function(){
         textSize(18);
     },false);
 
-    bottomBar.append(false,5,3,100,24,function(){   // Map layer/environmental field indicator
+    bottomBar.append(false,5,3,24,24,function(){    // Side menu button
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        rect(3,6,18,2);
+        rect(3,11,18,2);
+        rect(3,16,18,2);
+    },function(){
+        sideMenu.toggleShow();
+    }).append(false,29,0,100,24,function(){   // Map layer/environmental field indicator
         let txtStr = "Map Layer: ";
         if(Env.displaying!==-1){
             let f = Env.fieldList[Env.displaying];
@@ -627,6 +640,16 @@ UI.init = function(){
             Env.displayLayer();
         }
     });
+
+    sideMenu = primaryWrapper.append(false,0,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
+        fill(COLORS.UI.box);
+        noStroke();
+        this.fullRect();
+        fill(COLORS.UI.text);
+        textAlign(CENTER,TOP);
+        textSize(15);
+        text("WIP Menu",this.width/2,5);
+    },true,false);
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);

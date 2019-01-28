@@ -8,7 +8,7 @@ class Basin{
         this.startYear = year;
         this.seed = seed || moment().valueOf();
         this.envData = {};
-        this.saveSlot = load ? load : 0;
+        this.saveSlot = load || 0;
         if(load || load===0) this.load();
         // localStorage.setItem("testSeed",this.seed.toString());
     }
@@ -24,26 +24,29 @@ class Basin{
     }
 
     storagePrefix(){
-        return LOCALSTORAGE_SAVE_PREFIX + this.saveSlot + '-';
+        return LOCALSTORAGE_KEY_PREFIX + this.saveSlot + '-';
     }
 
     save(){
-        localStorage.setItem(this.storagePrefix()+'format',SAVE_FORMAT);
-        let key = this.storagePrefix() + 'basin';
+        let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+        let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+        localStorage.setItem(formatKey,SAVE_FORMAT);
         let flags = 0;
         flags |= this.godMode;
         flags <<= 1;
         flags |= this.SHem;
         let arr = [this.tick,this.seed,this.startYear,flags];
         arr = encodeB36StringArray(arr);
-        localStorage.setItem(key,arr);
+        localStorage.setItem(basinKey,arr);
         // insert seasons and env saving here
     }
 
     load(){
-        let key = this.storagePrefix() + 'basin';
-        let arr = localStorage.getItem(key);
-        if(arr){
+        let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+        let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+        let arr = localStorage.getItem(basinKey);
+        let format = parseInt(localStorage.getItem(formatKey));
+        if(arr && format>=EARLIEST_COMPATIBLE_FORMAT){
             arr = decodeB36StringArray(arr);
             this.tick = arr[0];
             this.seed = arr[1];

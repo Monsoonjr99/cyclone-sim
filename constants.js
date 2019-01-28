@@ -1,5 +1,8 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190101a";
+const VERSION_NUMBER = "20190128a";
+
+const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
+const EARLIEST_COMPATIBLE_FORMAT = 0;
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -7,7 +10,7 @@ const TICK_DURATION = 3600000;  // How long in sim time does a tick last in mill
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
 const TIME_FORMAT = "HH[z] MMM DD Y";
-const NHEM_DEFAULT_YEAR = moment.utc().startOf('year').year();
+const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
@@ -39,8 +42,9 @@ const SNOW_LAYERS = 40;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
-const LOCALSTORAGE_SAVE_PREFIX = "cyclone-sim-";
-const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
+const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";
+const LOCALSTORAGE_KEY_BASIN = "basin";
+const LOCALSTORAGE_KEY_FORMAT = "format";
 const AUTOSAVE_TICK_PERIOD = 240;
 
 const OFF_SEASON_POLAR_TEMP = -3;
