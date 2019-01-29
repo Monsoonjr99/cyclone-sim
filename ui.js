@@ -228,23 +228,6 @@ UI.init = function(){
 
     // basin creation menu
 
-    basinCreationMenu.append(false,20,20,50,30,function(){
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
-        text("Back",this.width/2,this.height/2);
-    },function(){
-        basinCreationMenu.hide();
-        mainMenu.show();
-    });
-
     basinCreationMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
@@ -320,7 +303,7 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    basinCreationMenu.append(false,width/2-100,7*height/8-20,200,40,function(){    // "Start" button
+    basinCreationMenu.append(false,width/2-100,7*height/8-20,200,30,function(){    // "Start" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -330,11 +313,26 @@ UI.init = function(){
         }
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
-        textSize(24);
-        text("Start",100,20);
+        textSize(20);
+        text("Start",this.width/2,this.height/2);
     },function(){
         init();
         basinCreationMenu.hide();
+    }).append(false,0,40,200,30,function(){ // "Cancel" button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(20);
+        text("Cancel",this.width/2,this.height/2);
+    },function(){
+        basinCreationMenu.hide();
+        mainMenu.show();
     });
 
     // primary "in sim" scene
@@ -683,6 +681,7 @@ UI.init = function(){
         basin.save();
         sideMenu.hide();
         primaryWrapper.hide();
+        land.clear();
         basin = undefined;
         mainMenu.show();
     });

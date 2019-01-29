@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190129b:
+    * Fixed graphical glitch where generating a new basin after returning to the main menu rendered the new basin's land on top of the old basin's land
+    * Changed the "Back" button in the basin creation menu to a "Cancel" button in a more nice-looking position
 v20190129a:
     + Added "Save* and Return to Main Menu" button in the in-sim menu
     + Added "Back" button in basin creation menu
