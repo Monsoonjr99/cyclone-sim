@@ -110,6 +110,7 @@ function init(){
     let seed = newBasinSettings.seed;
     if(newBasinSettings.load) basin = new Basin(0);
     else basin = new Basin(false,year,hem,true,seed);
+    newBasinSettings = {};
 
     viewTick = basin.tick;
     curSeason = getSeason(basin.tick);

@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190129a:
+    + Added "Save* and Return to Main Menu" button in the in-sim menu
+    + Added "Back" button in basin creation menu
 v20190128a:
     + Added WIP menu in-sim for accessing various settings and features in upcoming updates
     * Saving/loading now checks save format number for compatibility

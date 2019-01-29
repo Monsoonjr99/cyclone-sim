@@ -228,6 +228,23 @@ UI.init = function(){
 
     // basin creation menu
 
+    basinCreationMenu.append(false,20,20,50,30,function(){
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        text("Back",this.width/2,this.height/2);
+    },function(){
+        basinCreationMenu.hide();
+        mainMenu.show();
+    });
+
     basinCreationMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
@@ -647,9 +664,28 @@ UI.init = function(){
         this.fullRect();
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
-        textSize(15);
-        text("WIP Menu",this.width/2,5);
+        textSize(18);
+        text("Menu",this.width/2,10);
+        textSize(10);
+        text("*Saving is currently a test and won't yet save\nthe full basin with all its history",this.width/2,this.height-40);
     },true,false);
+
+    sideMenu.append(false,5,30,sideMenu.width-10,25,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Save* and Return to Main Menu",this.width/2,this.height/2);
+    },function(){
+        basin.save();
+        sideMenu.hide();
+        primaryWrapper.hide();
+        basin = undefined;
+        mainMenu.show();
+    });
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);
