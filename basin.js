@@ -145,3 +145,57 @@ function decodeB36StringArray(str){
     }
     return arr;
 }
+
+function encodePoint(x,y,z,o){
+    if(typeof x === "object"){
+        o = y;
+        z = x.z || 0;
+        y = x.y || 0;
+        x = x.x || 0;
+    }else{
+        x = x || 0;
+        y = y || 0;
+        z = z || 0;
+    }
+    if(!o) o = {};
+    let w = floor(o.w || width);
+    let h = floor(o.h || height);
+    if(o.mapX instanceof Function) x = o.mapX(x);
+    if(o.mapY instanceof Function) y = o.mapY(y);
+    if(o.mapZ instanceof Function) z = o.mapZ(z);
+    x = abs(x);
+    y = abs(y);
+    z = abs(z);
+    return floor(z)*w*h+floor(y)*w+floor(x);
+}
+
+function decodePoint(n,o){
+    if(!o) o = {};
+    let w = floor(o.w || width);
+    let h = floor(o.h || height);
+    let z = floor(n/(w*h));
+    n %= w*h;
+    let y = floor(n/w);
+    n %= w;
+    let x = n;
+    if(o.mapX instanceof Function) x = o.mapX(x);
+    if(o.mapY instanceof Function) y = o.mapY(y);
+    if(o.mapZ instanceof Function) z = o.mapZ(z);
+    return {x,y,z};
+}
+
+function encodePointArray(a,o){
+    let arr = [];
+    for(let i=0;i<a.length;i++){
+        arr[i] = encodePoint(a[i],o);
+    }
+    return encodeB36StringArray(arr);
+}
+
+function decodePointArray(s,o){
+    let arr = decodeB36StringArray(s);
+    for(let i=0;i<arr.length;i++){
+        arr[i] = decodePoint(arr[i],o);
+    }
+    return arr;
+}

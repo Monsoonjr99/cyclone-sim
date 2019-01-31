@@ -64,7 +64,7 @@ class NCMetadata{
         this.yOff = load ? load.y : random(r);
         this.zOff = load ? load.z : random(r);
         this.history = {};
-        if(load) for(let i=0;i<load.hist.length;i++) this.history[load.hist[i].t] = load.hist[i].p;
+        // if(load) for(let i=0;i<load.hist.length;i++) this.history[load.hist[i].t] = load.hist[i].p;
         if(!basin.envData[this.field]) basin.envData[this.field] = {};
         basin.envData[this.field][this.index] = this;
     }
@@ -84,12 +84,13 @@ class NCMetadata{
         };
         else{
             t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
-            return this.history[t];
+            return this.history[getSeason(t)][t];
         }
     }
 
     record(){
-        this.history[basin.tick] = {
+        if(!this.history[curSeason]) this.history[curSeason] = {};
+        this.history[curSeason][basin.tick] = {
             x: this.xOff,
             y: this.yOff,
             z: this.zOff

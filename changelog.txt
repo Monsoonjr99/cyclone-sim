@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190131a:
+    + Added some more data compression functions for aiding in saving/loading
+    * Environmental field data for analysis is now structured per-season to make loading more efficient
 v20190129b:
     * Fixed graphical glitch where generating a new basin after returning to the main menu rendered the new basin's land on top of the old basin's land
     * Changed the "Back" button in the basin creation menu to a "Cancel" button in a more nice-looking position
