@@ -23,6 +23,35 @@ class Basin{
         return mo.valueOf();
     }
 
+    tickMoment(t){
+        return moment.utc(this.startTime()+t*TICK_DURATION);
+    }
+
+    seasonTick(n){
+        let m = moment.utc(this.SHem ? [n-1, 6, 1] : [n, 0, 1]);
+        let t = floor((m.valueOf()-this.startTime())/TICK_DURATION);
+        t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+        return t;
+    }
+
+    getSeason(t){
+        if(t===-1) t = this.tick;
+        if(this.SHem){
+            let tm = this.tickMoment(t);
+            let m = tm.month();
+            let y = tm.year();
+            if(m>=6) return y+1;
+            return y;
+        }
+        return this.tickMoment(t).year();
+    }
+
+    fetchSeason(n,isTick){
+        if(isTick) n = this.getSeason(n);
+        if(this.seasons[n]) return this.seasons[n];
+        return null; // insert season loading here
+    }
+
     storagePrefix(){
         return LOCALSTORAGE_KEY_PREFIX + this.saveSlot + '-';
     }
@@ -76,17 +105,6 @@ class Season{
         this.deaths = 0;
         this.damage = 0;
     }
-}
-
-function getSeason(t){
-    if(basin.SHem){
-        let tm = tickMoment(t);
-        let m = tm.month();
-        let y = tm.year();
-        if(m>=6) return y+1;
-        return y;
-    }
-    return tickMoment(t).year();
 }
 
 // saving/loading helper functions

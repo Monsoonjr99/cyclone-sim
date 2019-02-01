@@ -81,7 +81,7 @@ function draw(){
             }
         }
         if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
-        else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderIcon();
+        else for(let s of basin.fetchSeason(viewTick,true).systems) s.renderIcon();
 
         if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
         image(landBuffer,0,0,width,height);
@@ -113,7 +113,7 @@ function init(){
     newBasinSettings = {};
 
     viewTick = basin.tick;
-    curSeason = getSeason(basin.tick);
+    curSeason = basin.getSeason(-1);
     selectedStorm = undefined;
     noiseSeed(basin.seed);
     Environment.init();
@@ -132,8 +132,8 @@ function advanceSim(){
     basin.tick++;
     viewTick = basin.tick;
     if(!vp) refreshTracks();
-    curSeason = getSeason(basin.tick);
-    if(!basin.seasons[curSeason]){
+    curSeason = basin.getSeason(-1);
+    if(!basin.fetchSeason(curSeason)){
         let e = new Season();
         for(let s of basin.activeSystems){
             e.systems.push(s);

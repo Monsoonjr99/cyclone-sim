@@ -6,7 +6,7 @@ class Storm{
         if(isNewStorm){
             this.current = new ActiveSystem(this,extropical,godModeSpawn);
             this.active = true;
-            basin.seasons[curSeason].systems.push(this);
+            basin.fetchSeason(curSeason).systems.push(this);
         }
 
         this.TC = false;
@@ -175,7 +175,7 @@ class Storm{
         let p = data.pressure;
         let type = data.type;
         let cat = getCat(w);
-        let cSeason = basin.seasons[curSeason];
+        let cSeason = basin.fetchSeason(curSeason);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);

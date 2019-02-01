@@ -345,7 +345,7 @@ UI.init = function(){
     },false);
 
     topBar.append(false,5,3,100,24,function(){  // Date indicator
-        let txtStr = tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
+        let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
@@ -377,7 +377,7 @@ UI.init = function(){
 
     let navButtonClick = function(){    // Navigator button click function
         if(paused){
-            let m = tickMoment(viewTick);
+            let m = basin.tickMoment(viewTick);
             switch(this.metadata){
                 case 0:
                 m.add(TICK_DURATION*ADVISORY_TICKS,"ms");
@@ -431,7 +431,7 @@ UI.init = function(){
         if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
         else triangle(6,9,18,9,12,15);
     },function(){
-        stormInfoPanel.target = selectedStorm || getSeason(viewTick);
+        stormInfoPanel.target = selectedStorm || basin.getSeason(viewTick);
         stormInfoPanel.toggleShow();
     }).append(false,-29,0,24,24,function(){  // Pause/resume button
         if(this.isHovered()){
@@ -569,8 +569,8 @@ UI.init = function(){
             let formTime;
             let dissTime;
             if(s.TC){
-                formTime = tickMoment(s.formationTime).format(TIME_FORMAT);
-                dissTime = tickMoment(s.dissipationTime).format(TIME_FORMAT);
+                formTime = basin.tickMoment(s.formationTime).format(TIME_FORMAT);
+                dissTime = basin.tickMoment(s.dissipationTime).format(TIME_FORMAT);
                 txt += "Dates active: " + formTime + " - " + (s.dissipationTime ? dissTime : "currently active");
             }else txt += "Dates active: N/A";
             txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
@@ -586,7 +586,7 @@ UI.init = function(){
             let nh = countTextLines(n)*textLeading();
             text(n,this.width/2,35);
             textSize(15);
-            let se = basin.seasons[s];
+            let se = basin.fetchSeason(s);
             let txt = "Depressions: " + se.depressions;
             txt += "\nNamed storms: " + se.namedStorms;
             txt += "\nHurricanes: " + se.hurricanes;
@@ -607,11 +607,11 @@ UI.init = function(){
         }
         fill(COLORS.UI.greyText);
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s>getSeason(0)) fill(COLORS.UI.text);
+        if(!(s instanceof Storm) && s>basin.getSeason(0)) fill(COLORS.UI.text);
         triangle(19,5,19,19,5,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s>getSeason(0)) stormInfoPanel.target--;
+        if(!(s instanceof Storm) && s>basin.getSeason(0)) stormInfoPanel.target--;
     });
     
     stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){
@@ -621,11 +621,11 @@ UI.init = function(){
         }
         fill(COLORS.UI.greyText);
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s<getSeason(basin.tick)) fill(COLORS.UI.text);
+        if(!(s instanceof Storm) && s<basin.getSeason(-1)) fill(COLORS.UI.text);
         triangle(5,5,5,19,19,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s<getSeason(basin.tick)) stormInfoPanel.target++;
+        if(!(s instanceof Storm) && s<basin.getSeason(-1)) stormInfoPanel.target++;
     });
     
     stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(){
@@ -646,9 +646,7 @@ UI.init = function(){
                 t = s.birthTime;
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
-                let m = moment.utc(basin.SHem ? [s-1, 6, 1] : [s, 0, 1]);
-                t = floor((m.valueOf()-basin.startTime())/TICK_DURATION);
-                t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+                t = basin.seasonTick(s);
             }
             viewTick = t;
             refreshTracks();
@@ -754,7 +752,7 @@ function mouseClicked(){
                 selectStorm();
                 refreshTracks();
             }else{
-                let vSeason = basin.seasons[getSeason(viewTick)];
+                let vSeason = basin.fetchSeason(viewTick,true);
                 let mVector = createVector(mouseX,mouseY);
                 for(let i=vSeason.systems.length-1;i>=0;i--){
                     let s = vSeason.systems[i];
@@ -883,7 +881,7 @@ function damageDisplayNumber(d){
 }
 
 function seasonName(y,h){
-    if(h===undefined) h = basin.SHem;
+    if(h===undefined) h = basin && basin.SHem;
     if(h){
         return (y-1) + "-" + (y%100<10 ? "0" : "") + (y%100);
     }

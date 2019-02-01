@@ -6,11 +6,7 @@ function refreshTracks(){
     tracks.clear();
     forecastTracks.clear();
     if(viewingPresent()) for(let s of basin.activeSystems) s.renderTrack();
-    else for(let s of basin.seasons[getSeason(viewTick)].systems) s.renderTrack();
-}
-
-function tickMoment(t){
-    return moment.utc(basin.startTime()+t*TICK_DURATION);
+    else for(let s of basin.fetchSeason(viewTick,true).systems) s.renderTrack();
 }
 
 function hem(v){

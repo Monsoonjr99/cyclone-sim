@@ -84,13 +84,16 @@ class NCMetadata{
         };
         else{
             t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
-            return this.history[getSeason(t)][t];
+            let s = basin.getSeason(t);
+            t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
+            return this.history[s][t];
         }
     }
 
     record(){
-        if(!this.history[curSeason]) this.history[curSeason] = {};
-        this.history[curSeason][basin.tick] = {
+        if(!this.history[curSeason]) this.history[curSeason] = [];
+        let t = (basin.tick-basin.seasonTick(curSeason))/ADVISORY_TICKS;
+        this.history[curSeason][t] = {
             x: this.xOff,
             y: this.yOff,
             z: this.zOff

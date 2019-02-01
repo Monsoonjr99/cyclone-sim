@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190201a:
+    * Various optimizations to help with saving/loading
 v20190131a:
     + Added some more data compression functions for aiding in saving/loading
     * Environmental field data for analysis is now structured per-season to make loading more efficient
