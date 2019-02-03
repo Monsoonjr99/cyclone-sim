@@ -96,6 +96,7 @@ class Basin{
 class Season{
     constructor(){
         this.systems = [];
+        this.envData = {};
         this.depressions = 0;
         this.namedStorms = 0;
         this.hurricanes = 0;
@@ -104,6 +105,37 @@ class Season{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
+    }
+
+    save(){
+        // WIP
+        let str = "";
+        let stats = [this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*10000,this.deaths,this.damage];
+        str += encodeB36StringArray(stats);
+        str += ";";
+        let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
+        for(let f of Env.fieldList){
+            for(let i=0;i<Env.fields[f].noise.length;i++){
+                let a = this.envData[f][i];
+                let c = Env.fields[f].noise[i];
+                let k = a[0];
+                let m = a.slice(1);
+                k = [k.x,k.y,k.z];
+                str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
+                str += ".";
+                let opts = {};
+                opts.h = opts.w = ENVDATA_SAVE_MULT;
+                let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                opts.mapY = opts.mapX = mapR(xyrange);
+                opts.mapZ = mapR(zrange);
+                str += encodePointArray(m,opts);
+                str += ",";
+            }
+        }
+        if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
+        str += "insert storm system data here";
+        return str;
     }
 }
 

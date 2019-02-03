@@ -76,6 +76,29 @@ class NCMetadata{
         }
     }
 
+    getHistoryCache(s){
+        if(this.history.season===s) return this.history.arr;
+        this.history.season = s;
+        let d = basin.fetchSeason(s);
+        if(d.envData[this.field] && d.envData[this.field][this.index]){
+            d = d.envData[this.field][this.index];
+            let h = this.history.arr = [];
+            for(let i=0;i<d.length;i++){
+                if(i===0) h.push(d[0]);
+                else{
+                    let o = h[i-1];
+                    let n = d[i];
+                    h.push({
+                        x: o.x + n.x,
+                        y: o.y + n.y,
+                        z: o.z + n.z
+                    });
+                }
+            }
+        }else this.history.arr = null;
+        return this.history.arr;
+    }
+
     fetch(t){
         if(t>=basin.tick) return {
             x: this.xOff,
@@ -86,18 +109,34 @@ class NCMetadata{
             t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             let s = basin.getSeason(t);
             t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
-            return this.history[s][t];
+            if(!this.getHistoryCache(s)) return null;
+            return this.history.arr[t];
         }
     }
 
     record(){
-        if(!this.history[curSeason]) this.history[curSeason] = [];
-        let t = (basin.tick-basin.seasonTick(curSeason))/ADVISORY_TICKS;
-        this.history[curSeason][t] = {
+        let h = this.getHistoryCache(curSeason);
+        if(!h) h = this.history.arr = [];
+        h.push({
             x: this.xOff,
             y: this.yOff,
             z: this.zOff
-        };
+        });
+        let s = basin.fetchSeason(curSeason);
+        if(!s.envData[this.field]) s.envData[this.field] = {};
+        s = s.envData[this.field];
+        if(!s[this.index]) s[this.index] = [];
+        s = s[this.index];
+        if(s.length===0) s.push(h[0]);
+        else{
+            let o = h[h.length-2];
+            let n = h[h.length-1];
+            s.push({
+                x: n.x - o.x,
+                y: n.y - o.y,
+                z: n.z - o.z
+            });
+        }
     }
 }
 

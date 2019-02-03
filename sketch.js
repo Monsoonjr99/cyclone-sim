@@ -117,6 +117,7 @@ function init(){
     selectedStorm = undefined;
     noiseSeed(basin.seed);
     Environment.init();
+    if(!basin.fetchSeason(curSeason)) basin.seasons[curSeason] = new Season();
     if(basin.tick===0) Env.record();
     land = new Land();
     primaryWrapper.show();
