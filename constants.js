@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190203a";
+const VERSION_NUMBER = "20190204a";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -42,6 +42,8 @@ const SNOW_LAYERS = 40;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
+const ACE_DIVISOR = 10000;
+const DAMAGE_DIVISOR = 1000;
 const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";
 const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";

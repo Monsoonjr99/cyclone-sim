@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190204a:
+    + Added part of the season loading algorithm (still WIP)
+    * "minimal" damage is now below $50 M instead of $1 M
 v20190203a:
     + Added part of the season saving algorithm (still WIP)
     * Another change to how analysis environmental field data is stored to make saving/loading easier

@@ -875,7 +875,7 @@ function ktsToKmh(k,rnd){
 
 function damageDisplayNumber(d){
     if(d===0) return "none";
-    if(d<1000000) return "minimal";
+    if(d<50000000) return "minimal";
     if(d<1000000000) return "$ " + (round(d/1000)/1000) + " M";
     return "$ " + (round(d/1000000)/1000) + " B";
 }

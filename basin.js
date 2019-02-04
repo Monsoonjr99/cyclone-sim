@@ -94,7 +94,7 @@ class Basin{
 }
 
 class Season{
-    constructor(){
+    constructor(loadstr){
         this.systems = [];
         this.envData = {};
         this.depressions = 0;
@@ -105,12 +105,13 @@ class Season{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
+        if(loadstr) this.load(loadstr);
     }
 
     save(){
         // WIP
         let str = "";
-        let stats = [this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*10000,this.deaths,this.damage];
+        let stats = [this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*ACE_DIVISOR,this.deaths,this.damage/DAMAGE_DIVISOR];
         str += encodeB36StringArray(stats);
         str += ";";
         let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
@@ -136,6 +137,41 @@ class Season{
         if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
         str += "insert storm system data here";
         return str;
+    }
+
+    load(str){
+        // WIP
+        let mainparts = str.split(";");
+        let stats = decodeB36StringArray(mainparts[0]);
+        this.depressions = stats[0];
+        this.namedStorms = stats[1];
+        this.hurricanes = stats[2];
+        this.majors = stats[3];
+        this.c5s = stats[4];
+        this.ACE = stats[5]/ACE_DIVISOR;
+        this.deaths = stats[6];
+        this.damage = stats[7]*DAMAGE_DIVISOR;
+        let e = mainparts[1].split(",");
+        let i = 0;
+        let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
+        for(let f of Env.fieldList){
+            for(let j=0;j<Env.fields[f].noise.length;j++,i++){
+                let c = Env.fields[f].noise[j];
+                let s = e[i].split(".");
+                let k = decodeB36StringArray(s[0]);
+                k = {x:k[0],y:k[1],z:k[2]};
+                let opts = {};
+                opts.h = opts.w = ENVDATA_SAVE_MULT;
+                let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                opts.mapY = opts.mapX = mapR(xyrange);
+                opts.mapZ = mapR(zrange);
+                let m = decodePointArray(s[1],opts);
+                m.unshift(k);
+                if(!this.envData[f]) this.envData[f] = {};
+                this.envData[f][j] = m;
+            }
+        }
     }
 }
 
