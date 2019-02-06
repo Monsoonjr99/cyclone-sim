@@ -3,10 +3,11 @@ class Storm{
         let isNewStorm = extropical !== undefined;
         this.current = undefined;
         this.active = false;
+        this.id = undefined;
         if(isNewStorm){
             this.current = new ActiveSystem(this,extropical,godModeSpawn);
             this.active = true;
-            basin.fetchSeason(curSeason).systems.push(this);
+            basin.fetchSeason(curSeason).addSystem(this);
         }
 
         this.TC = false;
@@ -234,6 +235,20 @@ class Storm{
             if(!this.peak) this.peak = data;
             else if(p<this.peak.pressure) this.peak = data;
         }
+    }
+}
+
+class StormRef{
+    constructor(s){
+        this.season = basin.getSeason(s.birthTime);
+        this.refId = s.id;
+        this.ref = undefined;
+    }
+
+    fetch(){
+        if(this.ref) return this.ref;
+        this.ref = basin.fetchSeason(this.season).fetchSystemById(this.refId);
+        return this.ref;
     }
 }
 

@@ -517,7 +517,8 @@ UI.init = function(){
                 txtStr += "N/A";
             }else{
                 let v = Env.get(f,x,y,viewTick);
-                if(Env.fields[f].isVectorField){
+                if(v===null) txtStr += "Unavailable";
+                else if(Env.fields[f].isVectorField){
                     let m = v.mag();
                     let h = v.heading();
                     txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
@@ -755,7 +756,7 @@ function mouseClicked(){
                 let vSeason = basin.fetchSeason(viewTick,true);
                 let mVector = createVector(mouseX,mouseY);
                 for(let i=vSeason.systems.length-1;i>=0;i--){
-                    let s = vSeason.systems[i];
+                    let s = vSeason.fetchSystemAtIndex(i);
                     if(s.aliveAt(viewTick)){
                         let p = s.getStormDataByTick(viewTick).pos;
                         if(p.dist(mVector)<DIAMETER){

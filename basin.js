@@ -59,7 +59,7 @@ class Basin{
     save(){
         let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-        localStorage.setItem(formatKey,SAVE_FORMAT);
+        localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
         let flags = 0;
         flags |= this.godMode;
         flags <<= 1;
@@ -74,7 +74,7 @@ class Basin{
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
         let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
         let arr = localStorage.getItem(basinKey);
-        let format = parseInt(localStorage.getItem(formatKey));
+        let format = parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
         if(arr && format>=EARLIEST_COMPATIBLE_FORMAT){
             arr = decodeB36StringArray(arr);
             this.tick = arr[0];
@@ -97,6 +97,8 @@ class Season{
     constructor(loadstr){
         this.systems = [];
         this.envData = {};
+        this.idSystemCache = {};
+        this.totalSystemCount = 0;
         this.depressions = 0;
         this.namedStorms = 0;
         this.hurricanes = 0;
@@ -105,35 +107,64 @@ class Season{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
+        this.envRecordStarts = 0;
         if(loadstr) this.load(loadstr);
+    }
+
+    addSystem(s){
+        this.systems.push(s);
+        if(s.active) s.id = this.totalSystemCount++;
+    }
+
+    fetchSystemById(id){
+        if(this.idSystemCache[id]) return this.idSystemCache[id];
+        for(let i=0;i<this.systems.length;i++){
+            let s = this.systems[i];
+            if(s.id===id){
+                this.idSystemCache[id] = s;
+                return s;
+            }
+        }
+        return null;
+    }
+
+    fetchSystemAtIndex(i){
+        if(this.systems[i] instanceof StormRef) return this.systems[i].fetch();
+        return this.systems[i];
+    }
+
+    *forSystems(){
+        for(let i=0;i<this.systems.length;i++) yield this.fetchSystemAtIndex(i);
     }
 
     save(){
         // WIP
         let str = "";
-        let stats = [this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*ACE_DIVISOR,this.deaths,this.damage/DAMAGE_DIVISOR];
+        let stats = [SAVE_FORMAT,this.totalSystemCount,this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*ACE_DIVISOR,this.deaths,this.damage/DAMAGE_DIVISOR,this.envRecordStarts];
         str += encodeB36StringArray(stats);
         str += ";";
-        let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
-        for(let f of Env.fieldList){
-            for(let i=0;i<Env.fields[f].noise.length;i++){
-                let a = this.envData[f][i];
-                let c = Env.fields[f].noise[i];
-                let k = a[0];
-                let m = a.slice(1);
-                k = [k.x,k.y,k.z];
-                str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
-                str += ".";
-                let opts = {};
-                opts.h = opts.w = ENVDATA_SAVE_MULT;
-                let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-                let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-                opts.mapY = opts.mapX = mapR(xyrange);
-                opts.mapZ = mapR(zrange);
-                str += encodePointArray(m,opts);
-                str += ",";
+        if(this.envData){
+            let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
+            for(let f of Env.fieldList){
+                for(let i=0;i<Env.fields[f].noise.length;i++){
+                    let a = this.envData[f][i];
+                    let c = Env.fields[f].noise[i];
+                    let k = a[0];
+                    let m = a.slice(1);
+                    k = [k.x,k.y,k.z];
+                    str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
+                    str += ".";
+                    let opts = {};
+                    opts.h = opts.w = ENVDATA_SAVE_MULT;
+                    let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                    let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                    opts.mapY = opts.mapX = mapR(xyrange);
+                    opts.mapZ = mapR(zrange);
+                    str += encodePointArray(m,opts);
+                    str += ",";
+                }
             }
-        }
+        }else str += ";";
         if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
         str += "insert storm system data here";
         return str;
@@ -143,42 +174,47 @@ class Season{
         // WIP
         let mainparts = str.split(";");
         let stats = decodeB36StringArray(mainparts[0]);
-        this.depressions = stats[0];
-        this.namedStorms = stats[1];
-        this.hurricanes = stats[2];
-        this.majors = stats[3];
-        this.c5s = stats[4];
-        this.ACE = stats[5]/ACE_DIVISOR;
-        this.deaths = stats[6];
-        this.damage = stats[7]*DAMAGE_DIVISOR;
-        let e = mainparts[1].split(",");
-        let i = 0;
-        let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
-        for(let f of Env.fieldList){
-            for(let j=0;j<Env.fields[f].noise.length;j++,i++){
-                let c = Env.fields[f].noise[j];
-                let s = e[i].split(".");
-                let k = decodeB36StringArray(s[0]);
-                k = {x:k[0],y:k[1],z:k[2]};
-                let opts = {};
-                opts.h = opts.w = ENVDATA_SAVE_MULT;
-                let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-                let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-                opts.mapY = opts.mapX = mapR(xyrange);
-                opts.mapZ = mapR(zrange);
-                let m = decodePointArray(s[1],opts);
-                m.unshift(k);
-                if(!this.envData[f]) this.envData[f] = {};
-                this.envData[f][j] = m;
+        let seasonSaveFormat = stats[0];
+        this.totalSystemCount = stats[1];
+        this.depressions = stats[2];
+        this.namedStorms = stats[3];
+        this.hurricanes = stats[4];
+        this.majors = stats[5];
+        this.c5s = stats[6];
+        this.ACE = stats[7]/ACE_DIVISOR;
+        this.deaths = stats[8];
+        this.damage = stats[9]*DAMAGE_DIVISOR;
+        this.envRecordStarts = stats[10];
+        if(seasonSaveFormat>=EARLIEST_COMPATIBLE_FORMAT && seasonSaveFormat>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
+            let e = mainparts[1].split(",");
+            let i = 0;
+            let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
+            for(let f of Env.fieldList){
+                for(let j=0;j<Env.fields[f].noise.length;j++,i++){
+                    let c = Env.fields[f].noise[j];
+                    let s = e[i].split(".");
+                    let k = decodeB36StringArray(s[0]);
+                    k = {x:k[0],y:k[1],z:k[2]};
+                    let opts = {};
+                    opts.h = opts.w = ENVDATA_SAVE_MULT;
+                    let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                    let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                    opts.mapY = opts.mapX = mapR(xyrange);
+                    opts.mapZ = mapR(zrange);
+                    let m = decodePointArray(s[1],opts);
+                    m.unshift(k);
+                    if(!this.envData[f]) this.envData[f] = {};
+                    this.envData[f][j] = m;
+                }
             }
-        }
+        }else this.envData = null;
     }
 }
 
 // saving/loading helper functions
 
 function encodeB36StringArray(arr,fl){
-    const R = 36;
+    const R = SAVING_RADIX;
     const numLen = n=>constrain(floor(log(abs(n)/pow(R,fl)*2+(n<0?1:0))/log(R))+1,1,R);
     if(fl===undefined) fl = 0;
     if(fl>R/2) fl = 0;
@@ -210,7 +246,7 @@ function encodeB36StringArray(arr,fl){
 }
 
 function decodeB36StringArray(str){
-    const R = 36;
+    const R = SAVING_RADIX;
     let arr = [];
     let fl = str.slice(0,1);
     fl = parseInt(fl,R);

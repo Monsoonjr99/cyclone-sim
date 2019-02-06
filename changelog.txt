@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+
+v20190206a:
+    + Added some future-proofing for when saved environmental field analysis data is loaded in a version with an incompatible environmental field algorithm
+        > The old data will be deleted and map layers will display "Unavailable" in analysis prior to the tick the basin was loaded
+    * Optimized how season-crossing storms are stored for saving/loading purposes
 v20190204a:
     + Added part of the season loading algorithm (still WIP)
     * "minimal" damage is now below $50 M instead of $1 M

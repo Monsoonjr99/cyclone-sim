@@ -81,7 +81,7 @@ function draw(){
             }
         }
         if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
-        else for(let s of basin.fetchSeason(viewTick,true).systems) s.renderIcon();
+        else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
 
         if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
         image(landBuffer,0,0,width,height);
@@ -136,9 +136,7 @@ function advanceSim(){
     curSeason = basin.getSeason(-1);
     if(!basin.fetchSeason(curSeason)){
         let e = new Season();
-        for(let s of basin.activeSystems){
-            e.systems.push(s);
-        }
+        for(let s of basin.activeSystems) e.addSystem(new StormRef(s));
         basin.seasons[curSeason] = e;
     }
     Env.wobble();    // random change in environment for future forecast realism

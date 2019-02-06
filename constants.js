@@ -1,8 +1,9 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190204a";
+const VERSION_NUMBER = "20190206a";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
+const ENVDATA_COMPATIBLE_FORMAT = 0;
 
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
@@ -44,9 +45,12 @@ const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
 const ACE_DIVISOR = 10000;
 const DAMAGE_DIVISOR = 1000;
+const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
+
 const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";
 const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";
+const SAVING_RADIX = 36;
 const AUTOSAVE_TICK_PERIOD = 240;
 const ENVDATA_SAVE_FLOAT = -2;
 const ENVDATA_SAVE_MULT = 10000;

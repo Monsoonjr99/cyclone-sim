@@ -19,7 +19,7 @@ class NoiseChannel{
         let zo;
         if(this.meta){
             let m = this.meta.fetch(z);
-            if(!m) return 0;
+            if(!m) throw ENVDATA_NOT_FOUND_ERROR;
             xo = m.x;
             yo = m.y;
             zo = m.z;
@@ -76,11 +76,12 @@ class NCMetadata{
         }
     }
 
-    getHistoryCache(s){
-        if(this.history.season===s) return this.history.arr;
+    getHistoryCache(s,refresh){
+        if(!refresh && this.history.season===s) return this.history.arr;
         this.history.season = s;
         let d = basin.fetchSeason(s);
-        if(d.envData[this.field] && d.envData[this.field][this.index]){
+        this.history.recordStarts = d.envRecordStarts;
+        if(d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
             d = d.envData[this.field][this.index];
             let h = this.history.arr = [];
             for(let i=0;i<d.length;i++){
@@ -110,6 +111,7 @@ class NCMetadata{
             let s = basin.getSeason(t);
             t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
             if(!this.getHistoryCache(s)) return null;
+            t -= this.history.recordStarts;
             return this.history.arr[t];
         }
     }
@@ -122,11 +124,25 @@ class NCMetadata{
             y: this.yOff,
             z: this.zOff
         });
-        let s = basin.fetchSeason(curSeason);
-        if(!s.envData[this.field]) s.envData[this.field] = {};
-        s = s.envData[this.field];
-        if(!s[this.index]) s[this.index] = [];
+        let seas = basin.fetchSeason(curSeason);
+        let s = seas;
+        let startingRecord;
+        if(!s.envData){
+            s.envData = {};
+            startingRecord = true;
+        }
+        s = s.envData;
+        if(!s[this.field]){
+            s[this.field] = {};
+            startingRecord = true;
+        }
+        s = s[this.field];
+        if(!s[this.index]){
+            s[this.index] = [];
+            startingRecord = true;
+        }
         s = s[this.index];
+        if(startingRecord) this.history.recordStarts = seas.envRecordStarts = (floor(basin.tick/ADVISORY_TICKS)*ADVISORY_TICKS-basin.seasonTick(curSeason))/ADVISORY_TICKS;
         if(s.length===0) s.push(h[0]);
         else{
             let o = h[h.length-2];
@@ -170,23 +186,28 @@ class EnvField{
     }
 
     get(x,y,z,noHem){
-        if(!noHem) y = hemY(y);
-        if(this.mapFunc){
-            let s = this.noise;
-            let n = function(num,x1,y1,z1){
-                x1 = x1===undefined ? x : x1;
-                y1 = y1===undefined ? y : y1;
-                z1 = z1===undefined ? z : z1;
-                return s[num].get(x1,y1,z1);
-            };
-            return this.mapFunc(n,x,y,z);
+        try{
+            if(!noHem) y = hemY(y);
+            if(this.mapFunc){
+                let s = this.noise;
+                let n = function(num,x1,y1,z1){
+                    x1 = x1===undefined ? x : x1;
+                    y1 = y1===undefined ? y : y1;
+                    z1 = z1===undefined ? z : z1;
+                    return s[num].get(x1,y1,z1);
+                };
+                return this.mapFunc(n,x,y,z);
+            }
+            if(this.isVectorField){
+                this.vec.set(1);
+                this.vec.rotate(map(this.noise[0].get(x,y,z),0,1,0,4*TAU));
+                return this.vec;
+            }
+            return this.noise[0].get(x,y,z);
+        }catch(err){
+            if(!noHem && err===ENVDATA_NOT_FOUND_ERROR) return null;
+            throw err;
         }
-        if(this.isVectorField){
-            this.vec.set(1);
-            this.vec.rotate(map(this.noise[0].get(x,y,z),0,1,0,4*TAU));
-            return this.vec;
-        }
-        return this.noise[0].get(x,y,z);
     }
 
     wobble(){
@@ -209,20 +230,31 @@ class EnvField{
                         envLayer.push();
                         envLayer.stroke(0);
                         envLayer.translate(x,y);
-                        envLayer.rotate(v.heading());
-                        let mg = v.mag();
-                        let mp = this.magMap;
-                        let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
-                        envLayer.line(0,0,l,0);
-                        envLayer.noStroke();
-                        envLayer.fill(0);
-                        envLayer.triangle(l+5,0,l,3,l,-3);
+                        if(v!==null){
+                            envLayer.rotate(v.heading());
+                            let mg = v.mag();
+                            let mp = this.magMap;
+                            let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
+                            envLayer.line(0,0,l,0);
+                            envLayer.noStroke();
+                            envLayer.fill(0);
+                            envLayer.triangle(l+5,0,l,3,l,-3);
+                        }else{
+                            envLayer.line(-3,-3,3,3);
+                            envLayer.line(-3,3,3,-3);
+                        }
                         envLayer.pop();
                     }else{
-                        let h = this.hueMap;
-                        if(h instanceof Function) envLayer.fill(h(v));
-                        else envLayer.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
+                        if(v!==null){
+                            let h = this.hueMap;
+                            if(h instanceof Function) envLayer.fill(h(v));
+                            else envLayer.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
+                        }else envLayer.fill(0,0,50);
                         envLayer.rect(i,j,ENV_LAYER_TILE_SIZE,ENV_LAYER_TILE_SIZE);
+                        if(v===null){
+                            envLayer.fill(0,0,60);
+                            envLayer.triangle(i,j,i+ENV_LAYER_TILE_SIZE,j,i,j+ENV_LAYER_TILE_SIZE);
+                        }
                     }
                 }
                 
