@@ -468,7 +468,7 @@ function getNewName(season,sNum){
     if(sNum>=list.length){
         let gNum = sNum-list.length;
         let greeks = NAMES[6];
-        if(gNum>=greeks.length) return "Name " + (sNum+1);
+        if(gNum>=greeks.length) return "Unnamed";
         return greeks[gNum];
     }
     return list[sNum];

@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190206a";
+const VERSION_NUMBER = "20190206b";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -59,6 +59,10 @@ const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;
 const OFF_SEASON_TROPICS_TEMP = 26;
 const PEAK_SEASON_TROPICS_TEMP = 29;
+const HYPER_OFF_SEASON_POLAR_TEMP = 5;
+const HYPER_PEAK_SEASON_POLAR_TEMP = 20;
+const HYPER_OFF_SEASON_TROPICS_TEMP = 31;
+const HYPER_PEAK_SEASON_TROPICS_TEMP = 35;
 
 const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tSPACE - Pause/resume simulation\n" +

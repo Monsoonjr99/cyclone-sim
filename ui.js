@@ -259,7 +259,7 @@ UI.init = function(){
         }
     });
 
-    hemsel.append(false,0,60,0,40,function(){ // Year selector
+    let yearsel = hemsel.append(false,0,60,0,40,function(){ // Year selector
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -273,7 +273,9 @@ UI.init = function(){
         }
         textAlign(LEFT,CENTER);
         text("Starting year: "+yName,0,20);
-    }).append(false,-25,5,20,10,function(){
+    });
+    
+    yearsel.append(false,-25,5,20,10,function(){ // Year increment button
         fill(COLORS.UI.buttonBox);
         this.fullRect();
         if(this.isHovered()){
@@ -287,7 +289,7 @@ UI.init = function(){
             if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
             else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
         }else newBasinSettings.year++;
-    }).append(false,0,20,20,10,function(){
+    }).append(false,0,20,20,10,function(){  // Year decrement button
         fill(COLORS.UI.buttonBox);
         this.fullRect();
         if(this.isHovered()){
@@ -301,6 +303,23 @@ UI.init = function(){
             if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
             else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
         }else newBasinSettings.year--;
+    });
+
+    yearsel.append(false,0,60,200,40,function(){
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
+        text("Activity Mode: "+mode,100,20);
+    },function(){
+        newBasinSettings.hyper = !newBasinSettings.hyper;
     });
 
     basinCreationMenu.append(false,width/2-100,7*height/8-20,200,30,function(){    // "Start" button
@@ -878,7 +897,8 @@ function damageDisplayNumber(d){
     if(d===0) return "none";
     if(d<50000000) return "minimal";
     if(d<1000000000) return "$ " + (round(d/1000)/1000) + " M";
-    return "$ " + (round(d/1000000)/1000) + " B";
+    if(d<1000000000000) return "$ " + (round(d/1000000)/1000) + " B";
+    return "$ " + (round(d/1000000000)/1000) + " T";
 }
 
 function seasonName(y,h){

@@ -321,9 +321,9 @@ Environment.init = function(){
         "jetstream",
         function(n,x,y,z){
             let s = seasonalSine(z);
-            let l = map(sqrt(map(s,-1,1,0,1)),0,1,0.55,0.35);
+            let l = map(sqrt(map(s,-1,1,0,1)),0,1,basin.hyper?0.47:0.55,basin.hyper?0.25:0.35);
             let v = n(0,x-z*3,0,z);
-            let r = map(s,-1,1,0.5,0.35);
+            let r = map(s,-1,1,basin.hyper?0.45:0.5,basin.hyper?0.25:0.35);
             v = map(v,0,1,-r,r);
             return (l+v)*height;
         },
@@ -390,7 +390,7 @@ Environment.init = function(){
             let tAngle = -PI/16;                                                            // angle of push from jetstream dips
             let ridging = 0.45-j0/height-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
             // power of winds equatorward of jetstream
-            let hadley = (map(ridging,-0.3,0.2,5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
+            let hadley = (map(ridging,-0.3,0.2,basin.hyper?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
             let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);                       // angle of winds equatorward of jetstream
             let ferrel = 2*jOP*(y<j0?1:0);                                                  // power of winds poleward of jetstream
             let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
@@ -477,7 +477,11 @@ Environment.init = function(){
             let h1 = (sqrt(h0)+h0)/2;
             let h2 = sqrt(sqrt(h0));
             let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
-            let t = lerp(map(s,-1,1,OFF_SEASON_POLAR_TEMP,PEAK_SEASON_POLAR_TEMP),map(s,-1,1,OFF_SEASON_TROPICS_TEMP,PEAK_SEASON_TROPICS_TEMP),h);
+            let ospt = basin.hyper ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
+            let pspt = basin.hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
+            let ostt = basin.hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
+            let pstt = basin.hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
+            let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
             return t+anom;
         },
         {
@@ -500,7 +504,10 @@ Environment.init = function(){
             let v = n(0);
             let s = seasonalSine(z);
             let l = land.get(x,hemY(y));
-            let m = map(l,0.5,0.7,map(y,0,height,0.43,0.57),0.2,true);
+            let pm = basin.hyper ? 0.52 : 0.43;
+            let tm = basin.hyper ? 0.62 : 0.57;
+            let mm = basin.hyper ? 0.3 : 0.2;
+            let m = map(l,0.5,0.7,map(y,0,height,pm,tm),mm,true);
             m += map(s,-1,1,-0.08,0.08);
             m += map(v,0,1,-0.3,0.3);
             m = constrain(m,0,1);

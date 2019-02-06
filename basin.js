@@ -1,10 +1,11 @@
 class Basin{
-    constructor(load,year,SHem,godMode,seed){
+    constructor(load,year,SHem,godMode,hyper,seed){
         this.seasons = {};
         this.activeSystems = [];
         this.tick = 0;
         this.godMode = godMode;
         this.SHem = SHem;
+        this.hyper = hyper;
         this.startYear = year;
         this.seed = seed || moment().valueOf();
         this.envData = {};
@@ -61,6 +62,8 @@ class Basin{
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
         localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
         let flags = 0;
+        flags |= this.hyper;
+        flags <<= 1;
         flags |= this.godMode;
         flags <<= 1;
         flags |= this.SHem;
@@ -84,6 +87,8 @@ class Basin{
             this.SHem = flags & 1;
             flags >>= 1;
             this.godMode = flags & 1;
+            flags >>= 1;
+            this.hyper = flags & 1;
             // insert seasons and env loading here
             this.tick = 0; // temporary since saving seasons and env not yet added
         }else{

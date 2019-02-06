@@ -1,6 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
-
+v20190206b:
+    + Added "Hyper Mode"
+        > A new option in the basin creation menu allows for a very hyperactive basin
+    * Damage over $1 trillion now displays as T instead of 1000s of B
+    * Storms are now named "Unnamed" after the Greek alphabet is exhausted instead of "Name #"
 v20190206a:
     + Added some future-proofing for when saved environmental field analysis data is loaded in a version with an incompatible environmental field algorithm
         > The old data will be deleted and map layers will display "Unavailable" in analysis prior to the tick the basin was loaded
