@@ -109,8 +109,9 @@ function init(){
     if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
     let seed = newBasinSettings.seed;
     let hyper = newBasinSettings.hyper;
+    let names = newBasinSettings.names;
     if(newBasinSettings.load) basin = new Basin(0);
-    else basin = new Basin(false,year,hem,true,hyper,seed);
+    else basin = new Basin(false,year,hem,true,hyper,seed,names);
     newBasinSettings = {};
 
     viewTick = basin.tick;

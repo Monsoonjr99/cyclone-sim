@@ -236,7 +236,7 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let hemsel = basinCreationMenu.append(false,width/2-100,height/4-20,200,40,function(){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,width/2-100,height/4-20,200,30,function(){   // hemisphere selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -250,7 +250,7 @@ UI.init = function(){
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
-        text("Hemisphere: "+hem,100,20);
+        text("Hemisphere: "+hem,100,15);
     },function(){
         if(newBasinSettings.hem===undefined) newBasinSettings.hem = 1;
         else{
@@ -259,7 +259,7 @@ UI.init = function(){
         }
     });
 
-    let yearsel = hemsel.append(false,0,60,0,40,function(){ // Year selector
+    let yearsel = hemsel.append(false,0,45,0,30,function(){ // Year selector
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -272,7 +272,7 @@ UI.init = function(){
             }else yName = seasonName(y,h);
         }
         textAlign(LEFT,CENTER);
-        text("Starting year: "+yName,0,20);
+        text("Starting year: "+yName,0,15);
     });
     
     yearsel.append(false,-25,5,20,10,function(){ // Year increment button
@@ -305,7 +305,7 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    yearsel.append(false,0,60,200,40,function(){
+    yearsel.append(false,0,45,200,30,function(){    // Activity mode selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -317,9 +317,27 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(18);
         let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
-        text("Activity Mode: "+mode,100,20);
+        text("Activity Mode: "+mode,100,15);
     },function(){
         newBasinSettings.hyper = !newBasinSettings.hyper;
+    }).append(false,0,45,200,30,function(){     // Name list selector
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let list = newBasinSettings.names || 0;
+        list = ["Atl","EPac","WPac","Aus"][list];
+        text("Name List: "+list,100,15);
+    },function(){
+        if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
+        newBasinSettings.names++;
+        newBasinSettings.names %= NAME_LIST_PRESETS.length;
     });
 
     basinCreationMenu.append(false,width/2-100,7*height/8-20,200,30,function(){    // "Start" button
@@ -609,8 +627,8 @@ UI.init = function(){
             let se = basin.fetchSeason(s);
             let txt = "Depressions: " + se.depressions;
             txt += "\nNamed storms: " + se.namedStorms;
-            txt += "\nHurricanes: " + se.hurricanes;
-            txt += "\nMajor Hurricanes: " + se.majors;
+            txt += "\n" + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
+            txt += "\nMajor " + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.majors;
             txt += "\nCategory 5s: " + se.c5s;
             txt += "\nTotal ACE: " + se.ACE;
             txt += "\nDamage: " + damageDisplayNumber(se.damage);

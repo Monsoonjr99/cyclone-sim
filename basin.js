@@ -1,5 +1,5 @@
 class Basin{
-    constructor(load,year,SHem,godMode,hyper,seed){
+    constructor(load,year,SHem,godMode,hyper,seed,names){
         this.seasons = {};
         this.activeSystems = [];
         this.tick = 0;
@@ -7,6 +7,9 @@ class Basin{
         this.SHem = SHem;
         this.hyper = hyper;
         this.startYear = year;
+        this.nameList = NAME_LIST_PRESETS[names || 0];
+        this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
+        this.hurricaneStrengthTerm = [1,1,2,0][names || 0];
         this.seed = seed || moment().valueOf();
         this.envData = {};
         this.saveSlot = load || 0;
@@ -60,6 +63,7 @@ class Basin{
     save(){
         let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+        let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
         localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
         let flags = 0;
         flags |= this.hyper;
@@ -67,28 +71,47 @@ class Basin{
         flags |= this.godMode;
         flags <<= 1;
         flags |= this.SHem;
-        let arr = [this.tick,this.seed,this.startYear,flags];
+        let arr = [this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
         arr = encodeB36StringArray(arr);
         localStorage.setItem(basinKey,arr);
+        let names = this.nameList.join(";");
+        if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
+        localStorage.setItem(namesKey,names);
         // insert seasons and env saving here
     }
 
     load(){
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
         let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+        let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
         let arr = localStorage.getItem(basinKey);
         let format = parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
+        let names = localStorage.getItem(namesKey);
         if(arr && format>=EARLIEST_COMPATIBLE_FORMAT){
             arr = decodeB36StringArray(arr);
-            this.tick = arr[0];
-            this.seed = arr[1];
-            this.startYear = arr[2];
-            let flags = arr[3];
+            let flags = arr.pop() || 0;
+            this.startYear = arr.pop();
+            this.seed = arr.pop() || moment().valueOf();
+            this.tick = arr.pop() || 0;
+            this.sequentialNameIndex = arr.pop();
+            this.hurricaneStrengthTerm = arr.pop() || 0;
             this.SHem = flags & 1;
             flags >>= 1;
             this.godMode = flags & 1;
             flags >>= 1;
             this.hyper = flags & 1;
+            if(this.startYear===undefined) this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+            if(names){
+                names = names.split(";");
+                if(names[0].indexOf(",")>-1){
+                    for(let i=0;i<names.length;i++){
+                        names[i] = names[i].split(",");
+                    }
+                    if(names[0][0]==="") names[0].shift();
+                }
+                this.nameList = names;
+            }
+            if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
             // insert seasons and env loading here
             this.tick = 0; // temporary since saving seasons and env not yet added
         }else{

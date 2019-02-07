@@ -57,11 +57,12 @@ class Storm{
         let name = t==="peak" ? this.name : this.getNameByTick(t);
         let ty = data ? data.type : null;
         let cat = data ? data.cat : null;
+        let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         return ty===TROP ?
-            (cat>0 ? "Hurricane" :
+            (cat>0 ? hurricaneTerm :
             cat>-1 ? "Tropical Storm" : "Tropical Depression") + " " + name :
         ty===SUBTROP ?
-            (cat>0 ? "Subtropical Hurricane" :
+            (cat>0 ? "Subtropical " + hurricaneTerm :
             cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + " " + name :
         ty===TROPWAVE ?
             name ? "Remnants of " + name : "Unnamed Tropical Wave" :
@@ -464,14 +465,22 @@ class ActiveSystem extends StormData{
 }
 
 function getNewName(season,sNum){
-    let list = NAMES[(season+1)%6];
-    if(sNum>=list.length){
-        let gNum = sNum-list.length;
-        let greeks = NAMES[6];
-        if(gNum>=greeks.length) return "Unnamed";
-        return greeks[gNum];
+    let list;
+    if(basin.sequentialNameIndex<0){
+        let numoflists = basin.nameList.length-1;
+        list = basin.nameList[(season+1)%numoflists];
+        if(sNum>=list.length){
+            let gNum = sNum-list.length;
+            let greeks = basin.nameList[numoflists];
+            if(gNum>=greeks.length) return "Unnamed";
+            return greeks[gNum];
+        }
+        return list[sNum];
+    }else{
+        let n = basin.nameList[basin.sequentialNameIndex++];
+        basin.sequentialNameIndex %= basin.nameList.length;
+        return n;
     }
-    return list[sNum];
 }
 
 function getCat(w){     // windspeed in knots

@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190207a:
+    + Added EPac, WPac, and Aus name lists alongside the existing Atl list
+        > Use the name list selector in the basin creation menu to access
+        > Atl and EPac lists behave per year; WPac and Aus lists are sequential regardless of year (just as you'd expect)
+    * Hurricane-strength tropical cyclones now come in 3 flavors: Cyclone, Hurricane, and Typhoon
+        > Currently tied to the selected name list; to be made its own option later
 v20190206b:
     + Added "Hyper Mode"
         > A new option in the basin creation menu allows for a very hyperactive basin
