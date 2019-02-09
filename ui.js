@@ -228,7 +228,7 @@ UI.init = function(){
 
     // basin creation menu
 
-    basinCreationMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
+    basinCreationMenu.append(false,width/2,height/16,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -236,7 +236,7 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let hemsel = basinCreationMenu.append(false,width/2-100,height/4-20,200,30,function(){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,width/2-150,height/8,300,30,function(){   // hemisphere selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -250,7 +250,7 @@ UI.init = function(){
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
-        text("Hemisphere: "+hem,100,15);
+        text("Hemisphere: "+hem,150,15);
     },function(){
         if(newBasinSettings.hem===undefined) newBasinSettings.hem = 1;
         else{
@@ -271,11 +271,11 @@ UI.init = function(){
                 yName = seasonName(y,false) + " or " + seasonName(y,true);
             }else yName = seasonName(y,h);
         }
-        textAlign(LEFT,CENTER);
-        text("Starting year: "+yName,0,15);
+        textAlign(CENTER,CENTER);
+        text("Starting year: "+yName,150,15);
     });
     
-    yearsel.append(false,-25,5,20,10,function(){ // Year increment button
+    yearsel.append(false,0,0,20,10,function(){ // Year increment button
         fill(COLORS.UI.buttonBox);
         this.fullRect();
         if(this.isHovered()){
@@ -305,7 +305,7 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    yearsel.append(false,0,45,200,30,function(){    // Activity mode selector
+    yearsel.append(false,0,45,300,30,function(){    // Activity mode selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -317,10 +317,10 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(18);
         let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
-        text("Activity Mode: "+mode,100,15);
+        text("Activity Mode: "+mode,150,15);
     },function(){
         newBasinSettings.hyper = !newBasinSettings.hyper;
-    }).append(false,0,45,200,30,function(){     // Name list selector
+    }).append(false,0,45,300,30,function(){     // Name list selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -332,15 +332,32 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(18);
         let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","WPac","Aus"][list];
-        text("Name List: "+list,100,15);
+        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus"][list];
+        text("Name List: "+list,150,15);
     },function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
         newBasinSettings.names++;
         newBasinSettings.names %= NAME_LIST_PRESETS.length;
+    }).append(false,0,45,300,30,function(){     // Hurricane term selector
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let term = newBasinSettings.hurrTerm || 0;
+        text("Hurricane-Strength Term: "+HURRICANE_STRENGTH_TERM[term],150,15);
+    },function(){
+        if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
+        newBasinSettings.hurrTerm++;
+        newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
     });
 
-    basinCreationMenu.append(false,width/2-100,7*height/8-20,200,30,function(){    // "Start" button
+    basinCreationMenu.append(false,width/2-150,7*height/8-20,300,30,function(){    // "Start" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -355,7 +372,7 @@ UI.init = function(){
     },function(){
         init();
         basinCreationMenu.hide();
-    }).append(false,0,40,200,30,function(){ // "Cancel" button
+    }).append(false,0,40,300,30,function(){ // "Cancel" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();

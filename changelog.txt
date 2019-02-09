@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190209a:
+    + Added CPac and PAGASA name lists
+    + Added selector for hurricane-strength term in basin creation menu
 v20190207a:
     + Added EPac, WPac, and Aus name lists alongside the existing Atl list
         > Use the name list selector in the basin creation menu to access

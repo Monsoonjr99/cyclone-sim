@@ -1,5 +1,5 @@
 class Basin{
-    constructor(load,year,SHem,godMode,hyper,seed,names){
+    constructor(load,year,SHem,godMode,hyper,seed,names,hurrTerm){
         this.seasons = {};
         this.activeSystems = [];
         this.tick = 0;
@@ -9,7 +9,7 @@ class Basin{
         this.startYear = year;
         this.nameList = NAME_LIST_PRESETS[names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-        this.hurricaneStrengthTerm = [1,1,2,0][names || 0];
+        this.hurricaneStrengthTerm = hurrTerm || 0;
         this.seed = seed || moment().valueOf();
         this.envData = {};
         this.saveSlot = load || 0;
