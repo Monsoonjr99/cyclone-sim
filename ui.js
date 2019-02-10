@@ -792,11 +792,11 @@ function mouseClicked(){
                 }else if(key === "x" || key === "X"){
                     g.sType = "x";
                 }else return;
-                basin.activeSystems.push(new Storm(false,g));
+                basin.spawn(false,g);
             }else if(viewingPresent()){
                 let mVector = createVector(mouseX,mouseY);
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
-                    let s = basin.activeSystems[i];
+                    let s = basin.activeSystems[i].storm;
                     let p = s.getStormDataByTick(viewTick,true).pos;
                     if(p.dist(mVector)<DIAMETER){
                         selectStorm(s);

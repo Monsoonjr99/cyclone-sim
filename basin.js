@@ -38,6 +38,10 @@ class Basin{
         return t;
     }
 
+    spawn(...opts){
+        this.activeSystems.push(new ActiveSystem(...opts));
+    }
+
     getSeason(t){
         if(t===-1) t = this.tick;
         if(this.SHem){

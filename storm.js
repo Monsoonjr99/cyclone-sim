@@ -1,14 +1,9 @@
 class Storm{
-    constructor(extropical,godModeSpawn){
-        let isNewStorm = extropical !== undefined;
-        this.current = undefined;
-        this.active = false;
+    constructor(data){
+        this.active = data instanceof ActiveSystem;
+        this.current = this.active ? data : undefined;
         this.id = undefined;
-        if(isNewStorm){
-            this.current = new ActiveSystem(this,extropical,godModeSpawn);
-            this.active = true;
-            basin.fetchSeason(curSeason).addSystem(this);
-        }
+        if(this.active) basin.fetchSeason(curSeason).addSystem(this);
 
         this.TC = false;
         this.named = false;
@@ -19,9 +14,10 @@ class Storm{
         this.rotation = random(TAU);
 
         this.depressionNum = undefined;
+        this.nameNum = undefined;
         this.name = undefined;
 
-        this.birthTime = isNewStorm ? basin.tick : undefined;       // Time formed as a disturbance/low
+        this.birthTime = this.active ? basin.tick : undefined;       // Time formed as a disturbance/low
         this.formationTime = undefined;                             // Time formed as a TC
         this.dissipationTime = undefined;                           // Time degenerated/dissipated as a TC
         this.deathTime = undefined;                                 // Time completely dissipated
@@ -32,7 +28,7 @@ class Storm{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
-        if(isNewStorm && basin.tick%ADVISORY_TICKS===0) this.current.advisory();
+        if(!this.active && data) this.load(data);
     }
 
     aliveAt(t){
@@ -191,7 +187,12 @@ class Storm{
         }
         if(isTropical && cat>=0){
             if(!this.named){
-                this.name = getNewName(curSeason,cSeason.namedStorms++);
+                this.nameNum = cSeason.namedStorms++;
+                if(basin.sequentialNameIndex>=0){
+                    this.nameNum = basin.sequentialNameIndex++;
+                    basin.sequentialNameIndex %= basin.nameList.length;
+                }
+                this.name = getNewName(curSeason,this.nameNum);
                 this.named = true;
                 this.namedTime = basin.tick;
             }
@@ -237,6 +238,14 @@ class Storm{
             else if(p<this.peak.pressure) this.peak = data;
         }
     }
+
+    save(){
+        //WIP
+    }
+
+    load(data){
+        //WIP
+    }
 }
 
 class StormRef{
@@ -264,7 +273,7 @@ class StormData{
 }
 
 class ActiveSystem extends StormData{
-    constructor(storm,ext,spawn){
+    constructor(ext,spawn){
         let sType = spawn ? spawn.sType : undefined;
         if(sType==="x") ext = true;
         let x = spawn ? spawn.x : ext ? 0 : width;
@@ -295,7 +304,6 @@ class ActiveSystem extends StormData{
             sType==="l" ? TROPWAVE : TROP :
         TROPWAVE;
         super(x,y,p,w,ty);
-        this.storm = storm;
         this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
         this.lowerWarmCore = ext ? 0 : 1;
         this.upperWarmCore = ext ? 0 : 1;
@@ -310,6 +318,8 @@ class ActiveSystem extends StormData{
         this.trackForecast.stVec = createVector(0);
         this.trackForecast.pVec = createVector(0);
         this.trackForecast.points = [];
+        this.storm = new Storm(this);
+        if(basin.tick%ADVISORY_TICKS===0) this.advisory();
     }
 
     update(){
@@ -476,11 +486,8 @@ function getNewName(season,sNum){
             return greeks[gNum];
         }
         return list[sNum];
-    }else{
-        let n = basin.nameList[basin.sequentialNameIndex++];
-        basin.sequentialNameIndex %= basin.nameList.length;
-        return n;
     }
+    return basin.nameList[sNum];
 }
 
 function getCat(w){     // windspeed in knots

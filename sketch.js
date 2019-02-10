@@ -44,60 +44,74 @@ function setup(){
 }
 
 function draw(){
-    background(COLORS.bg);
-    if(basin){
-        if(finisher){
-            let t = finisher.next();
-            if(t.done){
-                finisher = undefined;
+    try{
+        background(COLORS.bg);
+        if(basin){
+            if(finisher){
+                let t = finisher.next();
+                if(t.done){
+                    finisher = undefined;
+                    return;
+                }
+                push();
+                textSize(48);
+                textAlign(CENTER,CENTER);
+                text(t.value,width/2,height/2);
+                pop();
                 return;
             }
-            push();
-            textSize(48);
-            textAlign(CENTER,CENTER);
-            text(t.value,width/2,height/2);
-            pop();
-            return;
-        }
-        stormIcons.clear();
-        if(!paused){
-            simSpeedFrameCounter++;
-            simSpeedFrameCounter%=pow(2,simSpeed);
-            if(simSpeedFrameCounter===0) advanceSim();
-        }
-        keyRepeatFrameCounter++;
-        if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
-            if(paused){
-                if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
-                    viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
-                    refreshTracks();
-                    Env.displayLayer();
-                }else if(keyCode===RIGHT_ARROW){
-                    if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-                    else viewTick = basin.tick;
-                    refreshTracks();
-                    Env.displayLayer();
+            stormIcons.clear();
+            if(!paused){
+                simSpeedFrameCounter++;
+                simSpeedFrameCounter%=pow(2,simSpeed);
+                if(simSpeedFrameCounter===0) advanceSim();
+            }
+            keyRepeatFrameCounter++;
+            if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
+                if(paused){
+                    if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
+                        viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
+                        refreshTracks();
+                        Env.displayLayer();
+                    }else if(keyCode===RIGHT_ARROW){
+                        if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                        else viewTick = basin.tick;
+                        refreshTracks();
+                        Env.displayLayer();
+                    }
                 }
             }
+            if(viewingPresent()) for(let s of basin.activeSystems) s.storm.renderIcon();
+            else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
+    
+            if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
+            image(landBuffer,0,0,width,height);
+            image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
+            if(useShader) image(landShader,0,0,width,height);
+            if(Env.displaying>=0 && !Env.layerIsOceanic){
+                image(envLayer,0,0,width,height);
+                if(!Env.layerIsVector) image(coastLine,0,0,width,height);
+            }
+            image(tracks,0,0,width,height);
+            image(forecastTracks,0,0,width,height);
+            image(stormIcons,0,0,width,height);
         }
-        if(viewingPresent()) for(let s of basin.activeSystems) s.renderIcon();
-        else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
-
-        if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
-        image(landBuffer,0,0,width,height);
-        image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
-        if(useShader) image(landShader,0,0,width,height);
-        if(Env.displaying>=0 && !Env.layerIsOceanic){
-            image(envLayer,0,0,width,height);
-            if(!Env.layerIsVector) image(coastLine,0,0,width,height);
-        }
-        image(tracks,0,0,width,height);
-        image(forecastTracks,0,0,width,height);
-        image(stormIcons,0,0,width,height);
+    
+        UI.updateMouseOver();
+        UI.renderAll();
+    }catch(err){            // BSOD
+        resetMatrix();
+        colorMode(RGB);
+        background(0,0,200);
+        fill(255);
+        textSize(24);
+        textAlign(LEFT,TOP);
+        text("Crash!",width/16,height/8);
+        textSize(15);
+        text(err.stack,width/16,height/4);
+        console.error(err);
+        noLoop();
     }
-
-    UI.updateMouseOver();
-    UI.renderAll();
 }
 
 function init(){
@@ -139,22 +153,22 @@ function advanceSim(){
     curSeason = basin.getSeason(-1);
     if(!basin.fetchSeason(curSeason)){
         let e = new Season();
-        for(let s of basin.activeSystems) e.addSystem(new StormRef(s));
+        for(let s of basin.activeSystems) e.addSystem(new StormRef(s.storm));
         basin.seasons[curSeason] = e;
     }
     Env.wobble();    // random change in environment for future forecast realism
     for(let i=0;i<basin.activeSystems.length;i++){
         for(let j=i+1;j<basin.activeSystems.length;j++){
-            basin.activeSystems[i].current.interact(basin.activeSystems[j].current,true);
+            basin.activeSystems[i].interact(basin.activeSystems[j],true);
         }
-        basin.activeSystems[i].current.update();
+        basin.activeSystems[i].update();
     }
     if(random()<0.012){
-        basin.activeSystems.push(new Storm(random()>0.5+0.1*seasonalSine(basin.tick)));
+        basin.spawn(random()>0.5+0.1*seasonalSine(basin.tick));
     }
     let stormKilled = false;
     for(let i=basin.activeSystems.length-1;i>=0;i--){
-        if(!basin.activeSystems[i].active){
+        if(!basin.activeSystems[i].storm.active){
             basin.activeSystems.splice(i,1);
             stormKilled = true;
         }

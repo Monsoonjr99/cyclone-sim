@@ -5,7 +5,7 @@ function viewingPresent(){
 function refreshTracks(){
     tracks.clear();
     forecastTracks.clear();
-    if(viewingPresent()) for(let s of basin.activeSystems) s.renderTrack();
+    if(viewingPresent()) for(let s of basin.activeSystems) s.storm.renderTrack();
     else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
 }
 
