@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190216a:
+    + Added saving/loading methods for the StormData class
+    * Storms no longer continue off the edge of the map, but are now killed as soon as the center reaches the edge
+    * Changed how new instances of Storm and ActiveSystem are created when a new storm is spawned (optimization for saving/loading)
+    * basin.activeSystems now contains ActiveSystem objects instead of Storm objects
+    * The category of a storm at each point in its life is now calculated on the fly rather than stored as a property
 v20190210a:
     + Added crash screen in case this crashes
     * Optimizations to Storm and ActiveSystem classes for saving/loading

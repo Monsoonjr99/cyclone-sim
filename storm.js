@@ -1,9 +1,8 @@
 class Storm{
     constructor(data){
-        this.active = data instanceof ActiveSystem;
-        this.current = this.active ? data : undefined;
+        this.current = data instanceof ActiveSystem && data;
         this.id = undefined;
-        if(this.active) basin.fetchSeason(curSeason).addSystem(this);
+        if(this.current) basin.fetchSeason(curSeason).addSystem(this);
 
         this.TC = false;
         this.named = false;
@@ -17,7 +16,7 @@ class Storm{
         this.nameNum = undefined;
         this.name = undefined;
 
-        this.birthTime = this.active ? basin.tick : undefined;       // Time formed as a disturbance/low
+        this.birthTime = this.current ? basin.tick : undefined;       // Time formed as a disturbance/low
         this.formationTime = undefined;                             // Time formed as a TC
         this.dissipationTime = undefined;                           // Time degenerated/dissipated as a TC
         this.deathTime = undefined;                                 // Time completely dissipated
@@ -28,11 +27,11 @@ class Storm{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
-        if(!this.active && data) this.load(data);
+        if(!this.current && data) this.load(data);
     }
 
     aliveAt(t){
-        return t >= this.birthTime && (this.active || t < this.deathTime);
+        return t >= this.birthTime && (!!this.current || t < this.deathTime);
     }
 
     getStormDataByTick(t,allowCurrent){
@@ -52,7 +51,7 @@ class Storm{
         let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
         let name = t==="peak" ? this.name : this.getNameByTick(t);
         let ty = data ? data.type : null;
-        let cat = data ? data.cat : null;
+        let cat = data ? data.getCat() : null;
         let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         return ty===TROP ?
             (cat>0 ? hurricaneTerm :
@@ -74,7 +73,7 @@ class Storm{
             let pr = advC.pressure;
             let st = advC.windSpeed;
             let pos = advC.pos;
-            let cat = adv ? adv.cat : advC.cat;
+            let cat = adv ? adv.getCat() : advC.getCat();
             let ty = adv ? adv.type : advC.type;
             let name = this.getNameByTick(viewTick);
             this.rotation -= 0.03*pow(1.01,ktsToMph(st));
@@ -142,7 +141,7 @@ class Storm{
             if(newestSegment){
                 if(this.record.length>1){
                     let adv = this.record[this.record.length-2];
-                    let col = getColor(adv.cat,adv.type);
+                    let col = getColor(adv.getCat(),adv.type);
                     tracks.stroke(col);
                     let pos = adv.pos;
                     let nextPos = this.record[this.record.length-1].pos;
@@ -151,7 +150,7 @@ class Storm{
             }else if(this.aliveAt(viewTick) || selectedStorm===this){
                 for(let n=0;n<this.record.length-1;n++){
                     let adv = this.record[n];
-                    let col = getColor(adv.cat,adv.type);
+                    let col = getColor(adv.getCat(),adv.type);
                     tracks.stroke(col);
                     let pos = adv.pos;
                     let nextPos = this.record[n+1].pos;
@@ -159,7 +158,7 @@ class Storm{
                 }
             }
         }
-        if(selectedStorm===this && viewingPresent() && this.active){
+        if(selectedStorm===this && viewingPresent() && this.current){
             forecastTracks.clear();
             let p = this.current.trackForecast.points;
             for(let n=0;n<p.length;n++){
@@ -172,7 +171,7 @@ class Storm{
         let w = data.windSpeed;
         let p = data.pressure;
         let type = data.type;
-        let cat = getCat(w);
+        let cat = data.getCat();
         let cSeason = basin.fetchSeason(curSeason);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
@@ -240,7 +239,8 @@ class Storm{
     }
 
     save(){
-        //WIP
+        // WIP
+        let data = [];
     }
 
     load(data){
@@ -264,11 +264,96 @@ class StormRef{
 
 class StormData{
     constructor(x,y,p,w,t){
-        this.pos = createVector(x,y);
-        this.pressure = p;
-        this.windSpeed = w;
-        this.cat = getCat(this.windSpeed);
-        this.type = t<STORM_TYPES ? t : EXTROP;//!STORM_TYPES.includes(t) ? EXTROP : t;
+        this.pos = undefined;
+        this.pressure = undefined;
+        this.windSpeed = undefined; // in knots
+        this.type = undefined;
+        if(typeof x==="string"){
+            this.load(x,y);
+        }else{
+            this.pos = createVector(x,y);
+            this.pressure = p;
+            this.windSpeed = w;
+            this.type = t<STORM_TYPES ? t : EXTROP;
+        }
+    }
+
+    getCat(){
+        let w = this.windSpeed;
+        if(w<34) return -1;
+        if(w<64) return 0;
+        if(w<83) return 1;
+        if(w<96) return 2;
+        if(w<113) return 3;
+        if(w<137) return 4;
+        return 5;
+    }
+
+    save(inArr){
+        let arr = [];
+        if(!inArr){
+            let opts = {
+                w: width * STORMDATA_POS_MULT,
+                h: height * STORMDATA_POS_MULT,
+                mapX: x=>x*STORMDATA_POS_MULT,
+                mapY: y=>y*STORMDATA_POS_MULT
+            };
+            arr.push(encodePoint(this.pos,opts));
+        }
+        arr.push(this.pressure);
+        arr.push(this.windSpeed);
+        arr.push(this.type);
+        return encodeB36StringArray(arr);
+    }
+
+    load(str,posInArr){
+        let arr = decodeB36StringArray(str);
+        this.type = arr.pop();
+        this.windSpeed = arr.pop();
+        this.pressure = arr.pop();
+        if(posInArr) this.pos = posInArr;
+        else{
+            let opts = {
+                w: width * STORMDATA_POS_MULT,
+                h: height * STORMDATA_POS_MULT,
+                mapX: x=>x/STORMDATA_POS_MULT,
+                mapY: y=>y/STORMDATA_POS_MULT,
+                p5Vec: true
+            };
+            this.pos = decodePoint(arr.pop(),opts);
+        }
+    }
+
+    static saveArr(arr){
+        let opts = {
+            w: width * STORMDATA_POS_MULT,
+            h: height * STORMDATA_POS_MULT,
+            mapX: x=>x*STORMDATA_POS_MULT,
+            mapY: y=>y*STORMDATA_POS_MULT
+        };
+        let positions = [];
+        let theRest = [];
+        for(let i=0;i<arr.length;i++){
+            positions.push(arr[i].pos);
+            theRest.push(arr[i].save(true));
+        }
+        return encodePointArray(positions,opts) + "/" + theRest.join("/");
+    }
+
+    static loadArr(str){
+        let arr = str.split("/");
+        let opts = {
+            w: width * STORMDATA_POS_MULT,
+            h: height * STORMDATA_POS_MULT,
+            mapX: x=>x/STORMDATA_POS_MULT,
+            mapY: y=>y/STORMDATA_POS_MULT,
+            p5Vec: true
+        };
+        let positions = decodePointArray(arr.shift(),opts);
+        for(let i=0;i<arr.length;i++){
+            arr[i] = new StormData(arr[i],positions[i]);
+        }
+        return arr;
     }
 }
 
@@ -276,7 +361,7 @@ class ActiveSystem extends StormData{
     constructor(ext,spawn){
         let sType = spawn ? spawn.sType : undefined;
         if(sType==="x") ext = true;
-        let x = spawn ? spawn.x : ext ? 0 : width;
+        let x = spawn ? spawn.x : ext ? 0 : width-1;
         let y = spawn ? spawn.y : hemY(ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9));
         let p = spawn ?
             sType==="x" ? 1005 :
@@ -397,10 +482,9 @@ class ActiveSystem extends StormData{
                 this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
         }
 
-        if(this.pressure>1030 || (this.pos.x > width+DIAMETER || this.pos.x < 0-DIAMETER || this.pos.y > height+DIAMETER || this.pos.y < 0-DIAMETER) || this.interaction.kill){
+        if(this.pressure>1030 || (this.pos.x >= width || this.pos.x < 0 || this.pos.y >= height || this.pos.y < 0) || this.interaction.kill){
             this.storm.deathTime = basin.tick;
             if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;
-            this.storm.active = false;
             this.storm.current = undefined;
             return;
         }
@@ -488,16 +572,6 @@ function getNewName(season,sNum){
         return list[sNum];
     }
     return basin.nameList[sNum];
-}
-
-function getCat(w){     // windspeed in knots
-    if(w<34) return -1;
-    if(w<64) return 0;
-    if(w<83) return 1;
-    if(w<96) return 2;
-    if(w<113) return 3;
-    if(w<137) return 4;
-    return 5;
 }
 
 function tropOrSub(ty){

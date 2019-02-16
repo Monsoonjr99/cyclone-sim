@@ -168,7 +168,7 @@ function advanceSim(){
     }
     let stormKilled = false;
     for(let i=basin.activeSystems.length-1;i>=0;i--){
-        if(!basin.activeSystems[i].storm.active){
+        if(!basin.activeSystems[i].storm.current){
             basin.activeSystems.splice(i,1);
             stormKilled = true;
         }

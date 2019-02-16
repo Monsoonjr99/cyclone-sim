@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190210a";
+const VERSION_NUMBER = "20190216a";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -77,6 +77,7 @@ const SAVING_RADIX = 36;
 const AUTOSAVE_TICK_PERIOD = 240;
 const ENVDATA_SAVE_FLOAT = -2;
 const ENVDATA_SAVE_MULT = 10000;
+const STORMDATA_POS_MULT = 5;
 
 const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;

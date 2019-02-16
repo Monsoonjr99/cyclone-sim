@@ -145,7 +145,7 @@ class Season{
 
     addSystem(s){
         this.systems.push(s);
-        if(s.active) s.id = this.totalSystemCount++;
+        if(s.current) s.id = this.totalSystemCount++;
     }
 
     fetchSystemById(id){
@@ -335,6 +335,7 @@ function decodePoint(n,o){
     if(o.mapX instanceof Function) x = o.mapX(x);
     if(o.mapY instanceof Function) y = o.mapY(y);
     if(o.mapZ instanceof Function) z = o.mapZ(z);
+    if(o.p5Vec) return createVector(x,y,z);
     return {x,y,z};
 }
 
