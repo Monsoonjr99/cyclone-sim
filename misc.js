@@ -2,10 +2,14 @@ function viewingPresent(){
     return viewTick === basin.tick;
 }
 
-function refreshTracks(){
+function refreshTracks(force){
+    if(trackMode===2 && !force) return;
     tracks.clear();
     forecastTracks.clear();
-    if(viewingPresent()) for(let s of basin.activeSystems) s.storm.renderTrack();
+    if(selectedStorm) selectedStorm.renderTrack();
+    else if(trackMode===2){
+        for(let s of basin.fetchSeason(viewTick,true).forSystems()) if(s.TC) s.renderTrack();
+    }else if(viewingPresent()) for(let s of basin.activeSystems) s.storm.renderTrack();
     else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
 }
 

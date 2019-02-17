@@ -76,7 +76,7 @@ class Storm{
             let cat = adv ? adv.getCat() : advC.getCat();
             let ty = adv ? adv.type : advC.type;
             let name = this.getNameByTick(viewTick);
-            this.rotation -= 0.03*pow(1.01,ktsToMph(st));
+            this.rotation -= 0.03*pow(1.01,ktsToMph(min(270,st)));
             stormIcons.push();
             stormIcons.translate(pos.x,pos.y);
             stormIcons.textAlign(CENTER,CENTER);
@@ -137,18 +137,24 @@ class Storm{
     }
 
     renderTrack(newestSegment){
-        if(this.TC && (selectedStorm===undefined || selectedStorm===this)){
+        if(this.TC || trackMode===1){
             if(newestSegment){
                 if(this.record.length>1){
+                    let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
                     let adv = this.record[this.record.length-2];
                     let col = getColor(adv.getCat(),adv.type);
                     tracks.stroke(col);
                     let pos = adv.pos;
                     let nextPos = this.record[this.record.length-1].pos;
-                    tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                    if(trackMode===1 || (t>=this.formationTime && (!this.dissipationTime || t<this.dissipationTime))) tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
                 }
-            }else if(this.aliveAt(viewTick) || selectedStorm===this){
+            }else if(this.aliveAt(viewTick) || trackMode===2 || selectedStorm===this){
                 for(let n=0;n<this.record.length-1;n++){
+                    let t = n*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
+                    if(trackMode!==1){
+                        if(t<this.formationTime) continue;
+                        if(t>=this.dissipationTime) break;
+                    }
                     let adv = this.record[n];
                     let col = getColor(adv.getCat(),adv.type);
                     tracks.stroke(col);
@@ -182,7 +188,6 @@ class Storm{
             this.depressionNum = ++cSeason.depressions;
             this.peak = undefined;
             this.name = this.depressionNum + DEPRESSION_LETTER;
-            refreshTracks();
         }
         if(isTropical && cat>=0){
             if(!this.named){
@@ -231,7 +236,10 @@ class Storm{
             cSeason.deaths += ded;
         }
         if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
-        if(!wasTCB4Update && isTropical) this.dissipationTime = undefined;
+        if(!wasTCB4Update && isTropical){
+            this.dissipationTime = undefined;
+            if(this.formationTime!==basin.tick) refreshTracks(true);
+        }
         if(!this.TC || isTropical){
             if(!this.peak) this.peak = data;
             else if(p<this.peak.pressure) this.peak = data;

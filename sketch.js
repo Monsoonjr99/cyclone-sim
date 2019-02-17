@@ -10,6 +10,7 @@ function setup(){
     basin = undefined;
     newBasinSettings = {};
     useShader = false;
+    trackMode = 0;
 
     tracks = createBuffer();
     tracks.strokeWeight(2);
@@ -69,14 +70,17 @@ function draw(){
             keyRepeatFrameCounter++;
             if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
                 if(paused){
+                    let oldS = basin.getSeason(viewTick);
                     if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
                         viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
-                        refreshTracks();
+                        let newS = basin.getSeason(viewTick);
+                        refreshTracks(newS!==oldS);
                         Env.displayLayer();
                     }else if(keyCode===RIGHT_ARROW){
                         if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
                         else viewTick = basin.tick;
-                        refreshTracks();
+                        let newS = basin.getSeason(viewTick);
+                        refreshTracks(newS!==oldS);
                         Env.displayLayer();
                     }
                 }
@@ -148,14 +152,15 @@ function* finishInit(){
 function advanceSim(){
     let vp = viewingPresent();
     basin.tick++;
+    let os = basin.getSeason(viewTick);
     viewTick = basin.tick;
-    if(!vp) refreshTracks();
     curSeason = basin.getSeason(-1);
     if(!basin.fetchSeason(curSeason)){
         let e = new Season();
         for(let s of basin.activeSystems) e.addSystem(new StormRef(s.storm));
         basin.seasons[curSeason] = e;
     }
+    if(!vp || curSeason!==os) refreshTracks(curSeason!==os);
     Env.wobble();    // random change in environment for future forecast realism
     for(let i=0;i<basin.activeSystems.length;i++){
         for(let j=i+1;j<basin.activeSystems.length;j++){

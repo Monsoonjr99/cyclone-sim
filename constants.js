@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190216a";
+const VERSION_NUMBER = "20190217a";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -92,6 +92,7 @@ const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tSPACE - Pause/resume simulation\n" +
     "\t\tA - Step simulation one hour while paused\n" +
     "\t\tE - Cycle through map layers\n" +
+    "\t\tT - Cycle through track display modes\n" +
     "\t\tW - Toggle strength indicators below storm icons (kts / hPa)\n" +
     "\t\t[ - Decrease simulation speed by half\n" +
     "\t\t] - Increase simulation speed by double\n" +

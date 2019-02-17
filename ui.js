@@ -463,8 +463,10 @@ UI.init = function(){
             if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(t>basin.tick) t = basin.tick;
             if(t<0) t = 0;
+            let os = basin.getSeason(viewTick);
+            let ns = basin.getSeason(t);
             viewTick = t;
-            refreshTracks();
+            refreshTracks(ns!==os);
             Env.displayLayer();
         }
     };
@@ -703,8 +705,10 @@ UI.init = function(){
             }else{
                 t = basin.seasonTick(s);
             }
+            let os = basin.getSeason(viewTick);
+            let ns = basin.getSeason(t);
             viewTick = t;
-            refreshTracks();
+            refreshTracks(ns!==os);
             Env.displayLayer();
         }
     });
@@ -800,12 +804,12 @@ function mouseClicked(){
                     let p = s.getStormDataByTick(viewTick,true).pos;
                     if(p.dist(mVector)<DIAMETER){
                         selectStorm(s);
-                        refreshTracks();
+                        refreshTracks(true);
                         return false;
                     }
                 }
                 selectStorm();
-                refreshTracks();
+                refreshTracks(true);
             }else{
                 let vSeason = basin.fetchSeason(viewTick,true);
                 let mVector = createVector(mouseX,mouseY);
@@ -815,13 +819,13 @@ function mouseClicked(){
                         let p = s.getStormDataByTick(viewTick).pos;
                         if(p.dist(mVector)<DIAMETER){
                             selectStorm(s);
-                            refreshTracks();
+                            refreshTracks(true);
                             return false;
                         }
                     }
                 }
                 selectStorm();
-                refreshTracks();
+                refreshTracks(true);
             }
         }
         return false;
@@ -850,6 +854,11 @@ function keyPressed(){
         break;
         case "E":
         Env.displayNext();
+        break;
+        case "T":
+        trackMode++;
+        trackMode%=3;
+        refreshTracks(true);
         break;
         default:
         switch(keyCode){

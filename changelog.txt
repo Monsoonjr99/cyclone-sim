@@ -1,5 +1,12 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190217a:
+    + Added track display modes, currently accessed by pressing the "T" key (mobile-friendly UI coming later)
+        > There are 3 modes as of this update, which the "T" key cycles through
+            > The first mode shows the tracks from first tropical formation to last tropical dissipation of systems active at the viewed tick
+            > The second mode shows the full tracks of all systems active at the viewed tick, including extratropical systems
+            > The third mode shows the tracks from first tropical formation to last tropical dissipation of all systems in the viewed season ("Season track display mode")
+    * Capped storm icon rotation speed for storms exceeding 270 kts
 v20190216a:
     + Added saving/loading methods for the StormData class
     * Storms no longer continue off the edge of the map, but are now killed as soon as the center reaches the edge
