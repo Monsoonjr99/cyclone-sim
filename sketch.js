@@ -11,6 +11,7 @@ function setup(){
     newBasinSettings = {};
     useShader = false;
     trackMode = 0;
+    testSavedSeasons = {};  // test
 
     tracks = createBuffer();
     tracks.strokeWeight(2);
@@ -41,6 +42,7 @@ function setup(){
     simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
 
+    renameOldBasinSaveKeys();
     UI.init();
 }
 

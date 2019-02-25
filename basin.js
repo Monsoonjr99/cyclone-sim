@@ -61,7 +61,7 @@ class Basin{
     }
 
     storagePrefix(){
-        return LOCALSTORAGE_KEY_PREFIX + this.saveSlot + '-';
+        return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + this.saveSlot + '-';
     }
 
     save(){
@@ -82,6 +82,9 @@ class Basin{
         if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
         localStorage.setItem(namesKey,names);
         // insert seasons and env saving here
+        for(let k in this.seasons){ // test
+            if(!testSavedSeasons[k] || k==this.getSeason(-1)) testSavedSeasons[k] = this.seasons[k].save();
+        }
     }
 
     load(){
@@ -166,13 +169,27 @@ class Season{
     }
 
     *forSystems(){
-        for(let i=0;i<this.systems.length;i++) yield this.fetchSystemAtIndex(i);
+        for(let i=0;i<this.systems.length;i++){
+            let s = this.fetchSystemAtIndex(i);
+            if(s) yield s;
+        }
     }
 
     save(){
         // WIP
         let str = "";
-        let stats = [SAVE_FORMAT,this.totalSystemCount,this.depressions,this.namedStorms,this.hurricanes,this.majors,this.c5s,this.ACE*ACE_DIVISOR,this.deaths,this.damage/DAMAGE_DIVISOR,this.envRecordStarts];
+        let stats = [];
+        stats.push(this.totalSystemCount);
+        stats.push(this.depressions);
+        stats.push(this.namedStorms);
+        stats.push(this.hurricanes);
+        stats.push(this.majors);
+        stats.push(this.c5s);
+        stats.push(this.ACE*ACE_DIVISOR);
+        stats.push(this.deaths);
+        stats.push(this.damage/DAMAGE_DIVISOR);
+        stats.push(this.envRecordStarts);
+        stats.push(SAVE_FORMAT);
         str += encodeB36StringArray(stats);
         str += ";";
         if(this.envData){
@@ -198,7 +215,14 @@ class Season{
             }
         }else str += ";";
         if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
-        str += "insert storm system data here";
+        for(let i=0;i<this.systems.length;i++){
+            let s = this.systems[i];
+            if(s instanceof StormRef && s.fetch() && s.fetch().TC){
+                str += "~" + s.save();
+            }else if(s.TC){
+                str += "," + s.save();
+            }
+        }
         return str;
     }
 
@@ -206,18 +230,22 @@ class Season{
         // WIP
         let mainparts = str.split(";");
         let stats = decodeB36StringArray(mainparts[0]);
-        let seasonSaveFormat = stats[0];
-        this.totalSystemCount = stats[1];
-        this.depressions = stats[2];
-        this.namedStorms = stats[3];
-        this.hurricanes = stats[4];
-        this.majors = stats[5];
-        this.c5s = stats[6];
-        this.ACE = stats[7]/ACE_DIVISOR;
-        this.deaths = stats[8];
-        this.damage = stats[9]*DAMAGE_DIVISOR;
-        this.envRecordStarts = stats[10];
-        if(seasonSaveFormat>=EARLIEST_COMPATIBLE_FORMAT && seasonSaveFormat>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
+        let seasonSaveFormat = stats.pop();
+        if(seasonSaveFormat===undefined || seasonSaveFormat<EARLIEST_COMPATIBLE_FORMAT){
+            this.envData = null;
+            return;
+        }
+        this.envRecordStarts = stats.pop() || 0;
+        this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
+        this.deaths = stats.pop() || 0;
+        this.ACE = stats.pop()/ACE_DIVISOR || 0;
+        this.c5s = stats.pop() || 0;
+        this.majors = stats.pop() || 0;
+        this.hurricanes = stats.pop() || 0;
+        this.namedStorms = stats.pop() || 0;
+        this.depressions = stats.pop() || 0;
+        this.totalSystemCount = stats.pop() || 0;
+        if(seasonSaveFormat>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
             let e = mainparts[1].split(",");
             let i = 0;
             let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
@@ -240,6 +268,14 @@ class Season{
                 }
             }
         }else this.envData = null;
+        let storms = mainparts[2];
+        for(let i=0,i1=0;i1<storms.length;i=i1){
+            i1 = storms.slice(i+1).search(/[~,]/g);
+            i1 = i1<0 ? storms.length : i+1+i1;
+            let s = storms.slice(i,i1);
+            if(s.charAt(0)==="~") this.systems.push(new StormRef(s.slice(1)));
+            else if(s.charAt(0)===",") this.systems.push(new Storm(s.slice(1)));
+        }
     }
 }
 

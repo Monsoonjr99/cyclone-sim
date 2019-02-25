@@ -247,26 +247,91 @@ class Storm{
     }
 
     save(){
-        // WIP
-        let data = [];
+        let numData = [];
+        numData.push(this.id);
+        numData.push(this.depressionNum!==undefined ? this.depressionNum : -1);
+        numData.push(this.nameNum!==undefined ? this.nameNum : -1);
+        numData.push(this.birthTime);
+        numData.push(this.deaths);
+        numData.push(this.damage/DAMAGE_DIVISOR);
+        let record = StormData.saveArr(this.record);
+        numData = encodeB36StringArray(numData);
+        return numData + "." + record;
     }
 
     load(data){
-        //WIP
+        data = data.split(".");
+        let numData = decodeB36StringArray(data[0]);
+        this.record = StormData.loadArr(data[1]);
+        this.damage = numData.pop()*DAMAGE_DIVISOR || 0;
+        this.deaths = numData.pop() || 0;
+        this.birthTime = numData.pop() || 0;
+        this.nameNum = numData.pop();
+        if(this.nameNum<0) this.nameNum = undefined;
+        if(this.nameNum!==undefined) this.named = true;
+        this.depressionNum = numData.pop();
+        if(this.depressionNum<0) this.depressionNum = undefined;
+        if(this.depressionNum!==undefined) this.TC = true;
+        this.id = numData.pop() || 0;
+        for(let i=0;i<this.record.length;i++){
+            let d = this.record[i];
+            let trop = tropOrSub(d.type);
+            let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
+            if(trop && !this.formationTime) this.formationTime = t;
+            if(trop && this.dissipationTime) this.dissipationTime = undefined;
+            if(!trop && this.formationTime && !this.dissipationTime) this.dissipationTime = t;
+            let cat = d.getCat();
+            if(trop && !this.namedTime && cat>=0) this.namedTime = t;
+            if(trop && !this.hurricane && cat>=1) this.hurricane = true;
+            if(trop && !this.major && cat>=3) this.major = true;
+            if(trop && !this.c5 && cat>=5) this.c5 = true;
+            if(!this.TC || trop){
+                if(!this.peak) this.peak = d;
+                else if(d.pressure<this.peak.pressure) this.peak = d;
+            }
+            if(trop && cat>=0){
+                this.ACE *= ACE_DIVISOR;
+                this.ACE += pow(d.windSpeed,2);
+                this.ACE /= ACE_DIVISOR;
+            }
+        }
+        this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
+        if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
+        if(this.nameNum!==undefined) this.name = getNewName(basin.getSeason(this.namedTime),this.nameNum);
     }
 }
 
 class StormRef{
     constructor(s){
-        this.season = basin.getSeason(s.birthTime);
-        this.refId = s.id;
-        this.ref = undefined;
+        if(typeof s === "string"){
+            this.season = undefined;
+            this.refId = undefined;
+            this.ref = undefined;
+            this.load(s);
+        }else{
+            this.season = basin.getSeason(s.birthTime);
+            this.refId = s.id;
+            this.ref = undefined;
+        }
     }
 
     fetch(){
         if(this.ref) return this.ref;
         this.ref = basin.fetchSeason(this.season).fetchSystemById(this.refId);
         return this.ref;
+    }
+
+    save(){
+        let arr = [];
+        arr.push(this.refId);
+        arr.push(this.season);
+        return encodeB36StringArray(arr);
+    }
+
+    load(str){
+        let arr = decodeB36StringArray(str);
+        this.season = arr.pop();
+        this.refId = arr.pop();
     }
 }
 

@@ -815,7 +815,7 @@ function mouseClicked(){
                 let mVector = createVector(mouseX,mouseY);
                 for(let i=vSeason.systems.length-1;i>=0;i--){
                     let s = vSeason.fetchSystemAtIndex(i);
-                    if(s.aliveAt(viewTick)){
+                    if(s && s.aliveAt(viewTick)){
                         let p = s.getStormDataByTick(viewTick).pos;
                         if(p.dist(mVector)<DIAMETER){
                             selectStorm(s);

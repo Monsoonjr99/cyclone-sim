@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190217a";
+const VERSION_NUMBER = "20190225a";
 
 const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -70,6 +70,7 @@ const DAMAGE_DIVISOR = 1000;
 const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
 
 const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";
+const LOCALSTORAGE_KEY_SAVEDBASIN = "savedbasin-";
 const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";
 const LOCALSTORAGE_KEY_NAMES = "names";

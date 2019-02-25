@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190225a:
+    + Added save/load methods for Storm and StormRef classes
+    * WIP (almost finished) season saving/loading algorithm now includes the storms (only TCs) in that season
+    * Small change to saved basin localStorage keys to accomodate future sim options
+    * As a test, seasons are "saved" to the global variable testSavedSeasons during basin autosaves
+        > They aren't actually saved to localStorage and loading the saved basin test is still the same as before
 v20190217a:
     + Added track display modes, currently accessed by pressing the "T" key (mobile-friendly UI coming later)
         > There are 3 modes as of this update, which the "T" key cycles through
