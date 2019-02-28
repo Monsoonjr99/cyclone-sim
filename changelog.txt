@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190228a:
+    + Added save/load methods for ActiveSystem and NCMetadata (current environmental field data) classes
 v20190225a:
     + Added save/load methods for Storm and StormRef classes
     * WIP (almost finished) season saving/loading algorithm now includes the storms (only TCs) in that season

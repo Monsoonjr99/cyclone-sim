@@ -12,6 +12,7 @@ class Basin{
         this.hurricaneStrengthTerm = hurrTerm || 0;
         this.seed = seed || moment().valueOf();
         this.envData = {};
+        this.envData.loadData = [];
         this.saveSlot = load || 0;
         if(load || load===0) this.load();
         // localStorage.setItem("testSeed",this.seed.toString());

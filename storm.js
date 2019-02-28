@@ -316,7 +316,7 @@ class StormRef{
     }
 
     fetch(){
-        if(this.ref) return this.ref;
+        if(this.ref && basin.seasons[this.season]) return this.ref;
         this.ref = basin.fetchSeason(this.season).fetchSystemById(this.refId);
         return this.ref;
     }
@@ -432,40 +432,48 @@ class StormData{
 
 class ActiveSystem extends StormData{
     constructor(ext,spawn){
-        let sType = spawn ? spawn.sType : undefined;
-        if(sType==="x") ext = true;
-        let x = spawn ? spawn.x : ext ? 0 : width-1;
-        let y = spawn ? spawn.y : hemY(ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9));
-        let p = spawn ?
-            sType==="x" ? 1005 :
-            sType==="l" ? 1015 :
-            sType==="d" ? 1005 :
-            sType==="s" ? 995 :
-            sType==="1" ? 985 :
-            sType==="2" ? 975 :
-            sType==="3" ? 960 :
-            sType==="4" ? 945 :
-            sType==="5" ? 925 : 1000 :
-        random(1000,1020);
-        let w = spawn ?
-            sType==="x" ? 15 :
-            sType==="l" ? 15 :
-            sType==="d" ? 25 :
-            sType==="s" ? 45 :
-            sType==="1" ? 70 :
-            sType==="2" ? 90 :
-            sType==="3" ? 105 :
-            sType==="4" ? 125 :
-            sType==="5" ? 145 : 35 :
-        random(15,35);
-        let ty = ext ? EXTROP : spawn ?
-            sType==="l" ? TROPWAVE : TROP :
-        TROPWAVE;
-        super(x,y,p,w,ty);
-        this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
-        this.lowerWarmCore = ext ? 0 : 1;
-        this.upperWarmCore = ext ? 0 : 1;
-        this.depth = ext ? 1 : 0;
+        if(typeof ext === "string"){
+            super();
+            this.organization = undefined;
+            this.lowerWarmCore = undefined;
+            this.upperWarmCore = undefined;
+            this.depth = undefined;
+        }else{
+            let sType = spawn ? spawn.sType : undefined;
+            if(sType==="x") ext = true;
+            let x = spawn ? spawn.x : ext ? 0 : width-1;
+            let y = spawn ? spawn.y : hemY(ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9));
+            let p = spawn ?
+                sType==="x" ? 1005 :
+                sType==="l" ? 1015 :
+                sType==="d" ? 1005 :
+                sType==="s" ? 995 :
+                sType==="1" ? 985 :
+                sType==="2" ? 975 :
+                sType==="3" ? 960 :
+                sType==="4" ? 945 :
+                sType==="5" ? 925 : 1000 :
+            random(1000,1020);
+            let w = spawn ?
+                sType==="x" ? 15 :
+                sType==="l" ? 15 :
+                sType==="d" ? 25 :
+                sType==="s" ? 45 :
+                sType==="1" ? 70 :
+                sType==="2" ? 90 :
+                sType==="3" ? 105 :
+                sType==="4" ? 125 :
+                sType==="5" ? 145 : 35 :
+            random(15,35);
+            let ty = ext ? EXTROP : spawn ?
+                sType==="l" ? TROPWAVE : TROP :
+            TROPWAVE;
+            super(x,y,p,w,ty);
+            this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
+            this.lowerWarmCore = ext ? 0 : 1;
+            this.upperWarmCore = ext ? 0 : 1;
+            this.depth = ext ? 1 : 0;
+        }
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
         this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
@@ -476,8 +484,13 @@ class ActiveSystem extends StormData{
         this.trackForecast.stVec = createVector(0);
         this.trackForecast.pVec = createVector(0);
         this.trackForecast.points = [];
-        this.storm = new Storm(this);
-        if(basin.tick%ADVISORY_TICKS===0) this.advisory();
+        if(typeof ext === "string"){
+            this.storm = undefined;
+            this.load(ext);
+        }else{
+            this.storm = new Storm(this);
+            if(basin.tick%ADVISORY_TICKS===0) this.advisory();
+        }
     }
 
     update(){
@@ -628,6 +641,33 @@ class ActiveSystem extends StormData{
             p.add(s);
             if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
         }
+    }
+
+    save(){
+        let base = super.save();
+        let activeData = [];
+        activeData.push(this.organization);
+        activeData.push(this.lowerWarmCore);
+        activeData.push(this.upperWarmCore);
+        activeData.push(this.depth);
+        activeData = encodeB36StringArray(activeData,ACTIVESYSTEM_SAVE_FLOAT);
+        let ref = new StormRef(this.storm);
+        ref = ref.save();
+        return base + "." + activeData + "." + ref;
+    }
+
+    load(str){
+        let parts = str.split(".");
+        super.load(parts[0]);
+        let activeData = decodeB36StringArray(parts[1]);
+        this.depth = activeData.pop();
+        this.upperWarmCore = activeData.pop();
+        this.lowerWarmCore = activeData.pop();
+        this.organization = activeData.pop();
+        let ref = new StormRef(parts[2]);
+        this.storm = ref.fetch();
+        this.storm.deathTime = undefined;
+        if(this.storm.record.length>0 && tropOrSub(this.storm.record[this.storm.record.length-1].type)) this.storm.dissipationTime = undefined;
     }
 }
 

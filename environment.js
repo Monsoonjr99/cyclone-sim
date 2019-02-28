@@ -54,17 +54,17 @@ class NoiseChannel{
 }
 
 class NCMetadata{
-    constructor(field,index,load){
+    constructor(field,index,loadstr){
         this.field = field;
         this.index = index;
         this.channel = null;
-        this.wobbleVector = load ? createVector(load.vec.x,load.vec.y) : p5.Vector.random2D();
+        this.wobbleVector = p5.Vector.random2D();
         let r = NC_OFFSET_RANDOM_FACTOR;
-        this.xOff = load ? load.x : random(r);
-        this.yOff = load ? load.y : random(r);
-        this.zOff = load ? load.z : random(r);
+        this.xOff = random(r);
+        this.yOff = random(r);
+        this.zOff = random(r);
         this.history = {};
-        // if(load) for(let i=0;i<load.hist.length;i++) this.history[load.hist[i].t] = load.hist[i].p;
+        if(loadstr) this.load(loadstr);
         if(!basin.envData[this.field]) basin.envData[this.field] = {};
         basin.envData[this.field][this.index] = this;
     }
@@ -154,6 +154,26 @@ class NCMetadata{
             });
         }
     }
+
+    save(){
+        let arr = [];
+        arr.push(this.wobbleVector.y);
+        arr.push(this.wobbleVector.x);
+        arr.push(this.zOff);
+        arr.push(this.yOff);
+        arr.push(this.xOff);
+        return encodeB36StringArray(arr,ENVDATA_SAVE_FLOAT);
+    }
+
+    load(str){
+        let arr = decodeB36StringArray(str);
+        this.xOff = arr.pop() || this.xOff;
+        this.yOff = arr.pop() || this.yOff;
+        this.zOff = arr.pop() || this.zOff;
+        let wx = arr.pop();
+        let wy = arr.pop();
+        if(wx!==undefined && wy!==undefined) this.wobbleVector = createVector(wx,wy);
+    }
 }
 
 class EnvField{
@@ -181,7 +201,7 @@ class EnvField{
         }
         for(let i=0;i<this.noise.length;i++){
             if(!basin.envData[this.name]) basin.envData[this.name] = {};
-            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i);
+            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i,basin.envData.loadData.pop());
         }
     }
 
