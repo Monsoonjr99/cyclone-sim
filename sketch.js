@@ -120,20 +120,23 @@ function draw(){
     }
 }
 
-function init(){
-    let hem;
-    if(newBasinSettings.hem===1) hem = false;
-    else if(newBasinSettings.hem===2) hem = true;
-    else hem = random()<0.5;
-    let year = hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-    if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
-    let seed = newBasinSettings.seed;
-    let hyper = newBasinSettings.hyper;
-    let names = newBasinSettings.names;
-    let hurrTerm = newBasinSettings.hurrTerm;
-    if(newBasinSettings.load) basin = new Basin(0);
-    else basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm);
-    newBasinSettings = {};
+function init(load){
+    if(load!==undefined){
+        basin = new Basin(load);
+    }else{
+        let hem;
+        if(newBasinSettings.hem===1) hem = false;
+        else if(newBasinSettings.hem===2) hem = true;
+        else hem = random()<0.5;
+        let year = hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+        if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
+        let seed = newBasinSettings.seed;
+        let hyper = newBasinSettings.hyper;
+        let names = newBasinSettings.names;
+        let hurrTerm = newBasinSettings.hurrTerm;
+        basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm);
+        newBasinSettings = {};
+    }
 
     viewTick = basin.tick;
     curSeason = basin.getSeason(-1);

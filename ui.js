@@ -178,7 +178,13 @@ UI.init = function(){
 
     mainMenu = new UI(null,0,0,width,height);
     basinCreationMenu = new UI(null,0,0,width,height,undefined,undefined,false);
+    loadMenu = new UI(null,0,0,width,height,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,width,height,undefined,undefined,false);
+    areYouSure = new UI(null,0,0,width,height,function(){
+        fill(COLORS.UI.box);
+        noStroke();
+        this.fullRect();
+    },true,false);
 
     // main menu
 
@@ -208,7 +214,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         basinCreationMenu.show();
-    }).append(false,0,60,200,40,function(){     // test load button
+    }).append(false,0,60,200,40,function(){     // load button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -218,12 +224,12 @@ UI.init = function(){
         }
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
-        textSize(18);
-        text("Partial Load (test)",100,20);
+        textSize(24);
+        text("Load Basin",100,20);
     },function(){
-        newBasinSettings.load = true;
-        init();
         mainMenu.hide();
+        loadMenu.show();
+        loadMenu.loadables = {};
     });
 
     // basin creation menu
@@ -389,6 +395,163 @@ UI.init = function(){
         mainMenu.show();
     });
 
+    // load menu
+
+    loadMenu.loadables = {}; // cache that stores whether the save slot has a loadable basin or not
+
+    loadMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
+        fill(COLORS.UI.text);
+        noStroke();
+        textAlign(CENTER,CENTER);
+        textSize(36);
+        text("Load Basin [test]",0,0);
+    });
+
+    let getslotloadable = function(s){
+        let l = loadMenu.loadables[s];
+        if(l===undefined){
+            let f = localStorage.getItem(Basin.storagePrefix(s) + LOCALSTORAGE_KEY_FORMAT);
+            l = loadMenu.loadables[s] = f===null ? 0 : f>=EARLIEST_COMPATIBLE_FORMAT ? 1 : -1;
+        }
+        return l;
+    };
+
+    let loadbuttonrender = function(){
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        let loadable = getslotloadable(this.slotNum);
+        if(loadable<1) fill(COLORS.UI.greyText);
+        else fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let label = "Slot ";
+        label += this.slotNum;
+        if(this.slotNum===0) label += " (Autosave)";
+        if(loadable<0) label += " [Incompatible]";
+        text(label,150,15);
+    };
+
+    let loadbuttonclick = function(){
+        let loadable = getslotloadable(this.slotNum);
+        if(loadable>0){
+            init(this.slotNum);
+            loadMenu.hide();
+            loadMenu.loadables = {};
+        }
+    };
+
+    let loadbuttons = [];
+
+    for(let i=0;i<SAVE_SLOTS;i++){
+        let x = i===0 ? width/2-150 : 0;
+        let y = i===0 ? height/4 : 40;
+        loadbuttons[i] = loadMenu.append(1,x,y,300,30,loadbuttonrender,loadbuttonclick);
+        loadbuttons[i].slotNum = i;
+    }
+
+    loadMenu.append(1,0,40,300,30,function(){ // "Cancel" button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(20);
+        text("Cancel",this.width/2,this.height/2);
+    },function(){
+        loadMenu.hide();
+        mainMenu.show();
+        loadMenu.loadables = {};
+    });
+
+    let delbuttonrender = function(){
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        let exists = getslotloadable(this.parent.slotNum);
+        if(exists) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        text("Del",this.width/2,this.height/2);
+    };
+
+    let delbuttonclick = function(){
+        let s = this.parent.slotNum;
+        if(getslotloadable(s)){
+            areYouSure.dialog(()=>{
+                Basin.deleteSave(s);
+                loadMenu.loadables = {};
+            });
+        }
+    };
+
+    for(let i=0;i<SAVE_SLOTS;i++) loadbuttons[i].append(false,315,0,40,30,delbuttonrender,delbuttonclick);
+
+    // Are you sure dialog
+
+    areYouSure.append(false,width/2,height/4,0,0,function(){ // dialog text
+        fill(COLORS.UI.text);
+        noStroke();
+        textAlign(CENTER,CENTER);
+        textSize(36);
+        text("Are You Sure?",0,0);
+    });
+
+    areYouSure.append(false,width/2-108,height/4+100,100,30,function(){ // "Yes" button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(20);
+        text("Yes",this.width/2,this.height/2);
+    },function(){
+        if(areYouSure.action){
+            areYouSure.action();
+            areYouSure.action = undefined;
+        }
+        else console.error("No action tied to areYouSure dialog");
+        areYouSure.hide();
+    }).append(false,116,0,100,30,function(){ // "No" button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(20);
+        text("No",this.width/2,this.height/2);
+    },function(){
+        areYouSure.hide();
+    });
+
+    areYouSure.dialog = function(action){
+        if(action instanceof Function){
+            areYouSure.action = action;
+            areYouSure.show();
+        }
+    };
+
     // primary "in sim" scene
 
     let topBar = primaryWrapper.append(false,0,0,width,30,function(){   // Top bar
@@ -553,6 +716,7 @@ UI.init = function(){
         rect(3,16,18,2);
     },function(){
         sideMenu.toggleShow();
+        saveBasinAsPanel.hide();
     }).append(false,29,0,100,24,function(){   // Map layer/environmental field indicator
         let txtStr = "Map Layer: ";
         if(Env.displaying!==-1){
@@ -713,6 +877,14 @@ UI.init = function(){
         }
     });
 
+    let returntomainmenu = function(){
+        sideMenu.hide();
+        primaryWrapper.hide();
+        land.clear();
+        basin = undefined;
+        mainMenu.show();
+    };
+
     sideMenu = primaryWrapper.append(false,0,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
         fill(COLORS.UI.box);
         noStroke();
@@ -725,7 +897,7 @@ UI.init = function(){
         text("*Saving is currently a test and won't yet save\nthe full basin with all its history",this.width/2,this.height-40);
     },true,false);
 
-    sideMenu.append(false,5,30,sideMenu.width-10,25,function(){
+    sideMenu.append(false,5,30,sideMenu.width-10,25,function(){ // Save and return to main menu button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -735,13 +907,106 @@ UI.init = function(){
         textSize(15);
         text("Save* and Return to Main Menu",this.width/2,this.height/2);
     },function(){
-        basin.save();
-        sideMenu.hide();
-        primaryWrapper.hide();
-        land.clear();
-        basin = undefined;
-        mainMenu.show();
+        if(basin.saveSlot===0) saveBasinAsPanel.invoke(true);
+        else{
+            basin.save();
+            returntomainmenu();
+        }
+    }).append(false,0,30,sideMenu.width-10,25,function(){   // Return to main menu w/o saving button
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Return to Main Menu w/o Saving*",this.width/2,this.height/2);
+    },function(){
+        areYouSure.dialog(returntomainmenu);
+    }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin button
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        let txt = "Save* Basin";
+        if(basin.tick===basin.lastSaved) txt += " [Saved*]";
+        text(txt,this.width/2,this.height/2);
+    },function(){
+        if(basin.saveSlot===0) saveBasinAsPanel.invoke();
+        else basin.save();
+    }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin as button
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Save* Basin As...",this.width/2,this.height/2);
+    },function(){
+        saveBasinAsPanel.invoke();
     });
+
+    saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(){
+        fill(COLORS.UI.box);
+        noStroke();
+        this.fullRect();
+        fill(COLORS.UI.text);
+        textAlign(CENTER,TOP);
+        textSize(18);
+        text("Save* Basin As...",this.width/2,10);
+        stroke(0);
+        line(0,0,0,this.height);
+    },true,false);
+
+    saveBasinAsPanel.invoke = function(exit){
+        saveBasinAsPanel.exit = exit;
+        saveBasinAsPanel.toggleShow();
+    };
+    
+    let saveslotbuttonrender = function(){
+        noStroke();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        let slotOccupied = getslotloadable(this.slotNum);
+        let txt = "Slot " + this.slotNum;
+        if(basin.saveSlot===this.slotNum) txt += " [This]";
+        else if(slotOccupied) txt += " [Overwrite]";
+        text(txt,this.width/2,this.height/2);
+    };
+
+    let saveslotbuttonclick = function(){
+        if(basin.saveSlot===this.slotNum){
+            basin.save();
+            loadMenu.loadables = {};
+            saveBasinAsPanel.hide();
+        }else{
+            let slotOccupied = getslotloadable(this.slotNum);
+            let f = ()=>{
+                basin.saveAs(this.slotNum);
+                loadMenu.loadables = {};
+                saveBasinAsPanel.hide();
+                if(saveBasinAsPanel.exit) returntomainmenu();
+            };
+            if(slotOccupied) areYouSure.dialog(f);
+            else f();
+        }
+    };
+
+    for(let i=1;i<SAVE_SLOTS;i++){  // 1-indexed as to not include the autosave slot 0
+        let x = i===1 ? 5 : 0;
+        let y = i===1 ? 40 : 30;
+        let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
+        b.slotNum = i;
+    }
 
     helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
         fill(COLORS.UI.box);

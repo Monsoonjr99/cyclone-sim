@@ -1,5 +1,13 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190305a:
+    + Added 5 additional save slots for saved basins (besides autosave slot 0)
+    + Added a load basin menu accessible from the main menu
+        > includes the ability to delete saved basins
+    + Added a save basin as... menu accessible from the in-sim side menu
+    + Added an "Are you sure" dialog for certain actions
+    + Added a button to the side menu to return to the main menu without saving
+    * Basin saving test now includes the current environmental field data as of the tick saved
 v20190228a:
     + Added save/load methods for ActiveSystem and NCMetadata (current environmental field data) classes
 v20190225a:

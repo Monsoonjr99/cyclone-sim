@@ -3,6 +3,7 @@ class Basin{
         this.seasons = {};
         this.activeSystems = [];
         this.tick = 0;
+        this.lastSaved = 0;
         this.godMode = godMode;
         this.SHem = SHem;
         this.hyper = hyper;
@@ -15,6 +16,7 @@ class Basin{
         this.envData.loadData = [];
         this.saveSlot = load || 0;
         if(load || load===0) this.load();
+        else Basin.deleteSave(0);
         // localStorage.setItem("testSeed",this.seed.toString());
     }
 
@@ -61,46 +63,63 @@ class Basin{
         return null; // insert season loading here
     }
 
+    static storagePrefix(s){
+        return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + s + '-';
+    }
+
     storagePrefix(){
-        return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + this.saveSlot + '-';
+        return Basin.storagePrefix(this.saveSlot);
     }
 
     save(){
-        let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
-        let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-        let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-        localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
-        let flags = 0;
-        flags |= this.hyper;
-        flags <<= 1;
-        flags |= this.godMode;
-        flags <<= 1;
-        flags |= this.SHem;
-        let arr = [this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
-        arr = encodeB36StringArray(arr);
-        localStorage.setItem(basinKey,arr);
-        let names = this.nameList.join(";");
-        if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
-        localStorage.setItem(namesKey,names);
-        // insert seasons and env saving here
-        for(let k in this.seasons){ // test
-            if(!testSavedSeasons[k] || k==this.getSeason(-1)) testSavedSeasons[k] = this.seasons[k].save();
-        }
+        modifyLocalStorage(()=>{
+            let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+            let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+            let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
+            localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
+            let str = "";
+            for(let i=Env.fieldList.length-1;i>=0;i--){
+                let f = Env.fieldList[i];
+                for(let j=Env.fields[f].noise.length-1;j>=0;j--){
+                    str += this.envData[f][j].save();
+                    if(i>0 || j>0) str += ",";
+                }
+            }
+            str += ";";
+            let flags = 0;
+            flags |= this.hyper;
+            flags <<= 1;
+            flags |= this.godMode;
+            flags <<= 1;
+            flags |= this.SHem;
+            let arr = [this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
+            str += encodeB36StringArray(arr);
+            localStorage.setItem(basinKey,str);
+            let names = this.nameList.join(";");
+            if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
+            localStorage.setItem(namesKey,names);
+            // insert seasons and env saving here
+            for(let k in this.seasons){ // test
+                if(!testSavedSeasons[k] || k==this.getSeason(-1)) testSavedSeasons[k] = this.seasons[k].save();
+            }
+            this.lastSaved = this.tick;
+        });
     }
 
     load(){
         let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
         let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
         let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-        let arr = localStorage.getItem(basinKey);
+        let str = localStorage.getItem(basinKey);
         let format = parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
         let names = localStorage.getItem(namesKey);
-        if(arr && format>=EARLIEST_COMPATIBLE_FORMAT){
-            arr = decodeB36StringArray(arr);
+        if(str && format>=EARLIEST_COMPATIBLE_FORMAT){
+            let parts = str.split(";");
+            let arr = decodeB36StringArray(parts.pop());
             let flags = arr.pop() || 0;
             this.startYear = arr.pop();
             this.seed = arr.pop() || moment().valueOf();
-            this.tick = arr.pop() || 0;
+            this.lastSaved = this.tick = arr.pop() || 0;
             this.sequentialNameIndex = arr.pop();
             this.hurricaneStrengthTerm = arr.pop() || 0;
             this.SHem = flags & 1;
@@ -120,11 +139,39 @@ class Basin{
                 this.nameList = names;
             }
             if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-            // insert seasons and env loading here
-            this.tick = 0; // temporary since saving seasons and env not yet added
+            let envLoadData = parts.pop();
+            this.envData.loadData = envLoadData ? envLoadData.split(",") : this.envData.loadData;
+            this.lastSaved = this.tick = 0; // temporary since saving seasons not yet added
         }else{
             this.godMode = true;
             this.startYear = NHEM_DEFAULT_YEAR;
+        }
+    }
+
+    saveAs(newSlot){
+        let oldPre = this.storagePrefix();
+        let newPre = Basin.storagePrefix(newSlot);
+        modifyLocalStorage(()=>{
+            Basin.deleteSave(newSlot);
+            for(let i=0;i<localStorage.length;i++){
+                let k = localStorage.key(i);
+                if(k.startsWith(oldPre)){
+                    let suffix = k.slice(oldPre.length);
+                    localStorage.setItem(newPre+suffix,localStorage.getItem(k));
+                }
+            }
+        },undefined,()=>{
+            this.saveSlot = newSlot;
+            this.save();
+        });
+    }
+
+    static deleteSave(s){
+        for(let i=localStorage.length-1;i>=0;i--){
+            let k = localStorage.key(i);
+            if(k.startsWith(Basin.storagePrefix(s))){
+                localStorage.removeItem(k);
+            }
         }
     }
 }
@@ -218,9 +265,9 @@ class Season{
         if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
         for(let i=0;i<this.systems.length;i++){
             let s = this.systems[i];
-            if(s instanceof StormRef && s.fetch() && s.fetch().TC){
+            if(s instanceof StormRef && s.fetch() && (s.fetch().TC || s.fetch().current)){
                 str += "~" + s.save();
-            }else if(s.TC){
+            }else if(s.TC || s.current){
                 str += "," + s.save();
             }
         }
@@ -390,4 +437,28 @@ function decodePointArray(s,o){
         arr[i] = decodePoint(arr[i],o);
     }
     return arr;
+}
+
+function modifyLocalStorage(action,error,callback){
+    let lsCache = {};
+    for(let i=0;i<localStorage.length;i++){
+        let k = localStorage.key(i);
+        if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) lsCache[k] = localStorage.getItem(k);
+    }
+    try{
+        action();
+    }catch(e){
+        for(let i=localStorage.length-1;i>=0;i--){
+            let k = localStorage.key(i);
+            if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) localStorage.removeItem(k);
+        }
+        for(let k in lsCache){
+            localStorage.setItem(k,lsCache[k]);
+        }
+        if(error) error(e);
+        else console.error(e);
+        return;
+    }
+    lsCache = undefined;
+    if(callback) callback();
 }
