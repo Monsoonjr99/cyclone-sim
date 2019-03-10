@@ -153,6 +153,7 @@ class NCMetadata{
                 z: n.z - o.z
             });
         }
+        seas.modified = true;
     }
 
     save(){

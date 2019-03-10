@@ -1,7 +1,7 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190305a";
+const VERSION_NUMBER = "20190310a";
 
-const SAVE_FORMAT = 0;  // Format "0" is probably to be a test and ultimately incompatible
+const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -74,13 +74,14 @@ const LOCALSTORAGE_KEY_SAVEDBASIN = "savedbasin-";
 const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";
 const LOCALSTORAGE_KEY_NAMES = "names";
+const LOCALSTORAGE_KEY_SEASON = "season-";
 const SAVING_RADIX = 36;
-const AUTOSAVE_TICK_PERIOD = 240;
 const ENVDATA_SAVE_FLOAT = -2;
 const ENVDATA_SAVE_MULT = 10000;
 const ACTIVESYSTEM_SAVE_FLOAT = -2;
-const STORMDATA_POS_MULT = 5;
 const SAVE_SLOTS = 6; // including autosave slot 0
+const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
+const FORMAT_WITH_SAVED_SEASONS = 1;
 
 const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;
@@ -146,4 +147,5 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.UI.buttonHover = color(200);
     COLORS.UI.text = color(0);
     COLORS.UI.greyText = color(130);
+    COLORS.UI.redText = color(240,0,0);
 }

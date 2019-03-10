@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190310a:
+    + Added full saving/loading including active storms, analysis, and environmental data
+    + Added safeguard in case one's localStorage quota is reached and they can no longer save
+    * Autosaving now happens at the beginning of the 1st and 15th days of a month, rather than every 10 days as before
+    * Saved seasons when not the current season nor currently viewed will eventually unload to be RAM-friendly (will automatically load when needed)
+    * Fixed a corruption bug with the numerical array compression function
 v20190305a:
     + Added 5 additional save slots for saved basins (besides autosave slot 0)
     + Added a load basin menu accessible from the main menu

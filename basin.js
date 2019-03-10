@@ -1,6 +1,7 @@
 class Basin{
     constructor(load,year,SHem,godMode,hyper,seed,names,hurrTerm){
         this.seasons = {};
+        this.seasonExpirationTimers = {};
         this.activeSystems = [];
         this.tick = 0;
         this.lastSaved = 0;
@@ -31,6 +32,7 @@ class Basin{
     }
 
     tickMoment(t){
+        if(t===undefined) t = this.tick;
         return moment.utc(this.startTime()+t*TICK_DURATION);
     }
 
@@ -45,7 +47,7 @@ class Basin{
         this.activeSystems.push(new ActiveSystem(...opts));
     }
 
-    getSeason(t){
+    getSeason(t){       // returns the year number of a season given a sim tick
         if(t===-1) t = this.tick;
         if(this.SHem){
             let tm = this.tickMoment(t);
@@ -57,10 +59,39 @@ class Basin{
         return this.tickMoment(t).year();
     }
 
-    fetchSeason(n,isTick){
+    fetchSeason(n,isTick){  // returns the season object given a year number, or given a sim tick if isTick is true
         if(isTick) n = this.getSeason(n);
-        if(this.seasons[n]) return this.seasons[n];
-        return null; // insert season loading here
+        let season;
+        if(this.seasons[n]) season = this.seasons[n];
+        else{
+            let sKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + n;
+            let str = localStorage.getItem(sKey);
+            if(str){
+                season = this.seasons[n] = new Season(str);
+                this.expireSeasonTimer(n);
+            }
+        }
+        if(season) season.lastAccessed = moment().valueOf();
+        return season;
+    }
+
+    seasonUnloadable(n){
+        n = parseInt(n);
+        if(!this.seasons[n]) return false;
+        let s = this.seasons[n];
+        let v = this.getSeason(viewTick);
+        for(let a of this.activeSystems) if(a.fetchStorm().originSeason()===n) return false;
+        return !s.modified && n!==v && n!==v-1 && n!==this.getSeason(-1);
+    }
+    
+    expireSeasonTimer(n){
+        let f = ()=>{
+            if(this.seasons[n]){
+                if(moment().diff(this.seasons[n].lastAccessed)>=LOADED_SEASON_EXPIRATION && this.seasonUnloadable(n)) this.seasons[n] = undefined;
+                else this.expireSeasonTimer(n);
+            }
+        };
+        this.seasonExpirationTimers[n] = setTimeout(f,LOADED_SEASON_EXPIRATION);
     }
 
     static storagePrefix(s){
@@ -72,12 +103,19 @@ class Basin{
     }
 
     save(){
+        let lastSaved = this.lastSaved;
+        let savedSeasons = [];
         modifyLocalStorage(()=>{
             let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
             let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
             let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
             localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
             let str = "";
+            for(let i=this.activeSystems.length-1;i>=0;i--){
+                str += this.activeSystems[i].save();
+                if(i>0) str += ",";
+            }
+            str += ";";
             for(let i=Env.fieldList.length-1;i>=0;i--){
                 let f = Env.fieldList[i];
                 for(let j=Env.fields[f].noise.length-1;j>=0;j--){
@@ -98,11 +136,18 @@ class Basin{
             let names = this.nameList.join(";");
             if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
             localStorage.setItem(namesKey,names);
-            // insert seasons and env saving here
-            for(let k in this.seasons){ // test
-                if(!testSavedSeasons[k] || k==this.getSeason(-1)) testSavedSeasons[k] = this.seasons[k].save();
+            for(let k in this.seasons){
+                if(this.seasons[k] && this.seasons[k].modified){
+                    let seasonKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + k;
+                    savedSeasons.push(k);
+                    localStorage.setItem(seasonKey,this.seasons[k].save());
+                }
             }
             this.lastSaved = this.tick;
+        },()=>{
+            this.lastSaved = lastSaved;
+            for(let k of savedSeasons) this.seasons[k].modified = true;
+            alert("localStorage quota for origin " + origin + " exceeded; unable to save");
         });
     }
 
@@ -141,7 +186,12 @@ class Basin{
             if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
             let envLoadData = parts.pop();
             this.envData.loadData = envLoadData ? envLoadData.split(",") : this.envData.loadData;
-            this.lastSaved = this.tick = 0; // temporary since saving seasons not yet added
+            let activeSystemData = parts.pop();
+            if(activeSystemData){
+                activeSystemData = activeSystemData.split(",");
+                while(activeSystemData.length>0) this.activeSystems.push(new ActiveSystem(activeSystemData.pop()));
+            }
+            if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
         }else{
             this.godMode = true;
             this.startYear = NHEM_DEFAULT_YEAR;
@@ -160,7 +210,9 @@ class Basin{
                     localStorage.setItem(newPre+suffix,localStorage.getItem(k));
                 }
             }
-        },undefined,()=>{
+        },()=>{
+            newSlot = this.saveSlot;
+        },()=>{
             this.saveSlot = newSlot;
             this.save();
         });
@@ -173,6 +225,7 @@ class Basin{
                 localStorage.removeItem(k);
             }
         }
+        storageQuotaExhausted = false;
     }
 }
 
@@ -191,12 +244,15 @@ class Season{
         this.deaths = 0;
         this.damage = 0;
         this.envRecordStarts = 0;
+        this.modified = true;
+        this.lastAccessed = moment().valueOf();
         if(loadstr) this.load(loadstr);
     }
 
     addSystem(s){
         this.systems.push(s);
         if(s.current) s.id = this.totalSystemCount++;
+        this.modified = true;
     }
 
     fetchSystemById(id){
@@ -224,7 +280,6 @@ class Season{
     }
 
     save(){
-        // WIP
         let str = "";
         let stats = [];
         stats.push(this.totalSystemCount);
@@ -271,11 +326,11 @@ class Season{
                 str += "," + s.save();
             }
         }
+        this.modified = false;
         return str;
     }
 
     load(str){
-        // WIP
         let mainparts = str.split(";");
         let stats = decodeB36StringArray(mainparts[0]);
         let seasonSaveFormat = stats.pop();
@@ -324,6 +379,7 @@ class Season{
             if(s.charAt(0)==="~") this.systems.push(new StormRef(s.slice(1)));
             else if(s.charAt(0)===",") this.systems.push(new Storm(s.slice(1)));
         }
+        this.modified = false;
     }
 }
 
@@ -351,7 +407,7 @@ function encodeB36StringArray(arr,fl){
             lenRun = 1;
         }else lenRun++;
         n /= pow(R,fl);
-        n = round(n);
+        n = floor(n);
         n = n<0 ? abs(n)*2+1 : n*2;
         n = n.toString(R);
         if(n.length>R) n = n.slice(0,R);
@@ -455,6 +511,7 @@ function modifyLocalStorage(action,error,callback){
         for(let k in lsCache){
             localStorage.setItem(k,lsCache[k]);
         }
+        storageQuotaExhausted = true;
         if(error) error(e);
         else console.error(e);
         return;

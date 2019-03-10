@@ -30,6 +30,10 @@ class Storm{
         if(!this.current && data) this.load(data);
     }
 
+    originSeason(){
+        return basin.getSeason(this.birthTime);
+    }
+
     aliveAt(t){
         return t >= this.birthTime && (!!this.current || t < this.deathTime);
     }
@@ -244,6 +248,8 @@ class Storm{
             if(!this.peak) this.peak = data;
             else if(p<this.peak.pressure) this.peak = data;
         }
+        cSeason.modified = true;
+        basin.fetchSeason(this.originSeason()).modified = true;
     }
 
     save(){
@@ -309,7 +315,7 @@ class StormRef{
             this.ref = undefined;
             this.load(s);
         }else{
-            this.season = basin.getSeason(s.birthTime);
+            this.season = s.originSeason();
             this.refId = s.id;
             this.ref = undefined;
         }
@@ -365,12 +371,7 @@ class StormData{
     save(inArr){
         let arr = [];
         if(!inArr){
-            let opts = {
-                w: width * STORMDATA_POS_MULT,
-                h: height * STORMDATA_POS_MULT,
-                mapX: x=>x*STORMDATA_POS_MULT,
-                mapY: y=>y*STORMDATA_POS_MULT
-            };
+            let opts = {};
             arr.push(encodePoint(this.pos,opts));
         }
         arr.push(this.pressure);
@@ -387,10 +388,6 @@ class StormData{
         if(posInArr) this.pos = posInArr;
         else{
             let opts = {
-                w: width * STORMDATA_POS_MULT,
-                h: height * STORMDATA_POS_MULT,
-                mapX: x=>x/STORMDATA_POS_MULT,
-                mapY: y=>y/STORMDATA_POS_MULT,
                 p5Vec: true
             };
             this.pos = decodePoint(arr.pop(),opts);
@@ -398,12 +395,7 @@ class StormData{
     }
 
     static saveArr(arr){
-        let opts = {
-            w: width * STORMDATA_POS_MULT,
-            h: height * STORMDATA_POS_MULT,
-            mapX: x=>x*STORMDATA_POS_MULT,
-            mapY: y=>y*STORMDATA_POS_MULT
-        };
+        let opts = {};
         let positions = [];
         let theRest = [];
         for(let i=0;i<arr.length;i++){
@@ -416,10 +408,6 @@ class StormData{
     static loadArr(str){
         let arr = str.split("/");
         let opts = {
-            w: width * STORMDATA_POS_MULT,
-            h: height * STORMDATA_POS_MULT,
-            mapX: x=>x/STORMDATA_POS_MULT,
-            mapY: y=>y/STORMDATA_POS_MULT,
             p5Vec: true
         };
         let positions = decodePointArray(arr.shift(),opts);
@@ -569,9 +557,9 @@ class ActiveSystem extends StormData{
         }
 
         if(this.pressure>1030 || (this.pos.x >= width || this.pos.x < 0 || this.pos.y >= height || this.pos.y < 0) || this.interaction.kill){
-            this.storm.deathTime = basin.tick;
-            if(this.storm.dissipationTime===undefined) this.storm.dissipationTime = basin.tick;
-            this.storm.current = undefined;
+            this.fetchStorm().deathTime = basin.tick;
+            if(this.fetchStorm().dissipationTime===undefined) this.fetchStorm().dissipationTime = basin.tick;
+            this.fetchStorm().current = undefined;
             return;
         }
         this.resetInteraction();
@@ -581,14 +569,14 @@ class ActiveSystem extends StormData{
     advisory(){
         let x = floor(this.pos.x);
         let y = floor(this.pos.y);
-        let p = round(this.pressure);
+        let p = floor(this.pressure);
         let w = round(this.windSpeed/WINDSPEED_ROUNDING)*WINDSPEED_ROUNDING;
         let ty = this.type;
         let adv = new StormData(x,y,p,w,ty);
-        this.storm.updateStats(adv);
-        this.storm.record.push(adv);
+        this.fetchStorm().updateStats(adv);
+        this.fetchStorm().record.push(adv);
         this.doTrackForecast();
-        this.storm.renderTrack(true);
+        this.fetchStorm().renderTrack(true);
     }
 
     getSteering(){
@@ -643,6 +631,16 @@ class ActiveSystem extends StormData{
         }
     }
 
+    fetchStorm(){
+        if(this.storm instanceof StormRef){
+            this.storm = this.storm.fetch();
+            this.storm.deathTime = undefined;
+            if(this.storm.record.length>0 && tropOrSub(this.storm.record[this.storm.record.length-1].type)) this.storm.dissipationTime = undefined;
+            this.storm.current = this;
+        }
+        return this.storm;
+    }
+
     save(){
         let base = super.save();
         let activeData = [];
@@ -651,7 +649,7 @@ class ActiveSystem extends StormData{
         activeData.push(this.upperWarmCore);
         activeData.push(this.depth);
         activeData = encodeB36StringArray(activeData,ACTIVESYSTEM_SAVE_FLOAT);
-        let ref = new StormRef(this.storm);
+        let ref = new StormRef(this.fetchStorm());
         ref = ref.save();
         return base + "." + activeData + "." + ref;
     }
@@ -664,10 +662,7 @@ class ActiveSystem extends StormData{
         this.upperWarmCore = activeData.pop();
         this.lowerWarmCore = activeData.pop();
         this.organization = activeData.pop();
-        let ref = new StormRef(parts[2]);
-        this.storm = ref.fetch();
-        this.storm.deathTime = undefined;
-        if(this.storm.record.length>0 && tropOrSub(this.storm.record[this.storm.record.length-1].type)) this.storm.dissipationTime = undefined;
+        this.storm = new StormRef(parts[2]);
     }
 }
 

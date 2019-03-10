@@ -11,7 +11,8 @@ function setup(){
     newBasinSettings = {};
     useShader = false;
     trackMode = 0;
-    testSavedSeasons = {};  // test
+    doAutosave = true;
+    storageQuotaExhausted = false;
 
     tracks = createBuffer();
     tracks.strokeWeight(2);
@@ -87,7 +88,7 @@ function draw(){
                     }
                 }
             }
-            if(viewingPresent()) for(let s of basin.activeSystems) s.storm.renderIcon();
+            if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
             else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
     
             if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
@@ -146,6 +147,7 @@ function init(load){
     if(!basin.fetchSeason(curSeason)) basin.seasons[curSeason] = new Season();
     if(basin.tick===0) Env.record();
     land = new Land();
+    refreshTracks(true);
     primaryWrapper.show();
     finisher = finishInit();
 }
@@ -162,7 +164,7 @@ function advanceSim(){
     curSeason = basin.getSeason(-1);
     if(!basin.fetchSeason(curSeason)){
         let e = new Season();
-        for(let s of basin.activeSystems) e.addSystem(new StormRef(s.storm));
+        for(let s of basin.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
         basin.seasons[curSeason] = e;
     }
     if(!vp || curSeason!==os) refreshTracks(curSeason!==os);
@@ -178,7 +180,7 @@ function advanceSim(){
     }
     let stormKilled = false;
     for(let i=basin.activeSystems.length-1;i>=0;i--){
-        if(!basin.activeSystems[i].storm.current){
+        if(!basin.activeSystems[i].fetchStorm().current){
             basin.activeSystems.splice(i,1);
             stormKilled = true;
         }
@@ -188,5 +190,6 @@ function advanceSim(){
         Env.displayLayer();
         Env.record();
     }
-    if(basin.tick%AUTOSAVE_TICK_PERIOD===0) basin.save();
+    let curTime = basin.tickMoment();
+    if(doAutosave && !storageQuotaExhausted && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
 }

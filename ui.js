@@ -404,7 +404,7 @@ UI.init = function(){
         noStroke();
         textAlign(CENTER,CENTER);
         textSize(36);
-        text("Load Basin [test]",0,0);
+        text("Load Basin",0,0);
     });
 
     let getslotloadable = function(s){
@@ -714,6 +714,11 @@ UI.init = function(){
         rect(3,6,18,2);
         rect(3,11,18,2);
         rect(3,16,18,2);
+        if(storageQuotaExhausted){
+            fill(COLORS.UI.redText);
+            textAlign(CENTER,TOP);
+            text("!",24,3);
+        }
     },function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
@@ -881,6 +886,7 @@ UI.init = function(){
         sideMenu.hide();
         primaryWrapper.hide();
         land.clear();
+        for(let t in basin.seasonExpirationTimers) clearTimeout(basin.seasonExpirationTimers[t]);
         basin = undefined;
         mainMenu.show();
     };
@@ -893,8 +899,11 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         text("Menu",this.width/2,10);
-        textSize(10);
-        text("*Saving is currently a test and won't yet save\nthe full basin with all its history",this.width/2,this.height-40);
+        if(storageQuotaExhausted){
+            textSize(14);
+            fill(COLORS.UI.redText);
+            text("localStorage quota for origin\n" + origin + "\nexceeded; unable to save",this.width/2,this.height-60);
+        }
     },true,false);
 
     sideMenu.append(false,5,30,sideMenu.width-10,25,function(){ // Save and return to main menu button
@@ -902,15 +911,18 @@ UI.init = function(){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
         }
-        fill(COLORS.UI.text);
+        if(!storageQuotaExhausted) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
         textAlign(CENTER,CENTER);
         textSize(15);
-        text("Save* and Return to Main Menu",this.width/2,this.height/2);
+        text("Save and Return to Main Menu",this.width/2,this.height/2);
     },function(){
-        if(basin.saveSlot===0) saveBasinAsPanel.invoke(true);
-        else{
-            basin.save();
-            returntomainmenu();
+        if(!storageQuotaExhausted){
+            if(basin.saveSlot===0) saveBasinAsPanel.invoke(true);
+            else{
+                basin.save();
+                returntomainmenu();
+            }
         }
     }).append(false,0,30,sideMenu.width-10,25,function(){   // Return to main menu w/o saving button
         if(this.isHovered()){
@@ -920,7 +932,7 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(15);
-        text("Return to Main Menu w/o Saving*",this.width/2,this.height/2);
+        text("Return to Main Menu w/o Saving",this.width/2,this.height/2);
     },function(){
         areYouSure.dialog(returntomainmenu);
     }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin button
@@ -928,26 +940,30 @@ UI.init = function(){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
         }
-        fill(COLORS.UI.text);
+        if(!storageQuotaExhausted) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
         textAlign(CENTER,CENTER);
         textSize(15);
-        let txt = "Save* Basin";
-        if(basin.tick===basin.lastSaved) txt += " [Saved*]";
+        let txt = "Save Basin";
+        if(basin.tick===basin.lastSaved) txt += " [Saved]";
         text(txt,this.width/2,this.height/2);
     },function(){
-        if(basin.saveSlot===0) saveBasinAsPanel.invoke();
-        else basin.save();
+        if(!storageQuotaExhausted){
+            if(basin.saveSlot===0) saveBasinAsPanel.invoke();
+            else basin.save();
+        }
     }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin as button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
         }
-        fill(COLORS.UI.text);
+        if(!storageQuotaExhausted) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
         textAlign(CENTER,CENTER);
         textSize(15);
-        text("Save* Basin As...",this.width/2,this.height/2);
+        text("Save Basin As...",this.width/2,this.height/2);
     },function(){
-        saveBasinAsPanel.invoke();
+        if(!storageQuotaExhausted) saveBasinAsPanel.invoke();
     });
 
     saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(){
@@ -957,7 +973,7 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
-        text("Save* Basin As...",this.width/2,10);
+        text("Save Basin As...",this.width/2,10);
         stroke(0);
         line(0,0,0,this.height);
     },true,false);
@@ -973,7 +989,8 @@ UI.init = function(){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
         }
-        fill(COLORS.UI.text);
+        if(!storageQuotaExhausted) fill(COLORS.UI.text);
+        else fill(COLORS.UI.greyText);
         textAlign(CENTER,CENTER);
         textSize(15);
         let slotOccupied = getslotloadable(this.slotNum);
@@ -984,20 +1001,22 @@ UI.init = function(){
     };
 
     let saveslotbuttonclick = function(){
-        if(basin.saveSlot===this.slotNum){
-            basin.save();
-            loadMenu.loadables = {};
-            saveBasinAsPanel.hide();
-        }else{
-            let slotOccupied = getslotloadable(this.slotNum);
-            let f = ()=>{
-                basin.saveAs(this.slotNum);
+        if(!storageQuotaExhausted){
+            if(basin.saveSlot===this.slotNum){
+                basin.save();
                 loadMenu.loadables = {};
                 saveBasinAsPanel.hide();
-                if(saveBasinAsPanel.exit) returntomainmenu();
-            };
-            if(slotOccupied) areYouSure.dialog(f);
-            else f();
+            }else{
+                let slotOccupied = getslotloadable(this.slotNum);
+                let f = ()=>{
+                    basin.saveAs(this.slotNum);
+                    loadMenu.loadables = {};
+                    saveBasinAsPanel.hide();
+                    if(saveBasinAsPanel.exit) returntomainmenu();
+                };
+                if(slotOccupied) areYouSure.dialog(f);
+                else f();
+            }
         }
     };
 
@@ -1065,7 +1084,7 @@ function mouseClicked(){
             }else if(viewingPresent()){
                 let mVector = createVector(mouseX,mouseY);
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
-                    let s = basin.activeSystems[i].storm;
+                    let s = basin.activeSystems[i].fetchStorm();
                     let p = s.getStormDataByTick(viewTick,true).pos;
                     if(p.dist(mVector)<DIAMETER){
                         selectStorm(s);
