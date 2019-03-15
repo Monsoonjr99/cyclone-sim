@@ -222,23 +222,23 @@ class Storm{
             cSeason.c5s++;
             this.c5 = true;
         }
-        if(isTropical){
-            let lnd = land.get(data.pos.x,data.pos.y);
-            let pop = lnd ? round(250000*(1+hemY(data.pos.y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
-            let damPot = pow(1.062,data.windSpeed)-1;   // damage potential
-            let dedPot = pow(1.02,data.windSpeed)-1;    // death potential
-            let m = pow(1.5,randomGaussian());      // modifier
-            damPot *= m;
-            dedPot *= m;
-            let dam = pop*damPot*20*pow(1.1,random(-1,1));
-            let ded = round(pop*dedPot*0.00001*pow(1.1,random(-1,1)));
-            this.damage += dam;
-            this.damage = round(this.damage*100)/100;
-            this.deaths += ded;
-            cSeason.damage += dam;
-            cSeason.damage = round(cSeason.damage*100)/100;
-            cSeason.deaths += ded;
-        }
+        // if(isTropical){
+        //     let lnd = land.get(data.pos.x,data.pos.y);
+        //     let pop = lnd ? round(250000*(1+hemY(data.pos.y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
+        //     let damPot = pow(1.062,data.windSpeed)-1;   // damage potential
+        //     let dedPot = pow(1.02,data.windSpeed)-1;    // death potential
+        //     let m = pow(1.5,randomGaussian());      // modifier
+        //     damPot *= m;
+        //     dedPot *= m;
+        //     let dam = pop*damPot*20*pow(1.1,random(-1,1));
+        //     let ded = round(pop*dedPot*0.00001*pow(1.1,random(-1,1)));
+        //     this.damage += dam;
+        //     this.damage = round(this.damage*100)/100;
+        //     this.deaths += ded;
+        //     cSeason.damage += dam;
+        //     cSeason.damage = round(cSeason.damage*100)/100;
+        //     cSeason.deaths += ded;
+        // }
         if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
         if(!wasTCB4Update && isTropical){
             this.dissipationTime = undefined;
@@ -562,6 +562,27 @@ class ActiveSystem extends StormData{
             this.fetchStorm().current = undefined;
             return;
         }
+
+        let rType = this.fetchStorm().getStormDataByTick(basin.tick);
+        rType = rType && rType.type;
+        if(tropOrSub(rType!==null ? rType : this.type)){
+            let pop = lnd ? round(250000*(1+hemY(y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
+            let damPot = pow(1.062,this.windSpeed)-1;   // damage potential
+            let dedPot = pow(1.02,this.windSpeed)-1;    // death potential
+            let m = pow(1.5,randomGaussian());      // modifier
+            damPot *= m;
+            dedPot *= m;
+            let dam = pop*damPot*3.3*pow(1.1,random(-1,1));
+            let ded = round(pop*dedPot*0.0000017*pow(1.1,random(-1,1)));
+            this.fetchStorm().damage += dam;
+            this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
+            this.fetchStorm().deaths += ded;
+            let s = basin.fetchSeason(-1,true);
+            s.damage += dam;
+            s.damage = round(s.damage*100)/100;
+            s.deaths += ded;
+        }
+
         this.resetInteraction();
         if(basin.tick%ADVISORY_TICKS===0) this.advisory();
     }

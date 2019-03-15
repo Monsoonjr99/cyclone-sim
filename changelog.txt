@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190315a:
+    * Storm damage/deaths is now calculated every tick instead of every advisory
 v20190310a:
     + Added full saving/loading including active storms, analysis, and environmental data
     + Added safeguard in case one's localStorage quota is reached and they can no longer save
