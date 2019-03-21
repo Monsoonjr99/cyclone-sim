@@ -2,7 +2,7 @@ class Storm{
     constructor(data){
         this.current = data instanceof ActiveSystem && data;
         this.id = undefined;
-        if(this.current) basin.fetchSeason(curSeason).addSystem(this);
+        if(this.current) basin.fetchSeason(-1,true).addSystem(this);
 
         this.TC = false;
         this.named = false;
@@ -182,7 +182,7 @@ class Storm{
         let p = data.pressure;
         let type = data.type;
         let cat = data.getCat();
-        let cSeason = basin.fetchSeason(curSeason);
+        let cSeason = basin.fetchSeason(-1,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
@@ -200,7 +200,7 @@ class Storm{
                     this.nameNum = basin.sequentialNameIndex++;
                     basin.sequentialNameIndex %= basin.nameList.length;
                 }
-                this.name = getNewName(curSeason,this.nameNum);
+                this.name = getNewName(basin.getSeason(-1),this.nameNum);
                 this.named = true;
                 this.namedTime = basin.tick;
             }

@@ -140,11 +140,10 @@ function init(load){
     }
 
     viewTick = basin.tick;
-    curSeason = basin.getSeason(-1);
     selectedStorm = undefined;
     noiseSeed(basin.seed);
     Environment.init();
-    if(!basin.fetchSeason(curSeason)) basin.seasons[curSeason] = new Season();
+    if(!basin.fetchSeason(-1,true)) basin.seasons[basin.getSeason(-1)] = new Season();
     if(basin.tick===0) Env.record();
     land = new Land();
     refreshTracks(true);
@@ -161,7 +160,7 @@ function advanceSim(){
     basin.tick++;
     let os = basin.getSeason(viewTick);
     viewTick = basin.tick;
-    curSeason = basin.getSeason(-1);
+    let curSeason = basin.getSeason(-1);
     if(!basin.fetchSeason(curSeason)){
         let e = new Season();
         for(let s of basin.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));

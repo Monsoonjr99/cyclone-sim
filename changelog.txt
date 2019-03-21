@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190321a:
+    * Atlantic name list preset names "Florence" and "Michael" retired and replaced with "Francine" and "Milton"
+        > Does not affect old saved basins; only new basins
+    - Removed curSeason as a global variable
 v20190315a:
     * Storm damage/deaths is now calculated every tick instead of every advisory
 v20190310a:

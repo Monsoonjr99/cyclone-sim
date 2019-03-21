@@ -37,6 +37,7 @@ class Basin{
     }
 
     seasonTick(n){
+        if(n===undefined) n = this.getSeason(-1);
         let m = moment.utc(this.SHem ? [n-1, 6, 1] : [n, 0, 1]);
         let t = floor((m.valueOf()-this.startTime())/TICK_DURATION);
         t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;

@@ -117,14 +117,14 @@ class NCMetadata{
     }
 
     record(){
-        let h = this.getHistoryCache(curSeason);
+        let h = this.getHistoryCache(basin.getSeason(-1));
         if(!h) h = this.history.arr = [];
         h.push({
             x: this.xOff,
             y: this.yOff,
             z: this.zOff
         });
-        let seas = basin.fetchSeason(curSeason);
+        let seas = basin.fetchSeason(-1,true);
         let s = seas;
         let startingRecord;
         if(!s.envData){
@@ -142,7 +142,7 @@ class NCMetadata{
             startingRecord = true;
         }
         s = s[this.index];
-        if(startingRecord) this.history.recordStarts = seas.envRecordStarts = (floor(basin.tick/ADVISORY_TICKS)*ADVISORY_TICKS-basin.seasonTick(curSeason))/ADVISORY_TICKS;
+        if(startingRecord) this.history.recordStarts = seas.envRecordStarts = (floor(basin.tick/ADVISORY_TICKS)*ADVISORY_TICKS-basin.seasonTick())/ADVISORY_TICKS;
         if(s.length===0) s.push(h[0]);
         else{
             let o = h[h.length-2];
