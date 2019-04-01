@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190401a:
+    + Added Atlantic basin map
+    * Fixed bug with tropical depressions not numbered in loaded basins
+    - April Fools! No Atlantic basin map. SAD!
 v20190321a:
     * Atlantic name list preset names "Florence" and "Michael" retired and replaced with "Francine" and "Milton"
         > Does not affect old saved basins; only new basins

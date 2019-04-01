@@ -304,6 +304,7 @@ class Storm{
         this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
         if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
         if(this.nameNum!==undefined) this.name = getNewName(basin.getSeason(this.namedTime),this.nameNum);
+        else if(this.depressionNum!==undefined) this.name = this.depressionNum+DEPRESSION_LETTER;
     }
 }
 
