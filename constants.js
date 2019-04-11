@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190401a";
+const VERSION_NUMBER = "20190411a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -75,6 +75,7 @@ const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";
 const LOCALSTORAGE_KEY_NAMES = "names";
 const LOCALSTORAGE_KEY_SEASON = "season-";
+const LOCALSTORAGE_KEY_SETTINGS = "settings";
 const SAVING_RADIX = 36;
 const ENVDATA_SAVE_FLOAT = -2;
 const ENVDATA_SAVE_MULT = 10000;
@@ -97,7 +98,7 @@ const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tA - Step simulation one hour while paused\n" +
     "\t\tE - Cycle through map layers\n" +
     "\t\tT - Cycle through track display modes\n" +
-    "\t\tW - Toggle strength indicators below storm icons (kts / hPa)\n" +
+    "\t\tW - Toggle intensity indicators below storm icons (kts / hPa)\n" +
     "\t\t[ - Decrease simulation speed by half\n" +
     "\t\t] - Increase simulation speed by double\n" +
     "\t\tLEFT ARROW - Step backwards through analysis\n" +

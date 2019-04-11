@@ -3,11 +3,11 @@ function viewingPresent(){
 }
 
 function refreshTracks(force){
-    if(trackMode===2 && !force) return;
+    if(simSettings.trackMode===2 && !force) return;
     tracks.clear();
     forecastTracks.clear();
     if(selectedStorm) selectedStorm.renderTrack();
-    else if(trackMode===2){
+    else if(simSettings.trackMode===2){
         for(let s of basin.fetchSeason(viewTick,true).forSystems()) if(s.TC) s.renderTrack();
     }else if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
     else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
@@ -26,6 +26,25 @@ function createBuffer(w,h){
     w = w || width;
     h = h || height;
     return createGraphics(w*d,h*d);
+}
+
+function drawBuffer(img,dx,dy,dw,dh,sx,sy,sw,sh){
+    let d = displayDensity();
+    iw = img.width;
+    ih = img.height;
+    dx = dx || 0;
+    dy = dy || 0;
+    dw = dw || iw;
+    dh = dh || ih;
+    sx = sx || 0;
+    sy = sy || 0;
+    sw = sw || iw;
+    sh = sh || ih;
+    sx *= d;
+    sy *= d;
+    sw *= d;
+    sh *= d;
+    image(img,dx,dy,dw,dh,sx,sy,sw,sh);
 }
 
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers

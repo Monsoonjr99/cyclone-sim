@@ -6,12 +6,10 @@ function setup(){
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
-    showStrength = false;
+    simSettings = new Settings();
     basin = undefined;
     newBasinSettings = {};
     useShader = false;
-    trackMode = 0;
-    doAutosave = true;
     storageQuotaExhausted = false;
 
     tracks = createBuffer();
@@ -72,7 +70,7 @@ function draw(){
             }
             keyRepeatFrameCounter++;
             if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
-                if(paused){
+                if(paused && primaryWrapper.showing){
                     let oldS = basin.getSeason(viewTick);
                     if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
                         viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
@@ -88,20 +86,6 @@ function draw(){
                     }
                 }
             }
-            if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
-            else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
-    
-            if(Env.displaying>=0 && Env.layerIsOceanic) image(envLayer,0,0,width,height);
-            image(landBuffer,0,0,width,height);
-            image(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))],0,0,width,height);
-            if(useShader) image(landShader,0,0,width,height);
-            if(Env.displaying>=0 && !Env.layerIsOceanic){
-                image(envLayer,0,0,width,height);
-                if(!Env.layerIsVector) image(coastLine,0,0,width,height);
-            }
-            image(tracks,0,0,width,height);
-            image(forecastTracks,0,0,width,height);
-            image(stormIcons,0,0,width,height);
         }
     
         UI.updateMouseOver();
@@ -124,6 +108,7 @@ function draw(){
 function init(load){
     if(load!==undefined){
         basin = new Basin(load);
+        paused = true;
     }else{
         let hem;
         if(newBasinSettings.hem===1) hem = false;
@@ -137,6 +122,7 @@ function init(load){
         let hurrTerm = newBasinSettings.hurrTerm;
         basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm);
         newBasinSettings = {};
+        paused = false;
     }
 
     viewTick = basin.tick;
@@ -190,5 +176,66 @@ function advanceSim(){
         Env.record();
     }
     let curTime = basin.tickMoment();
-    if(doAutosave && !storageQuotaExhausted && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
+    if(simSettings.doAutosave && !storageQuotaExhausted && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
+}
+
+class Settings{
+    constructor(){
+        const k = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
+        const order = Settings.order();
+        const defaults = Settings.defaults();
+        let v = localStorage.getItem(k);
+        if(v) v = decodeB36StringArray(v);
+        else v = [];
+        for(let i=order.length-1;i>=0;i--){
+            if(v.length>0) this[order[i]] = v.pop();
+            else this[order[i]] = defaults[i];
+        }
+        let sf = (k)=>{
+            return (v,v2)=>{
+                this.set(k,v,v2);
+            };
+        };
+        for(let i=0;i<order.length;i++){
+            let n = "set" + order[i].charAt(0).toUpperCase() + order[i].slice(1);
+            this[n] = sf(order[i]);
+        }
+    }
+
+    static order(){
+        return ["trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+    }
+
+    static defaults(){
+        return [0,false,true];  // add new defaults to the beginning of this array
+    }
+
+    save(){
+        const k = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
+        const order = Settings.order();
+        let v = [];
+        for(let i=0;i<order.length;i++){
+            v.push(this[order[i]]);
+        }
+        v = encodeB36StringArray(v);
+        modifyLocalStorage(()=>{
+            localStorage.setItem(k,v);
+        },(e)=>{
+            console.error(e);
+            alert("Cannot save settings due to saving quota");
+        });
+    }
+
+    set(k,v,v2){
+        if(v==="toggle") this[k] = !this[k];
+        else if(v==="incmod"){
+            this[k]++;
+            this[k] %= v2;
+        }else this[k] = v;
+        this.save();
+    }
+
+    get(k){         // accessing the property directly also works (only for getting)
+        return this[k];
+    }
 }

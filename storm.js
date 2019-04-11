@@ -127,7 +127,7 @@ class Storm{
             stormIcons.textStyle(NORMAL);
             stormIcons.text(tropOrSub(ty) ? cat>0 ? (ty===SUBTROP ? "S" : "") + cat : cat===0 ? ty===SUBTROP ? "SS" : "S" : ty===SUBTROP ? "SD" : "D" : "L", 0, 0);
             stormIcons.fill(0);
-            if(showStrength){
+            if(simSettings.showStrength){
                 stormIcons.textSize(10);
                 stormIcons.text(floor(st) + " / " + floor(pr), 0, DIAMETER);
             }
@@ -141,7 +141,7 @@ class Storm{
     }
 
     renderTrack(newestSegment){
-        if(this.TC || trackMode===1){
+        if(this.TC || simSettings.trackMode===1){
             if(newestSegment){
                 if(this.record.length>1){
                     let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
@@ -150,12 +150,12 @@ class Storm{
                     tracks.stroke(col);
                     let pos = adv.pos;
                     let nextPos = this.record[this.record.length-1].pos;
-                    if(trackMode===1 || (t>=this.formationTime && (!this.dissipationTime || t<this.dissipationTime))) tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                    if(simSettings.trackMode===1 || (t>=this.formationTime && (!this.dissipationTime || t<this.dissipationTime))) tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
                 }
-            }else if(this.aliveAt(viewTick) || trackMode===2 || selectedStorm===this){
+            }else if(this.aliveAt(viewTick) || simSettings.trackMode===2 || selectedStorm===this){
                 for(let n=0;n<this.record.length-1;n++){
                     let t = n*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
-                    if(trackMode!==1){
+                    if(simSettings.trackMode!==1){
                         if(t<this.formationTime) continue;
                         if(t>=this.dissipationTime) break;
                     }

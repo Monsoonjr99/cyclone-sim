@@ -166,8 +166,6 @@ UI.click = function(){
         UI.mouseOver.clicked();
         return true;
     }
-    helpBox.hide();
-    sideMenu.hide();
     return false;
 };
 
@@ -179,7 +177,82 @@ UI.init = function(){
     mainMenu = new UI(null,0,0,width,height);
     basinCreationMenu = new UI(null,0,0,width,height,undefined,undefined,false);
     loadMenu = new UI(null,0,0,width,height,undefined,undefined,false);
-    primaryWrapper = new UI(null,0,0,width,height,undefined,undefined,false);
+    settingsMenu = new UI(null,0,0,width,height,undefined,undefined,false);
+    primaryWrapper = new UI(null,0,0,width,height,function(){
+        if(basin){
+            if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
+            else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
+    
+            if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
+            drawBuffer(landBuffer);
+            drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))]);
+            if(useShader) drawBuffer(landShader);
+            if(Env.displaying>=0 && !Env.layerIsOceanic){
+                drawBuffer(envLayer);
+                if(!Env.layerIsVector) drawBuffer(coastLine);
+            }
+            drawBuffer(tracks);
+            drawBuffer(forecastTracks);
+            drawBuffer(stormIcons);
+        }
+    },function(){
+        helpBox.hide();
+        sideMenu.hide();
+        if(basin){
+            if(basin.godMode && keyIsPressed && viewingPresent()) {
+                let g = {x: mouseX, y: mouseY};
+                if(key === "l" || key === "L"){
+                    g.sType = "l";
+                }else if(key === "d" || key === "D"){
+                    g.sType = "d";
+                }else if(key === "s" || key === "S"){
+                    g.sType = "s";
+                }else if(key === "1"){
+                    g.sType = "1";
+                }else if(key === "2"){
+                    g.sType = "2";
+                }else if(key === "3"){
+                    g.sType = "3";
+                }else if(key === "4"){
+                    g.sType = "4";
+                }else if(key === "5"){
+                    g.sType = "5";
+                }else if(key === "x" || key === "X"){
+                    g.sType = "x";
+                }else return;
+                basin.spawn(false,g);
+            }else if(viewingPresent()){
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=basin.activeSystems.length-1;i>=0;i--){
+                    let s = basin.activeSystems[i].fetchStorm();
+                    let p = s.getStormDataByTick(viewTick,true).pos;
+                    if(p.dist(mVector)<DIAMETER){
+                        selectStorm(s);
+                        refreshTracks(true);
+                        return;
+                    }
+                }
+                selectStorm();
+                refreshTracks(true);
+            }else{
+                let vSeason = basin.fetchSeason(viewTick,true);
+                let mVector = createVector(mouseX,mouseY);
+                for(let i=vSeason.systems.length-1;i>=0;i--){
+                    let s = vSeason.fetchSystemAtIndex(i);
+                    if(s && s.aliveAt(viewTick)){
+                        let p = s.getStormDataByTick(viewTick).pos;
+                        if(p.dist(mVector)<DIAMETER){
+                            selectStorm(s);
+                            refreshTracks(true);
+                            return;
+                        }
+                    }
+                }
+                selectStorm();
+                refreshTracks(true);
+            }
+        }
+    },false);
     areYouSure = new UI(null,0,0,width,height,function(){
         fill(COLORS.UI.box);
         noStroke();
@@ -230,6 +303,21 @@ UI.init = function(){
         mainMenu.hide();
         loadMenu.show();
         loadMenu.loadables = {};
+    }).append(false,0,60,200,40,function(){     // settings menu button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(24);
+        text("Settings",100,20);
+    },function(){
+        mainMenu.hide();
+        settingsMenu.show();
     });
 
     // basin creation menu
@@ -499,6 +587,80 @@ UI.init = function(){
     };
 
     for(let i=0;i<SAVE_SLOTS;i++) loadbuttons[i].append(false,315,0,40,30,delbuttonrender,delbuttonclick);
+
+    // Settings Menu
+
+    settingsMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
+        fill(COLORS.UI.text);
+        noStroke();
+        textAlign(CENTER,CENTER);
+        textSize(36);
+        text("Settings",0,0);
+    });
+
+    settingsMenu.append(false,width/2-150,height/4,300,30,function(){   // storm intensity indicator
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let b = simSettings.showStrength ? "Enabled" : "Disabled";
+        text("Intensity Indicator: "+b,150,15);
+    },function(){
+        simSettings.setShowStrength("toggle");
+    }).append(false,0,45,300,30,function(){     // autosaving
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let b = simSettings.doAutosave ? "Enabled" : "Disabled";
+        text("Autosaving: "+b,150,15);
+    },function(){
+        simSettings.setDoAutosave("toggle");
+    }).append(false,0,45,300,30,function(){     // track mode
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        text("Track Mode: "+simSettings.trackMode,150,15);
+    },function(){
+        simSettings.setTrackMode("incmod",3);
+    });
+
+    settingsMenu.append(false,width/2-150,7*height/8-20,300,30,function(){ // "Back" button
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(20);
+        text("Back",this.width/2,this.height/2);
+    },function(){
+        settingsMenu.hide();
+        if(basin) primaryWrapper.show();
+        else mainMenu.show();
+    });
 
     // Are you sure dialog
 
@@ -964,6 +1126,19 @@ UI.init = function(){
         text("Save Basin As...",this.width/2,this.height/2);
     },function(){
         if(!storageQuotaExhausted) saveBasinAsPanel.invoke();
+    }).append(false,0,30,sideMenu.width-10,25,function(){   // Settings menu button
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Settings",this.width/2,this.height/2);
+    },function(){
+        primaryWrapper.hide();
+        settingsMenu.show();
+        paused = true;
     });
 
     saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(){
@@ -1057,61 +1232,7 @@ function mouseInCanvas(){
 
 function mouseClicked(){
     if(mouseInCanvas()){
-        if(UI.click()) return false;
-        if(basin){
-            if(basin.godMode && keyIsPressed && viewingPresent()) {
-                let g = {x: mouseX, y: mouseY};
-                if(key === "l" || key === "L"){
-                    g.sType = "l";
-                }else if(key === "d" || key === "D"){
-                    g.sType = "d";
-                }else if(key === "s" || key === "S"){
-                    g.sType = "s";
-                }else if(key === "1"){
-                    g.sType = "1";
-                }else if(key === "2"){
-                    g.sType = "2";
-                }else if(key === "3"){
-                    g.sType = "3";
-                }else if(key === "4"){
-                    g.sType = "4";
-                }else if(key === "5"){
-                    g.sType = "5";
-                }else if(key === "x" || key === "X"){
-                    g.sType = "x";
-                }else return;
-                basin.spawn(false,g);
-            }else if(viewingPresent()){
-                let mVector = createVector(mouseX,mouseY);
-                for(let i=basin.activeSystems.length-1;i>=0;i--){
-                    let s = basin.activeSystems[i].fetchStorm();
-                    let p = s.getStormDataByTick(viewTick,true).pos;
-                    if(p.dist(mVector)<DIAMETER){
-                        selectStorm(s);
-                        refreshTracks(true);
-                        return false;
-                    }
-                }
-                selectStorm();
-                refreshTracks(true);
-            }else{
-                let vSeason = basin.fetchSeason(viewTick,true);
-                let mVector = createVector(mouseX,mouseY);
-                for(let i=vSeason.systems.length-1;i>=0;i--){
-                    let s = vSeason.fetchSystemAtIndex(i);
-                    if(s && s.aliveAt(viewTick)){
-                        let p = s.getStormDataByTick(viewTick).pos;
-                        if(p.dist(mVector)<DIAMETER){
-                            selectStorm(s);
-                            refreshTracks(true);
-                            return false;
-                        }
-                    }
-                }
-                selectStorm();
-                refreshTracks(true);
-            }
-        }
+        UI.click();
         return false;
     }
 }
@@ -1128,20 +1249,19 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        paused = !paused;
+        if(basin && primaryWrapper.showing) paused = !paused;
         break;
         case "A":
-        if(paused) advanceSim();
+        if(basin && paused && primaryWrapper.showing) advanceSim();
         break;
         case "W":
-        showStrength = !showStrength;
+        simSettings.setShowStrength("toggle");
         break;
         case "E":
-        Env.displayNext();
+        if(basin) Env.displayNext();
         break;
         case "T":
-        trackMode++;
-        trackMode%=3;
+        simSettings.setTrackMode("incmod",3);
         refreshTracks(true);
         break;
         default:

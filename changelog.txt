@@ -1,5 +1,13 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190411a:
+    + Added settings menu
+        > Accessible from main menu and within a sim basin
+        > Currently only includes settings for intensity indicators, autosaving, and track mode
+    * Settings added to settings menu are now saved and preserved between reloads (e.g. intensity indicators no longer need to be enabled with every page load)
+    * Simulation is automatically paused when loading a saved basin, but still starts unpaused for newly created basins
+    * Main rendering and click actions (storm selection/spawning) for basins now tied to primaryWrapper UI element
+    * Another attempt to fix the high-density display graphical bug
 v20190401a:
     + Added Atlantic basin map
     * Fixed bug with tropical depressions not numbered in loaded basins
