@@ -1251,16 +1251,16 @@ function keyPressed(){
         case " ":
         if(basin && primaryWrapper.showing) paused = !paused;
         break;
-        case "A":
+        case "a":
         if(basin && paused && primaryWrapper.showing) advanceSim();
         break;
-        case "W":
+        case "w":
         simSettings.setShowStrength("toggle");
         break;
-        case "E":
+        case "e":
         if(basin) Env.displayNext();
         break;
-        case "T":
+        case "t":
         simSettings.setTrackMode("incmod",3);
         refreshTracks(true);
         break;

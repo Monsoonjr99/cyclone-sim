@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190412a:
+    * Most likely finally fixed the HiDPI graphical bug for real this time
+    % Upgraded p5.js dependency from 0.6.1 to 0.8.0
 v20190411a:
     + Added settings menu
         > Accessible from main menu and within a sim basin

@@ -22,29 +22,13 @@ function hemY(y){
 }
 
 function createBuffer(w,h){
-    let d = displayDensity();
     w = w || width;
     h = h || height;
-    return createGraphics(w*d,h*d);
+    return createGraphics(w,h);
 }
 
-function drawBuffer(img,dx,dy,dw,dh,sx,sy,sw,sh){
-    let d = displayDensity();
-    iw = img.width;
-    ih = img.height;
-    dx = dx || 0;
-    dy = dy || 0;
-    dw = dw || iw;
-    dh = dh || ih;
-    sx = sx || 0;
-    sy = sy || 0;
-    sw = sw || iw;
-    sh = sh || ih;
-    sx *= d;
-    sy *= d;
-    sw *= d;
-    sh *= d;
-    image(img,dx,dy,dw,dh,sx,sy,sw,sh);
+function drawBuffer(b){
+    image(b,0,0,width,height);
 }
 
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
