@@ -426,7 +426,7 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(18);
         let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus"][list];
+        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984"][list];
         text("Name List: "+list,150,15);
     },function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;

@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190413a:
+    + Added Atl 1979-1984 name list preset (original iteration of the current Atlantic naming system)
 v20190412a:
     * Most likely finally fixed the HiDPI graphical bug for real this time
     % Upgraded p5.js dependency from 0.6.1 to 0.8.0
