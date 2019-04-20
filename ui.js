@@ -146,6 +146,7 @@ UI.renderAll = function(){
 };
 
 UI.mouseOver = undefined;
+UI.focusedInput = undefined;
 
 UI.updateMouseOver = function(){
     for(let i=UI.elements.length-1;i>=0;i--){
@@ -318,7 +319,23 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    });
+    })/*.append(false,0,60,200,40,function(){     // test test test
+        fill("white");
+        stroke("black");
+        this.fullRect();
+        noStroke();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(24);
+        text(textInput.value,100,20);
+    },function(){
+        textInput.focus();
+        UI.focusedInput = this;
+    })*/;
 
     // basin creation menu
 
@@ -1246,6 +1263,13 @@ function selectStorm(s){
 
 function keyPressed(){
     // console.log("keyPressed: " + key + " / " + keyCode);
+    if(document.activeElement === textInput){
+        if(keyCode === ENTER){
+            textInput.blur();
+            return false;
+        }
+        return;
+    }
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":

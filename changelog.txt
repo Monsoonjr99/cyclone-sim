@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190420a:
+    + Added partial under-the-hood support for text input UI elements
+        > includes commented-out input element on the main menu
 v20190413a:
     + Added Atl 1979-1984 name list preset (original iteration of the current Atlantic naming system)
 v20190412a:

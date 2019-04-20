@@ -12,6 +12,13 @@ function setup(){
     useShader = false;
     storageQuotaExhausted = false;
 
+    textInput = document.createElement("input");
+    textInput.type = "text";
+    document.body.appendChild(textInput);
+    textInput.style.position = "absolute";
+    textInput.style.left = "-500px";
+    textInput.onblur = ()=>{UI.focusedInput = undefined;};
+
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
