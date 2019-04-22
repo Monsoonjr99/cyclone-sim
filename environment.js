@@ -576,10 +576,11 @@ class Land{
             this.map[i] = [];
             for(let j=0;j<height;j++){
                 let n = this.noise.get(i,j);
-                let landBiasAnchor = width * LAND_BIAS_FACTORS[0];
+                let landBiasFactors = LAND_BIAS_FACTORS[basin.mapType];
+                let landBiasAnchor = width * landBiasFactors[0];
                 let landBias = i < landBiasAnchor ?
-                    map(i,0,landBiasAnchor,LAND_BIAS_FACTORS[1],LAND_BIAS_FACTORS[2]) :
-                    map(i-landBiasAnchor,0,width-landBiasAnchor,LAND_BIAS_FACTORS[2],LAND_BIAS_FACTORS[3]);
+                    map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
+                    map(i-landBiasAnchor,0,width-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
                 this.map[i][j] = n + landBias;
                 let ox = floor(i/ENV_LAYER_TILE_SIZE);
                 let oy = floor(j/ENV_LAYER_TILE_SIZE);

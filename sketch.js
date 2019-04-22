@@ -127,7 +127,8 @@ function init(load){
         let hyper = newBasinSettings.hyper;
         let names = newBasinSettings.names;
         let hurrTerm = newBasinSettings.hurrTerm;
-        basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm);
+        let mapType = newBasinSettings.mapType;
+        basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm,mapType);
         newBasinSettings = {};
         paused = false;
     }

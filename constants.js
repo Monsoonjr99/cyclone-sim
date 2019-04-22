@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190422a";
+const VERSION_NUMBER = "20190422b";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -15,11 +15,31 @@ const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
-const LAND_BIAS_FACTORS = [
-    5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
-    0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
-    -0.3,       // Bias factor for the "center" (as defined by LAND_BIAS_FACTORS[0])
-    0.1         // Bias factor for the east edge
+const LAND_BIAS_FACTORS = [     // Land generation bias factors controlling different map types
+    [   // "Two Continents" map type
+        5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
+        0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
+        -0.3,       // Bias factor for the "center" (as defined by LAND_BIAS_FACTORS[<mapType>][0])
+        0.1         // Bias factor for the east edge
+    ],
+    [   // "East Continent" map type
+        5/8,
+        -0.3,
+        -0.3,
+        0.15
+    ],
+    [   // "West Continent" map type
+        1/2,
+        0.15,
+        -0.3,
+        -0.3
+    ],
+    [   // "Island Ocean" map type
+        1/2,
+        -0.28,
+        -0.28,
+        -0.28
+    ]
 ];
 const EXTROP = 0;//"extratropical";
 const SUBTROP = 1;//"subtropical";

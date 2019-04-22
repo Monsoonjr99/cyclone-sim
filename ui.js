@@ -466,6 +466,23 @@ UI.init = function(){
         if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
+    }).append(false,0,45,300,30,function(){     // Map type Selector
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean"][newBasinSettings.mapType || 0];
+        text("Map Type: "+maptype,150,15);
+    },function(){
+        if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
+        newBasinSettings.mapType++;
+        newBasinSettings.mapType %= LAND_BIAS_FACTORS.length;
     });
 
     basinCreationMenu.append(false,width/2-150,7*height/8-20,300,30,function(){    // "Start" button

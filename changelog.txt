@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190422b:
+    + Added a "Map Type" option to the basin creation menu
+    + Added three new map types: East Continent, West Continent, and Island Ocean
+        > The existing default map type from previous versions is called Two Continents
 v20190422a:
     * Fixed crash bug when selecting a newly-spawned (before first advisory) system while the info panel is open
     * Fixed crash bug when loading a basin after exiting to the main menu from another basin with the info panel open

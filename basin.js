@@ -1,5 +1,5 @@
 class Basin{
-    constructor(load,year,SHem,godMode,hyper,seed,names,hurrTerm){
+    constructor(load,year,SHem,godMode,hyper,seed,names,hurrTerm,mapType){
         this.seasons = {};
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
@@ -12,6 +12,7 @@ class Basin{
         this.nameList = NAME_LIST_PRESETS[names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
         this.hurricaneStrengthTerm = hurrTerm || 0;
+        this.mapType = mapType || 0;
         this.seed = seed || moment().valueOf();
         this.envData = {};
         this.envData.loadData = [];
@@ -131,7 +132,7 @@ class Basin{
             flags |= this.godMode;
             flags <<= 1;
             flags |= this.SHem;
-            let arr = [this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
+            let arr = [this.mapType,this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
             str += encodeB36StringArray(arr);
             localStorage.setItem(basinKey,str);
             let names = this.nameList.join(";");
@@ -168,6 +169,7 @@ class Basin{
             this.lastSaved = this.tick = arr.pop() || 0;
             this.sequentialNameIndex = arr.pop();
             this.hurricaneStrengthTerm = arr.pop() || 0;
+            this.mapType = arr.pop() || 0;
             this.SHem = flags & 1;
             flags >>= 1;
             this.godMode = flags & 1;
