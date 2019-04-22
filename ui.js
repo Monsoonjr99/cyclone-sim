@@ -187,7 +187,10 @@ UI.init = function(){
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
             drawBuffer(landBuffer);
             drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))]);
-            if(useShader) drawBuffer(landShader);
+            if(simSettings.useShader){
+                if(land.shaderDrawn) drawBuffer(landShader);
+                else finisher = land.drawShader();
+            }
             if(Env.displaying>=0 && !Env.layerIsOceanic){
                 drawBuffer(envLayer);
                 if(!Env.layerIsVector) drawBuffer(coastLine);
@@ -676,6 +679,21 @@ UI.init = function(){
         text("Track Mode: "+simSettings.trackMode,150,15);
     },function(){
         simSettings.setTrackMode("incmod",3);
+    }).append(false,0,45,300,30,function(){     // shader
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let b = simSettings.useShader ? "Enabled" : "Disabled";
+        text("Land Shader: "+b,150,15);
+    },function(){
+        simSettings.setUseShader("toggle");
     });
 
     settingsMenu.append(false,width/2-150,7*height/8-20,300,30,function(){ // "Back" button

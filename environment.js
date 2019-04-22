@@ -559,6 +559,7 @@ class Land{
         this.noise = new NoiseChannel(9,0.5,100);
         this.map = [];
         this.oceanTile = [];
+        this.shaderDrawn = false;
     }
 
     get(x,y){
@@ -621,25 +622,30 @@ class Land{
                 }
             }
         }
-        if(useShader){
-            yield "Rendering shader...";
-            for(let i=0;i<width;i++){
-                for(let j=0;j<height;j++){
-                    let v = this.get(i,j);
-                    if(v===0) v = 0.5;
-                    let m = 0;
-                    for(let k=1;k<6;k++){
-                        let s = this.get(i-k,j-k)-v-k*0.0008;
-                        s = constrain(map(s,0,0.14,0,191),0,191);
-                        if(s>m) m = s;
-                    }
-                    if(m>0){
-                        landShader.fill(0,m);
-                        landShader.rect(i,j,1,1);
-                    }
+        if(simSettings.useShader){
+            yield* this.drawShader();
+        }
+    }
+
+    *drawShader(){
+        yield "Rendering shader...";
+        for(let i=0;i<width;i++){
+            for(let j=0;j<height;j++){
+                let v = this.get(i,j);
+                if(v===0) v = 0.5;
+                let m = 0;
+                for(let k=1;k<6;k++){
+                    let s = this.get(i-k,j-k)-v-k*0.0008;
+                    s = constrain(map(s,0,0.14,0,191),0,191);
+                    if(s>m) m = s;
+                }
+                if(m>0){
+                    landShader.fill(0,m);
+                    landShader.rect(i,j,1,1);
                 }
             }
         }
+        this.shaderDrawn = true;
     }
 
     tileContainsOcean(x,y){

@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190422c:
+    + Added setting for the previously inaccessible shader added in v20181105a
 v20190422b:
     + Added a "Map Type" option to the basin creation menu
     + Added three new map types: East Continent, West Continent, and Island Ocean

@@ -9,7 +9,6 @@ function setup(){
     simSettings = new Settings();
     basin = undefined;
     newBasinSettings = {};
-    useShader = false;
     storageQuotaExhausted = false;
 
     textInput = document.createElement("input");
@@ -211,11 +210,11 @@ class Settings{
     }
 
     static order(){
-        return ["trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [0,false,true];  // add new defaults to the beginning of this array
+        return [false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){
