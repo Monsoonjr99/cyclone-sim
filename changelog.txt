@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190422a:
+    * Fixed crash bug when selecting a newly-spawned (before first advisory) system while the info panel is open
+    * Fixed crash bug when loading a basin after exiting to the main menu from another basin with the info panel open
 v20190420a:
     + Added partial under-the-hood support for text input UI elements
         > includes commented-out input element on the main menu

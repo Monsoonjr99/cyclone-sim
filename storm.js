@@ -67,7 +67,7 @@ class Storm{
             name ? "Remnants of " + name : "Unnamed Tropical Wave" :
         ty===EXTROP ?
             name ? "Post-Tropical Cyclone " + name : "Unnamed Extratropical Cyclone" :
-        name;
+        name ? name : "Unknown Cyclone";
     }
 
     renderIcon(){

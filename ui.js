@@ -1063,6 +1063,7 @@ UI.init = function(){
 
     let returntomainmenu = function(){
         sideMenu.hide();
+        stormInfoPanel.hide();
         primaryWrapper.hide();
         land.clear();
         for(let t in basin.seasonExpirationTimers) clearTimeout(basin.seasonExpirationTimers[t]);
