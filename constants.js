@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190422c";
+const VERSION_NUMBER = "20190423a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -15,31 +15,55 @@ const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
-const LAND_BIAS_FACTORS = [     // Land generation bias factors controlling different map types
-    [   // "Two Continents" map type
-        5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
-        0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
-        -0.3,       // Bias factor for the "center" (as defined by LAND_BIAS_FACTORS[<mapType>][0])
-        0.1         // Bias factor for the east edge
-    ],
-    [   // "East Continent" map type
-        5/8,
-        -0.3,
-        -0.3,
-        0.15
-    ],
-    [   // "West Continent" map type
-        1/2,
-        0.15,
-        -0.3,
-        -0.3
-    ],
-    [   // "Island Ocean" map type
-        1/2,
-        -0.28,
-        -0.28,
-        -0.28
-    ]
+const MAP_TYPES = [     // Land generation controls for different map types
+    {   // "Two Continents" map type
+        form: "linear",
+        landBiasFactors: [
+            5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
+            0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
+            -0.3,       // Bias factor for the "center" (as defined by .landBiasFactors[0])
+            0.1         // Bias factor for the east edge
+        ]
+    },
+    {   // "East Continent" map type
+        form: "linear",
+        landBiasFactors: [
+            5/8,
+            -0.3,
+            -0.3,
+            0.15
+        ]
+    },
+    {   // "West Continent" map type
+        form: "linear",
+        landBiasFactors: [
+            1/2,
+            0.15,
+            -0.3,
+            -0.3
+        ]
+    },
+    {   // "Island Ocean" map type
+        form: "linear",
+        landBiasFactors: [
+            1/2,
+            -0.28,
+            -0.28,
+            -0.28
+        ]
+    },
+    {   // "Central Continent" map type
+        form: "radial",
+        landBiasFactors: [
+            1/2,    // Where the east-west center should be (0-1 scale from west to east)
+            1/2,    // Where the north-south center should be (0-1 scale from north to south)
+            1/2,    // First control distance (in terms of the geometric mean of the canvas dimensions)
+            1,      // Second control distance
+            0.15,   // Bias factor for the center
+            -0.27,   // Bias factor for the first control distance
+            -0.3    // Bias factor for the second control distance and outward
+        ]
+    }
 ];
 const EXTROP = 0;//"extratropical";
 const SUBTROP = 1;//"subtropical";

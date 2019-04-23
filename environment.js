@@ -577,11 +577,25 @@ class Land{
             this.map[i] = [];
             for(let j=0;j<height;j++){
                 let n = this.noise.get(i,j);
-                let landBiasFactors = LAND_BIAS_FACTORS[basin.mapType];
-                let landBiasAnchor = width * landBiasFactors[0];
-                let landBias = i < landBiasAnchor ?
-                    map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
-                    map(i-landBiasAnchor,0,width-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
+                let mapTypeControls = MAP_TYPES[basin.mapType];
+                let landBiasFactors = mapTypeControls.landBiasFactors;
+                let landBias;
+                if(mapTypeControls.form == "linear"){
+                    let landBiasAnchor = width * landBiasFactors[0];
+                    landBias = i < landBiasAnchor ?
+                        map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
+                        map(i-landBiasAnchor,0,width-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
+                }else if(mapTypeControls.form == "radial"){
+                    let EWAnchor = width * landBiasFactors[0];
+                    let NSAnchor = height * landBiasFactors[1];
+                    let pointDist = sqrt(sq(i-EWAnchor)+sq(j-NSAnchor));
+                    let distAnchor1 = landBiasFactors[2] * sqrt(width*height);
+                    let distAnchor2 = landBiasFactors[3] * sqrt(width*height);
+                    landBias = pointDist < distAnchor1 ?
+                        map(pointDist,0,distAnchor1,landBiasFactors[4],landBiasFactors[5]) : pointDist < distAnchor2 ?
+                        map(pointDist,distAnchor1,distAnchor2,landBiasFactors[5],landBiasFactors[6]) :
+                        landBiasFactors[6];
+                }
                 this.map[i][j] = n + landBias;
                 let ox = floor(i/ENV_LAYER_TILE_SIZE);
                 let oy = floor(j/ENV_LAYER_TILE_SIZE);

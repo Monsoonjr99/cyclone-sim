@@ -480,12 +480,12 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(18);
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean"][newBasinSettings.mapType || 0];
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent"][newBasinSettings.mapType || 0];
         text("Map Type: "+maptype,150,15);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
-        newBasinSettings.mapType %= LAND_BIAS_FACTORS.length;
+        newBasinSettings.mapType %= MAP_TYPES.length;
     });
 
     basinCreationMenu.append(false,width/2-150,7*height/8-20,300,30,function(){    // "Start" button
