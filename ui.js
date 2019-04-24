@@ -1334,6 +1334,10 @@ function keyPressed(){
             simSpeed--;
             if(simSpeed<0) simSpeed=0;
             break;
+            case KEY_F11:
+            if(document.fullscreenElement===canvas) document.exitFullscreen();
+            else canvas.requestFullscreen();
+            break;
             default:
             return;
         }

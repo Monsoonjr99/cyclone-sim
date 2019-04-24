@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190423a";
+const VERSION_NUMBER = "20190424a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -112,6 +112,7 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists
 const HURRICANE_STRENGTH_TERM = ["Cyclone","Hurricane","Typhoon"];
 const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
+const KEY_F11 = 122;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
 const SNOW_LAYERS = 40;
