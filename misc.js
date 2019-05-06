@@ -18,17 +18,55 @@ function hem(v){
 }
 
 function hemY(y){
-    return basin.SHem ? height-y : y;
+    return basin.SHem ? HEIGHT-y : y;
 }
 
-function createBuffer(w,h){
-    w = w || width;
-    h = h || height;
-    return createGraphics(w,h);
+function createBuffer(w,h,noScale){
+    w = w || WIDTH;
+    h = h || HEIGHT;
+    let b = createGraphics(w,h);
+    let metadata = {
+        baseWidth: w,
+        baseHeight: h,
+        noScale: noScale
+    };
+    buffers.set(b,metadata);
+    return b;
+}
+
+function rescaleCanvases(s){
+    for(let [buffer, metadata] of buffers){
+        buffer.resizeCanvas(floor(metadata.baseWidth*s),floor(metadata.baseHeight*s));
+        if(!metadata.noScale) buffer.scale(s);
+    }
+    resizeCanvas(floor(WIDTH*s),floor(HEIGHT*s));
+}
+
+function toggleFullscreen(){
+    if(document.fullscreenElement===canvas) document.exitFullscreen();
+    else{
+        canvas.requestFullscreen().then(function(){
+            scaler = displayWidth/WIDTH;
+            rescaleCanvases(scaler);
+            if(basin){
+                land.clear();
+                refreshTracks(true);
+                Env.displayLayer();
+            }
+        });
+    }
 }
 
 function drawBuffer(b){
-    image(b,0,0,width,height);
+    image(b,0,0,WIDTH,HEIGHT);
+}
+
+function getMouseX(){
+    return floor(mouseX/scaler);
+}
+
+function getMouseY(){
+    return floor(mouseY/scaler);
 }
 
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
@@ -50,3 +88,15 @@ function renameOldBasinSaveKeys(){  // Rename saved basin keys for save slot 0 f
         localStorage.removeItem(oldPrefix+n);
     }
 }
+
+document.onfullscreenchange = function(){
+    if(document.fullscreenElement===null){
+        scaler = 1;
+        rescaleCanvases(scaler);
+        if(basin){
+            land.clear();
+            refreshTracks(true);
+            Env.displayLayer();
+        }
+    }
+};

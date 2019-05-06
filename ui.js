@@ -75,7 +75,7 @@ class UI{
             let right = left + this.width;
             let top = this.getY();
             let bottom = top + this.height;
-            if(this.clickFunc && mouseX>=left && mouseX<right && mouseY>=top && mouseY<bottom) return this;
+            if(this.clickFunc && getMouseX()>=left && getMouseX()<right && getMouseY()>=top && getMouseY()<bottom) return this;
         }
         return null;
     }
@@ -175,18 +175,25 @@ UI.click = function(){
 UI.init = function(){
     // "scene" wrappers
 
-    mainMenu = new UI(null,0,0,width,height);
-    basinCreationMenu = new UI(null,0,0,width,height,undefined,undefined,false);
-    loadMenu = new UI(null,0,0,width,height,undefined,undefined,false);
-    settingsMenu = new UI(null,0,0,width,height,undefined,undefined,false);
-    primaryWrapper = new UI(null,0,0,width,height,function(){
+    mainMenu = new UI(null,0,0,WIDTH,HEIGHT);
+    basinCreationMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(){
         if(basin){
             if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
             else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
     
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
+            if(!land.drawn){
+                finisher = land.draw();
+                return;
+            }
             drawBuffer(landBuffer);
-            drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,SNOW_LAYERS))]);
+            if(simSettings.snowLayers){
+                if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
+                else finisher = land.drawSnow();
+            }
             if(simSettings.useShader){
                 if(land.shaderDrawn) drawBuffer(landShader);
                 else finisher = land.drawShader();
@@ -204,7 +211,7 @@ UI.init = function(){
         sideMenu.hide();
         if(basin){
             if(basin.godMode && keyIsPressed && viewingPresent()) {
-                let g = {x: mouseX, y: mouseY};
+                let g = {x: getMouseX(), y: getMouseY()};
                 if(key === "l" || key === "L"){
                     g.sType = "l";
                 }else if(key === "d" || key === "D"){
@@ -226,7 +233,7 @@ UI.init = function(){
                 }else return;
                 basin.spawn(false,g);
             }else if(viewingPresent()){
-                let mVector = createVector(mouseX,mouseY);
+                let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
                     let s = basin.activeSystems[i].fetchStorm();
                     let p = s.getStormDataByTick(viewTick,true).pos;
@@ -240,7 +247,7 @@ UI.init = function(){
                 refreshTracks(true);
             }else{
                 let vSeason = basin.fetchSeason(viewTick,true);
-                let mVector = createVector(mouseX,mouseY);
+                let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=vSeason.systems.length-1;i>=0;i--){
                     let s = vSeason.fetchSystemAtIndex(i);
                     if(s && s.aliveAt(viewTick)){
@@ -257,7 +264,7 @@ UI.init = function(){
             }
         }
     },false);
-    areYouSure = new UI(null,0,0,width,height,function(){
+    areYouSure = new UI(null,0,0,WIDTH,HEIGHT,function(){
         fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
@@ -265,7 +272,7 @@ UI.init = function(){
 
     // main menu
 
-    mainMenu.append(false,width/2,height/4,0,0,function(){  // title text
+    mainMenu.append(false,WIDTH/2,HEIGHT/4,0,0,function(){  // title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -276,7 +283,7 @@ UI.init = function(){
         text("Simulate your own monster storms!",0,40);
     });
 
-    mainMenu.append(false,width/2-100,height/2-20,200,40,function(){    // "New Basin" button
+    mainMenu.append(false,WIDTH/2-100,HEIGHT/2-20,200,40,function(){    // "New Basin" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -342,7 +349,7 @@ UI.init = function(){
 
     // basin creation menu
 
-    basinCreationMenu.append(false,width/2,height/16,0,0,function(){ // menu title text
+    basinCreationMenu.append(false,WIDTH/2,HEIGHT/16,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -350,7 +357,7 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let hemsel = basinCreationMenu.append(false,width/2-150,height/8,300,30,function(){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(){   // hemisphere selector
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -488,7 +495,7 @@ UI.init = function(){
         newBasinSettings.mapType %= MAP_TYPES.length;
     });
 
-    basinCreationMenu.append(false,width/2-150,7*height/8-20,300,30,function(){    // "Start" button
+    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(){    // "Start" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -524,7 +531,7 @@ UI.init = function(){
 
     loadMenu.loadables = {}; // cache that stores whether the save slot has a loadable basin or not
 
-    loadMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
+    loadMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -573,8 +580,8 @@ UI.init = function(){
     let loadbuttons = [];
 
     for(let i=0;i<SAVE_SLOTS;i++){
-        let x = i===0 ? width/2-150 : 0;
-        let y = i===0 ? height/4 : 40;
+        let x = i===0 ? WIDTH/2-150 : 0;
+        let y = i===0 ? HEIGHT/4 : 40;
         loadbuttons[i] = loadMenu.append(1,x,y,300,30,loadbuttonrender,loadbuttonclick);
         loadbuttons[i].slotNum = i;
     }
@@ -627,7 +634,7 @@ UI.init = function(){
 
     // Settings Menu
 
-    settingsMenu.append(false,width/2,height/8,0,0,function(){ // menu title text
+    settingsMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -635,7 +642,7 @@ UI.init = function(){
         text("Settings",0,0);
     });
 
-    settingsMenu.append(false,width/2-150,height/4,300,30,function(){   // storm intensity indicator
+    settingsMenu.append(false,WIDTH/2-150,HEIGHT/4,300,30,function(){   // storm intensity indicator
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -679,6 +686,22 @@ UI.init = function(){
         text("Track Mode: "+simSettings.trackMode,150,15);
     },function(){
         simSettings.setTrackMode("incmod",3);
+    }).append(false,0,45,300,30,function(){     // snow
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let b = simSettings.snowLayers ? (simSettings.snowLayers*10) + " layers" : "Disabled";
+        text("Snow: "+b,150,15);
+    },function(){
+        simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
+        if(land) land.clearSnow();
     }).append(false,0,45,300,30,function(){     // shader
         fill(COLORS.UI.buttonBox);
         noStroke();
@@ -696,7 +719,7 @@ UI.init = function(){
         simSettings.setUseShader("toggle");
     });
 
-    settingsMenu.append(false,width/2-150,7*height/8-20,300,30,function(){ // "Back" button
+    settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(){ // "Back" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -716,7 +739,7 @@ UI.init = function(){
 
     // Are you sure dialog
 
-    areYouSure.append(false,width/2,height/4,0,0,function(){ // dialog text
+    areYouSure.append(false,WIDTH/2,HEIGHT/4,0,0,function(){ // dialog text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -724,7 +747,7 @@ UI.init = function(){
         text("Are You Sure?",0,0);
     });
 
-    areYouSure.append(false,width/2-108,height/4+100,100,30,function(){ // "Yes" button
+    areYouSure.append(false,WIDTH/2-108,HEIGHT/4+100,100,30,function(){ // "Yes" button
         fill(COLORS.UI.buttonBox);
         noStroke();
         this.fullRect();
@@ -768,7 +791,7 @@ UI.init = function(){
 
     // primary "in sim" scene
 
-    let topBar = primaryWrapper.append(false,0,0,width,30,function(){   // Top bar
+    let topBar = primaryWrapper.append(false,0,0,WIDTH,30,function(){   // Top bar
         fill(COLORS.UI.bar);
         noStroke();
         this.fullRect();
@@ -855,7 +878,7 @@ UI.init = function(){
         button.metadata = i;
     }
 
-    topBar.append(false,width-29,3,24,24,function(){    // Toggle button for storm info panel
+    topBar.append(false,WIDTH-29,3,24,24,function(){    // Toggle button for storm info panel
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -912,7 +935,7 @@ UI.init = function(){
         }
     });
 
-    let bottomBar = primaryWrapper.append(false,0,height-30,width,30,function(){    // Bottom bar
+    let bottomBar = primaryWrapper.append(false,0,HEIGHT-30,WIDTH,30,function(){    // Bottom bar
         fill(COLORS.UI.bar);
         noStroke();
         this.fullRect();
@@ -949,10 +972,10 @@ UI.init = function(){
                 x = p.x;
                 y = p.y;
             }else{
-                x = mouseX;
-                y = mouseY;
+                x = getMouseX();
+                y = getMouseY();
             }
-            if(x >= width || x < 0 || y >= height || y < 0 || (Env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (Env.fields[f].oceanic && land.get(x,y))){
                 txtStr += "N/A";
             }else{
                 let v = Env.get(f,x,y,viewTick);
@@ -977,7 +1000,7 @@ UI.init = function(){
         Env.displayNext();
     });
 
-    bottomBar.append(false,width-29,3,24,24,function(){  // Help button
+    bottomBar.append(false,WIDTH-29,3,24,24,function(){  // Help button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -990,7 +1013,7 @@ UI.init = function(){
         helpBox.toggleShow();
     });
 
-    stormInfoPanel = primaryWrapper.append(false,3*width/4,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
+    stormInfoPanel = primaryWrapper.append(false,3*WIDTH/4,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(){
         let s = this.target;
         fill(COLORS.UI.box);
         noStroke();
@@ -1106,7 +1129,7 @@ UI.init = function(){
         mainMenu.show();
     };
 
-    sideMenu = primaryWrapper.append(false,0,topBar.height,width/4,height-topBar.height-bottomBar.height,function(){
+    sideMenu = primaryWrapper.append(false,0,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(){
         fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
@@ -1255,7 +1278,7 @@ UI.init = function(){
         b.slotNum = i;
     }
 
-    helpBox = primaryWrapper.append(false,width/8,height/8,3*width/4,3*height/4,function(){
+    helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(){
         fill(COLORS.UI.box);
         noStroke();
         this.fullRect();
@@ -1280,7 +1303,7 @@ UI.init = function(){
 };
 
 function mouseInCanvas(){
-    return mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height;
+    return getMouseX() >= 0 && getMouseX() < WIDTH && getMouseY() >= 0 && getMouseY() < HEIGHT;
 }
 
 function mouseClicked(){
@@ -1335,8 +1358,7 @@ function keyPressed(){
             if(simSpeed<0) simSpeed=0;
             break;
             case KEY_F11:
-            if(document.fullscreenElement===canvas) document.exitFullscreen();
-            else canvas.requestFullscreen();
+            toggleFullscreen();
             break;
             default:
             return;

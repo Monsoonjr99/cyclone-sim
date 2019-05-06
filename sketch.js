@@ -2,7 +2,7 @@ function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
     document.title = TITLE;
 
-    createCanvas(960,540); // 16:9 Aspect Ratio
+    createCanvas(WIDTH,HEIGHT);
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
@@ -18,6 +18,9 @@ function setup(){
     textInput.style.left = "-500px";
     textInput.onblur = ()=>{UI.focusedInput = undefined;};
 
+    buffers = new Map();
+    scaler = 1;
+
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
@@ -25,20 +28,20 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    landBuffer = createBuffer();
+    landBuffer = createBuffer(WIDTH,HEIGHT,true);
     landBuffer.noStroke();
-    landShader = createBuffer();
+    landShader = createBuffer(WIDTH,HEIGHT,true);
     landShader.noStroke();
-    coastLine = createBuffer();
+    coastLine = createBuffer(WIDTH,HEIGHT,true);
     coastLine.fill(0);
     coastLine.noStroke();
-    envLayer = createBuffer();
+    envLayer = createBuffer(WIDTH,HEIGHT,true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
     envLayer.noStroke();
     snow = [];
-    for(let i=0;i<SNOW_LAYERS;i++){
-        snow[i] = createBuffer();
+    for(let i=0;i<MAX_SNOW_LAYERS;i++){
+        snow[i] = createBuffer(WIDTH,HEIGHT,true);
         snow[i].noStroke();
         snow[i].fill(COLORS.snow);
     }
@@ -53,6 +56,7 @@ function setup(){
 
 function draw(){
     try{
+        scale(scaler);
         background(COLORS.bg);
         if(basin){
             if(finisher){
@@ -64,7 +68,7 @@ function draw(){
                 push();
                 textSize(48);
                 textAlign(CENTER,CENTER);
-                text(t.value,width/2,height/2);
+                text(t.value,WIDTH/2,HEIGHT/2);
                 pop();
                 return;
             }
@@ -210,11 +214,11 @@ class Settings{
     }
 
     static order(){
-        return ["useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [false,0,false,true];  // add new defaults to the beginning of this array
+        return [2,false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){

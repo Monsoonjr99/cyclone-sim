@@ -241,8 +241,9 @@ class EnvField{
 
     render(){
         envLayer.noFill();
-        for(let i=0;i<width;i+=ENV_LAYER_TILE_SIZE){
-            for(let j=0;j<height;j+=ENV_LAYER_TILE_SIZE){
+        let tileSize = ceil(ENV_LAYER_TILE_SIZE*scaler);
+        for(let i=0;i<WIDTH;i+=ENV_LAYER_TILE_SIZE){
+            for(let j=0;j<HEIGHT;j+=ENV_LAYER_TILE_SIZE){
                 let x = i+ENV_LAYER_TILE_SIZE/2;
                 let y = j+ENV_LAYER_TILE_SIZE/2;
                 if(!this.oceanic || land.tileContainsOcean(x,y)){
@@ -250,6 +251,7 @@ class EnvField{
                     if(this.isVectorField){
                         envLayer.push();
                         envLayer.stroke(0);
+                        envLayer.scale(scaler);
                         envLayer.translate(x,y);
                         if(v!==null){
                             envLayer.rotate(v.heading());
@@ -271,10 +273,10 @@ class EnvField{
                             if(h instanceof Function) envLayer.fill(h(v));
                             else envLayer.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
                         }else envLayer.fill(0,0,50);
-                        envLayer.rect(i,j,ENV_LAYER_TILE_SIZE,ENV_LAYER_TILE_SIZE);
+                        envLayer.rect(i*scaler,j*scaler,tileSize,tileSize);
                         if(v===null){
                             envLayer.fill(0,0,60);
-                            envLayer.triangle(i,j,i+ENV_LAYER_TILE_SIZE,j,i,j+ENV_LAYER_TILE_SIZE);
+                            envLayer.triangle(i*scaler,j*scaler,i*scaler+tileSize,j*scaler,i*scaler,j*scaler+tileSize);
                         }
                     }
                 }
@@ -346,7 +348,7 @@ Environment.init = function(){
             let v = n(0,x-z*3,0,z);
             let r = map(s,-1,1,basin.hyper?0.45:0.5,basin.hyper?0.25:0.35);
             v = map(v,0,1,-r,r);
-            return (l+v)*height;
+            return (l+v)*HEIGHT;
         },
         {
             invisible: true
@@ -362,11 +364,11 @@ Environment.init = function(){
             // Jetstream
             let j = Env.get("jetstream",x,y,z,true);
             // Cosine curve from 0 at poleward side of map to 1 at equatorward side
-            let h = map(cos(map(y,0,height,0,PI)),-1,1,1,0);
+            let h = map(cos(map(y,0,HEIGHT,0,PI)),-1,1,1,0);
             // westerlies
-            let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3)+map(j,0,height,-0.4,0.4),2)*4,0,4);
+            let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3)+map(j,0,HEIGHT,-0.4,0.4),2)*4,0,4);
             // ridging and trades
-            let ridging = constrain(n(1)+map(j,0,height,0.3,-0.3),0,1);
+            let ridging = constrain(n(1)+map(j,0,HEIGHT,0.3,-0.3),0,1);
             let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
             let tAngle = map(h,0.9,1,511*PI/512,17*PI/16); // trades angle
             // noise angle
@@ -409,7 +411,7 @@ Environment.init = function(){
             let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/4,-PI/4,true);                 // angle of jetstream at point
             let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
             let tAngle = -PI/16;                                                            // angle of push from jetstream dips
-            let ridging = 0.45-j0/height-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
+            let ridging = 0.45-j0/HEIGHT-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
             // power of winds equatorward of jetstream
             let hadley = (map(ridging,-0.3,0.2,basin.hyper?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
             let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);                       // angle of winds equatorward of jetstream
@@ -464,7 +466,7 @@ Environment.init = function(){
             v = 1-abs(1-v);
             if(v===0) v = 0.000001;
             v = log(v);
-            let r = map(y,0,height,6,3);
+            let r = map(y,0,HEIGHT,6,3);
             v = -r*v;
             v = v*i;
             return v;
@@ -493,8 +495,8 @@ Environment.init = function(){
             if(y<0) return 0;
             let anom = Env.get("SSTAnomaly",x,y,z,true);
             let s = seasonalSine(z);
-            let w = map(cos(map(x,0,width,0,PI)),-1,1,0,1);
-            let h0 = y/height;
+            let w = map(cos(map(x,0,WIDTH,0,PI)),-1,1,0,1);
+            let h0 = y/HEIGHT;
             let h1 = (sqrt(h0)+h0)/2;
             let h2 = sqrt(sqrt(h0));
             let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
@@ -528,7 +530,7 @@ Environment.init = function(){
             let pm = basin.hyper ? 0.52 : 0.43;
             let tm = basin.hyper ? 0.62 : 0.57;
             let mm = basin.hyper ? 0.3 : 0.2;
-            let m = map(l,0.5,0.7,map(y,0,height,pm,tm),mm,true);
+            let m = map(l,0.5,0.7,map(y,0,HEIGHT,pm,tm),mm,true);
             m += map(s,-1,1,-0.08,0.08);
             m += map(v,0,1,-0.3,0.3);
             m = constrain(m,0,1);
@@ -559,6 +561,7 @@ class Land{
         this.noise = new NoiseChannel(9,0.5,100);
         this.map = [];
         this.oceanTile = [];
+        this.drawn = false;
         this.shaderDrawn = false;
     }
 
@@ -573,24 +576,24 @@ class Land{
 
     *init(){
         yield "Calculating land...";
-        for(let i=0;i<width;i++){
+        for(let i=0;i<WIDTH;i++){
             this.map[i] = [];
-            for(let j=0;j<height;j++){
+            for(let j=0;j<HEIGHT;j++){
                 let n = this.noise.get(i,j);
                 let mapTypeControls = MAP_TYPES[basin.mapType];
                 let landBiasFactors = mapTypeControls.landBiasFactors;
                 let landBias;
                 if(mapTypeControls.form == "linear"){
-                    let landBiasAnchor = width * landBiasFactors[0];
+                    let landBiasAnchor = WIDTH * landBiasFactors[0];
                     landBias = i < landBiasAnchor ?
                         map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
-                        map(i-landBiasAnchor,0,width-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
+                        map(i-landBiasAnchor,0,WIDTH-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
                 }else if(mapTypeControls.form == "radial"){
-                    let EWAnchor = width * landBiasFactors[0];
-                    let NSAnchor = height * landBiasFactors[1];
+                    let EWAnchor = WIDTH * landBiasFactors[0];
+                    let NSAnchor = HEIGHT * landBiasFactors[1];
                     let pointDist = sqrt(sq(i-EWAnchor)+sq(j-NSAnchor));
-                    let distAnchor1 = landBiasFactors[2] * sqrt(width*height);
-                    let distAnchor2 = landBiasFactors[3] * sqrt(width*height);
+                    let distAnchor1 = landBiasFactors[2] * sqrt(WIDTH*HEIGHT);
+                    let distAnchor2 = landBiasFactors[3] * sqrt(WIDTH*HEIGHT);
                     landBias = pointDist < distAnchor1 ?
                         map(pointDist,0,distAnchor1,landBiasFactors[4],landBiasFactors[5]) : pointDist < distAnchor2 ?
                         map(pointDist,distAnchor1,distAnchor2,landBiasFactors[5],landBiasFactors[6]) :
@@ -603,10 +606,15 @@ class Land{
                 if(this.map[i][j]<=0.5) this.oceanTile[ox][oy] = true;
             }
         }
+        yield* this.draw();
+    }
+
+    *draw(){
         yield "Rendering land...";
+        let lget = (x,y)=>this.get(x/scaler,y/scaler);
         for(let i=0;i<width;i++){
             for(let j=0;j<height;j++){
-                let landVal = this.get(i,j);
+                let landVal = lget(i,j);
                 if(landVal){
                     for(let k=0;k<COLORS.land.length;k++){
                         if(landVal > COLORS.land[k][0]){
@@ -616,40 +624,51 @@ class Land{
                         }
                     }
                     let touchingOcean = false;
-                    if(i>0 && !this.get(i-1,j)) touchingOcean = true;
-                    if(j>0 && !this.get(i,j-1)) touchingOcean = true;
-                    if(i<width-1 && !this.get(i+1,j)) touchingOcean = true;
-                    if(j<height-1 && !this.get(i,j+1)) touchingOcean = true;
+                    if(i>0 && !lget(i-1,j)) touchingOcean = true;
+                    if(j>0 && !lget(i,j-1)) touchingOcean = true;
+                    if(i<WIDTH-1 && !lget(i+1,j)) touchingOcean = true;
+                    if(j<HEIGHT-1 && !lget(i,j+1)) touchingOcean = true;
                     if(touchingOcean) coastLine.rect(i,j,1,1);
                 }
             }
         }
-        yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
-        for(let i=0;i<width;i++){
-            for(let j=0;j<height;j++){
-                let landVal = this.get(i,j);
-                if(landVal){
-                    let l = 1-hemY(j)/height;
-                    let h = 0.95-landVal;
-                    let p = l>0 ? ceil(map(h/l,0.15,0.45,0,SNOW_LAYERS)) : h<0 ? 0 : SNOW_LAYERS;
-                    for(let k=max(p,0);k<SNOW_LAYERS;k++) snow[k].rect(i,j,1,1);
-                }
-            }
+        if(simSettings.snowLayers){
+            yield* this.drawSnow();
         }
         if(simSettings.useShader){
             yield* this.drawShader();
         }
+        this.drawn = true;
+    }
+
+    *drawSnow(){
+        yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
+        let lget = (x,y)=>this.get(x/scaler,y/scaler);
+        let snowLayers = simSettings.snowLayers * 10;
+        for(let i=0;i<width;i++){
+            for(let j=0;j<height;j++){
+                let landVal = lget(i,j);
+                if(landVal){
+                    let l = 1-hemY(j)/HEIGHT;
+                    let h = 0.95-landVal;
+                    let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
+                    for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);
+                }
+            }
+        }
+        this.snowDrawn = true;
     }
 
     *drawShader(){
         yield "Rendering shader...";
+        let lget = (x,y)=>this.get(x/scaler,y/scaler);
         for(let i=0;i<width;i++){
             for(let j=0;j<height;j++){
-                let v = this.get(i,j);
+                let v = lget(i,j);
                 if(v===0) v = 0.5;
                 let m = 0;
                 for(let k=1;k<6;k++){
-                    let s = this.get(i-k,j-k)-v-k*0.0008;
+                    let s = lget(i-k,j-k)-v-k*0.0008;
                     s = constrain(map(s,0,0.14,0,191),0,191);
                     if(s>m) m = s;
                 }
@@ -668,11 +687,18 @@ class Land{
         return this.oceanTile[x][y];
     }
 
+    clearSnow(){
+        for(let i=0;i<MAX_SNOW_LAYERS;i++) snow[i].clear();
+        this.snowDrawn = false;
+    }
+
     clear(){
         landBuffer.clear();
         coastLine.clear();
         landShader.clear();
-        for(let i=0;i<SNOW_LAYERS;i++) snow[i].clear();
+        this.clearSnow();
+        this.drawn = false;
+        this.shaderDrawn = false;
     }
 }
 

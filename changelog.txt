@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190506a:
+    + Added setting for number of annual snow layers (at most 50), including disabling snow altogether
+    * Fullscreen mode now matches your screen resolution, offering Cyclone Simulator in high-definition
+        > Warning: Snow can take a long time to render in fullscreen mode, so a low snow layer number or disabling snow is recommended
 v20190424a:
     * Pressing "F11" now toggles fullscreen mode
 v20190423a:

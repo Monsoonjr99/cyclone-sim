@@ -455,8 +455,8 @@ function encodePoint(x,y,z,o){
         z = z || 0;
     }
     if(!o) o = {};
-    let w = floor(o.w || width);
-    let h = floor(o.h || height);
+    let w = floor(o.w || WIDTH);
+    let h = floor(o.h || HEIGHT);
     if(o.mapX instanceof Function) x = o.mapX(x);
     if(o.mapY instanceof Function) y = o.mapY(y);
     if(o.mapZ instanceof Function) z = o.mapZ(z);
@@ -468,8 +468,8 @@ function encodePoint(x,y,z,o){
 
 function decodePoint(n,o){
     if(!o) o = {};
-    let w = floor(o.w || width);
-    let h = floor(o.h || height);
+    let w = floor(o.w || WIDTH);
+    let h = floor(o.h || HEIGHT);
     let z = floor(n/(w*h));
     n %= w*h;
     let y = floor(n/w);

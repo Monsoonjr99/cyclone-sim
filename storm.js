@@ -430,8 +430,8 @@ class ActiveSystem extends StormData{
         }else{
             let sType = spawn ? spawn.sType : undefined;
             if(sType==="x") ext = true;
-            let x = spawn ? spawn.x : ext ? 0 : width-1;
-            let y = spawn ? spawn.y : hemY(ext ? random(height*0.1,height*0.4) : random(height*0.7,height*0.9));
+            let x = spawn ? spawn.x : ext ? 0 : WIDTH-1;
+            let y = spawn ? spawn.y : hemY(ext ? random(HEIGHT*0.1,HEIGHT*0.4) : random(HEIGHT*0.7,HEIGHT*0.9));
             let p = spawn ?
                 sType==="x" ? 1005 :
                 sType==="l" ? 1015 :
@@ -512,7 +512,7 @@ class ActiveSystem extends StormData{
         if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
         if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
         if(lnd) this.organization -= pow(10,map(lnd,0.5,1,0,1));
-        this.organization -= pow(2,4-((height-hemY(y))/(height*0.01)));
+        this.organization -= pow(2,4-((HEIGHT-hemY(y))/(HEIGHT*0.01)));
         this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
         this.organization -= map(moisture,0,0.65,3,0,true)*shear;
         this.organization += sq(map(moisture,0.6,1,0,1,true))*4;
@@ -557,7 +557,7 @@ class ActiveSystem extends StormData{
                 this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
         }
 
-        if(this.pressure>1030 || (this.pos.x >= width || this.pos.x < 0 || this.pos.y >= height || this.pos.y < 0) || this.interaction.kill){
+        if(this.pressure>1030 || (this.pos.x >= WIDTH || this.pos.x < 0 || this.pos.y >= HEIGHT || this.pos.y < 0) || this.interaction.kill){
             this.fetchStorm().deathTime = basin.tick;
             if(this.fetchStorm().dissipationTime===undefined) this.fetchStorm().dissipationTime = basin.tick;
             this.fetchStorm().current = undefined;
@@ -567,7 +567,7 @@ class ActiveSystem extends StormData{
         let rType = this.fetchStorm().getStormDataByTick(basin.tick);
         rType = rType && rType.type;
         if(tropOrSub(rType!==null ? rType : this.type)){
-            let pop = lnd ? round(250000*(1+hemY(y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
+            let pop = lnd ? round(250000*(1+hemY(y)/HEIGHT)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
             let damPot = pow(1.062,this.windSpeed)-1;   // damage potential
             let dedPot = pow(1.02,this.windSpeed)-1;    // death potential
             let m = pow(1.5,randomGaussian());      // modifier

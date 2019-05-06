@@ -1,10 +1,12 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190424a";
+const VERSION_NUMBER = "20190506a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
+const WIDTH = 960; // 16:9 aspect ratio
+const HEIGHT = 540;
 const DIAMETER = 20;    // Storm icon diameter
 const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
@@ -115,7 +117,7 @@ const KEY_RIGHT_BRACKET = 221;
 const KEY_F11 = 122;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
-const SNOW_LAYERS = 40;
+const MAX_SNOW_LAYERS = 50;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
