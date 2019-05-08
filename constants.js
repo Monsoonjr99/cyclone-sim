@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190506a";
+const VERSION_NUMBER = "20190508a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -64,6 +64,18 @@ const MAP_TYPES = [     // Land generation controls for different map types
             0.15,   // Bias factor for the center
             -0.27,   // Bias factor for the first control distance
             -0.3    // Bias factor for the second control distance and outward
+        ]
+    },
+    {   // "Central Inland Sea" map type
+        form: "radial",
+        landBiasFactors: [
+            1/2,
+            1/2,
+            3/8,
+            1,
+            -0.3,
+            0.2,
+            0.3
         ]
     }
 ];

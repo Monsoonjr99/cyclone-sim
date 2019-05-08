@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190508a:
+    + Added Central Inland Sea map type
 v20190506a:
     + Added setting for number of annual snow layers (at most 50), including disabling snow altogether
     * Fullscreen mode now matches your screen resolution, offering Cyclone Simulator in high-definition

@@ -487,7 +487,7 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(18);
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent"][newBasinSettings.mapType || 0];
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea"][newBasinSettings.mapType || 0];
         text("Map Type: "+maptype,150,15);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
