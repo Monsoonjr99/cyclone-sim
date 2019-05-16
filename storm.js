@@ -168,7 +168,7 @@ class Storm{
                 }
             }
         }
-        if(selectedStorm===this && viewingPresent() && this.current){
+        if(selectedStorm===this && basin.viewingPresent() && this.current){
             forecastTracks.clear();
             let p = this.current.trackForecast.points;
             for(let n=0;n<p.length;n++){
@@ -431,7 +431,7 @@ class ActiveSystem extends StormData{
             let sType = spawn ? spawn.sType : undefined;
             if(sType==="x") ext = true;
             let x = spawn ? spawn.x : ext ? 0 : WIDTH-1;
-            let y = spawn ? spawn.y : hemY(ext ? random(HEIGHT*0.1,HEIGHT*0.4) : random(HEIGHT*0.7,HEIGHT*0.9));
+            let y = spawn ? spawn.y : basin.hemY(ext ? random(HEIGHT*0.1,HEIGHT*0.4) : random(HEIGHT*0.7,HEIGHT*0.9));
             let p = spawn ?
                 sType==="x" ? 1005 :
                 sType==="l" ? 1015 :
@@ -492,7 +492,7 @@ class ActiveSystem extends StormData{
 
         let SST = Env.get("SST",x,y,z);
         let jet = Env.get("jetstream",x,y,z);
-        jet = hemY(y)-jet;
+        jet = basin.hemY(y)-jet;
         let lnd = land.get(x,y);
         let moisture = Env.get("moisture",x,y,z);
         let shear = Env.get("shear",x,y,z).mag()+this.interaction.shear;
@@ -512,7 +512,7 @@ class ActiveSystem extends StormData{
         if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
         if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
         if(lnd) this.organization -= pow(10,map(lnd,0.5,1,0,1));
-        this.organization -= pow(2,4-((HEIGHT-hemY(y))/(HEIGHT*0.01)));
+        this.organization -= pow(2,4-((HEIGHT-basin.hemY(y))/(HEIGHT*0.01)));
         this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
         this.organization -= map(moisture,0,0.65,3,0,true)*shear;
         this.organization += sq(map(moisture,0.6,1,0,1,true))*4;
@@ -567,7 +567,7 @@ class ActiveSystem extends StormData{
         let rType = this.fetchStorm().getStormDataByTick(basin.tick);
         rType = rType && rType.type;
         if(tropOrSub(rType!==null ? rType : this.type)){
-            let pop = lnd ? round(250000*(1+hemY(y)/HEIGHT)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
+            let pop = lnd ? round(250000*(1+basin.hemY(y)/HEIGHT)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
             let damPot = pow(1.062,this.windSpeed)-1;   // damage potential
             let dedPot = pow(1.02,this.windSpeed)-1;    // death potential
             let m = pow(1.5,randomGaussian());      // modifier
@@ -618,7 +618,7 @@ class ActiveSystem extends StormData{
         let m = v.mag();
         let r = map(that.lowerWarmCore,0,1,150,50);
         if(m<r && m>0){
-            v.rotate(hem(-TAU/4+((3/m)*TAU/16)));
+            v.rotate(basin.hem(-TAU/4+((3/m)*TAU/16)));
             v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
             this.interaction.fuji.add(v);
             this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));

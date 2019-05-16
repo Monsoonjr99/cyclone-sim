@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190516a:
+    * Made some miscellaneous functions methods of Basin for cleaner code
 v20190508a:
     + Added Central Inland Sea map type
 v20190506a:

@@ -181,7 +181,7 @@ UI.init = function(){
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(){
         if(basin){
-            if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
+            if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
             else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
     
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
@@ -210,7 +210,7 @@ UI.init = function(){
         helpBox.hide();
         sideMenu.hide();
         if(basin){
-            if(basin.godMode && keyIsPressed && viewingPresent()) {
+            if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
                 let g = {x: getMouseX(), y: getMouseY()};
                 if(key === "l" || key === "L"){
                     g.sType = "l";
@@ -232,7 +232,7 @@ UI.init = function(){
                     g.sType = "x";
                 }else return;
                 basin.spawn(false,g);
-            }else if(viewingPresent()){
+            }else if(basin.viewingPresent()){
                 let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
                     let s = basin.activeSystems[i].fetchStorm();
@@ -799,7 +799,7 @@ UI.init = function(){
     },false);
 
     topBar.append(false,5,3,100,24,function(){  // Date indicator
-        let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (viewingPresent() ? '' : ' [Analysis]');
+        let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (basin.viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);

@@ -1,7 +1,3 @@
-function viewingPresent(){
-    return viewTick === basin.tick;
-}
-
 function refreshTracks(force){
     if(simSettings.trackMode===2 && !force) return;
     tracks.clear();
@@ -11,14 +7,6 @@ function refreshTracks(force){
         for(let s of basin.fetchSeason(viewTick,true).forSystems()) if(s.TC) s.renderTrack();
     }else if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
     else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
-}
-
-function hem(v){
-    return basin.SHem ? -v : v;
-}
-
-function hemY(y){
-    return basin.SHem ? HEIGHT-y : y;
 }
 
 function createBuffer(w,h,noScale){

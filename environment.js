@@ -208,7 +208,7 @@ class EnvField{
 
     get(x,y,z,noHem){
         try{
-            if(!noHem) y = hemY(y);
+            if(!noHem) y = basin.hemY(y);
             if(this.mapFunc){
                 let s = this.noise;
                 let n = function(num,x1,y1,z1){
@@ -380,7 +380,7 @@ Environment.init = function(){
             this.vec.rotate(a);
             this.vec.mult(m);
             this.vec.add(west+trades*cos(tAngle),trades*sin(tAngle));
-            this.vec.y = hem(this.vec.y); // hemisphere flip
+            this.vec.y = basin.hem(this.vec.y); // hemisphere flip
             return this.vec;
         },
         {
@@ -431,7 +431,7 @@ Environment.init = function(){
             this.vec.add(hadley*cos(hAngle),hadley*sin(hAngle));                            // apply winds equatorward of jetstream
             this.vec.add(ferrel*cos(fAngle),ferrel*sin(fAngle));                            // apply winds poleward of jetstream
 
-            this.vec.y = hem(this.vec.y);                                                   // hemisphere flip
+            this.vec.y = basin.hem(this.vec.y);                                                   // hemisphere flip
             return this.vec;
         },
         {
@@ -526,7 +526,7 @@ Environment.init = function(){
         function(n,x,y,z){
             let v = n(0);
             let s = seasonalSine(z);
-            let l = land.get(x,hemY(y));
+            let l = land.get(x,basin.hemY(y));
             let pm = basin.hyper ? 0.52 : 0.43;
             let tm = basin.hyper ? 0.62 : 0.57;
             let mm = basin.hyper ? 0.3 : 0.2;
@@ -649,7 +649,7 @@ class Land{
             for(let j=0;j<height;j++){
                 let landVal = lget(i,j);
                 if(landVal){
-                    let l = 1-hemY(j)/HEIGHT;
+                    let l = 1-basin.hemY(j)/HEIGHT;
                     let h = 0.95-landVal;
                     let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
                     for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);

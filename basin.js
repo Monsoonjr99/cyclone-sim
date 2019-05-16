@@ -45,6 +45,18 @@ class Basin{
         return t;
     }
 
+    viewingPresent(){
+        return viewTick === this.tick;
+    }
+
+    hem(v){
+        return this.SHem ? -v : v;
+    }
+
+    hemY(y){
+        return this.SHem ? HEIGHT-y : y;
+    }
+
     spawn(...opts){
         this.activeSystems.push(new ActiveSystem(...opts));
     }

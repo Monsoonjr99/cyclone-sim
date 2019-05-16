@@ -153,7 +153,7 @@ function* finishInit(){
 }
 
 function advanceSim(){
-    let vp = viewingPresent();
+    let vp = basin.viewingPresent();
     basin.tick++;
     let os = basin.getSeason(viewTick);
     viewTick = basin.tick;
