@@ -5,7 +5,7 @@ function refreshTracks(force){
     if(selectedStorm) selectedStorm.renderTrack();
     else if(simSettings.trackMode===2){
         for(let s of basin.fetchSeason(viewTick,true).forSystems()) if(s.TC) s.renderTrack();
-    }else if(viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
+    }else if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
     else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
 }
 

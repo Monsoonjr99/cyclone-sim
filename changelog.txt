@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190517a:
+    * Fixed major crash bug from v20190516a
 v20190516a:
     * Made some miscellaneous functions methods of Basin for cleaner code
 v20190508a:
