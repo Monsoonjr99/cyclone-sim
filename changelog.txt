@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190518a:
+    + Added button in new basin settings menu to control if god mode (user able to spawn storms) is enabled/disabled
+        > Previously always enabled by default, but now the default setting for new basins is disabled
+    * Cleaned up Basin constructor code to better accomodate new options
 v20190517a:
     * Fixed major crash bug from v20190516a
 v20190516a:

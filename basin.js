@@ -1,19 +1,20 @@
 class Basin{
-    constructor(load,year,SHem,godMode,hyper,seed,names,hurrTerm,mapType){
+    constructor(load,opts/*,year,SHem,godMode,hyper,seed,names,hurrTerm,mapType*/){
+        if(!opts) opts = {};
         this.seasons = {};
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
         this.tick = 0;
         this.lastSaved = 0;
-        this.godMode = godMode;
-        this.SHem = SHem;
-        this.hyper = hyper;
-        this.startYear = year;
-        this.nameList = NAME_LIST_PRESETS[names || 0];
+        this.godMode = opts.godMode;
+        this.SHem = opts.hem;
+        this.hyper = opts.hyper;
+        this.startYear = opts.year;
+        this.nameList = NAME_LIST_PRESETS[opts.names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-        this.hurricaneStrengthTerm = hurrTerm || 0;
-        this.mapType = mapType || 0;
-        this.seed = seed || moment().valueOf();
+        this.hurricaneStrengthTerm = opts.hurrTerm || 0;
+        this.mapType = opts.mapType || 0;
+        this.seed = opts.seed || moment().valueOf();
         this.envData = {};
         this.envData.loadData = [];
         this.saveSlot = load || 0;

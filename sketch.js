@@ -120,18 +120,19 @@ function init(load){
         basin = new Basin(load);
         paused = true;
     }else{
-        let hem;
-        if(newBasinSettings.hem===1) hem = false;
-        else if(newBasinSettings.hem===2) hem = true;
-        else hem = random()<0.5;
-        let year = hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-        if(newBasinSettings.year!==undefined) year = newBasinSettings.year;
-        let seed = newBasinSettings.seed;
-        let hyper = newBasinSettings.hyper;
-        let names = newBasinSettings.names;
-        let hurrTerm = newBasinSettings.hurrTerm;
-        let mapType = newBasinSettings.mapType;
-        basin = new Basin(false,year,hem,true,hyper,seed,names,hurrTerm,mapType);
+        let opts = {};
+        if(newBasinSettings.hem===1) opts.hem = false;
+        else if(newBasinSettings.hem===2) opts.hem = true;
+        else opts.hem = random()<0.5;
+        opts.year = opts.hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+        if(newBasinSettings.year!==undefined) opts.year = newBasinSettings.year;
+        opts.seed = newBasinSettings.seed;
+        opts.hyper = newBasinSettings.hyper;
+        opts.names = newBasinSettings.names;
+        opts.hurrTerm = newBasinSettings.hurrTerm;
+        opts.mapType = newBasinSettings.mapType;
+        opts.godMode = newBasinSettings.godMode;
+        basin = new Basin(false,opts);
         newBasinSettings = {};
         paused = false;
     }

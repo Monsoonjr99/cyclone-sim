@@ -493,6 +493,21 @@ UI.init = function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
+    }).append(false,0,45,300,30,function(){     // God mode Selector
+        fill(COLORS.UI.buttonBox);
+        noStroke();
+        this.fullRect();
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
+        text("God Mode: "+gMode,150,15);
+    },function(){
+        newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
     basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(){    // "Start" button
