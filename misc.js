@@ -31,7 +31,7 @@ function rescaleCanvases(s){
 }
 
 function toggleFullscreen(){
-    if(document.fullscreenElement===canvas) document.exitFullscreen();
+    if(document.fullscreenElement===canvas || deviceOrientation===PORTRAIT) document.exitFullscreen();
     else{
         canvas.requestFullscreen().then(function(){
             scaler = displayWidth/WIDTH;

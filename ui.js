@@ -1382,6 +1382,10 @@ function keyPressed(){
     return false;
 }
 
+function deviceTurned(){
+    toggleFullscreen();
+}
+
 function wrapText(str,w){
     let newStr = "";
     for(let i = 0, j = 0;i<str.length;i=j){

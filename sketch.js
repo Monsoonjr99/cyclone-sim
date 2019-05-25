@@ -172,9 +172,8 @@ function advanceSim(){
         }
         basin.activeSystems[i].update();
     }
-    if(random()<0.012){
-        basin.spawn(random()>0.5+0.1*seasonalSine(basin.tick));
-    }
+    if(random()<0.015*sq((seasonalSine(basin.tick)+1)/2)) basin.spawn(false);    // tropical waves
+    if(random()<0.01-0.002*seasonalSine(basin.tick)) basin.spawn(true);    // extratropical cyclones
     let stormKilled = false;
     for(let i=basin.activeSystems.length-1;i>=0;i--){
         if(!basin.activeSystems[i].fetchStorm().current){

@@ -430,8 +430,23 @@ class ActiveSystem extends StormData{
         }else{
             let sType = spawn ? spawn.sType : undefined;
             if(sType==="x") ext = true;
-            let x = spawn ? spawn.x : ext ? 0 : WIDTH-1;
-            let y = spawn ? spawn.y : basin.hemY(ext ? random(HEIGHT*0.1,HEIGHT*0.4) : random(HEIGHT*0.7,HEIGHT*0.9));
+            let x, y, tooClose;
+            if(spawn){
+                x = spawn.x;
+                y = spawn.y;
+            }else{
+                do{
+                    tooClose = false;
+                    x = random()<0.2 && !ext ?
+                            WIDTH-1:
+                            random(0,WIDTH-1);
+                    y = basin.hemY(ext ? Env.get("jetstream",x,0,basin.tick)+random(-75,75) : random(HEIGHT*0.7,HEIGHT*0.9));
+                    for(let i=0;i<basin.activeSystems.length;i++){
+                        let p = basin.activeSystems[i].pos;
+                        if(sqrt(sq(x-p.x)+sq(y-p.y))<50) tooClose = true;
+                    }
+                }while(tooClose);
+            }
             let p = spawn ?
                 sType==="x" ? 1005 :
                 sType==="l" ? 1015 :
@@ -511,7 +526,8 @@ class ActiveSystem extends StormData{
         this.organization *= 100;
         if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
         if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
-        if(lnd) this.organization -= pow(10,map(lnd,0.5,1,0,1));
+        // if(lnd) this.organization -= pow(10,map(lnd,0.5,1,-3,1));
+        // if(lnd && this.organization<70 && moisture>0.3) this.organization += pow(5,map(moisture,0.3,0.5,-1,1,true))*tropicalness;
         this.organization -= pow(2,4-((HEIGHT-basin.hemY(y))/(HEIGHT*0.01)));
         this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
         this.organization -= map(moisture,0,0.65,3,0,true)*shear;
