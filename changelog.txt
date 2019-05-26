@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190526a:
+    + Added spawning of subtropical depressions and storms in god mode
+        > Shift+D and click for subtropical depressions
+        > Shift+S and click for subtropical storms
+        > Pardon me mobile users; I'll add an alternative spawning method eventually
 v20190525a:
     * Changed how natural storm system spawning works
         > Systems (both extratropical and tropical waves) can now spawn at any longitude

@@ -214,10 +214,14 @@ UI.init = function(){
                 let g = {x: getMouseX(), y: getMouseY()};
                 if(key === "l" || key === "L"){
                     g.sType = "l";
-                }else if(key === "d" || key === "D"){
+                }else if(key === "d"){
                     g.sType = "d";
-                }else if(key === "s" || key === "S"){
+                }else if(key === "D"){
+                    g.sType = "sd";
+                }else if(key === "s"){
                     g.sType = "s";
+                }else if(key === "S"){
+                    g.sType = "ss";
                 }else if(key === "1"){
                     g.sType = "1";
                 }else if(key === "2"){

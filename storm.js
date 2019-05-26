@@ -430,6 +430,15 @@ class ActiveSystem extends StormData{
         }else{
             let sType = spawn ? spawn.sType : undefined;
             if(sType==="x") ext = true;
+            let subt = false;
+            if(sType==="sd"){
+                sType = "d";
+                subt = true;
+            }
+            if(sType==="ss"){
+                sType = "s";
+                subt = true;
+            }
             let x, y, tooClose;
             if(spawn){
                 x = spawn.x;
@@ -470,12 +479,13 @@ class ActiveSystem extends StormData{
                 sType==="5" ? 145 : 35 :
             random(15,35);
             let ty = ext ? EXTROP : spawn ?
-                sType==="l" ? TROPWAVE : TROP :
+                sType==="l" ? TROPWAVE :
+                subt ? SUBTROP : TROP :
             TROPWAVE;
             super(x,y,p,w,ty);
             this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
-            this.lowerWarmCore = ext ? 0 : 1;
-            this.upperWarmCore = ext ? 0 : 1;
+            this.lowerWarmCore = ext ? 0 : subt ? 0.6 : 1;
+            this.upperWarmCore = ext ? 0 : subt ? 0.5 : 1;
             this.depth = ext ? 1 : 0;
         }
         this.steering = createVector(0); // A vector that updates with the environmental steering
