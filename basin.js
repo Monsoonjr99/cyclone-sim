@@ -38,6 +38,10 @@ class Basin{
         return moment.utc(this.startTime()+t*TICK_DURATION);
     }
 
+    tickFromMoment(m){
+        if(m instanceof moment) return floor((m.valueOf()-this.startTime())/TICK_DURATION);
+    }
+
     seasonTick(n){
         if(n===undefined) n = this.getSeason(-1);
         let m = moment.utc(this.SHem ? [n-1, 6, 1] : [n, 0, 1]);

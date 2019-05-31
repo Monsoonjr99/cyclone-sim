@@ -877,7 +877,7 @@ UI.init = function(){
                 m.subtract(1,"y");
                 break;
             }
-            let t = floor((m.valueOf()-basin.startTime())/TICK_DURATION);
+            let t = basin.tickFromMoment(m);
             if(this.metadata%2===0 && t%ADVISORY_TICKS!==0) t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(t>basin.tick) t = basin.tick;
@@ -906,7 +906,7 @@ UI.init = function(){
         if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
         else triangle(6,9,18,9,12,15);
     },function(){
-        stormInfoPanel.target = selectedStorm || basin.getSeason(viewTick);
+        if(!stormInfoPanel.showing) stormInfoPanel.target = selectedStorm || basin.getSeason(viewTick);
         stormInfoPanel.toggleShow();
     }).append(false,-29,0,24,24,function(){  // Pause/resume button
         if(this.isHovered()){
@@ -1082,7 +1082,7 @@ UI.init = function(){
         }
     },true,false);
 
-    stormInfoPanel.append(false,3,3,24,24,function(){
+    stormInfoPanel.append(false,3,3,24,24,function(){   // info panel previous season button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -1096,7 +1096,7 @@ UI.init = function(){
         if(!(s instanceof Storm) && s>basin.getSeason(0)) stormInfoPanel.target--;
     });
     
-    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){
+    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){ // info panel next season button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -1110,7 +1110,7 @@ UI.init = function(){
         if(!(s instanceof Storm) && s<basin.getSeason(-1)) stormInfoPanel.target++;
     });
     
-    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(){
+    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(){ // info panel "Jump to" button
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             this.fullRect();
@@ -1138,9 +1138,185 @@ UI.init = function(){
         }
     });
 
+    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(15);
+        text("Show Timeline",this.width/2,this.height/2);
+    },function(){
+        timelineBox.toggleShow();
+    });
+
+    let buildtimeline = function(){
+        let tb = timelineBox;
+        tb.parts = [];
+        let plotWidth = tb.width*0.9;
+        let target = stormInfoPanel.target;
+        if(target!==undefined && !(target instanceof Storm)){
+            let s = basin.fetchSeason(target);
+            let TCs = [];
+            let beginSeasonTick;
+            let endSeasonTick;
+            for(let sys of s.forSystems()){
+                if(sys.TC && (basin.getSeason(sys.formationTime)===target || basin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || basin.getSeason(sys.dissipationTime-1)>=target))){
+                    TCs.push(sys);
+                    let dissTime = sys.dissipationTime || basin.tick;
+                    if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
+                    if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
+                }
+            }
+            for(let n=0;n<TCs.length-1;n++){
+                let t0 = TCs[n];
+                let t1 = TCs[n+1];
+                if(t0.formationTime>t1.formationTime){
+                    TCs[n] = t1;
+                    TCs[n+1] = t0;
+                    if(n>0) n -= 2;
+                }
+            }
+            let sMoment = basin.tickMoment(beginSeasonTick);
+            tb.sMonth = sMoment.month();
+            sMoment.startOf('month');
+            let beginPlotTick = basin.tickFromMoment(sMoment);
+            let eMoment = basin.tickMoment(endSeasonTick);
+            eMoment.endOf('month');
+            let endPlotTick = basin.tickFromMoment(eMoment);
+            tb.months = eMoment.diff(sMoment,'months') + 1;
+            for(let t of TCs){
+                let part = {};
+                part.segments = [];
+                part.label = t.named ? t.name.slice(0,1) : t.depressionNum + '';
+                let aSegment;
+                for(let q=0;q<t.record.length;q++){
+                    let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
+                    let d = t.record[q];
+                    if(tropOrSub(d.type)){
+                        let cat = d.getCat();
+                        if(!aSegment){
+                            aSegment = {};
+                            part.segments.push(aSegment);
+                            aSegment.startTick = rt;
+                            aSegment.maxCat = cat;
+                            aSegment.fullyTrop = (d.type===TROP);
+                        }
+                        if(cat > aSegment.maxCat) aSegment.maxCat = cat;
+                        aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
+                        aSegment.endTick = rt;
+                    }else if(aSegment) aSegment = undefined;
+                }
+                for(let q=0;q<part.segments.length;q++){
+                    let seg = part.segments[q];
+                    seg.startX = map(seg.startTick,beginPlotTick,endPlotTick,0,plotWidth);
+                    seg.endX = map(seg.endTick,beginPlotTick,endPlotTick,0,plotWidth);
+                }
+                let rowFits;
+                part.row = -1;
+                let labelZone = 20;
+                do{
+                    part.row++;
+                    rowFits = true;
+                    for(let q=0;q<tb.parts.length;q++){
+                        let p = tb.parts[q];
+                        let thisS = part.segments[0].startX;
+                        let thisE = part.segments[part.segments.length-1].endX + labelZone;
+                        let otherS = p.segments[0].startX;
+                        let otherE = p.segments[p.segments.length-1].endX + labelZone;
+                        if(p.row===part.row){
+                            if(thisS>=otherS && thisS<=otherE ||
+                                thisE>=otherS && thisE<=otherE ||
+                                otherS>=thisS && otherS<=thisE ||
+                                otherE>=thisS && otherE<=thisE) rowFits = false;
+                        }
+                    }
+                }while(!rowFits);
+                tb.parts.push(part);
+            }
+        }else{
+            tb.months = 12;
+            tb.sMonth = 0;
+        }
+        tb.builtFor = target;
+        tb.builtAt = basin.tick;
+    };
+
+    timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(){
+        let target = stormInfoPanel.target;
+        if(target!==this.builtFor || (target===basin.getSeason(-1) && basin.tick!==this.builtAt)) buildtimeline();
+        fill(COLORS.UI.box);
+        noStroke();
+        this.fullRect();
+        stroke(COLORS.UI.text);
+        let w = this.width;
+        let h = this.height;
+        let lBound = w*0.05;
+        let rBound = w*0.95;
+        let tBound = h*0.2;
+        let bBound = h*0.85;
+        line(lBound,bBound,rBound,bBound);
+        line(lBound,bBound,lBound,tBound);
+        fill(COLORS.UI.text);
+        textAlign(CENTER,TOP);
+        textSize(13);
+        let M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+        for(let i=0;i<this.months;i++){
+            stroke(COLORS.UI.text);
+            let x0 = map(i+1,0,this.months,lBound,rBound);
+            let x1 = map(i+0.5,0,this.months,lBound,rBound);
+            line(x0,bBound,x0,tBound);
+            noStroke();
+            text(M[(i+this.sMonth)%12],x1,bBound+h*0.02);
+        }
+        noStroke();
+        textSize(18);
+        let t;
+        if(target===undefined) t = "none";
+        else if(target instanceof Storm) t = "WIP";
+        else t = seasonName(target);
+        text("Timeline of " + t,w*0.5,h*0.05);
+        for(let i=0;i<this.parts.length;i++){
+            let p = this.parts[i];
+            let y = tBound+p.row*15;
+            for(let j=0;j<p.segments.length;j++){
+                let s = p.segments[j];
+                if(s.fullyTrop) fill(getColor(s.maxCat,TROP));
+                else fill(getColor(s.maxCat,SUBTROP));
+                rect(lBound+s.startX,y,max(s.endX-s.startX,1),10);
+            }
+            let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
+            fill(COLORS.UI.text);
+            textAlign(LEFT,CENTER);
+            textSize(12);
+            text(p.label,labelLeftBound+5,y+5);
+        }
+    },true,false);
+
+    timelineBox.months = 12;
+    timelineBox.sMonth = 0;
+    timelineBox.parts = [];
+    timelineBox.builtAt = undefined;
+    timelineBox.builtFor = undefined;
+
+    timelineBox.append(false,timelineBox.width-30,10,20,20,function(){
+        if(this.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            this.fullRect();
+        }
+        fill(COLORS.UI.text);
+        textAlign(CENTER,CENTER);
+        textSize(22);
+        text("X",10,10);
+    },function(){
+        timelineBox.hide();
+    });
+
     let returntomainmenu = function(){
         sideMenu.hide();
         stormInfoPanel.hide();
+        timelineBox.hide();
         primaryWrapper.hide();
         land.clear();
         for(let t in basin.seasonExpirationTimers) clearTimeout(basin.seasonExpirationTimers[t]);

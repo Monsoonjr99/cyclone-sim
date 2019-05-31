@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190531a:
+    + Added season summary timelines
+        > Accessible by clicking "Show Timeline" in the info panel
 v20190526a:
     + Added spawning of subtropical depressions and storms in god mode
         > Shift+D and click for subtropical depressions
