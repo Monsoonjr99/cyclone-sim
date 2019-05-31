@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190531b:
+    * Season summary timelines now use Greek letters for storms with Greek letter names
 v20190531a:
     + Added season summary timelines
         > Accessible by clicking "Show Timeline" in the info panel
