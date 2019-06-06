@@ -141,38 +141,40 @@ class Storm{
     }
 
     renderTrack(newestSegment){
-        if(this.TC || simSettings.trackMode===1){
-            if(newestSegment){
-                if(this.record.length>1){
-                    let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
-                    let adv = this.record[this.record.length-2];
-                    let col = getColor(adv.getCat(),adv.type);
-                    tracks.stroke(col);
-                    let pos = adv.pos;
-                    let nextPos = this.record[this.record.length-1].pos;
-                    if(simSettings.trackMode===1 || (t>=this.formationTime && (!this.dissipationTime || t<this.dissipationTime))) tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
-                }
-            }else if(this.aliveAt(viewTick) || simSettings.trackMode===2 || selectedStorm===this){
-                for(let n=0;n<this.record.length-1;n++){
-                    let t = n*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
-                    if(simSettings.trackMode!==1){
-                        if(t<this.formationTime) continue;
-                        if(t>=this.dissipationTime) break;
+        if(simSettings.trackMode!==3){
+            if(this.TC || simSettings.trackMode===1){
+                if(newestSegment){
+                    if(this.record.length>1 && (selectedStorm===this || selectedStorm===undefined)){
+                        let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
+                        let adv = this.record[this.record.length-2];
+                        let col = getColor(adv.getCat(),adv.type);
+                        tracks.stroke(col);
+                        let pos = adv.pos;
+                        let nextPos = this.record[this.record.length-1].pos;
+                        if(simSettings.trackMode===1 || (t>=this.formationTime && (!this.dissipationTime || t<this.dissipationTime))) tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
                     }
-                    let adv = this.record[n];
-                    let col = getColor(adv.getCat(),adv.type);
-                    tracks.stroke(col);
-                    let pos = adv.pos;
-                    let nextPos = this.record[n+1].pos;
-                    tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                }else if(this.aliveAt(viewTick) || simSettings.trackMode===2 || selectedStorm===this){
+                    for(let n=0;n<this.record.length-1;n++){
+                        let t = n*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
+                        if(simSettings.trackMode!==1){
+                            if(t<this.formationTime) continue;
+                            if(t>=this.dissipationTime) break;
+                        }
+                        let adv = this.record[n];
+                        let col = getColor(adv.getCat(),adv.type);
+                        tracks.stroke(col);
+                        let pos = adv.pos;
+                        let nextPos = this.record[n+1].pos;
+                        tracks.line(pos.x,pos.y,nextPos.x,nextPos.y);
+                    }
                 }
             }
-        }
-        if(selectedStorm===this && basin.viewingPresent() && this.current){
-            forecastTracks.clear();
-            let p = this.current.trackForecast.points;
-            for(let n=0;n<p.length;n++){
-                forecastTracks.point(p[n].x,p[n].y);
+            if(selectedStorm===this && basin.viewingPresent() && this.current){
+                forecastTracks.clear();
+                let p = this.current.trackForecast.points;
+                for(let n=0;n<p.length;n++){
+                    forecastTracks.point(p[n].x,p[n].y);
+                }
             }
         }
     }

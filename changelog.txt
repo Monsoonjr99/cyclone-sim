@@ -1,5 +1,14 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190606a:
+    + Added NIO, SWIO, SPac, SAtl, Jakarta, and Port Moresby name lists
+        > Jakarta and Port Moresby lists are not included in Aus, but completely separate lists for now
+    + Added "No Tracks" track mode
+    * Updated WPac list preset to reflect the retirement and replacement of 2017 storm names
+        > Only affects newly created basins
+    * Fixed a couple track updating bugs:
+        > New track segments getting drawn for non-selected storms while a storm is selected
+        > Tracks not getting refreshed when the track mode setting button is clicked
 v20190531b:
     * Season summary timelines now use Greek letters for storms with Greek letter names
 v20190531a:

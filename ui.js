@@ -457,7 +457,7 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(18);
         let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984"][list];
+        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby"][list];
         text("Name List: "+list,150,15);
     },function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
@@ -702,9 +702,11 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
         textSize(18);
-        text("Track Mode: "+simSettings.trackMode,150,15);
+        let m = ["Active TC Tracks","Full Active Tracks","Season Summary","No Tracks"][simSettings.trackMode];
+        text("Track Mode: "+m,150,15);
     },function(){
-        simSettings.setTrackMode("incmod",3);
+        simSettings.setTrackMode("incmod",4);
+        refreshTracks(true);
     }).append(false,0,45,300,30,function(){     // snow
         fill(COLORS.UI.buttonBox);
         noStroke();
@@ -1566,7 +1568,7 @@ function keyPressed(){
         if(basin) Env.displayNext();
         break;
         case "t":
-        simSettings.setTrackMode("incmod",3);
+        simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
         break;
         default:
