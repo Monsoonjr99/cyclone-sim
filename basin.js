@@ -78,7 +78,7 @@ class Basin{
         return this.tickMoment(t).year();
     }
 
-    fetchSeason(n,isTick){  // returns the season object given a year number, or given a sim tick if isTick is true
+    fetchSeason(n,isTick,loadedRequired,callback){  // returns the season object given a year number, or given a sim tick if isTick is true
         if(isTick) n = this.getSeason(n);
         let season;
         if(this.seasons[n]) season = this.seasons[n];
@@ -86,11 +86,12 @@ class Basin{
             let sKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + n;
             let str = localStorage.getItem(sKey);
             if(str){
-                season = this.seasons[n] = new Season(str);
+                season = this.seasons[n] = new Season({format:FORMAT_WITH_SAVED_SEASONS,value:str});
                 this.expireSeasonTimer(n);
             }
         }
         if(season) season.lastAccessed = moment().valueOf();
+        else if(loadedRequired) throw new Error(LOADED_SEASON_REQUIRED_ERROR);
         return season;
     }
 
@@ -250,7 +251,7 @@ class Basin{
 }
 
 class Season{
-    constructor(loadstr){
+    constructor(loaddata){
         this.systems = [];
         this.envData = {};
         this.idSystemCache = {};
@@ -266,7 +267,7 @@ class Season{
         this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
-        if(loadstr) this.load(loadstr);
+        if(loaddata) this.load(loaddata);
     }
 
     addSystem(s){
@@ -350,60 +351,78 @@ class Season{
         return str;
     }
 
-    load(str){
-        let mainparts = str.split(";");
-        let stats = decodeB36StringArray(mainparts[0]);
-        let seasonSaveFormat = stats.pop();
-        if(seasonSaveFormat===undefined || seasonSaveFormat<EARLIEST_COMPATIBLE_FORMAT){
+    load(data){
+        if(data.format<EARLIEST_COMPATIBLE_FORMAT){
             this.envData = null;
             return;
         }
-        this.envRecordStarts = stats.pop() || 0;
-        this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
-        this.deaths = stats.pop() || 0;
-        this.ACE = stats.pop()/ACE_DIVISOR || 0;
-        this.c5s = stats.pop() || 0;
-        this.majors = stats.pop() || 0;
-        this.hurricanes = stats.pop() || 0;
-        this.namedStorms = stats.pop() || 0;
-        this.depressions = stats.pop() || 0;
-        this.totalSystemCount = stats.pop() || 0;
-        if(seasonSaveFormat>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
-            let e = mainparts[1].split(",");
-            let i = 0;
-            let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
-            for(let f of Env.fieldList){
-                for(let j=0;j<Env.fields[f].noise.length;j++,i++){
-                    let c = Env.fields[f].noise[j];
-                    let s = e[i].split(".");
-                    let k = decodeB36StringArray(s[0]);
-                    k = {x:k[0],y:k[1],z:k[2]};
-                    let opts = {};
-                    opts.h = opts.w = ENVDATA_SAVE_MULT;
-                    let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-                    let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-                    opts.mapY = opts.mapX = mapR(xyrange);
-                    opts.mapZ = mapR(zrange);
-                    let m = decodePointArray(s[1],opts);
-                    m.unshift(k);
-                    if(!this.envData[f]) this.envData[f] = {};
-                    this.envData[f][j] = m;
-                }
+        if(data.format>=FORMAT_WITH_INDEXEDDB){
+            // WIP
+        }else{
+            let str = data.value;
+            let mainparts = str.split(";");
+            let stats = decodeB36StringArray(mainparts[0]);
+            data.format = stats.pop();
+            if(data.format===undefined){
+                this.envData = null;
+                return;
             }
-        }else this.envData = null;
-        let storms = mainparts[2];
-        for(let i=0,i1=0;i1<storms.length;i=i1){
-            i1 = storms.slice(i+1).search(/[~,]/g);
-            i1 = i1<0 ? storms.length : i+1+i1;
-            let s = storms.slice(i,i1);
-            if(s.charAt(0)==="~") this.systems.push(new StormRef(s.slice(1)));
-            else if(s.charAt(0)===",") this.systems.push(new Storm(s.slice(1)));
+            this.envRecordStarts = stats.pop() || 0;
+            this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
+            this.deaths = stats.pop() || 0;
+            this.ACE = stats.pop()/ACE_DIVISOR || 0;
+            this.c5s = stats.pop() || 0;
+            this.majors = stats.pop() || 0;
+            this.hurricanes = stats.pop() || 0;
+            this.namedStorms = stats.pop() || 0;
+            this.depressions = stats.pop() || 0;
+            this.totalSystemCount = stats.pop() || 0;
+            if(data.format>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
+                let e = mainparts[1].split(",");
+                let i = 0;
+                let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
+                for(let f of Env.fieldList){
+                    for(let j=0;j<Env.fields[f].noise.length;j++,i++){
+                        let c = Env.fields[f].noise[j];
+                        let s = e[i].split(".");
+                        let k = decodeB36StringArray(s[0]);
+                        k = {x:k[0],y:k[1],z:k[2]};
+                        let opts = {};
+                        opts.h = opts.w = ENVDATA_SAVE_MULT;
+                        let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                        let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                        opts.mapY = opts.mapX = mapR(xyrange);
+                        opts.mapZ = mapR(zrange);
+                        let m = decodePointArray(s[1],opts);
+                        m.unshift(k);
+                        if(!this.envData[f]) this.envData[f] = {};
+                        this.envData[f][j] = m;
+                    }
+                }
+            }else this.envData = null;
+            let storms = mainparts[2];
+            for(let i=0,i1=0;i1<storms.length;i=i1){
+                i1 = storms.slice(i+1).search(/[~,]/g);
+                i1 = i1<0 ? storms.length : i+1+i1;
+                let s = storms.slice(i,i1);
+                if(s.charAt(0)==="~") this.systems.push(new StormRef(s.slice(1)));
+                else if(s.charAt(0)===",") this.systems.push(new Storm(s.slice(1)));
+            }
         }
         this.modified = false;
     }
 }
 
 // saving/loading helper functions
+
+function setupDatabase(){
+    db = new Dexie("cyclone-sim");
+    db.version(1).stores({
+        saves: '',
+        seasons: '++,saveName,season',
+        settings: ''
+    });
+}
 
 function encodeB36StringArray(arr,fl){
     const R = SAVING_RADIX;

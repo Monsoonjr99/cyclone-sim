@@ -2,13 +2,17 @@ function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
     document.title = TITLE;
 
+    setupDatabase();
+
     createCanvas(WIDTH,HEIGHT);
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
-    simSettings = new Settings();
     basin = undefined;
     newBasinSettings = {};
+    waitingFor = 0;
+    waitingDesc = '';
+    simSettings = new Settings();
     storageQuotaExhausted = false;
 
     textInput = document.createElement("input");
@@ -58,48 +62,59 @@ function draw(){
     try{
         scale(scaler);
         background(COLORS.bg);
-        if(basin){
-            if(finisher){
-                let t = finisher.next();
-                if(t.done){
-                    finisher = undefined;
+        if(waitingFor<1){   // waitingFor applies to asynchronous processes such as saving and loading
+            if(basin){
+                if(renderToDo){     // renderToDo applies to synchronous single-threaded rendering functions
+                    let t = renderToDo.next();
+                    if(t.done){
+                        renderToDo = undefined;
+                        return;
+                    }
+                    push();
+                    textSize(48);
+                    textAlign(CENTER,CENTER);
+                    text(t.value,WIDTH/2,HEIGHT/2);
+                    pop();
                     return;
                 }
-                push();
-                textSize(48);
-                textAlign(CENTER,CENTER);
-                text(t.value,WIDTH/2,HEIGHT/2);
-                pop();
-                return;
-            }
-            stormIcons.clear();
-            if(!paused){
-                simSpeedFrameCounter++;
-                simSpeedFrameCounter%=pow(2,simSpeed);
-                if(simSpeedFrameCounter===0) advanceSim();
-            }
-            keyRepeatFrameCounter++;
-            if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
-                if(paused && primaryWrapper.showing){
-                    let oldS = basin.getSeason(viewTick);
-                    if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
-                        viewTick = ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS;
-                        let newS = basin.getSeason(viewTick);
-                        refreshTracks(newS!==oldS);
-                        Env.displayLayer();
-                    }else if(keyCode===RIGHT_ARROW){
-                        if(viewTick<basin.tick-ADVISORY_TICKS) viewTick = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-                        else viewTick = basin.tick;
-                        let newS = basin.getSeason(viewTick);
-                        refreshTracks(newS!==oldS);
-                        Env.displayLayer();
+                stormIcons.clear();
+                if(!paused){
+                    simSpeedFrameCounter++;
+                    simSpeedFrameCounter%=pow(2,simSpeed);
+                    if(simSpeedFrameCounter===0) advanceSim();
+                }
+                keyRepeatFrameCounter++;
+                if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
+                    if(paused && primaryWrapper.showing){
+                        if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
+                            changeViewTick(ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS);
+                        }else if(keyCode===RIGHT_ARROW){
+                            let t;
+                            if(viewTick<basin.tick-ADVISORY_TICKS) t = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                            else t = basin.tick;
+                            changeViewTick(t);
+                        }
                     }
                 }
             }
+        
+            UI.updateMouseOver();
+            UI.renderAll();
+        }else{
+            push();
+            translate(WIDTH/2,HEIGHT/2);
+            push();
+            noFill();
+            stroke(0,64,128);
+            strokeWeight(5);
+            rotate(millis()*PI/500);
+            arc(0,0,100,100,0,7*PI/4);
+            pop();
+            textSize(48);
+            textAlign(CENTER,CENTER);
+            text(waitingDesc,0,0);
+            pop();
         }
-    
-        UI.updateMouseOver();
-        UI.renderAll();
     }catch(err){            // BSOD
         resetMatrix();
         colorMode(RGB);
@@ -141,30 +156,29 @@ function init(load){
     selectedStorm = undefined;
     noiseSeed(basin.seed);
     Environment.init();
-    if(!basin.fetchSeason(-1,true)) basin.seasons[basin.getSeason(-1)] = new Season();
-    if(basin.tick===0) Env.record();
+    if(load===undefined){
+        basin.seasons[basin.getSeason(-1)] = new Season();
+        Env.record();
+    }
     land = new Land();
     refreshTracks(true);
     primaryWrapper.show();
-    finisher = finishInit();
-}
-
-function* finishInit(){
-    yield* land.init();
+    renderToDo = land.init();
 }
 
 function advanceSim(){
     let vp = basin.viewingPresent();
+    let os = basin.getSeason(-1);
     basin.tick++;
-    let os = basin.getSeason(viewTick);
+    let vs = basin.getSeason(viewTick);
     viewTick = basin.tick;
     let curSeason = basin.getSeason(-1);
-    if(!basin.fetchSeason(curSeason)){
+    if(curSeason!==os){
         let e = new Season();
         for(let s of basin.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
         basin.seasons[curSeason] = e;
     }
-    if(!vp || curSeason!==os) refreshTracks(curSeason!==os);
+    if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
     Env.wobble();    // random change in environment for future forecast realism
     for(let i=0;i<basin.activeSystems.length;i++){
         for(let j=i+1;j<basin.activeSystems.length;j++){
@@ -192,25 +206,40 @@ function advanceSim(){
 
 class Settings{
     constructor(){
-        const k = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
         const order = Settings.order();
         const defaults = Settings.defaults();
-        let v = localStorage.getItem(k);
-        if(v) v = decodeB36StringArray(v);
-        else v = [];
-        for(let i=order.length-1;i>=0;i--){
-            if(v.length>0) this[order[i]] = v.pop();
-            else this[order[i]] = defaults[i];
-        }
-        let sf = (k)=>{
-            return (v,v2)=>{
-                this.set(k,v,v2);
+        waitForAsyncProcess(()=>{
+            return db.settings.get(DB_KEY_SETTINGS);
+        },'Retrieving Settings...').catch(err=>{
+            console.error(err);
+        }).then(result=>{
+            let v = result;
+            if(!v){
+                let lsKey = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
+                v = localStorage.getItem(lsKey);
+                if(v){
+                    v = decodeB36StringArray(v);
+                    db.settings.put(v,DB_KEY_SETTINGS).then(()=>{
+                        localStorage.removeItem(lsKey);
+                    }).catch(err=>{
+                        console.error(err);
+                    });
+                }else v = [];
+            }
+            for(let i=order.length-1;i>=0;i--){
+                if(v.length>0) this[order[i]] = v.pop();
+                else this[order[i]] = defaults[i];
+            }
+            let sf = (k)=>{
+                return (v,v2)=>{
+                    this.set(k,v,v2);
+                };
             };
-        };
-        for(let i=0;i<order.length;i++){
-            let n = "set" + order[i].charAt(0).toUpperCase() + order[i].slice(1);
-            this[n] = sf(order[i]);
-        }
+            for(let i=0;i<order.length;i++){
+                let n = "set" + order[i].charAt(0).toUpperCase() + order[i].slice(1);
+                this[n] = sf(order[i]);
+            }
+        });
     }
 
     static order(){
@@ -222,18 +251,20 @@ class Settings{
     }
 
     save(){
-        const k = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SETTINGS;
         const order = Settings.order();
         let v = [];
         for(let i=0;i<order.length;i++){
             v.push(this[order[i]]);
         }
-        v = encodeB36StringArray(v);
-        modifyLocalStorage(()=>{
-            localStorage.setItem(k,v);
-        },(e)=>{
-            console.error(e);
-            alert("Cannot save settings due to saving quota");
+        // v = encodeB36StringArray(v);
+        // modifyLocalStorage(()=>{
+        //     localStorage.setItem(k,v);
+        // },(e)=>{
+        //     console.error(e);
+        //     alert("Cannot save settings due to saving quota");
+        // });
+        db.settings.put(v,DB_KEY_SETTINGS).catch(err=>{
+            console.error(err);
         });
     }
 

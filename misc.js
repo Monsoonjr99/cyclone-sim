@@ -4,9 +4,9 @@ function refreshTracks(force){
     forecastTracks.clear();
     if(selectedStorm) selectedStorm.renderTrack();
     else if(simSettings.trackMode===2){
-        for(let s of basin.fetchSeason(viewTick,true).forSystems()) if(s.TC) s.renderTrack();
+        for(let s of basin.fetchSeason(viewTick,true,true).forSystems()) if(s.TC) s.renderTrack();
     }else if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
-    else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderTrack();
+    else for(let s of basin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
 }
 
 function createBuffer(w,h,noScale){
@@ -59,6 +59,32 @@ function getMouseY(){
 
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
     return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
+}
+
+// waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
+function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
+    waitingFor++;
+    if(waitingFor<2) waitingDesc = desc;
+    else waitingDesc = "Waiting...";
+    return func(...args).then(v=>{
+        waitingFor--;
+        return v;
+    }).catch(e=>{
+        waitingFor--;
+        throw e;
+    });
+}
+
+function makeAsyncProcess(func,...args){
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            try{
+                resolve(func(...args));
+            }catch(err){
+                reject(err);
+            }
+        });
+    });
 }
 
 function renameOldBasinSaveKeys(){  // Rename saved basin keys for save slot 0 from versions v20190217a and prior

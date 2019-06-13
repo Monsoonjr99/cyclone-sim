@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190606a";
+const VERSION_NUMBER = "20190613a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -147,14 +147,16 @@ const NC_OFFSET_RANDOM_FACTOR = 4096;
 const ACE_DIVISOR = 10000;
 const DAMAGE_DIVISOR = 1000;
 const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
+const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 
-const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";
+const LOCALSTORAGE_KEY_PREFIX = "cyclone-sim-";     // legacy localStorage keys
 const LOCALSTORAGE_KEY_SAVEDBASIN = "savedbasin-";
 const LOCALSTORAGE_KEY_BASIN = "basin";
 const LOCALSTORAGE_KEY_FORMAT = "format";
 const LOCALSTORAGE_KEY_NAMES = "names";
 const LOCALSTORAGE_KEY_SEASON = "season-";
 const LOCALSTORAGE_KEY_SETTINGS = "settings";
+const DB_KEY_SETTINGS = "settings";                 // indexedDB keys
 const SAVING_RADIX = 36;
 const ENVDATA_SAVE_FLOAT = -2;
 const ENVDATA_SAVE_MULT = 10000;
@@ -162,6 +164,7 @@ const ACTIVESYSTEM_SAVE_FLOAT = -2;
 const SAVE_SLOTS = 6; // including autosave slot 0
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
 const FORMAT_WITH_SAVED_SEASONS = 1;
+const FORMAT_WITH_INDEXEDDB = 2;
 
 const OFF_SEASON_POLAR_TEMP = -3;
 const PEAK_SEASON_POLAR_TEMP = 10;

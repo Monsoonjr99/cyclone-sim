@@ -182,21 +182,24 @@ UI.init = function(){
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(){
         if(basin){
             if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
-            else for(let s of basin.fetchSeason(viewTick,true).forSystems()) s.renderIcon();
+            else{
+                let seas = basin.fetchSeason(viewTick,true);
+                if(seas) for(let s of seas.forSystems()) s.renderIcon();
+            }
     
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
             if(!land.drawn){
-                finisher = land.draw();
+                renderToDo = land.draw();
                 return;
             }
             drawBuffer(landBuffer);
             if(simSettings.snowLayers){
                 if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
-                else finisher = land.drawSnow();
+                else renderToDo = land.drawSnow();
             }
             if(simSettings.useShader){
                 if(land.shaderDrawn) drawBuffer(landShader);
-                else finisher = land.drawShader();
+                else renderToDo = land.drawShader();
             }
             if(Env.displaying>=0 && !Env.layerIsOceanic){
                 drawBuffer(envLayer);
@@ -251,20 +254,22 @@ UI.init = function(){
                 refreshTracks(true);
             }else{
                 let vSeason = basin.fetchSeason(viewTick,true);
-                let mVector = createVector(getMouseX(),getMouseY());
-                for(let i=vSeason.systems.length-1;i>=0;i--){
-                    let s = vSeason.fetchSystemAtIndex(i);
-                    if(s && s.aliveAt(viewTick)){
-                        let p = s.getStormDataByTick(viewTick).pos;
-                        if(p.dist(mVector)<DIAMETER){
-                            selectStorm(s);
-                            refreshTracks(true);
-                            return;
+                if(vSeason){
+                    let mVector = createVector(getMouseX(),getMouseY());
+                    for(let i=vSeason.systems.length-1;i>=0;i--){
+                        let s = vSeason.fetchSystemAtIndex(i);
+                        if(s && s.aliveAt(viewTick)){
+                            let p = s.getStormDataByTick(viewTick).pos;
+                            if(p.dist(mVector)<DIAMETER){
+                                selectStorm(s);
+                                refreshTracks(true);
+                                return;
+                            }
                         }
                     }
+                    selectStorm();
+                    refreshTracks(true);
                 }
-                selectStorm();
-                refreshTracks(true);
             }
         }
     },false);
@@ -884,11 +889,7 @@ UI.init = function(){
             if(this.metadata%2!==0 && t%ADVISORY_TICKS!==0) t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             if(t>basin.tick) t = basin.tick;
             if(t<0) t = 0;
-            let os = basin.getSeason(viewTick);
-            let ns = basin.getSeason(t);
-            viewTick = t;
-            refreshTracks(ns!==os);
-            Env.displayLayer();
+            changeViewTick(t);
         }
     };
 
@@ -1071,14 +1072,17 @@ UI.init = function(){
             text(n,this.width/2,35);
             textSize(15);
             let se = basin.fetchSeason(s);
-            let txt = "Depressions: " + se.depressions;
-            txt += "\nNamed storms: " + se.namedStorms;
-            txt += "\n" + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
-            txt += "\nMajor " + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.majors;
-            txt += "\nCategory 5s: " + se.c5s;
-            txt += "\nTotal ACE: " + se.ACE;
-            txt += "\nDamage: " + damageDisplayNumber(se.damage);
-            txt += "\nDeaths: " + se.deaths;
+            let txt;
+            if(se){
+                txt = "Depressions: " + se.depressions;
+                txt += "\nNamed storms: " + se.namedStorms;
+                txt += "\n" + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
+                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.majors;
+                txt += "\nCategory 5s: " + se.c5s;
+                txt += "\nTotal ACE: " + se.ACE;
+                txt += "\nDamage: " + damageDisplayNumber(se.damage);
+                txt += "\nDeaths: " + se.deaths;
+            }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);
         }
@@ -1132,11 +1136,7 @@ UI.init = function(){
             }else{
                 t = basin.seasonTick(s);
             }
-            let os = basin.getSeason(viewTick);
-            let ns = basin.getSeason(t);
-            viewTick = t;
-            refreshTracks(ns!==os);
-            Env.displayLayer();
+            changeViewTick(t);
         }
     });
 
@@ -1158,7 +1158,7 @@ UI.init = function(){
         tb.parts = [];
         let plotWidth = tb.width*0.9;
         let target = stormInfoPanel.target;
-        if(target!==undefined && !(target instanceof Storm)){
+        if(target!==undefined && !(target instanceof Storm) && basin.fetchSeason(target)){
             let s = basin.fetchSeason(target);
             let TCs = [];
             let beginSeasonTick;
@@ -1531,7 +1531,7 @@ function mouseInCanvas(){
 }
 
 function mouseClicked(){
-    if(mouseInCanvas()){
+    if(mouseInCanvas() && waitingFor<1){
         UI.click();
         return false;
     }
@@ -1589,6 +1589,18 @@ function keyPressed(){
         }
     }
     return false;
+}
+
+function changeViewTick(t){
+    let oldS = basin.getSeason(viewTick);
+    viewTick = t;
+    let newS = basin.getSeason(viewTick);
+    if(basin.fetchSeason(viewTick,true)){
+        refreshTracks(oldS!==newS);
+        Env.displayLayer();
+    }else{
+        //WIP
+    }
 }
 
 function deviceTurned(){

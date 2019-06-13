@@ -2,7 +2,7 @@ class Storm{
     constructor(data){
         this.current = data instanceof ActiveSystem && data;
         this.id = undefined;
-        if(this.current) basin.fetchSeason(-1,true).addSystem(this);
+        if(this.current) basin.fetchSeason(-1,true,true).addSystem(this);
 
         this.TC = false;
         this.named = false;
@@ -184,7 +184,7 @@ class Storm{
         let p = data.pressure;
         let type = data.type;
         let cat = data.getCat();
-        let cSeason = basin.fetchSeason(-1,true);
+        let cSeason = basin.fetchSeason(-1,true,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
@@ -251,7 +251,7 @@ class Storm{
             else if(p<this.peak.pressure) this.peak = data;
         }
         cSeason.modified = true;
-        basin.fetchSeason(this.originSeason()).modified = true;
+        basin.fetchSeason(this.originSeason(),false,true).modified = true;
     }
 
     save(){
@@ -326,7 +326,9 @@ class StormRef{
 
     fetch(){
         if(this.ref && basin.seasons[this.season]) return this.ref;
-        this.ref = basin.fetchSeason(this.season).fetchSystemById(this.refId);
+        let seas = basin.fetchSeason(this.season);
+        if(seas) this.ref = seas.fetchSystemById(this.refId);
+        else return null;
         return this.ref;
     }
 
@@ -606,10 +608,11 @@ class ActiveSystem extends StormData{
             this.fetchStorm().damage += dam;
             this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
             this.fetchStorm().deaths += ded;
-            let s = basin.fetchSeason(-1,true);
+            let s = basin.fetchSeason(-1,true,true);
             s.damage += dam;
             s.damage = round(s.damage*100)/100;
             s.deaths += ded;
+            s.modified = true;
         }
 
         this.resetInteraction();

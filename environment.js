@@ -78,25 +78,31 @@ class NCMetadata{
 
     getHistoryCache(s,refresh){
         if(!refresh && this.history.season===s) return this.history.arr;
-        this.history.season = s;
         let d = basin.fetchSeason(s);
-        this.history.recordStarts = d.envRecordStarts;
-        if(d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
-            d = d.envData[this.field][this.index];
-            let h = this.history.arr = [];
-            for(let i=0;i<d.length;i++){
-                if(i===0) h.push(d[0]);
-                else{
-                    let o = h[i-1];
-                    let n = d[i];
-                    h.push({
-                        x: o.x + n.x,
-                        y: o.y + n.y,
-                        z: o.z + n.z
-                    });
+        if(!d){
+            this.history.season = undefined;
+            this.history.recordStarts = 0;
+            this.history.arr = null;
+        }else{
+            this.history.season = s;
+            this.history.recordStarts = d.envRecordStarts;
+            if(d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
+                d = d.envData[this.field][this.index];
+                let h = this.history.arr = [];
+                for(let i=0;i<d.length;i++){
+                    if(i===0) h.push(d[0]);
+                    else{
+                        let o = h[i-1];
+                        let n = d[i];
+                        h.push({
+                            x: o.x + n.x,
+                            y: o.y + n.y,
+                            z: o.z + n.z
+                        });
+                    }
                 }
-            }
-        }else this.history.arr = null;
+            }else this.history.arr = null;
+        }
         return this.history.arr;
     }
 
@@ -117,6 +123,7 @@ class NCMetadata{
     }
 
     record(){
+        let seas = basin.fetchSeason(-1,true,true);
         let h = this.getHistoryCache(basin.getSeason(-1));
         if(!h) h = this.history.arr = [];
         h.push({
@@ -124,7 +131,6 @@ class NCMetadata{
             y: this.yOff,
             z: this.zOff
         });
-        let seas = basin.fetchSeason(-1,true);
         let s = seas;
         let startingRecord;
         if(!s.envData){
