@@ -28,7 +28,7 @@ class UI{
     render(){
         if(this.showing){
             translate(this.relX,this.relY);
-            if(this.renderFunc) this.renderFunc();
+            if(this.renderFunc) this.renderFunc(this.schematics());
             if(this.children.length===1){
                 this.children[0].render();
             }else{
@@ -41,8 +41,32 @@ class UI{
         }
     }
 
-    fullRect(){
-        rect(0,0,this.width,this.height);   // Easy method for use in the render function
+    // fullRect(){
+    //     rect(0,0,this.width,this.height);   // Easy method for use in the render function
+    // }
+
+    schematics(){
+        let s = {};
+        s.fullRect = ()=>{
+            rect(0,0,this.width,this.height);
+        };
+        s.button = (txt,box,size,grey)=>{
+            noStroke();
+            if(box){
+                fill(COLORS.UI.buttonBox);
+                s.fullRect();
+            }
+            if(this.isHovered()){
+                fill(COLORS.UI.buttonHover);
+                s.fullRect();
+            }
+            if(grey) fill(COLORS.UI.greyText);
+            else fill(COLORS.UI.text);
+            textAlign(CENTER,CENTER);
+            textSize(size || 18);
+            text(txt,this.width/2,this.height/2);
+        };
+        return s;
     }
 
     setBox(x,y,w,h){    // Should be used inside of the renderer function
@@ -179,12 +203,12 @@ UI.init = function(){
     basinCreationMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
-    primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(){
+    primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
         if(basin){
-            if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderIcon();
+            if(basin.viewingPresent()) for(let S of basin.activeSystems) S.fetchStorm().renderIcon();
             else{
                 let seas = basin.fetchSeason(viewTick,true);
-                if(seas) for(let s of seas.forSystems()) s.renderIcon();
+                if(seas) for(let S of seas.forSystems()) S.renderIcon();
             }
     
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
@@ -273,15 +297,15 @@ UI.init = function(){
             }
         }
     },false);
-    areYouSure = new UI(null,0,0,WIDTH,HEIGHT,function(){
+    areYouSure = new UI(null,0,0,WIDTH,HEIGHT,function(s){
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
     },true,false);
 
     // main menu
 
-    mainMenu.append(false,WIDTH/2,HEIGHT/4,0,0,function(){  // title text
+    mainMenu.append(false,WIDTH/2,HEIGHT/4,0,0,function(s){  // title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -292,60 +316,30 @@ UI.init = function(){
         text("Simulate your own monster storms!",0,40);
     });
 
-    mainMenu.append(false,WIDTH/2-100,HEIGHT/2-20,200,40,function(){    // "New Basin" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(24);
-        text("New Basin",100,20);
+    mainMenu.append(false,WIDTH/2-100,HEIGHT/2-20,200,40,function(s){    // "New Basin" button
+        s.button('New Basin',true,24);
     },function(){
         mainMenu.hide();
         basinCreationMenu.show();
-    }).append(false,0,60,200,40,function(){     // load button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(24);
-        text("Load Basin",100,20);
+    }).append(false,0,60,200,40,function(s){     // load button
+        s.button('Load Basin',true,24);
     },function(){
         mainMenu.hide();
         loadMenu.show();
         loadMenu.loadables = {};
-    }).append(false,0,60,200,40,function(){     // settings menu button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(24);
-        text("Settings",100,20);
+    }).append(false,0,60,200,40,function(s){     // settings menu button
+        s.button('Settings',true,24);
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    })/*.append(false,0,60,200,40,function(){     // test test test
+    })/*.append(false,0,60,200,40,function(s){     // test test test
         fill("white");
         stroke("black");
-        this.fullRect();
+        s.fullRect();
         noStroke();
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
-            this.fullRect();
+            s.fullRect();
         }
         fill(COLORS.UI.text);
         textAlign(CENTER,CENTER);
@@ -358,7 +352,7 @@ UI.init = function(){
 
     // basin creation menu
 
-    basinCreationMenu.append(false,WIDTH/2,HEIGHT/16,0,0,function(){ // menu title text
+    basinCreationMenu.append(false,WIDTH/2,HEIGHT/16,0,0,function(s){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -366,21 +360,11 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(){   // hemisphere selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(s){   // hemisphere selector
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
-        text("Hemisphere: "+hem,150,15);
+        s.button('Hemisphere: '+hem,true);
     },function(){
         if(newBasinSettings.hem===undefined) newBasinSettings.hem = 1;
         else{
@@ -389,7 +373,7 @@ UI.init = function(){
         }
     });
 
-    let yearsel = hemsel.append(false,0,45,0,30,function(){ // Year selector
+    let yearsel = hemsel.append(false,0,45,0,30,function(s){ // Year selector
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -405,28 +389,16 @@ UI.init = function(){
         text("Starting year: "+yName,150,15);
     });
     
-    yearsel.append(false,0,0,20,10,function(){ // Year increment button
-        fill(COLORS.UI.buttonBox);
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
+    yearsel.append(false,0,0,20,10,function(s){ // Year increment button
+        s.button('',true);
         triangle(2,8,10,2,18,8);
     },function(){
         if(newBasinSettings.year===undefined){
             if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
             else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
         }else newBasinSettings.year++;
-    }).append(false,0,20,20,10,function(){  // Year decrement button
-        fill(COLORS.UI.buttonBox);
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
+    }).append(false,0,20,20,10,function(s){  // Year decrement button
+        s.button('',true);
         triangle(2,2,18,2,10,8);
     },function(){
         if(newBasinSettings.year===undefined){
@@ -435,117 +407,47 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    yearsel.append(false,0,45,300,30,function(){    // Activity mode selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    yearsel.append(false,0,45,300,30,function(s){    // Activity mode selector
         let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
-        text("Activity Mode: "+mode,150,15);
+        s.button('Activity Mode: '+mode,true);
     },function(){
         newBasinSettings.hyper = !newBasinSettings.hyper;
-    }).append(false,0,45,300,30,function(){     // Name list selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
         list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby"][list];
-        text("Name List: "+list,150,15);
+        s.button('Name List: '+list,true);
     },function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
         newBasinSettings.names++;
         newBasinSettings.names %= NAME_LIST_PRESETS.length;
-    }).append(false,0,45,300,30,function(){     // Hurricane term selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // Hurricane term selector
         let term = newBasinSettings.hurrTerm || 0;
-        text("Hurricane-Strength Term: "+HURRICANE_STRENGTH_TERM[term],150,15);
+        s.button('Hurricane-Strength Term: '+HURRICANE_STRENGTH_TERM[term],true);
     },function(){
         if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
-    }).append(false,0,45,300,30,function(){     // Map type Selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // Map type Selector
         let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea"][newBasinSettings.mapType || 0];
-        text("Map Type: "+maptype,150,15);
+        s.button('Map Type: '+maptype,true);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
-    }).append(false,0,45,300,30,function(){     // God mode Selector
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // God mode Selector
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
-        text("God Mode: "+gMode,150,15);
+        s.button('God Mode: '+gMode,true);
     },function(){
         newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
-    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(){    // "Start" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("Start",this.width/2,this.height/2);
+    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
+        s.button("Start",true,20);
     },function(){
         init();
         basinCreationMenu.hide();
-    }).append(false,0,40,300,30,function(){ // "Cancel" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("Cancel",this.width/2,this.height/2);
+    }).append(false,0,40,300,30,function(s){ // "Cancel" button
+        s.button("Cancel",true,20);
     },function(){
         basinCreationMenu.hide();
         mainMenu.show();
@@ -555,7 +457,7 @@ UI.init = function(){
 
     loadMenu.loadables = {}; // cache that stores whether the save slot has a loadable basin or not
 
-    loadMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(){ // menu title text
+    loadMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(s){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -572,24 +474,13 @@ UI.init = function(){
         return l;
     };
 
-    let loadbuttonrender = function(){
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
+    let loadbuttonrender = function(s){
         let loadable = getslotloadable(this.slotNum);
-        if(loadable<1) fill(COLORS.UI.greyText);
-        else fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
         let label = "Slot ";
         label += this.slotNum;
         if(this.slotNum===0) label += " (Autosave)";
         if(loadable<0) label += " [Incompatible]";
-        text(label,150,15);
+        s.button(label,true,18,loadable<1);
     };
 
     let loadbuttonclick = function(){
@@ -610,38 +501,17 @@ UI.init = function(){
         loadbuttons[i].slotNum = i;
     }
 
-    loadMenu.append(1,0,40,300,30,function(){ // "Cancel" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("Cancel",this.width/2,this.height/2);
+    loadMenu.append(1,0,40,300,30,function(s){ // "Cancel" button
+        s.button("Cancel",true,20);
     },function(){
         loadMenu.hide();
         mainMenu.show();
         loadMenu.loadables = {};
     });
 
-    let delbuttonrender = function(){
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
+    let delbuttonrender = function(s){
         let exists = getslotloadable(this.parent.slotNum);
-        if(exists) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
-        textAlign(CENTER,CENTER);
-        textSize(18);
-        text("Del",this.width/2,this.height/2);
+        s.button("Del",true,18,!exists);
     };
 
     let delbuttonclick = function(){
@@ -658,7 +528,7 @@ UI.init = function(){
 
     // Settings Menu
 
-    settingsMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(){ // menu title text
+    settingsMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(s){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -666,97 +536,37 @@ UI.init = function(){
         text("Settings",0,0);
     });
 
-    settingsMenu.append(false,WIDTH/2-150,HEIGHT/4,300,30,function(){   // storm intensity indicator
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    settingsMenu.append(false,WIDTH/2-150,HEIGHT/4,300,30,function(s){   // storm intensity indicator
         let b = simSettings.showStrength ? "Enabled" : "Disabled";
-        text("Intensity Indicator: "+b,150,15);
+        s.button("Intensity Indicator: "+b,true);
     },function(){
         simSettings.setShowStrength("toggle");
-    }).append(false,0,45,300,30,function(){     // autosaving
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // autosaving
         let b = simSettings.doAutosave ? "Enabled" : "Disabled";
-        text("Autosaving: "+b,150,15);
+        s.button("Autosaving: "+b,true);
     },function(){
         simSettings.setDoAutosave("toggle");
-    }).append(false,0,45,300,30,function(){     // track mode
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // track mode
         let m = ["Active TC Tracks","Full Active Tracks","Season Summary","No Tracks"][simSettings.trackMode];
-        text("Track Mode: "+m,150,15);
+        s.button("Track Mode: "+m,true);
     },function(){
         simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
-    }).append(false,0,45,300,30,function(){     // snow
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // snow
         let b = simSettings.snowLayers ? (simSettings.snowLayers*10) + " layers" : "Disabled";
-        text("Snow: "+b,150,15);
+        s.button("Snow: "+b,true);
     },function(){
         simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
         if(land) land.clearSnow();
-    }).append(false,0,45,300,30,function(){     // shader
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(18);
+    }).append(false,0,45,300,30,function(s){     // shader
         let b = simSettings.useShader ? "Enabled" : "Disabled";
-        text("Land Shader: "+b,150,15);
+        s.button("Land Shader: "+b,true);
     },function(){
         simSettings.setUseShader("toggle");
     });
 
-    settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(){ // "Back" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("Back",this.width/2,this.height/2);
+    settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
+        s.button("Back",true,20);
     },function(){
         settingsMenu.hide();
         if(basin) primaryWrapper.show();
@@ -765,7 +575,7 @@ UI.init = function(){
 
     // Are you sure dialog
 
-    areYouSure.append(false,WIDTH/2,HEIGHT/4,0,0,function(){ // dialog text
+    areYouSure.append(false,WIDTH/2,HEIGHT/4,0,0,function(s){ // dialog text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -773,18 +583,8 @@ UI.init = function(){
         text("Are You Sure?",0,0);
     });
 
-    areYouSure.append(false,WIDTH/2-108,HEIGHT/4+100,100,30,function(){ // "Yes" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("Yes",this.width/2,this.height/2);
+    areYouSure.append(false,WIDTH/2-108,HEIGHT/4+100,100,30,function(s){ // "Yes" button
+        s.button("Yes",true,20);
     },function(){
         if(areYouSure.action){
             areYouSure.action();
@@ -792,18 +592,8 @@ UI.init = function(){
         }
         else console.error("No action tied to areYouSure dialog");
         areYouSure.hide();
-    }).append(false,116,0,100,30,function(){ // "No" button
-        fill(COLORS.UI.buttonBox);
-        noStroke();
-        this.fullRect();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(20);
-        text("No",this.width/2,this.height/2);
+    }).append(false,116,0,100,30,function(s){ // "No" button
+        s.button("No",true,20);
     },function(){
         areYouSure.hide();
     });
@@ -817,19 +607,19 @@ UI.init = function(){
 
     // primary "in sim" scene
 
-    let topBar = primaryWrapper.append(false,0,0,WIDTH,30,function(){   // Top bar
+    let topBar = primaryWrapper.append(false,0,0,WIDTH,30,function(s){   // Top bar
         fill(COLORS.UI.bar);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         textSize(18);
     },false);
 
-    topBar.append(false,5,3,100,24,function(){  // Date indicator
+    topBar.append(false,5,3,100,24,function(s){  // Date indicator
         let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (basin.viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
-            this.fullRect();
+            s.fullRect();
         }
         fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
@@ -838,19 +628,14 @@ UI.init = function(){
         dateNavigator.toggleShow();
     });
 
-    dateNavigator = primaryWrapper.append(false,0,30,140,50,function(){     // Analysis navigator panel
+    dateNavigator = primaryWrapper.append(false,0,30,140,50,function(s){     // Analysis navigator panel
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
     },true,false);
 
-    let navButtonRend = function(){     // Navigator button render function
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        if(paused) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
+    let navButtonRend = function(s){     // Navigator button render function
+        s.button('',false,18,!paused);
         if(this.metadata%2===0) triangle(2,8,10,2,18,8);
         else triangle(2,2,18,2,10,8);
     };
@@ -900,23 +685,15 @@ UI.init = function(){
         button.metadata = i;
     }
 
-    topBar.append(false,WIDTH-29,3,24,24,function(){    // Toggle button for storm info panel
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
+    topBar.append(false,WIDTH-29,3,24,24,function(s){    // Toggle button for storm info panel
+        s.button('');
         if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
         else triangle(6,9,18,9,12,15);
     },function(){
         if(!stormInfoPanel.showing) stormInfoPanel.target = selectedStorm || basin.getSeason(viewTick);
         stormInfoPanel.toggleShow();
-    }).append(false,-29,0,24,24,function(){  // Pause/resume button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
+    }).append(false,-29,0,24,24,function(s){  // Pause/resume button
+        s.button('');
         if(paused) triangle(3,3,21,12,3,21);
         else{
             rect(5,3,5,18);
@@ -924,7 +701,7 @@ UI.init = function(){
         }
     },function(){
         paused = !paused;
-    }).append(false,-105,0,100,24,function(){  // Pause/speed/selected storm indicator
+    }).append(false,-105,0,100,24,function(s){  // Pause/speed/selected storm indicator
         let txtStr = "";
         if(selectedStorm){
             let sName = selectedStorm.getFullNameByTick(viewTick);
@@ -944,7 +721,7 @@ UI.init = function(){
         this.setBox(-newW-5,undefined,newW);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
-            this.fullRect();
+            s.fullRect();
         }
         fill(COLORS.UI.text);
         textAlign(RIGHT,TOP);
@@ -957,19 +734,15 @@ UI.init = function(){
         }
     });
 
-    let bottomBar = primaryWrapper.append(false,0,HEIGHT-30,WIDTH,30,function(){    // Bottom bar
+    let bottomBar = primaryWrapper.append(false,0,HEIGHT-30,WIDTH,30,function(s){    // Bottom bar
         fill(COLORS.UI.bar);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         textSize(18);
     },false);
 
-    bottomBar.append(false,5,3,24,24,function(){    // Side menu button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
+    bottomBar.append(false,5,3,24,24,function(s){    // Side menu button
+        s.button('');
         rect(3,6,18,2);
         rect(3,11,18,2);
         rect(3,16,18,2);
@@ -981,15 +754,15 @@ UI.init = function(){
     },function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
-    }).append(false,29,0,100,24,function(){   // Map layer/environmental field indicator
+    }).append(false,29,0,100,24,function(s){   // Map layer/environmental field indicator
         let txtStr = "Map Layer: ";
         if(Env.displaying!==-1){
             let f = Env.fieldList[Env.displaying];
             txtStr += f + " -- ";
             let x;
             let y;
-            let s = selectedStorm && selectedStorm.aliveAt(viewTick);
-            if(s){
+            let S = selectedStorm && selectedStorm.aliveAt(viewTick);
+            if(S){
                 let p = selectedStorm.getStormDataByTick(viewTick,true).pos;
                 x = p.x;
                 y = p.y;
@@ -1013,7 +786,7 @@ UI.init = function(){
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
-            this.fullRect();
+            s.fullRect();
         }
         fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
@@ -1022,30 +795,23 @@ UI.init = function(){
         Env.displayNext();
     });
 
-    bottomBar.append(false,WIDTH-29,3,24,24,function(){  // Help button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(22);
-        text("?",12,12);
+    bottomBar.append(false,WIDTH-29,3,24,24,function(s){  // Help button
+        s.button("?",false,22);
     },function(){
         helpBox.toggleShow();
     });
 
-    stormInfoPanel = primaryWrapper.append(false,3*WIDTH/4,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(){
-        let s = this.target;
+    stormInfoPanel = primaryWrapper.append(false,3*WIDTH/4,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
+        let S = this.target;
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
         const txtW = 7*this.width/8;
-        if(s instanceof Storm){
-            let n = s.getFullNameByTick("peak");
+        if(S instanceof Storm){
+            let n = S.getFullNameByTick("peak");
             n = wrapText(n,txtW);
             let nameHeight = countTextLines(n)*textLeading();
             text(n,this.width/2,35);
@@ -1053,25 +819,25 @@ UI.init = function(){
             let txt = "";
             let formTime;
             let dissTime;
-            if(s.TC){
-                formTime = basin.tickMoment(s.formationTime).format(TIME_FORMAT);
-                dissTime = basin.tickMoment(s.dissipationTime).format(TIME_FORMAT);
-                txt += "Dates active: " + formTime + " - " + (s.dissipationTime ? dissTime : "currently active");
+            if(S.TC){
+                formTime = basin.tickMoment(S.formationTime).format(TIME_FORMAT);
+                dissTime = basin.tickMoment(S.dissipationTime).format(TIME_FORMAT);
+                txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
             }else txt += "Dates active: N/A";
-            txt += "\nPeak pressure: " + (s.peak ? s.peak.pressure : "N/A");
-            txt += "\nWind speed @ peak: " + (s.peak ? s.peak.windSpeed + " kts" : "N/A");
-            txt += "\nACE: " + s.ACE;
-            txt += "\nDamage: " + damageDisplayNumber(s.damage);
-            txt += "\nDeaths: " + s.deaths;
+            txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
+            txt += "\nWind speed @ peak: " + (S.peak ? S.peak.windSpeed + " kts" : "N/A");
+            txt += "\nACE: " + S.ACE;
+            txt += "\nDamage: " + damageDisplayNumber(S.damage);
+            txt += "\nDeaths: " + S.deaths;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nameHeight);
         }else{
-            let n = seasonName(s);
+            let n = seasonName(S);
             n = wrapText(n,txtW);
             let nh = countTextLines(n)*textLeading();
             text(n,this.width/2,35);
             textSize(15);
-            let se = basin.fetchSeason(s);
+            let se = basin.fetchSeason(S);
             let txt;
             if(se){
                 txt = "Depressions: " + se.depressions;
@@ -1088,44 +854,26 @@ UI.init = function(){
         }
     },true,false);
 
-    stormInfoPanel.append(false,3,3,24,24,function(){   // info panel previous season button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.greyText);
-        let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s>basin.getSeason(0)) fill(COLORS.UI.text);
+    stormInfoPanel.append(false,3,3,24,24,function(s){   // info panel previous season button
+        let S = stormInfoPanel.target;
+        s.button('',false,18,(S instanceof Storm) || S<=basin.getSeason(0));
         triangle(19,5,19,19,5,12);
     },function(){
         let s = stormInfoPanel.target;
         if(!(s instanceof Storm) && s>basin.getSeason(0)) stormInfoPanel.target--;
     });
     
-    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(){ // info panel next season button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.greyText);
-        let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s<basin.getSeason(-1)) fill(COLORS.UI.text);
+    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(s){ // info panel next season button
+        let S = stormInfoPanel.target;
+        s.button('',false,18,(S instanceof Storm) || S>=basin.getSeason(-1));
         triangle(5,5,5,19,19,12);
     },function(){
         let s = stormInfoPanel.target;
         if(!(s instanceof Storm) && s<basin.getSeason(-1)) stormInfoPanel.target++;
     });
     
-    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(){ // info panel "Jump to" button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.greyText);
-        if(paused && stormInfoPanel.target!==undefined) fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Jump to",this.width/2,this.height/2);
+    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
+        s.button("Jump to",false,15,!paused || stormInfoPanel.target===undefined);
     },function(){
         if(paused && stormInfoPanel.target!==undefined){
             let s = stormInfoPanel.target;
@@ -1140,15 +888,8 @@ UI.init = function(){
         }
     });
 
-    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(){
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Show Timeline",this.width/2,this.height/2);
+    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(s){ // show season summary timeline button
+        s.button("Show Timeline",false,15);
     },function(){
         timelineBox.toggleShow();
     });
@@ -1272,12 +1013,12 @@ UI.init = function(){
         tb.builtAt = basin.tick;
     };
 
-    timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(){
+    timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(s){
         let target = stormInfoPanel.target;
         if(target!==this.builtFor || (target===basin.getSeason(-1) && basin.tick!==this.builtAt)) buildtimeline();
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         stroke(COLORS.UI.text);
         let w = this.width;
         let h = this.height;
@@ -1310,10 +1051,10 @@ UI.init = function(){
             let p = this.parts[i];
             let y = tBound+p.row*15;
             for(let j=0;j<p.segments.length;j++){
-                let s = p.segments[j];
-                if(s.fullyTrop) fill(getColor(s.maxCat,TROP));
-                else fill(getColor(s.maxCat,SUBTROP));
-                rect(lBound+s.startX,y,max(s.endX-s.startX,1),10);
+                let S = p.segments[j];
+                if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
+                else fill(getColor(S.maxCat,SUBTROP));
+                rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
             }
             let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
             fill(COLORS.UI.text);
@@ -1329,15 +1070,8 @@ UI.init = function(){
     timelineBox.builtAt = undefined;
     timelineBox.builtFor = undefined;
 
-    timelineBox.append(false,timelineBox.width-30,10,20,20,function(){
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(22);
-        text("X",10,10);
+    timelineBox.append(false,timelineBox.width-30,10,20,20,function(s){
+        s.button("X",false,22);
     },function(){
         timelineBox.hide();
     });
@@ -1353,10 +1087,10 @@ UI.init = function(){
         mainMenu.show();
     };
 
-    sideMenu = primaryWrapper.append(false,0,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(){
+    sideMenu = primaryWrapper.append(false,0,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
@@ -1368,16 +1102,8 @@ UI.init = function(){
         }
     },true,false);
 
-    sideMenu.append(false,5,30,sideMenu.width-10,25,function(){ // Save and return to main menu button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        if(!storageQuotaExhausted) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Save and Return to Main Menu",this.width/2,this.height/2);
+    sideMenu.append(false,5,30,sideMenu.width-10,25,function(s){ // Save and return to main menu button
+        s.button("Save and Return to Main Menu",false,15,storageQuotaExhausted);
     },function(){
         if(!storageQuotaExhausted){
             if(basin.saveSlot===0) saveBasinAsPanel.invoke(true);
@@ -1386,65 +1112,35 @@ UI.init = function(){
                 returntomainmenu();
             }
         }
-    }).append(false,0,30,sideMenu.width-10,25,function(){   // Return to main menu w/o saving button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Return to Main Menu w/o Saving",this.width/2,this.height/2);
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Return to main menu w/o saving button
+        s.button("Return to Main Menu w/o Saving",false,15);
     },function(){
         areYouSure.dialog(returntomainmenu);
-    }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        if(!storageQuotaExhausted) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
-        textAlign(CENTER,CENTER);
-        textSize(15);
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin button
         let txt = "Save Basin";
         if(basin.tick===basin.lastSaved) txt += " [Saved]";
-        text(txt,this.width/2,this.height/2);
+        s.button(txt,false,15,storageQuotaExhausted);
     },function(){
         if(!storageQuotaExhausted){
             if(basin.saveSlot===0) saveBasinAsPanel.invoke();
             else basin.save();
         }
-    }).append(false,0,30,sideMenu.width-10,25,function(){   // Save basin as button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        if(!storageQuotaExhausted) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Save Basin As...",this.width/2,this.height/2);
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin as button
+        s.button("Save Basin As...",false,15,storageQuotaExhausted);
     },function(){
         if(!storageQuotaExhausted) saveBasinAsPanel.invoke();
-    }).append(false,0,30,sideMenu.width-10,25,function(){   // Settings menu button
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(15);
-        text("Settings",this.width/2,this.height/2);
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Settings menu button
+        s.button("Settings",false,15);
     },function(){
         primaryWrapper.hide();
         settingsMenu.show();
         paused = true;
     });
 
-    saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(){
+    saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(s){
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
@@ -1458,21 +1154,12 @@ UI.init = function(){
         saveBasinAsPanel.toggleShow();
     };
     
-    let saveslotbuttonrender = function(){
-        noStroke();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        if(!storageQuotaExhausted) fill(COLORS.UI.text);
-        else fill(COLORS.UI.greyText);
-        textAlign(CENTER,CENTER);
-        textSize(15);
+    let saveslotbuttonrender = function(s){
         let slotOccupied = getslotloadable(this.slotNum);
         let txt = "Slot " + this.slotNum;
         if(basin.saveSlot===this.slotNum) txt += " [This]";
         else if(slotOccupied) txt += " [Overwrite]";
-        text(txt,this.width/2,this.height/2);
+        s.button(txt,false,15,storageQuotaExhausted);
     };
 
     let saveslotbuttonclick = function(){
@@ -1502,25 +1189,18 @@ UI.init = function(){
         b.slotNum = i;
     }
 
-    helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(){
+    helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(s){
         fill(COLORS.UI.box);
         noStroke();
-        this.fullRect();
+        s.fullRect();
         fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
         textSize(18);
         text(HELP_TEXT,10,10);
     },true,false);
 
-    helpBox.append(false,helpBox.width-30,10,20,20,function(){
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            this.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(22);
-        text("X",10,10);
+    helpBox.append(false,helpBox.width-30,10,20,20,function(s){
+        s.button("X",false,22);
     },function(){
         helpBox.hide();
     });
