@@ -20,7 +20,10 @@ function setup(){
     document.body.appendChild(textInput);
     textInput.style.position = "absolute";
     textInput.style.left = "-500px";
-    textInput.onblur = ()=>{UI.focusedInput = undefined;};
+    textInput.onblur = ()=>{
+        if(UI.focusedInput) UI.focusedInput.value = textInput.value;
+        UI.focusedInput = undefined;
+    };
 
     buffers = new Map();
     scaler = 1;

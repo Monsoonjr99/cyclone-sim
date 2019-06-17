@@ -9,7 +9,23 @@ class UI{
         this.width = w;
         this.height = h;
         if(renderer instanceof Function) this.renderFunc = renderer;
-        this.clickFunc = onclick;
+        if(renderer instanceof Array){
+            this.isInput = true;
+            this.value = '';
+            this.clickFunc = function(){
+                textInput.value = this.value;
+                textInput.focus();
+                UI.focusedInput = this;
+                if(onclick instanceof Function) onclick.call(this,UI.focusedInput===this);
+            };
+            this.textCanvas = createBuffer(this.width,this.height);
+            this.renderFunc = function(s){
+                s.input(...renderer);
+            };
+        }else{
+            this.clickFunc = onclick;
+            this.isInput = false;
+        }
         this.children = [];
         this.showing = showing===undefined ? true : showing;
         if(!this.parent) UI.elements.push(this);
@@ -65,6 +81,52 @@ class UI{
             textAlign(CENTER,CENTER);
             textSize(size || 18);
             text(txt,this.width/2,this.height/2);
+        };
+        s.input = (size)=>{
+            fill(COLORS.UI.input);
+            if(this.isHovered()){
+                noStroke();
+                s.fullRect();
+                fill(COLORS.UI.buttonHover);
+            }
+            stroke(COLORS.UI.text);
+            s.fullRect();
+            let c = this.textCanvas;
+            c.clear();
+            c.noStroke();
+            c.fill(COLORS.UI.text);
+            c.textSize(size || 18);
+            let t = UI.focusedInput===this ? textInput.value : this.value;
+            let xAnchor;
+            if(UI.focusedInput===this){
+                c.textAlign(LEFT,CENTER);
+                let caret1X = c.textWidth(t.slice(0,textInput.selectionStart));
+                let caret2X = c.textWidth(t.slice(0,textInput.selectionEnd));
+                if(caret2X>this.width-5) xAnchor = this.width-5-caret2X;
+                else xAnchor = 5;
+                caret1X += xAnchor;
+                caret2X += xAnchor;
+                c.text(t,xAnchor,this.height/2);
+                if(textInput.selectionStart===textInput.selectionEnd){
+                    c.stroke(COLORS.UI.text);
+                    c.noFill();
+                    if(millis()%1000<500) c.line(caret1X,this.height/8,caret1X,7*this.height/8);
+                }else{
+                    c.rect(caret1X,this.height/8,caret2X-caret1X,3*this.height/4);
+                    c.fill(COLORS.UI.input);
+                    c.text(t.slice(textInput.selectionStart,textInput.selectionEnd),caret1X,this.height/2);
+                }
+            }else{
+                if(c.textWidth(t)>this.width-5){
+                    c.textAlign(RIGHT,CENTER);
+                    xAnchor = this.width-5;
+                }else{
+                    c.textAlign(LEFT,CENTER);
+                    xAnchor = 5;
+                }
+                c.text(t,xAnchor,this.height/2);
+            }
+            image(c,0,0);
         };
         return s;
     }
@@ -332,23 +394,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    })/*.append(false,0,60,200,40,function(s){     // test test test
-        fill("white");
-        stroke("black");
-        s.fullRect();
-        noStroke();
-        if(this.isHovered()){
-            fill(COLORS.UI.buttonHover);
-            s.fullRect();
-        }
-        fill(COLORS.UI.text);
-        textAlign(CENTER,CENTER);
-        textSize(24);
-        text(textInput.value,100,20);
-    },function(){
-        textInput.focus();
-        UI.focusedInput = this;
-    })*/;
+    })/* .append(false,0,60,200,30,[18]).append(false,0,60,200,30,[18]) */;     // test test test
 
     // basin creation menu
 
@@ -1227,6 +1273,11 @@ function selectStorm(s){
 function keyPressed(){
     // console.log("keyPressed: " + key + " / " + keyCode);
     if(document.activeElement === textInput){
+        if(keyCode === ESCAPE){
+            textInput.value = UI.focusedInput.value;
+            textInput.blur();
+            return false;
+        }
         if(keyCode === ENTER){
             textInput.blur();
             return false;

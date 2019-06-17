@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190617a:
+    * Mostly finished text input UI code for text boxes to be added in later updates
 v20190615a:
     * Cleaned up some of the repetative UI code, particularly in the case of buttons
 v20190613a:
