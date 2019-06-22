@@ -133,9 +133,26 @@ function draw(){
     }
 }
 
-function init(load){
+function init(load){    // clean this up when global variables are cleaned up
+    selectedStorm = undefined;
+    let whenBasinLoaded = ()=>{
+        viewTick = basin.tick;
+        if(load===undefined){
+            noiseSeed(basin.seed);
+            Environment.init();
+            basin.seasons[basin.getSeason(-1)] = new Season();
+            Env.record();
+        }
+        land = new Land();
+        refreshTracks(true);
+        primaryWrapper.show();
+        renderToDo = land.init();
+    };
+
     if(load!==undefined){
-        basin = new Basin(load);
+        new Basin(load,{    // the basin global variable is currently set by a hardcoded line in the load function -- temporary until the global variable problem is fixed
+            onload: whenBasinLoaded
+        });
         paused = true;
     }else{
         let opts = {};
@@ -153,20 +170,8 @@ function init(load){
         basin = new Basin(false,opts);
         newBasinSettings = {};
         paused = false;
+        whenBasinLoaded();
     }
-
-    viewTick = basin.tick;
-    selectedStorm = undefined;
-    noiseSeed(basin.seed);
-    Environment.init();
-    if(load===undefined){
-        basin.seasons[basin.getSeason(-1)] = new Season();
-        Env.record();
-    }
-    land = new Land();
-    refreshTracks(true);
-    primaryWrapper.show();
-    renderToDo = land.init();
 }
 
 function advanceSim(){

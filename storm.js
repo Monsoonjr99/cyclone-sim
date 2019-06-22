@@ -316,10 +316,12 @@ class StormRef{
             this.season = undefined;
             this.refId = undefined;
             this.ref = undefined;
+            this.lastApplicableAt = undefined;
             this.load(s);
         }else{
             this.season = s.originSeason();
             this.refId = s.id;
+            this.lastApplicableAt = s.deathTime;    // this property will optimize season loading, but for now I won't bother saving it in localStorage
             this.ref = undefined;
         }
     }
@@ -328,7 +330,12 @@ class StormRef{
         if(this.ref && basin.seasons[this.season]) return this.ref;
         let seas = basin.fetchSeason(this.season);
         if(seas) this.ref = seas.fetchSystemById(this.refId);
-        else return null;
+        else{
+            basin.fetchSeason(this.season,false,false,s=>{
+                this.ref = s.fetchSystemById(this.refId);
+            });
+            return null;
+        }
         return this.ref;
     }
 
@@ -686,7 +693,9 @@ class ActiveSystem extends StormData{
 
     fetchStorm(){
         if(this.storm instanceof StormRef){
-            this.storm = this.storm.fetch();
+            let s = this.storm.fetch();
+            if(!s) return new Storm();
+            this.storm = s;
             this.storm.deathTime = undefined;
             if(this.storm.record.length>0 && tropOrSub(this.storm.record[this.storm.record.length-1].type)) this.storm.dissipationTime = undefined;
             this.storm.current = this;

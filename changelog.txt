@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190622a:
+    * Mostly prepared the simulator for asynchronous saving/loading which will come later with the full transition to indexedDB
+    * Some tweaks to input UI
 v20190617a:
     * Mostly finished text input UI code for text boxes to be added in later updates
 v20190615a:

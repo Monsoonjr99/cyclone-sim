@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190617a";
+const VERSION_NUMBER = "20190622a";
 
 const SAVE_FORMAT = 1;  // Format #1 in use starting in v20190310a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -231,5 +231,6 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.UI.text = color(0);
     COLORS.UI.greyText = color(130);
     COLORS.UI.redText = color(240,0,0);
+    COLORS.UI.nonSelectedInput = color(70);
     COLORS.UI.input = color(255);
 }

@@ -10,17 +10,21 @@ class UI{
         this.height = h;
         if(renderer instanceof Function) this.renderFunc = renderer;
         if(renderer instanceof Array){
+            let size = renderer[0];
+            let charLimit = renderer[1];
             this.isInput = true;
             this.value = '';
             this.clickFunc = function(){
                 textInput.value = this.value;
+                if(charLimit) textInput.maxLength = charLimit;
+                else textInput.removeAttribute('maxlength');
                 textInput.focus();
                 UI.focusedInput = this;
                 if(onclick instanceof Function) onclick.call(this,UI.focusedInput===this);
             };
             this.textCanvas = createBuffer(this.width,this.height);
             this.renderFunc = function(s){
-                s.input(...renderer);
+                s.input(size);
             };
         }else{
             this.clickFunc = onclick;
@@ -84,12 +88,15 @@ class UI{
         };
         s.input = (size)=>{
             fill(COLORS.UI.input);
-            if(this.isHovered()){
-                noStroke();
-                s.fullRect();
-                fill(COLORS.UI.buttonHover);
+            if(UI.focusedInput===this) stroke(COLORS.UI.text);
+            else{
+                if(this.isHovered()){
+                    noStroke();
+                    s.fullRect();
+                    fill(COLORS.UI.buttonHover);
+                }
+                stroke(COLORS.UI.nonSelectedInput);
             }
-            stroke(COLORS.UI.text);
             s.fullRect();
             let c = this.textCanvas;
             c.clear();
@@ -270,7 +277,7 @@ UI.init = function(){
             if(basin.viewingPresent()) for(let S of basin.activeSystems) S.fetchStorm().renderIcon();
             else{
                 let seas = basin.fetchSeason(viewTick,true);
-                if(seas) for(let S of seas.forSystems()) S.renderIcon();
+                if(seas) for(let S of seas.forSystems(true)) S.renderIcon();
             }
     
             if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
@@ -394,7 +401,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    })/* .append(false,0,60,200,30,[18]).append(false,0,60,200,30,[18]) */;     // test test test
+    })/* .append(false,0,60,200,30,[18,5]).append(false,0,60,200,30,[18,32]) */;     // test test test
 
     // basin creation menu
 
@@ -945,111 +952,120 @@ UI.init = function(){
         tb.parts = [];
         let plotWidth = tb.width*0.9;
         let target = stormInfoPanel.target;
-        if(target!==undefined && !(target instanceof Storm) && basin.fetchSeason(target)){
-            let s = basin.fetchSeason(target);
-            let TCs = [];
-            let beginSeasonTick;
-            let endSeasonTick;
-            for(let sys of s.forSystems()){
-                if(sys.TC && (basin.getSeason(sys.formationTime)===target || basin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || basin.getSeason(sys.dissipationTime-1)>=target))){
-                    TCs.push(sys);
-                    let dissTime = sys.dissipationTime || basin.tick;
-                    if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
-                    if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
-                }
-            }
-            for(let n=0;n<TCs.length-1;n++){
-                let t0 = TCs[n];
-                let t1 = TCs[n+1];
-                if(t0.formationTime>t1.formationTime){
-                    TCs[n] = t1;
-                    TCs[n+1] = t0;
-                    if(n>0) n -= 2;
-                }
-            }
-            let sMoment = basin.tickMoment(beginSeasonTick);
-            tb.sMonth = sMoment.month();
-            sMoment.startOf('month');
-            let beginPlotTick = basin.tickFromMoment(sMoment);
-            let eMoment = basin.tickMoment(endSeasonTick);
-            eMoment.endOf('month');
-            let endPlotTick = basin.tickFromMoment(eMoment);
-            tb.months = eMoment.diff(sMoment,'months') + 1;
-            for(let t of TCs){
-                let part = {};
-                part.segments = [];
-                part.label = t.named ?
-                    ({
-                        'Alpha':'\u03B1',
-                        'Beta':'\u03B2',
-                        'Gamma':'\u03B3',
-                        'Delta':'\u03B4',
-                        'Epsilon':'\u03B5',
-                        'Zeta':'\u03B6',
-                        'Eta':'\u03B7',
-                        'Theta':'\u03B8',
-                        'Iota':'\u03B9',
-                        'Kappa':'\u03BA',
-                        'Lambda':'\u03BB',
-                        'Mu':'\u03BC',
-                        'Nu':'\u03BD',
-                        'Xi':'\u03BE',
-                        'Omicron':'\u03BF',
-                        'Pi':'\u03C0',
-                        'Rho':'\u03C1',
-                        'Sigma':'\u03C3',
-                        'Tau':'\u03C4',
-                        'Upsilon':'\u03C5',
-                        'Phi':'\u03C6',
-                        'Chi':'\u03C7',
-                        'Psi':'\u03C8',
-                        'Omega':'\u03C9'
-                    })[t.name] || t.name.slice(0,1) :
-                    t.depressionNum + '';
-                let aSegment;
-                for(let q=0;q<t.record.length;q++){
-                    let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
-                    let d = t.record[q];
-                    if(tropOrSub(d.type)){
-                        let cat = d.getCat();
-                        if(!aSegment){
-                            aSegment = {};
-                            part.segments.push(aSegment);
-                            aSegment.startTick = rt;
-                            aSegment.maxCat = cat;
-                            aSegment.fullyTrop = (d.type===TROP);
-                        }
-                        if(cat > aSegment.maxCat) aSegment.maxCat = cat;
-                        aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
-                        aSegment.endTick = rt;
-                    }else if(aSegment) aSegment = undefined;
-                }
-                for(let q=0;q<part.segments.length;q++){
-                    let seg = part.segments[q];
-                    seg.startX = map(seg.startTick,beginPlotTick,endPlotTick,0,plotWidth);
-                    seg.endX = map(seg.endTick,beginPlotTick,endPlotTick,0,plotWidth);
-                }
-                let rowFits;
-                part.row = -1;
-                let labelZone = 20;
-                do{
-                    part.row++;
-                    rowFits = true;
-                    for(let q=0;q<tb.parts.length;q++){
-                        let p = tb.parts[q];
-                        let thisS = part.segments[0].startX;
-                        let thisE = part.segments[part.segments.length-1].endX + labelZone;
-                        let otherS = p.segments[0].startX;
-                        let otherE = p.segments[p.segments.length-1].endX + labelZone;
-                        if(p.row===part.row){
-                            if(thisS>=otherS && thisS<=otherE ||
-                                thisE>=otherS && thisE<=otherE ||
-                                otherS>=thisS && otherS<=thisE ||
-                                otherE>=thisS && otherE<=thisE) rowFits = false;
-                        }
+        if(target!==undefined && !(target instanceof Storm)){
+            let gen = s=>{
+                let TCs = [];
+                let beginSeasonTick;
+                let endSeasonTick;
+                for(let sys of s.forSystems()){
+                    if(sys.TC && (basin.getSeason(sys.formationTime)===target || basin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || basin.getSeason(sys.dissipationTime-1)>=target))){
+                        TCs.push(sys);
+                        let dissTime = sys.dissipationTime || basin.tick;
+                        if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
+                        if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                     }
-                }while(!rowFits);
-                tb.parts.push(part);
+                }
+                for(let n=0;n<TCs.length-1;n++){
+                    let t0 = TCs[n];
+                    let t1 = TCs[n+1];
+                    if(t0.formationTime>t1.formationTime){
+                        TCs[n] = t1;
+                        TCs[n+1] = t0;
+                        if(n>0) n -= 2;
+                    }
+                }
+                let sMoment = basin.tickMoment(beginSeasonTick);
+                tb.sMonth = sMoment.month();
+                sMoment.startOf('month');
+                let beginPlotTick = basin.tickFromMoment(sMoment);
+                let eMoment = basin.tickMoment(endSeasonTick);
+                eMoment.endOf('month');
+                let endPlotTick = basin.tickFromMoment(eMoment);
+                tb.months = eMoment.diff(sMoment,'months') + 1;
+                for(let t of TCs){
+                    let part = {};
+                    part.segments = [];
+                    part.label = t.named ?
+                        ({
+                            'Alpha':'\u03B1',
+                            'Beta':'\u03B2',
+                            'Gamma':'\u03B3',
+                            'Delta':'\u03B4',
+                            'Epsilon':'\u03B5',
+                            'Zeta':'\u03B6',
+                            'Eta':'\u03B7',
+                            'Theta':'\u03B8',
+                            'Iota':'\u03B9',
+                            'Kappa':'\u03BA',
+                            'Lambda':'\u03BB',
+                            'Mu':'\u03BC',
+                            'Nu':'\u03BD',
+                            'Xi':'\u03BE',
+                            'Omicron':'\u03BF',
+                            'Pi':'\u03C0',
+                            'Rho':'\u03C1',
+                            'Sigma':'\u03C3',
+                            'Tau':'\u03C4',
+                            'Upsilon':'\u03C5',
+                            'Phi':'\u03C6',
+                            'Chi':'\u03C7',
+                            'Psi':'\u03C8',
+                            'Omega':'\u03C9'
+                        })[t.name] || t.name.slice(0,1) :
+                        t.depressionNum + '';
+                    let aSegment;
+                    for(let q=0;q<t.record.length;q++){
+                        let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
+                        let d = t.record[q];
+                        if(tropOrSub(d.type)){
+                            let cat = d.getCat();
+                            if(!aSegment){
+                                aSegment = {};
+                                part.segments.push(aSegment);
+                                aSegment.startTick = rt;
+                                aSegment.maxCat = cat;
+                                aSegment.fullyTrop = (d.type===TROP);
+                            }
+                            if(cat > aSegment.maxCat) aSegment.maxCat = cat;
+                            aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
+                            aSegment.endTick = rt;
+                        }else if(aSegment) aSegment = undefined;
+                    }
+                    for(let q=0;q<part.segments.length;q++){
+                        let seg = part.segments[q];
+                        seg.startX = map(seg.startTick,beginPlotTick,endPlotTick,0,plotWidth);
+                        seg.endX = map(seg.endTick,beginPlotTick,endPlotTick,0,plotWidth);
+                    }
+                    let rowFits;
+                    part.row = -1;
+                    let labelZone = 20;
+                    do{
+                        part.row++;
+                        rowFits = true;
+                        for(let q=0;q<tb.parts.length;q++){
+                            let p = tb.parts[q];
+                            let thisS = part.segments[0].startX;
+                            let thisE = part.segments[part.segments.length-1].endX + labelZone;
+                            let otherS = p.segments[0].startX;
+                            let otherE = p.segments[p.segments.length-1].endX + labelZone;
+                            if(p.row===part.row){
+                                if(thisS>=otherS && thisS<=otherE ||
+                                    thisE>=otherS && thisE<=otherE ||
+                                    otherS>=thisS && otherS<=thisE ||
+                                    otherE>=thisS && otherE<=thisE) rowFits = false;
+                            }
+                        }
+                    }while(!rowFits);
+                    tb.parts.push(part);
+                }
+            };
+            if(basin.fetchSeason(target)) gen(basin.fetchSeason(target));
+            else{
+                tb.months = 12;
+                tb.sMonth = 0;
+                basin.fetchSeason(target,false,false,s=>{
+                    gen(s);
+                });
             }
         }else{
             tb.months = 12;
@@ -1326,12 +1342,33 @@ function changeViewTick(t){
     let oldS = basin.getSeason(viewTick);
     viewTick = t;
     let newS = basin.getSeason(viewTick);
-    if(basin.fetchSeason(viewTick,true)){
+    let finish = ()=>{
         refreshTracks(oldS!==newS);
         Env.displayLayer();
-    }else{
-        //WIP
-    }
+    };
+    let requisites = s=>{
+        let arr = [];
+        let allFound = true;
+        for(let i=0;i<s.systems.length;i++){
+            let r = s.systems[i];
+            if(r instanceof StormRef && (r.lastApplicableAt===undefined || r.lastApplicableAt>=viewTick || simSettings.trackMode===2)){
+                arr.push(r.season);
+                allFound = allFound && basin.fetchSeason(r.season);
+            }
+        }
+        if(allFound) finish();
+        else{
+            for(let i=0;i<arr.length;i++){
+                arr[i] = basin.fetchSeason(arr[i],false,false,true);
+            }
+            Promise.all(arr).then(finish);
+        }
+    };
+    if(basin.fetchSeason(viewTick,true)){
+        requisites(basin.fetchSeason(viewTick,true));
+    }else basin.fetchSeason(viewTick,true,false,s=>{
+        requisites(s);
+    });
 }
 
 function deviceTurned(){
