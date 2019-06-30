@@ -27,7 +27,7 @@ class Storm{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
-        if(!this.current && data) this.load(data);
+        if(!this.current && data instanceof LoadData) this.load(data);
     }
 
     originSeason(){
@@ -255,74 +255,117 @@ class Storm{
     }
 
     save(){
-        let numData = [];
-        numData.push(this.id);
-        numData.push(this.depressionNum!==undefined ? this.depressionNum : -1);
-        numData.push(this.nameNum!==undefined ? this.nameNum : -1);
-        numData.push(this.birthTime);
-        numData.push(this.deaths);
-        numData.push(this.damage/DAMAGE_DIVISOR);
-        let record = StormData.saveArr(this.record);
-        numData = encodeB36StringArray(numData);
-        return numData + "." + record;
+        // new format
+
+        let obj = {};
+        for(let p of [
+            'id',
+            'depressionNum',
+            'nameNum',
+            'birthTime',
+            'deaths',
+            'damage'
+        ]) obj[p] = this[p];
+        obj.record = StormData.saveArr(this.record);
+        return obj;
+
+        // old format
+
+        // let numData = [];
+        // numData.push(this.id);
+        // numData.push(this.depressionNum!==undefined ? this.depressionNum : -1);
+        // numData.push(this.nameNum!==undefined ? this.nameNum : -1);
+        // numData.push(this.birthTime);
+        // numData.push(this.deaths);
+        // numData.push(this.damage/DAMAGE_DIVISOR);
+        // let record = StormData.saveArr(this.record);
+        // numData = encodeB36StringArray(numData);
+        // return numData + "." + record;
     }
 
-    load(data){
-        data = data.split(".");
-        let numData = decodeB36StringArray(data[0]);
-        this.record = StormData.loadArr(data[1]);
-        this.damage = numData.pop()*DAMAGE_DIVISOR || 0;
-        this.deaths = numData.pop() || 0;
-        this.birthTime = numData.pop() || 0;
-        this.nameNum = numData.pop();
-        if(this.nameNum<0) this.nameNum = undefined;
-        if(this.nameNum!==undefined) this.named = true;
-        this.depressionNum = numData.pop();
-        if(this.depressionNum<0) this.depressionNum = undefined;
-        if(this.depressionNum!==undefined) this.TC = true;
-        this.id = numData.pop() || 0;
-        for(let i=0;i<this.record.length;i++){
-            let d = this.record[i];
-            let trop = tropOrSub(d.type);
-            let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
-            if(trop && !this.formationTime) this.formationTime = t;
-            if(trop && this.dissipationTime) this.dissipationTime = undefined;
-            if(!trop && this.formationTime && !this.dissipationTime) this.dissipationTime = t;
-            let cat = d.getCat();
-            if(trop && !this.namedTime && cat>=0) this.namedTime = t;
-            if(trop && !this.hurricane && cat>=1) this.hurricane = true;
-            if(trop && !this.major && cat>=3) this.major = true;
-            if(trop && !this.c5 && cat>=5) this.c5 = true;
-            if(!this.TC || trop){
-                if(!this.peak) this.peak = d;
-                else if(d.pressure<this.peak.pressure) this.peak = d;
+    load(loadData){
+        if(loadData instanceof LoadData){
+            if(loadData.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = loadData.value;
+                this.record = StormData.loadArr(loadData.sub(obj.record));
+                for(let p of [
+                    'id',
+                    'depressionNum',
+                    'nameNum',
+                    'birthTime',
+                    'deaths',
+                    'damage'
+                ]) this[p] = obj[p];
+                if(!this.birthTime) this.birthTime = 0;
+                if(!this.deaths) this.deaths = 0;
+                if(!this.damage) this.damage = 0;
+            }else{
+                let data = loadData.value;
+                data = data.split(".");
+                let numData = decodeB36StringArray(data[0]);
+                this.record = StormData.loadArr(loadData.sub(data[1]));
+                this.damage = numData.pop()*DAMAGE_DIVISOR || 0;
+                this.deaths = numData.pop() || 0;
+                this.birthTime = numData.pop() || 0;
+                this.nameNum = numData.pop();
+                if(this.nameNum<0) this.nameNum = undefined;
+                this.depressionNum = numData.pop();
+                if(this.depressionNum<0) this.depressionNum = undefined;
+                this.id = numData.pop() || 0;
             }
-            if(trop && cat>=0){
-                this.ACE *= ACE_DIVISOR;
-                this.ACE += pow(d.windSpeed,2);
-                this.ACE /= ACE_DIVISOR;
+            if(this.depressionNum!==undefined) this.TC = true;
+            if(this.nameNum!==undefined) this.named = true;
+            for(let i=0;i<this.record.length;i++){
+                let d = this.record[i];
+                let trop = tropOrSub(d.type);
+                let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
+                if(trop && !this.formationTime) this.formationTime = t;
+                if(trop && this.dissipationTime) this.dissipationTime = undefined;
+                if(!trop && this.formationTime && !this.dissipationTime) this.dissipationTime = t;
+                let cat = d.getCat();
+                if(trop && !this.namedTime && cat>=0) this.namedTime = t;
+                if(trop && !this.hurricane && cat>=1) this.hurricane = true;
+                if(trop && !this.major && cat>=3) this.major = true;
+                if(trop && !this.c5 && cat>=5) this.c5 = true;
+                if(!this.TC || trop){
+                    if(!this.peak) this.peak = d;
+                    else if(d.pressure<this.peak.pressure) this.peak = d;
+                }
+                if(trop && cat>=0){
+                    this.ACE *= ACE_DIVISOR;
+                    this.ACE += pow(d.windSpeed,2);
+                    this.ACE /= ACE_DIVISOR;
+                }
             }
+            for(let a of basin.activeSystems){
+                if(a.storm instanceof StormRef){
+                    if(a.storm.season === loadData.season && a.storm.refId === this.id){
+                        this.current = a;
+                        a.storm = this;
+                    }
+                }
+            }
+            if(!this.current) this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
+            if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
+            if(this.nameNum!==undefined) this.name = getNewName(basin.getSeason(this.namedTime),this.nameNum);
+            else if(this.depressionNum!==undefined) this.name = this.depressionNum+DEPRESSION_LETTER;
         }
-        this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
-        if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
-        if(this.nameNum!==undefined) this.name = getNewName(basin.getSeason(this.namedTime),this.nameNum);
-        else if(this.depressionNum!==undefined) this.name = this.depressionNum+DEPRESSION_LETTER;
     }
 }
 
 class StormRef{
     constructor(s){
-        if(typeof s === "string"){
+        if(s instanceof Storm){
+            this.season = s.originSeason();
+            this.refId = s.id;
+            this.lastApplicableAt = s.deathTime;    // this property will optimize season loading, but for now I won't bother saving it in localStorage
+            this.ref = undefined;
+        }else if(s instanceof LoadData){
             this.season = undefined;
             this.refId = undefined;
             this.ref = undefined;
             this.lastApplicableAt = undefined;
             this.load(s);
-        }else{
-            this.season = s.originSeason();
-            this.refId = s.id;
-            this.lastApplicableAt = s.deathTime;    // this property will optimize season loading, but for now I won't bother saving it in localStorage
-            this.ref = undefined;
         }
     }
 
@@ -340,16 +383,31 @@ class StormRef{
     }
 
     save(){
-        let arr = [];
-        arr.push(this.refId);
-        arr.push(this.season);
-        return encodeB36StringArray(arr);
+        // new format
+
+        let obj = {};
+        for(let p of ['refId','season','lastApplicableAt']) obj[p] = this[p];
+        return obj;
+
+        // old format
+
+        // let arr = [];
+        // arr.push(this.refId);
+        // arr.push(this.season);
+        // return encodeB36StringArray(arr);
     }
 
-    load(str){
-        let arr = decodeB36StringArray(str);
-        this.season = arr.pop();
-        this.refId = arr.pop();
+    load(data){
+        if(data instanceof LoadData){
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                for(let p of ['refId','season','lastApplicableAt']) this[p] = data.value[p];
+            }else{
+                let str = data.value;
+                let arr = decodeB36StringArray(str);
+                this.season = arr.pop();
+                this.refId = arr.pop();
+            }
+        }
     }
 }
 
@@ -359,7 +417,7 @@ class StormData{
         this.pressure = undefined;
         this.windSpeed = undefined; // in knots
         this.type = undefined;
-        if(typeof x==="string"){
+        if(x instanceof LoadData){
             this.load(x,y);
         }else{
             this.pos = createVector(x,y);
@@ -381,58 +439,118 @@ class StormData{
     }
 
     save(inArr){
-        let arr = [];
-        if(!inArr){
-            let opts = {};
-            arr.push(encodePoint(this.pos,opts));
-        }
-        arr.push(this.pressure);
-        arr.push(this.windSpeed);
-        arr.push(this.type);
-        return encodeB36StringArray(arr);
+        // new format
+
+        let obj = {};
+        obj.pos = {x: this.pos.x, y: this.pos.y};
+        for(let p of ['pressure','windSpeed','type']) obj[p] = this[p];
+        return obj;
+
+        // old format
+
+        // let arr = [];
+        // if(!inArr){
+        //     let opts = {};
+        //     arr.push(encodePoint(this.pos,opts));
+        // }
+        // arr.push(this.pressure);
+        // arr.push(this.windSpeed);
+        // arr.push(this.type);
+        // return encodeB36StringArray(arr);
     }
 
-    load(str,posInArr){
-        let arr = decodeB36StringArray(str);
-        this.type = arr.pop();
-        this.windSpeed = arr.pop();
-        this.pressure = arr.pop();
-        if(posInArr) this.pos = posInArr;
-        else{
-            let opts = {
-                p5Vec: true
-            };
-            this.pos = decodePoint(arr.pop(),opts);
+    load(data,posInArr){
+        if(data instanceof LoadData){
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                this.pos = createVector(obj.pos.x,obj.pos.y);
+                for(let p of ['pressure','windSpeed','type']) this[p] = obj[p];
+            }else{
+                let str = data.value;
+                let arr = decodeB36StringArray(str);
+                this.type = arr.pop();
+                this.windSpeed = arr.pop();
+                this.pressure = arr.pop();
+                if(posInArr) this.pos = posInArr;
+                else{
+                    let opts = {
+                        p5Vec: true
+                    };
+                    this.pos = decodePoint(arr.pop(),opts);
+                }
+            }
         }
     }
 
     static saveArr(arr){
-        let opts = {};
-        let positions = [];
-        let theRest = [];
-        for(let i=0;i<arr.length;i++){
-            positions.push(arr[i].pos);
-            theRest.push(arr[i].save(true));
+        // new format
+
+        let x = [];
+        let y = [];
+        let pressure = [];
+        let windSpeed = [];
+        let type = [];
+        for(let d of arr){
+            if(d instanceof StormData){
+                x.push(d.pos.x);
+                y.push(d.pos.y);
+                pressure.push(constrain(d.pressure,0,pow(2,16)-1));
+                windSpeed.push(constrain(d.windSpeed,0,pow(2,16)-1));
+                type.push(d.type);
+            }
         }
-        return encodePointArray(positions,opts) + "/" + theRest.join("/");
+        let obj = {};
+        obj.pos = {x: new Float32Array(x), y: new Float32Array(y)};
+        obj.pressure = new Uint16Array(pressure);
+        obj.windSpeed = new Uint16Array(windSpeed);
+        obj.type = new Uint8ClampedArray(type);
+        return obj;
+
+        // old format
+
+        // let opts = {};
+        // let positions = [];
+        // let theRest = [];
+        // for(let i=0;i<arr.length;i++){
+        //     positions.push(arr[i].pos);
+        //     theRest.push(arr[i].save(true));
+        // }
+        // return encodePointArray(positions,opts) + "/" + theRest.join("/");
     }
 
-    static loadArr(str){
-        let arr = str.split("/");
-        let opts = {
-            p5Vec: true
-        };
-        let positions = decodePointArray(arr.shift(),opts);
-        for(let i=0;i<arr.length;i++){
-            arr[i] = new StormData(arr[i],positions[i]);
+    static loadArr(data){
+        if(data instanceof LoadData){
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                let arr = [];
+                let x = [...obj.pos.x];
+                let y = [...obj.pos.y];
+                let pressure = [...obj.pressure];
+                let windSpeed = [...obj.windSpeed];
+                let type = [...obj.type];
+                for(let i=0;i<x.length;i++){
+                    arr[i] = new StormData(x[i],y[i],pressure[i],windSpeed[i],type[i]);
+                }
+                return arr;
+            }else{
+                let str = data.value;
+                let arr = str.split("/");
+                let opts = {
+                    p5Vec: true
+                };
+                let positions = decodePointArray(arr.shift(),opts);
+                for(let i=0;i<arr.length;i++){
+                    arr[i] = new StormData(data.sub(arr[i]),positions[i]);
+                }
+                return arr;
+            }
         }
-        return arr;
     }
 }
 
 class ActiveSystem extends StormData{
     constructor(ext,spawn){
-        if(typeof ext === "string"){
+        if(ext instanceof LoadData){
             super();
             this.organization = undefined;
             this.lowerWarmCore = undefined;
@@ -509,7 +627,7 @@ class ActiveSystem extends StormData{
         this.trackForecast.stVec = createVector(0);
         this.trackForecast.pVec = createVector(0);
         this.trackForecast.points = [];
-        if(typeof ext === "string"){
+        if(ext instanceof LoadData){
             this.storm = undefined;
             this.load(ext);
         }else{
@@ -693,6 +811,7 @@ class ActiveSystem extends StormData{
 
     fetchStorm(){
         if(this.storm instanceof StormRef){
+            console.error('ActiveSystem still needs to fetch StormRefs');
             let s = this.storm.fetch();
             if(!s) return new Storm();
             this.storm = s;
@@ -704,27 +823,56 @@ class ActiveSystem extends StormData{
     }
 
     save(){
-        let base = super.save();
-        let activeData = [];
-        activeData.push(this.organization);
-        activeData.push(this.lowerWarmCore);
-        activeData.push(this.upperWarmCore);
-        activeData.push(this.depth);
-        activeData = encodeB36StringArray(activeData,ACTIVESYSTEM_SAVE_FLOAT);
-        let ref = new StormRef(this.fetchStorm());
-        ref = ref.save();
-        return base + "." + activeData + "." + ref;
+        // new format
+
+        let obj = super.save();
+        for(let p of [
+            'organization',
+            'lowerWarmCore',
+            'upperWarmCore',
+            'depth'
+        ]) obj[p] = this[p];
+        obj.ref = new StormRef(this.fetchStorm()).save();
+        return obj;
+
+        // old format
+
+        // let base = super.save();
+        // let activeData = [];
+        // activeData.push(this.organization);
+        // activeData.push(this.lowerWarmCore);
+        // activeData.push(this.upperWarmCore);
+        // activeData.push(this.depth);
+        // activeData = encodeB36StringArray(activeData,ACTIVESYSTEM_SAVE_FLOAT);
+        // let ref = new StormRef(this.fetchStorm());
+        // ref = ref.save();
+        // return base + "." + activeData + "." + ref;
     }
 
-    load(str){
-        let parts = str.split(".");
-        super.load(parts[0]);
-        let activeData = decodeB36StringArray(parts[1]);
-        this.depth = activeData.pop();
-        this.upperWarmCore = activeData.pop();
-        this.lowerWarmCore = activeData.pop();
-        this.organization = activeData.pop();
-        this.storm = new StormRef(parts[2]);
+    load(data){
+        if(data instanceof LoadData){
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                super.load(data);
+                for(let p of [
+                    'organization',
+                    'lowerWarmCore',
+                    'upperWarmCore',
+                    'depth'
+                ]) this[p] = obj[p];
+                this.storm = new StormRef(data.sub(obj.ref));
+            }else{
+                let str = data.value;
+                let parts = str.split(".");
+                super.load(data.sub(parts[0]));
+                let activeData = decodeB36StringArray(parts[1]);
+                this.depth = activeData.pop();
+                this.upperWarmCore = activeData.pop();
+                this.lowerWarmCore = activeData.pop();
+                this.organization = activeData.pop();
+                this.storm = new StormRef(data.sub(parts[2]));
+            }
+        }
     }
 }
 

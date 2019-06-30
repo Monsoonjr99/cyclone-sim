@@ -13,7 +13,7 @@ function setup(){
     waitingFor = 0;
     waitingDesc = '';
     simSettings = new Settings();
-    storageQuotaExhausted = false;
+    // storageQuotaExhausted = false;
 
     textInput = document.createElement("input");
     textInput.type = "text";
@@ -57,7 +57,7 @@ function setup(){
     simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
     keyRepeatFrameCounter = 0;
 
-    renameOldBasinSaveKeys();
+    upgradeLegacySaves();
     UI.init();
 }
 
@@ -87,7 +87,7 @@ function draw(){
                     if(simSpeedFrameCounter===0) advanceSim();
                 }
                 keyRepeatFrameCounter++;
-                if(keyIsPressed && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
+                if(keyIsPressed && document.activeElement!==textInput && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
                     if(paused && primaryWrapper.showing){
                         if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
                             changeViewTick(ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS);
@@ -209,7 +209,7 @@ function advanceSim(){
         Env.record();
     }
     let curTime = basin.tickMoment();
-    if(simSettings.doAutosave && !storageQuotaExhausted && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
+    if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
 }
 
 class Settings{

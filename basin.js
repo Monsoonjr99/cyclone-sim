@@ -10,7 +10,7 @@ class Basin{
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.hyper = opts.hyper;
-        this.startYear = opts.year;
+        this.startYear = opts.year || (this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR);
         this.nameList = NAME_LIST_PRESETS[opts.names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
         this.hurricaneStrengthTerm = opts.hurrTerm || 0;
@@ -18,10 +18,9 @@ class Basin{
         this.seed = opts.seed || moment().valueOf();
         this.envData = {};
         this.envData.loadData = [];
-        this.saveSlot = load || 0;
-        if(load || load===0) this.load(opts.onload);
-        else Basin.deleteSave(0);
-        // localStorage.setItem("testSeed",this.seed.toString());
+        this.saveName = load || AUTOSAVE_SAVE_NAME;
+        if(load) this.load(opts.onload);
+        else Basin.deleteSave(AUTOSAVE_SAVE_NAME);
     }
 
     startTime(){
@@ -85,23 +84,33 @@ class Basin{
         let promise;
         if(this.seasons[n]){
             season = this.seasons[n];
-            promise = new Promise((resolve,reject)=>{
-                resolve(season);
-            });
+            promise = Promise.resolve(season);
         }else{
             if(this.seasonsBusyLoading[n]) promise = this.seasonsBusyLoading[n];
             else{
-                promise = this.seasonsBusyLoading[n] = waitForAsyncProcess(makeAsyncProcess,'Retrieving Season...',()=>{
-                    let sKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + n;
-                    let str = localStorage.getItem(sKey);
-                    if(str){
-                        let seas = this.seasons[n] = new Season({format:FORMAT_WITH_SAVED_SEASONS,value:str});
-                        this.expireSeasonTimer(n);
-                        this.seasonsBusyLoading[n] = undefined;
-                        seas.lastAccessed = moment().valueOf();
-                        return seas;
-                    }else return undefined;
-                });
+                promise = this.seasonsBusyLoading[n] = waitForAsyncProcess(()=>{
+                    return db.seasons.where('[saveName+season]').equals([this.saveName,n]).last().then(res=>{
+                        if(res){
+                            let d = LoadData.wrap(res);
+                            let seas = this.seasons[n] = new Season(d);
+                            this.expireSeasonTimer(n);
+                            this.seasonsBusyLoading[n] = undefined;
+                            seas.lastAccessed = moment().valueOf();
+                            return seas;
+                        }else return undefined;
+                    });
+                },'Retrieving Season...');
+                //makeAsyncProcess,'Retrieving Season...',()=>{
+                //     let sKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + n;
+                //     let str = localStorage.getItem(sKey);
+                //     if(str){
+                //         let seas = this.seasons[n] = new Season({format:FORMAT_WITH_SAVED_SEASONS,value:str});
+                //         this.expireSeasonTimer(n);
+                //         this.seasonsBusyLoading[n] = undefined;
+                //         seas.lastAccessed = moment().valueOf();
+                //         return seas;
+                //     }else return undefined;
+                // });
             }
         }
         if(season) season.lastAccessed = moment().valueOf();
@@ -130,63 +139,15 @@ class Basin{
         this.seasonExpirationTimers[n] = setTimeout(f,LOADED_SEASON_EXPIRATION);
     }
 
-    static storagePrefix(s){
-        return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + s + '-';
-    }
+    // static storagePrefix(s){    // legacy
+    //     return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + s + '-';
+    // }
 
-    storagePrefix(){
-        return Basin.storagePrefix(this.saveSlot);
-    }
+    // storagePrefix(){    // legacy
+    //     return Basin.storagePrefix(this.saveSlot);
+    // }
 
     save(){
-        let doSave = ()=>{
-            let lastSaved = this.lastSaved;
-            let savedSeasons = [];
-            modifyLocalStorage(()=>{
-                let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
-                let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-                let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-                localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
-                let str = "";
-                for(let i=this.activeSystems.length-1;i>=0;i--){
-                    str += this.activeSystems[i].save();
-                    if(i>0) str += ",";
-                }
-                str += ";";
-                for(let i=Env.fieldList.length-1;i>=0;i--){
-                    let f = Env.fieldList[i];
-                    for(let j=Env.fields[f].noise.length-1;j>=0;j--){
-                        str += this.envData[f][j].save();
-                        if(i>0 || j>0) str += ",";
-                    }
-                }
-                str += ";";
-                let flags = 0;
-                flags |= this.hyper;
-                flags <<= 1;
-                flags |= this.godMode;
-                flags <<= 1;
-                flags |= this.SHem;
-                let arr = [this.mapType,this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
-                str += encodeB36StringArray(arr);
-                localStorage.setItem(basinKey,str);
-                let names = this.nameList.join(";");
-                if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
-                localStorage.setItem(namesKey,names);
-                for(let k in this.seasons){
-                    if(this.seasons[k] && this.seasons[k].modified){
-                        let seasonKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + k;
-                        savedSeasons.push(k);
-                        localStorage.setItem(seasonKey,this.seasons[k].save());
-                    }
-                }
-                this.lastSaved = this.tick;
-            },()=>{
-                this.lastSaved = lastSaved;
-                for(let k of savedSeasons) this.seasons[k].modified = true;
-                alert("localStorage quota for origin " + origin + " exceeded; unable to save");
-            });
-        };
         let reqSeasons = [];
         for(let k in this.seasons){
             if(this.seasons[k] && this.seasons[k].modified){
@@ -198,59 +159,197 @@ class Basin{
                 }
             }
         }
-        Promise.all(reqSeasons).then(doSave).catch(e=>{
-            console.error("Could not save due to an error while loading required seasons");
+        return Promise.all(reqSeasons).then(()=>{
+            // console.log('basin not saved for testing purposes');
+
+            // new indexedDB saving & Format 2
+
+            let obj = {};
+            obj.format = SAVE_FORMAT;
+            let b = obj.value = {};
+            b.activeSystems = [];
+            for(let a of this.activeSystems){
+                b.activeSystems.push(a.save());
+            }
+            b.envData = [];
+            for(let i=Env.fieldList.length-1;i>=0;i--){
+                let f = Env.fieldList[i];
+                for(let j=Env.fields[f].noise.length-1;j>=0;j--){
+                    b.envData.push(this.envData[f][j].save());
+                }
+            }
+            b.flags = 0;
+            b.flags |= this.hyper;
+            b.flags <<= 1;
+            b.flags |= this.godMode;
+            b.flags <<= 1;
+            b.flags |= this.SHem;
+            for(let p of [
+                'mapType',
+                'hurricaneStrengthTerm',
+                'sequentialNameIndex',
+                'tick',
+                'seed',
+                'startYear',
+                'nameList'
+            ]) b[p] = this[p];
+            return db.transaction('rw',db.saves,db.seasons,()=>{
+                db.saves.put(obj,this.saveName);
+                for(let k in this.seasons){
+                    if(this.seasons[k] && this.seasons[k].modified){
+                        let seas = {};
+                        seas.format = SAVE_FORMAT;
+                        seas.saveName = this.saveName;
+                        seas.season = parseInt(k);
+                        seas.value = this.seasons[k].save();
+                        let cur = db.seasons.where('[saveName+season]').equals([this.saveName,seas.season]);
+                        cur.count().then(c=>{
+                            if(c>1){
+                                cur.delete().then(()=>{
+                                    db.seasons.put(seas);
+                                });
+                            }else if(c===1) cur.modify((s,ref)=>{
+                                ref.value = seas;
+                            });
+                            else db.seasons.put(seas);
+                        });
+                    }
+                }
+            }).then(()=>{
+                this.lastSaved = this.tick;
+                for(let k in this.seasons){
+                    if(this.seasons[k]) this.seasons[k].modified = false;
+                }
+            });
+
+            // old localStorage save code (Format 1) (defunct)
+
+            // let lastSaved = this.lastSaved;
+            // let savedSeasons = [];
+            // modifyLocalStorage(()=>{
+            //     let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+            //     let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+            //     let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
+            //     localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
+            //     let str = "";
+            //     for(let i=this.activeSystems.length-1;i>=0;i--){
+            //         str += this.activeSystems[i].save();
+            //         if(i>0) str += ",";
+            //     }
+            //     str += ";";
+            //     for(let i=Env.fieldList.length-1;i>=0;i--){
+            //         let f = Env.fieldList[i];
+            //         for(let j=Env.fields[f].noise.length-1;j>=0;j--){
+            //             str += this.envData[f][j].save();
+            //             if(i>0 || j>0) str += ",";
+            //         }
+            //     }
+            //     str += ";";
+            //     let flags = 0;
+            //     flags |= this.hyper;
+            //     flags <<= 1;
+            //     flags |= this.godMode;
+            //     flags <<= 1;
+            //     flags |= this.SHem;
+            //     let arr = [this.mapType,this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
+            //     str += encodeB36StringArray(arr);
+            //     localStorage.setItem(basinKey,str);
+            //     let names = this.nameList.join(";");
+            //     if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
+            //     localStorage.setItem(namesKey,names);
+            //     for(let k in this.seasons){
+            //         if(this.seasons[k] && this.seasons[k].modified){
+            //             let seasonKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + k;
+            //             savedSeasons.push(k);
+            //             localStorage.setItem(seasonKey,this.seasons[k].save());
+            //         }
+            //     }
+            //     this.lastSaved = this.tick;
+            // },()=>{
+            //     this.lastSaved = lastSaved;
+            //     for(let k of savedSeasons) this.seasons[k].modified = true;
+            //     alert("localStorage quota for origin " + origin + " exceeded; unable to save");
+            // });
+        }).catch(e=>{
+            console.warn("Could not save due to an error");
             console.error(e);
         });
     }
 
     load(onload){
         let promise = waitForAsyncProcess(()=>{
-            return makeAsyncProcess(()=>{
-                let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-                let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
-                let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-                let str = localStorage.getItem(basinKey);
-                let format = parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
-                let names = localStorage.getItem(namesKey);
-                if(str && format>=EARLIEST_COMPATIBLE_FORMAT){
-                    let parts = str.split(";");
-                    let arr = decodeB36StringArray(parts.pop());
-                    let flags = arr.pop() || 0;
-                    this.startYear = arr.pop();
-                    this.seed = arr.pop() || moment().valueOf();
-                    this.lastSaved = this.tick = arr.pop() || 0;
-                    this.sequentialNameIndex = arr.pop();
-                    this.hurricaneStrengthTerm = arr.pop() || 0;
-                    this.mapType = arr.pop() || 0;
-                    this.SHem = flags & 1;
-                    flags >>= 1;
-                    this.godMode = flags & 1;
-                    flags >>= 1;
-                    this.hyper = flags & 1;
-                    if(this.startYear===undefined) this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-                    if(names){
-                        names = names.split(";");
-                        if(names[0].indexOf(",")>-1){
-                            for(let i=0;i<names.length;i++){
-                                names[i] = names[i].split(",");
-                            }
-                            if(names[0][0]==="") names[0].shift();
+            return db.saves.get(this.saveName).then(res=>{
+                if(res && res.format>=EARLIEST_COMPATIBLE_FORMAT){
+                    let data = LoadData.wrap(res);
+                    if(data.format>=FORMAT_WITH_INDEXEDDB){
+                        let obj = data.value;
+                        for(let a of obj.activeSystems){
+                            this.activeSystems.push(new ActiveSystem(data.sub(a)));
                         }
-                        this.nameList = names;
+                        this.envData.loadData = data.sub(obj.envData);
+                        let flags = obj.flags;
+                        this.SHem = flags & 1;
+                        flags >>= 1;
+                        this.godMode = flags & 1;
+                        flags >>= 1;
+                        this.hyper = flags & 1;
+                        for(let p of [
+                            'mapType',
+                            'hurricaneStrengthTerm',
+                            'sequentialNameIndex',
+                            'tick',
+                            'seed',
+                            'startYear',
+                            'nameList'
+                        ]) this[p] = obj[p];
+                    }else{
+                        // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
+                        // let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
+                        // let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
+                        let str = data.value.str;// localStorage.getItem(basinKey);
+                        let format = data.format;// parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
+                        let names = data.value.names;// localStorage.getItem(namesKey);
+                        if(str){
+                            let parts = str.split(";");
+                            let arr = decodeB36StringArray(parts.pop());
+                            let flags = arr.pop() || 0;
+                            this.startYear = arr.pop();
+                            this.seed = arr.pop() || moment().valueOf();
+                            this.lastSaved = this.tick = arr.pop() || 0;
+                            this.sequentialNameIndex = arr.pop();
+                            this.hurricaneStrengthTerm = arr.pop() || 0;
+                            this.mapType = arr.pop() || 0;
+                            this.SHem = flags & 1;
+                            flags >>= 1;
+                            this.godMode = flags & 1;
+                            flags >>= 1;
+                            this.hyper = flags & 1;
+                            if(this.startYear===undefined) this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+                            if(names){
+                                names = names.split(";");
+                                if(names[0].indexOf(",")>-1){
+                                    for(let i=0;i<names.length;i++){
+                                        names[i] = names[i].split(",");
+                                    }
+                                    if(names[0][0]==="") names[0].shift();
+                                }
+                                this.nameList = names;
+                            }
+                            if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
+                            let envLoadData = parts.pop();
+                            if(envLoadData) this.envData.loadData = data.sub(envLoadData.split(','));
+                            let activeSystemData = parts.pop();
+                            if(activeSystemData){
+                                activeSystemData = activeSystemData.split(",");
+                                while(activeSystemData.length>0) this.activeSystems.push(new ActiveSystem(data.sub(activeSystemData.pop())));
+                            }
+                            if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
+                        }
                     }
-                    if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-                    let envLoadData = parts.pop();
-                    this.envData.loadData = envLoadData ? envLoadData.split(",") : this.envData.loadData;
-                    let activeSystemData = parts.pop();
-                    if(activeSystemData){
-                        activeSystemData = activeSystemData.split(",");
-                        while(activeSystemData.length>0) this.activeSystems.push(new ActiveSystem(activeSystemData.pop()));
-                    }
-                    if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                 }else{
-                    this.godMode = true;
-                    this.startYear = NHEM_DEFAULT_YEAR;
+                    let t = 'Could not load basin';
+                    console.error(t);
+                    alert(t);
                 }
                 return this;
             }).then(b=>{
@@ -275,34 +374,53 @@ class Basin{
         });
     }
 
-    saveAs(newSlot){
-        let oldPre = this.storagePrefix();
-        let newPre = Basin.storagePrefix(newSlot);
-        modifyLocalStorage(()=>{
-            Basin.deleteSave(newSlot);
-            for(let i=0;i<localStorage.length;i++){
-                let k = localStorage.key(i);
-                if(k.startsWith(oldPre)){
-                    let suffix = k.slice(oldPre.length);
-                    localStorage.setItem(newPre+suffix,localStorage.getItem(k));
-                }
-            }
-        },()=>{
-            newSlot = this.saveSlot;
-        },()=>{
-            this.saveSlot = newSlot;
-            this.save();
+    saveAs(newName){
+        let oldName = this.saveName;
+        return Basin.deleteSave(newName,()=>{
+            return db.transaction('rw',db.saves,db.seasons,()=>{
+                db.saves.get(oldName).then(res=>{
+                    db.saves.put(res,newName);
+                });
+                db.seasons.where('saveName').equals(oldName).modify(v=>{
+                    db.seasons.put({
+                        format: v.format,
+                        saveName: newName,
+                        season: v.season,
+                        value: v.value
+                    });
+                });
+            }).then(()=>{
+                this.saveName = newName;
+                this.save();
+            });
         });
+
+        // let oldPre = this.storagePrefix();
+        // let newPre = Basin.storagePrefix(newSlot);
+        // modifyLocalStorage(()=>{
+        //     Basin.deleteSave(newSlot);
+        //     for(let i=0;i<localStorage.length;i++){
+        //         let k = localStorage.key(i);
+        //         if(k.startsWith(oldPre)){
+        //             let suffix = k.slice(oldPre.length);
+        //             localStorage.setItem(newPre+suffix,localStorage.getItem(k));
+        //         }
+        //     }
+        // },()=>{
+        //     newSlot = this.saveSlot;
+        // },()=>{
+        //     this.saveSlot = newSlot;
+        //     this.save();
+        // });
     }
 
-    static deleteSave(s){
-        for(let i=localStorage.length-1;i>=0;i--){
-            let k = localStorage.key(i);
-            if(k.startsWith(Basin.storagePrefix(s))){
-                localStorage.removeItem(k);
-            }
-        }
-        storageQuotaExhausted = false;
+    static deleteSave(name,callback){
+        return db.transaction('rw',db.saves,db.seasons,()=>{
+            db.saves.delete(name);
+            db.seasons.where('saveName').equals(name).delete();
+        }).then(callback).catch(e=>{
+            console.error(e);
+        });
     }
 }
 
@@ -323,7 +441,7 @@ class Season{
         this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
-        if(loaddata) this.load(loaddata);
+        if(loaddata instanceof LoadData) this.load(loaddata);
     }
 
     addSystem(s){
@@ -362,120 +480,238 @@ class Season{
         }
     }
 
-    save(){
-        let str = "";
-        let stats = [];
-        stats.push(this.totalSystemCount);
-        stats.push(this.depressions);
-        stats.push(this.namedStorms);
-        stats.push(this.hurricanes);
-        stats.push(this.majors);
-        stats.push(this.c5s);
-        stats.push(this.ACE*ACE_DIVISOR);
-        stats.push(this.deaths);
-        stats.push(this.damage/DAMAGE_DIVISOR);
-        stats.push(this.envRecordStarts);
-        stats.push(SAVE_FORMAT);
-        str += encodeB36StringArray(stats);
-        str += ";";
-        if(this.envData){
-            let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
-            for(let f of Env.fieldList){
-                for(let i=0;i<Env.fields[f].noise.length;i++){
-                    let a = this.envData[f][i];
-                    let c = Env.fields[f].noise[i];
-                    let k = a[0];
-                    let m = a.slice(1);
-                    k = [k.x,k.y,k.z];
-                    str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
-                    str += ".";
-                    let opts = {};
-                    opts.h = opts.w = ENVDATA_SAVE_MULT;
-                    let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-                    let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-                    opts.mapY = opts.mapX = mapR(xyrange);
-                    opts.mapZ = mapR(zrange);
-                    str += encodePointArray(m,opts);
-                    str += ",";
+    save(forceStormRefs){
+        // new save format
+
+        let val = {};
+        for(let p of [
+            'totalSystemCount',
+            'depressions',
+            'namedStorms',
+            'hurricanes',
+            'majors',
+            'c5s',
+            'ACE',
+            'deaths',
+            'damage',
+            'envRecordStarts'
+        ]) val[p] = this[p];
+        val.envData = {};
+        for(let f of Env.fieldList){
+            let fd = val.envData[f] = {};
+            for(let i=0;i<Env.fields[f].noise.length;i++){
+                let nd = fd[i] = {};
+                let x = [];
+                let y = [];
+                let z = [];
+                for(let e of this.envData[f][i]){
+                    x.push(e.x);
+                    y.push(e.y);
+                    z.push(e.z);
                 }
-            }
-        }else str += ";";
-        if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
-        for(let i=0;i<this.systems.length;i++){
-            let s = this.systems[i];
-            if(s instanceof StormRef && s.fetch() && (s.fetch().TC || s.fetch().current)){
-                str += "~" + s.save();
-            }else if(s.TC || s.current){
-                str += "," + s.save();
+                nd.x = new Float32Array(x);
+                nd.y = new Float32Array(y);
+                nd.z = new Float32Array(z);
             }
         }
-        this.modified = false;
-        return str;
+        val.systems = [];
+        for(let i=0;i<this.systems.length;i++){
+            let s = this.systems[i];
+            if(s instanceof StormRef && (forceStormRefs || s.fetch() && (s.fetch().TC || s.fetch().current))){
+                val.systems.push({isRef:true,val:s.save()});
+            }else if(s.TC || s.current){
+                val.systems.push({isRef:false,val:s.save()});
+            }
+        }
+        return val;
+
+        // old save format
+
+        // let str = "";
+        // let stats = [];
+        // stats.push(this.totalSystemCount);
+        // stats.push(this.depressions);
+        // stats.push(this.namedStorms);
+        // stats.push(this.hurricanes);
+        // stats.push(this.majors);
+        // stats.push(this.c5s);
+        // stats.push(this.ACE*ACE_DIVISOR);
+        // stats.push(this.deaths);
+        // stats.push(this.damage/DAMAGE_DIVISOR);
+        // stats.push(this.envRecordStarts);
+        // stats.push(SAVE_FORMAT);
+        // str += encodeB36StringArray(stats);
+        // str += ";";
+        // if(this.envData){
+        //     let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
+        //     for(let f of Env.fieldList){
+        //         for(let i=0;i<Env.fields[f].noise.length;i++){
+        //             let a = this.envData[f][i];
+        //             let c = Env.fields[f].noise[i];
+        //             let k = a[0];
+        //             let m = a.slice(1);
+        //             k = [k.x,k.y,k.z];
+        //             str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
+        //             str += ".";
+        //             let opts = {};
+        //             opts.h = opts.w = ENVDATA_SAVE_MULT;
+        //             let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+        //             let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+        //             opts.mapY = opts.mapX = mapR(xyrange);
+        //             opts.mapZ = mapR(zrange);
+        //             str += encodePointArray(m,opts);
+        //             str += ",";
+        //         }
+        //     }
+        // }else str += ";";
+        // if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
+        // for(let i=0;i<this.systems.length;i++){
+        //     let s = this.systems[i];
+        //     if(s instanceof StormRef && s.fetch() && (s.fetch().TC || s.fetch().current)){
+        //         str += "~" + s.save();
+        //     }else if(s.TC || s.current){
+        //         str += "," + s.save();
+        //     }
+        // }
+        // this.modified = false;
+        // return str;
     }
 
     load(data){
-        if(data.format<EARLIEST_COMPATIBLE_FORMAT){
-            this.envData = null;
-            return;
-        }
-        if(data.format>=FORMAT_WITH_INDEXEDDB){
-            // WIP
-        }else{
-            let str = data.value;
-            let mainparts = str.split(";");
-            let stats = decodeB36StringArray(mainparts[0]);
-            data.format = stats.pop();
-            if(data.format===undefined){
-                this.envData = null;
-                return;
-            }
-            this.envRecordStarts = stats.pop() || 0;
-            this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
-            this.deaths = stats.pop() || 0;
-            this.ACE = stats.pop()/ACE_DIVISOR || 0;
-            this.c5s = stats.pop() || 0;
-            this.majors = stats.pop() || 0;
-            this.hurricanes = stats.pop() || 0;
-            this.namedStorms = stats.pop() || 0;
-            this.depressions = stats.pop() || 0;
-            this.totalSystemCount = stats.pop() || 0;
-            if(data.format>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
-                let e = mainparts[1].split(",");
-                let i = 0;
-                let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
+        if(data instanceof LoadData && data.format>=EARLIEST_COMPATIBLE_FORMAT){
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                for(let p of [
+                    'totalSystemCount',
+                    'depressions',
+                    'namedStorms',
+                    'hurricanes',
+                    'majors',
+                    'c5s',
+                    'ACE',
+                    'deaths',
+                    'damage',
+                    'envRecordStarts'
+                ]) this[p] = obj[p];
                 for(let f of Env.fieldList){
-                    for(let j=0;j<Env.fields[f].noise.length;j++,i++){
-                        let c = Env.fields[f].noise[j];
-                        let s = e[i].split(".");
-                        let k = decodeB36StringArray(s[0]);
-                        k = {x:k[0],y:k[1],z:k[2]};
-                        let opts = {};
-                        opts.h = opts.w = ENVDATA_SAVE_MULT;
-                        let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-                        let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-                        opts.mapY = opts.mapX = mapR(xyrange);
-                        opts.mapZ = mapR(zrange);
-                        let m = decodePointArray(s[1],opts);
-                        m.unshift(k);
-                        if(!this.envData[f]) this.envData[f] = {};
-                        this.envData[f][j] = m;
+                    let fd = this.envData[f] = {};
+                    for(let i=0;i<Env.fields[f].noise.length;i++){
+                        let nd = fd[i] = [];
+                        let sd = obj.envData[f][i];
+                        let x = [...sd.x];
+                        let y = [...sd.y];
+                        let z = [...sd.z];
+                        for(let j=0;j<x.length;j++){
+                            nd.push({
+                                x: x[j],
+                                y: y[j],
+                                z: z[j]
+                            });
+                        }
                     }
                 }
-            }else this.envData = null;
-            let storms = mainparts[2];
-            for(let i=0,i1=0;i1<storms.length;i=i1){
-                i1 = storms.slice(i+1).search(/[~,]/g);
-                i1 = i1<0 ? storms.length : i+1+i1;
-                let s = storms.slice(i,i1);
-                if(s.charAt(0)==="~") this.systems.push(new StormRef(s.slice(1)));
-                else if(s.charAt(0)===",") this.systems.push(new Storm(s.slice(1)));
+                for(let i=0;i<obj.systems.length;i++){
+                    let s = obj.systems[i];
+                    if(s.isRef) this.systems.push(new StormRef(data.sub(s.val)));
+                    else{
+                        let v = data.sub(s.val);
+                        v.season = data.season;
+                        this.systems.push(new Storm(v));
+                    }
+                }
+            }else{
+                let str = data.value;
+                let mainparts = str.split(";");
+                let stats = decodeB36StringArray(mainparts[0]);
+                data.format = stats.pop();
+                if(data.format===undefined){
+                    this.envData = null;
+                    return;
+                }
+                this.envRecordStarts = stats.pop() || 0;
+                this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
+                this.deaths = stats.pop() || 0;
+                this.ACE = stats.pop()/ACE_DIVISOR || 0;
+                this.c5s = stats.pop() || 0;
+                this.majors = stats.pop() || 0;
+                this.hurricanes = stats.pop() || 0;
+                this.namedStorms = stats.pop() || 0;
+                this.depressions = stats.pop() || 0;
+                this.totalSystemCount = stats.pop() || 0;
+                if(data.format>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
+                    let e = mainparts[1].split(",");
+                    let i = 0;
+                    let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
+                    for(let f of Env.fieldList){
+                        for(let j=0;j<Env.fields[f].noise.length;j++,i++){
+                            let c = Env.fields[f].noise[j];
+                            let s = e[i].split(".");
+                            let k = decodeB36StringArray(s[0]);
+                            k = {x:k[0],y:k[1],z:k[2]};
+                            let opts = {};
+                            opts.h = opts.w = ENVDATA_SAVE_MULT;
+                            let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
+                            let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
+                            opts.mapY = opts.mapX = mapR(xyrange);
+                            opts.mapZ = mapR(zrange);
+                            let m = decodePointArray(s[1],opts);
+                            for(let n=0;n<m.length;n++){
+                                let p1;
+                                if(n===0) p1 = k;
+                                else p1 = m[n-1];
+                                let p2 = m[n];
+                                m[n] = {
+                                    x: p1.x + p2.x,
+                                    y: p1.y + p2.y,
+                                    z: p1.z + p2.z
+                                };
+                            }
+                            m.unshift(k);
+                            if(!this.envData[f]) this.envData[f] = {};
+                            this.envData[f][j] = m;
+                        }
+                    }
+                }else this.envData = null;
+                let storms = mainparts[2];
+                for(let i=0,i1=0;i1<storms.length;i=i1){
+                    i1 = storms.slice(i+1).search(/[~,]/g);
+                    i1 = i1<0 ? storms.length : i+1+i1;
+                    let s = storms.slice(i,i1);
+                    if(s.charAt(0)==="~") this.systems.push(new StormRef(data.sub(s.slice(1))));
+                    else if(s.charAt(0)===","){
+                        let v = data.sub(s.slice(1));
+                        v.season = data.season;
+                        this.systems.push(new Storm(v));
+                    }
+                }
             }
-        }
-        this.modified = false;
+            if(data.format===SAVE_FORMAT) this.modified = false;
+            else{
+                db.transaction('rw',db.seasons,()=>{
+                    let seas = {};
+                    seas.format = SAVE_FORMAT;
+                    seas.saveName = data.saveName;
+                    seas.season = data.season;
+                    seas.value = this.save(true);
+                    let cur = db.seasons.where('[saveName+season]').equals([data.saveName,data.season]);
+                    cur.count().then(c=>{
+                        if(c>0) cur.modify((s,ref)=>{
+                            ref.value = seas;
+                        });
+                        else db.seasons.put(seas);
+                    });
+                }).then(()=>{
+                    this.modified = false;
+                    // console.log('season ' + data.season + ' of "' + data.saveName + '" upgraded to format ' + SAVE_FORMAT);
+                }).catch(e=>{
+                    console.error(e);
+                });
+            }
+        }else this.envData = null;
     }
 }
 
-// saving/loading helper functions
+// saving/loading helpers
 
 function setupDatabase(){
     db = new Dexie("cyclone-sim");
@@ -484,39 +720,64 @@ function setupDatabase(){
         seasons: '++,saveName,season',
         settings: ''
     });
+    db.version(2).stores({
+        saves: ',format',
+        seasons: '++,format,saveName,[saveName+season]'
+    });
 }
 
-function encodeB36StringArray(arr,fl){
-    const R = SAVING_RADIX;
-    const numLen = n=>constrain(floor(log(abs(n)/pow(R,fl)*2+(n<0?1:0))/log(R))+1,1,R);
-    if(fl===undefined) fl = 0;
-    if(fl>R/2) fl = 0;
-    if(fl<=-R/2) fl = 0;
-    let str = (fl<0 ? fl+R : fl).toString(R);
-    let nLen;
-    let lenRun;
-    let strpart = "";
-    for(let i=0;i<arr.length;i++){
-        let n = arr[i];
-        let newLen = numLen(n);
-        if(newLen!==nLen || lenRun>=R){
-            if(lenRun!==undefined){
-                str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
-                strpart = "";
-            }
-            nLen = newLen;
-            lenRun = 1;
-        }else lenRun++;
-        n /= pow(R,fl);
-        n = floor(n);
-        n = n<0 ? abs(n)*2+1 : n*2;
-        n = n.toString(R);
-        if(n.length>R) n = n.slice(0,R);
-        strpart += n;
+class LoadData{
+    constructor(format,value){
+        this.format = format;
+        this.value = value;
     }
-    if(lenRun!==undefined) str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
-    return str;
+
+    sub(v){
+        return new LoadData(this.format,v);
+    }
+
+    static wrap(obj){
+        let d = new LoadData(obj.format,obj.value);
+        for(let k in obj){
+            if(k!=='format' && k!=='value') d[k] = obj[k];
+        }
+        return d;
+    }
 }
+
+// legacy saving/loading helpers (encoders are commented out; decoders aren't for backwards compatibility)
+
+// function encodeB36StringArray(arr,fl){
+//     const R = SAVING_RADIX;
+//     const numLen = n=>constrain(floor(log(abs(n)/pow(R,fl)*2+(n<0?1:0))/log(R))+1,1,R);
+//     if(fl===undefined) fl = 0;
+//     if(fl>R/2) fl = 0;
+//     if(fl<=-R/2) fl = 0;
+//     let str = (fl<0 ? fl+R : fl).toString(R);
+//     let nLen;
+//     let lenRun;
+//     let strpart = "";
+//     for(let i=0;i<arr.length;i++){
+//         let n = arr[i];
+//         let newLen = numLen(n);
+//         if(newLen!==nLen || lenRun>=R){
+//             if(lenRun!==undefined){
+//                 str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
+//                 strpart = "";
+//             }
+//             nLen = newLen;
+//             lenRun = 1;
+//         }else lenRun++;
+//         n /= pow(R,fl);
+//         n = floor(n);
+//         n = n<0 ? abs(n)*2+1 : n*2;
+//         n = n.toString(R);
+//         if(n.length>R) n = n.slice(0,R);
+//         strpart += n;
+//     }
+//     if(lenRun!==undefined) str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
+//     return str;
+// }
 
 function decodeB36StringArray(str){
     const R = SAVING_RADIX;
@@ -541,28 +802,28 @@ function decodeB36StringArray(str){
     return arr;
 }
 
-function encodePoint(x,y,z,o){
-    if(typeof x === "object"){
-        o = y;
-        z = x.z || 0;
-        y = x.y || 0;
-        x = x.x || 0;
-    }else{
-        x = x || 0;
-        y = y || 0;
-        z = z || 0;
-    }
-    if(!o) o = {};
-    let w = floor(o.w || WIDTH);
-    let h = floor(o.h || HEIGHT);
-    if(o.mapX instanceof Function) x = o.mapX(x);
-    if(o.mapY instanceof Function) y = o.mapY(y);
-    if(o.mapZ instanceof Function) z = o.mapZ(z);
-    x = abs(x);
-    y = abs(y);
-    z = abs(z);
-    return floor(z)*w*h+floor(y)*w+floor(x);
-}
+// function encodePoint(x,y,z,o){
+//     if(typeof x === "object"){
+//         o = y;
+//         z = x.z || 0;
+//         y = x.y || 0;
+//         x = x.x || 0;
+//     }else{
+//         x = x || 0;
+//         y = y || 0;
+//         z = z || 0;
+//     }
+//     if(!o) o = {};
+//     let w = floor(o.w || WIDTH);
+//     let h = floor(o.h || HEIGHT);
+//     if(o.mapX instanceof Function) x = o.mapX(x);
+//     if(o.mapY instanceof Function) y = o.mapY(y);
+//     if(o.mapZ instanceof Function) z = o.mapZ(z);
+//     x = abs(x);
+//     y = abs(y);
+//     z = abs(z);
+//     return floor(z)*w*h+floor(y)*w+floor(x);
+// }
 
 function decodePoint(n,o){
     if(!o) o = {};
@@ -580,13 +841,13 @@ function decodePoint(n,o){
     return {x,y,z};
 }
 
-function encodePointArray(a,o){
-    let arr = [];
-    for(let i=0;i<a.length;i++){
-        arr[i] = encodePoint(a[i],o);
-    }
-    return encodeB36StringArray(arr);
-}
+// function encodePointArray(a,o){
+//     let arr = [];
+//     for(let i=0;i<a.length;i++){
+//         arr[i] = encodePoint(a[i],o);
+//     }
+//     return encodeB36StringArray(arr);
+// }
 
 function decodePointArray(s,o){
     let arr = decodeB36StringArray(s);
@@ -596,27 +857,27 @@ function decodePointArray(s,o){
     return arr;
 }
 
-function modifyLocalStorage(action,error,callback){
-    let lsCache = {};
-    for(let i=0;i<localStorage.length;i++){
-        let k = localStorage.key(i);
-        if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) lsCache[k] = localStorage.getItem(k);
-    }
-    try{
-        action();
-    }catch(e){
-        for(let i=localStorage.length-1;i>=0;i--){
-            let k = localStorage.key(i);
-            if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) localStorage.removeItem(k);
-        }
-        for(let k in lsCache){
-            localStorage.setItem(k,lsCache[k]);
-        }
-        storageQuotaExhausted = true;
-        if(error) error(e);
-        else console.error(e);
-        return;
-    }
-    lsCache = undefined;
-    if(callback) callback();
-}
+// function modifyLocalStorage(action,error,callback){
+//     let lsCache = {};
+//     for(let i=0;i<localStorage.length;i++){
+//         let k = localStorage.key(i);
+//         if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) lsCache[k] = localStorage.getItem(k);
+//     }
+//     try{
+//         action();
+//     }catch(e){
+//         for(let i=localStorage.length-1;i>=0;i--){
+//             let k = localStorage.key(i);
+//             if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) localStorage.removeItem(k);
+//         }
+//         for(let k in lsCache){
+//             localStorage.setItem(k,lsCache[k]);
+//         }
+//         storageQuotaExhausted = true;
+//         if(error) error(e);
+//         else console.error(e);
+//         return;
+//     }
+//     lsCache = undefined;
+//     if(callback) callback();
+// }

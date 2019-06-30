@@ -1,5 +1,13 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190630a:
+    + Added ability to save basins with a custom name using a text box
+    * Finished the full switch from localStorage to indexedDB
+        > Basins and seasons are now stored in indexedDB
+        > Saving no longer limited by the localStorage 5 MB limit (Cyclone Sim can now theoretically save up to 10% of drive space)
+    * You can now save an unlimited number of basins
+        > Load menu UI updated with pages
+    * Saved basins and seasons upgraded to Format 2, which is more efficient and less hacky than the localStorage-limited Format 1
 v20190622a:
     * Mostly prepared the simulator for asynchronous saving/loading which will come later with the full transition to indexedDB
     * Some tweaks to input UI

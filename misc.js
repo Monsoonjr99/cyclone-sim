@@ -87,20 +87,71 @@ function makeAsyncProcess(func,...args){
     });
 }
 
-function renameOldBasinSaveKeys(){  // Rename saved basin keys for save slot 0 from versions v20190217a and prior
-    let oldPrefix = LOCALSTORAGE_KEY_PREFIX + '0-';
-    let newPrefix = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + '0-';
-    let f = LOCALSTORAGE_KEY_FORMAT;
-    let b = LOCALSTORAGE_KEY_BASIN;
-    let n = LOCALSTORAGE_KEY_NAMES;
-    if(localStorage.getItem(oldPrefix+f)){
-        localStorage.setItem(newPrefix+f,localStorage.getItem(oldPrefix+f));
-        localStorage.removeItem(oldPrefix+f);
-        localStorage.setItem(newPrefix+b,localStorage.getItem(oldPrefix+b));
-        localStorage.removeItem(oldPrefix+b);
-        localStorage.setItem(newPrefix+n,localStorage.getItem(oldPrefix+n));
-        localStorage.removeItem(oldPrefix+n);
-    }
+function upgradeLegacySaves(){
+    return waitForAsyncProcess(()=>{
+        return makeAsyncProcess(()=>{
+            // Rename saved basin keys for save slot 0 from versions v20190217a and prior
+
+            let oldPrefix = LOCALSTORAGE_KEY_PREFIX + '0-';
+            let newPrefix = LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + '0-';
+            let f = LOCALSTORAGE_KEY_FORMAT;
+            let b = LOCALSTORAGE_KEY_BASIN;
+            let n = LOCALSTORAGE_KEY_NAMES;
+            if(localStorage.getItem(oldPrefix+f)){
+                localStorage.setItem(newPrefix+f,localStorage.getItem(oldPrefix+f));
+                localStorage.removeItem(oldPrefix+f);
+                localStorage.setItem(newPrefix+b,localStorage.getItem(oldPrefix+b));
+                localStorage.removeItem(oldPrefix+b);
+                localStorage.setItem(newPrefix+n,localStorage.getItem(oldPrefix+n));
+                localStorage.removeItem(oldPrefix+n);
+            }
+        }).then(()=>{
+            // Transfer localStorage saves to indexedDB
+
+            return db.transaction('rw',db.saves,db.seasons,()=>{
+                for(let i=0;i<localStorage.length;i++){
+                    let k = localStorage.key(i);
+                    if(k.startsWith(LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN)){
+                        let s = k.slice((LOCALSTORAGE_KEY_PREFIX+LOCALSTORAGE_KEY_SAVEDBASIN).length);
+                        s = s.split('-');
+                        let name = parseInt(s[0]);
+                        if(name===0) name = AUTOSAVE_SAVE_NAME;
+                        else name = LEGACY_SAVE_NAME_PREFIX + name;
+                        let pre = LOCALSTORAGE_KEY_PREFIX+LOCALSTORAGE_KEY_SAVEDBASIN+s[0]+'-';
+                        if(s[1]===LOCALSTORAGE_KEY_FORMAT){
+                            let obj = {};
+                            obj.format = parseInt(localStorage.getItem(k),SAVING_RADIX);
+                            obj.value = {};
+                            obj.value.str = localStorage.getItem(pre+LOCALSTORAGE_KEY_BASIN);
+                            obj.value.names = localStorage.getItem(pre+LOCALSTORAGE_KEY_NAMES);
+                            db.saves.where(':id').equals(name).count().then(c=>{
+                                if(c<1) db.saves.put(obj,name);
+                            });
+                        }else if(s[1]+'-'===LOCALSTORAGE_KEY_SEASON){
+                            let y;
+                            if(s[2]==='') y = -parseInt(s[3]);
+                            else y = parseInt(s[2]);
+                            let obj = {};
+                            obj.format = FORMAT_WITH_SAVED_SEASONS;
+                            obj.saveName = name;
+                            obj.season = y;
+                            obj.value = localStorage.getItem(k);
+                            db.seasons.where('[saveName+season]').equals([name,y]).count().then(c=>{
+                                if(c<1) db.seasons.put(obj);
+                            });
+                        }
+                    }
+                }
+            }).then(()=>{
+                for(let i=localStorage.length-1;i>=0;i--){
+                    let k = localStorage.key(i);
+                    if(k.startsWith(LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN)) localStorage.removeItem(k);
+                }
+            });
+        });
+    },'Upgrading...').catch(e=>{
+        console.error(e);
+    });
 }
 
 document.onfullscreenchange = function(){

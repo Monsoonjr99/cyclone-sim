@@ -395,7 +395,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         loadMenu.show();
-        loadMenu.loadables = {};
+        loadMenu.refresh();
     }).append(false,0,60,200,40,function(s){     // settings menu button
         s.button('Settings',true,24);
     },function(){
@@ -508,7 +508,8 @@ UI.init = function(){
 
     // load menu
 
-    loadMenu.loadables = {}; // cache that stores whether the save slot has a loadable basin or not
+    loadMenu.loadables = []; // cache that stores a list of saved basins and if they are loadable
+    loadMenu.page = 0;
 
     loadMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(s){ // menu title text
         fill(COLORS.UI.text);
@@ -518,40 +519,95 @@ UI.init = function(){
         text("Load Basin",0,0);
     });
 
-    let getslotloadable = function(s){
-        let l = loadMenu.loadables[s];
-        if(l===undefined){
-            let f = localStorage.getItem(Basin.storagePrefix(s) + LOCALSTORAGE_KEY_FORMAT);
-            l = loadMenu.loadables[s] = f===null ? 0 : f>=EARLIEST_COMPATIBLE_FORMAT ? 1 : -1;
-        }
-        return l;
+    loadMenu.refresh = function(){
+        loadMenu.loadables = [];
+        waitForAsyncProcess(()=>{
+            return db.transaction('r',db.saves,()=>{
+                let col = db.saves.orderBy('format');
+                let saveNames = col.primaryKeys();
+                let formats = col.keys();
+                return Promise.all([saveNames,formats]);
+            }).then(res=>{
+                let saveNames = res[0];
+                let formats = res[1];
+                for(let i=0;i<saveNames.length;i++){
+                    loadMenu.loadables.push({
+                        saveName: saveNames[i],
+                        format: formats[i]
+                    });
+                }
+                // for(let i=0;i<SAVE_SLOTS;i++){
+                //     let newStyleSaveName;
+                //     if(i===0) newStyleSaveName = AUTOSAVE_SAVE_NAME;
+                //     else newStyleSaveName = LEGACY_SAVE_NAME_PREFIX + i;
+                //     let f = localStorage.getItem(Basin.storagePrefix(i) + LOCALSTORAGE_KEY_FORMAT);
+                //     if(f!==null){
+                //         loadMenu.loadables.push({
+                //             saveName: newStyleSaveName,
+                //             format: parseInt(f,SAVING_RADIX)
+                //         });
+                //     }
+                // }
+                loadMenu.loadables.sort((a,b)=>{
+                    a = a.saveName;
+                    b = b.saveName;
+                    if(a===AUTOSAVE_SAVE_NAME) return -1;
+                    if(b===AUTOSAVE_SAVE_NAME) return 1;
+                    return a>b ? 1 : -1;
+                });
+            });
+        },'Fetching Saved Basins...').catch(e=>{
+            console.error(e);
+        });
     };
 
+    // let getslotloadable = function(s){
+    //     let l = loadMenu.loadables[s];
+    //     if(l===undefined){
+    //         let f = localStorage.getItem(Basin.storagePrefix(s) + LOCALSTORAGE_KEY_FORMAT);
+    //         l = loadMenu.loadables[s] = f===null ? 0 : f>=EARLIEST_COMPATIBLE_FORMAT ? 1 : -1;
+    //     }
+    //     return l;
+    // };
+
     let loadbuttonrender = function(s){
-        let loadable = getslotloadable(this.slotNum);
-        let label = "Slot ";
-        label += this.slotNum;
-        if(this.slotNum===0) label += " (Autosave)";
-        if(loadable<0) label += " [Incompatible]";
-        s.button(label,true,18,loadable<1);
+        let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
+        let label;
+        let loadable;
+        if(!b){
+            label = '--Empty--';
+            loadable = false;
+        }else{
+            label = b.saveName;
+            if(b.format<EARLIEST_COMPATIBLE_FORMAT){
+                label += " [Incompatible]";
+                loadable = false;
+            }else loadable = true;
+        }
+        let fontSize = 18;
+        textSize(fontSize);
+        while(textWidth(label)>this.width-10 && fontSize>8){
+            fontSize--;
+            textSize(fontSize);
+        }
+        s.button(label,true,fontSize,!loadable);
     };
 
     let loadbuttonclick = function(){
-        let loadable = getslotloadable(this.slotNum);
-        if(loadable>0){
-            init(this.slotNum);
+        let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
+        if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
+            init(b.saveName);
             loadMenu.hide();
-            loadMenu.loadables = {};
         }
     };
 
     let loadbuttons = [];
 
-    for(let i=0;i<SAVE_SLOTS;i++){
+    for(let i=0;i<LOAD_MENU_BUTTONS_PER_PAGE;i++){
         let x = i===0 ? WIDTH/2-150 : 0;
         let y = i===0 ? HEIGHT/4 : 40;
         loadbuttons[i] = loadMenu.append(1,x,y,300,30,loadbuttonrender,loadbuttonclick);
-        loadbuttons[i].slotNum = i;
+        loadbuttons[i].buttonNum = i;
     }
 
     loadMenu.append(1,0,40,300,30,function(s){ // "Cancel" button
@@ -559,25 +615,38 @@ UI.init = function(){
     },function(){
         loadMenu.hide();
         mainMenu.show();
-        loadMenu.loadables = {};
+    });
+
+    loadMenu.append(false,WIDTH/2-75,HEIGHT/4-40,30,30,function(s){   // prev page
+        s.button('',true,18,loadMenu.page<1);
+        triangle(5,15,25,5,25,25);
+    },function(){
+        if(loadMenu.page>0) loadMenu.page--;
+    }).append(false,120,0,30,30,function(s){    // next page
+        let grey = loadMenu.page>=ceil(loadMenu.loadables.length/LOAD_MENU_BUTTONS_PER_PAGE)-1;
+        s.button('',true,18,grey);
+        triangle(5,5,25,15,5,25);
+    },function(){
+        if(loadMenu.page<ceil(loadMenu.loadables.length/LOAD_MENU_BUTTONS_PER_PAGE)-1) loadMenu.page++;
     });
 
     let delbuttonrender = function(s){
-        let exists = getslotloadable(this.parent.slotNum);
-        s.button("Del",true,18,!exists);
+        let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.parent.buttonNum];
+        s.button("Del",true,18,!b);
     };
 
     let delbuttonclick = function(){
-        let s = this.parent.slotNum;
-        if(getslotloadable(s)){
+        let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.parent.buttonNum];
+        if(b){
             areYouSure.dialog(()=>{
-                Basin.deleteSave(s);
-                loadMenu.loadables = {};
-            });
+                Basin.deleteSave(b.saveName,()=>{
+                    loadMenu.refresh();
+                });
+            },'Delete "'+b.saveName+'"?');
         }
     };
 
-    for(let i=0;i<SAVE_SLOTS;i++) loadbuttons[i].append(false,315,0,40,30,delbuttonrender,delbuttonclick);
+    for(let i=0;i<LOAD_MENU_BUTTONS_PER_PAGE;i++) loadbuttons[i].append(false,315,0,40,30,delbuttonrender,delbuttonclick);
 
     // Settings Menu
 
@@ -634,6 +703,10 @@ UI.init = function(){
         textAlign(CENTER,CENTER);
         textSize(36);
         text("Are You Sure?",0,0);
+        if(areYouSure.desc){
+            textSize(24);
+            text(areYouSure.desc,0,50);
+        }
     });
 
     areYouSure.append(false,WIDTH/2-108,HEIGHT/4+100,100,30,function(s){ // "Yes" button
@@ -651,9 +724,11 @@ UI.init = function(){
         areYouSure.hide();
     });
 
-    areYouSure.dialog = function(action){
+    areYouSure.dialog = function(action,desc){
         if(action instanceof Function){
             areYouSure.action = action;
+            if(typeof desc === "string") areYouSure.desc = desc;
+            else areYouSure.desc = undefined;
             areYouSure.show();
         }
     };
@@ -799,11 +874,11 @@ UI.init = function(){
         rect(3,6,18,2);
         rect(3,11,18,2);
         rect(3,16,18,2);
-        if(storageQuotaExhausted){
-            fill(COLORS.UI.redText);
-            textAlign(CENTER,TOP);
-            text("!",24,3);
-        }
+        // if(storageQuotaExhausted){
+        //     fill(COLORS.UI.redText);
+        //     textAlign(CENTER,TOP);
+        //     text("!",24,3);
+        // }
     },function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
@@ -1138,15 +1213,19 @@ UI.init = function(){
         timelineBox.hide();
     });
 
-    let returntomainmenu = function(){
+    let returntomainmenu = function(p){
         sideMenu.hide();
         stormInfoPanel.hide();
         timelineBox.hide();
         primaryWrapper.hide();
         land.clear();
         for(let t in basin.seasonExpirationTimers) clearTimeout(basin.seasonExpirationTimers[t]);
-        basin = undefined;
-        mainMenu.show();
+        let wait = ()=>{
+            basin = undefined;
+            mainMenu.show();
+        };
+        if(p instanceof Promise) p.then(wait);
+        else wait();
     };
 
     sideMenu = primaryWrapper.append(false,0,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
@@ -1157,23 +1236,22 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         text("Menu",this.width/2,10);
-        if(storageQuotaExhausted){
-            textSize(14);
-            fill(COLORS.UI.redText);
-            text("localStorage quota for origin\n" + origin + "\nexceeded; unable to save",this.width/2,this.height-60);
-        }
+        // if(storageQuotaExhausted){
+        //     textSize(14);
+        //     fill(COLORS.UI.redText);
+        //     text("localStorage quota for origin\n" + origin + "\nexceeded; unable to save",this.width/2,this.height-60);
+        // }
     },true,false);
 
     sideMenu.append(false,5,30,sideMenu.width-10,25,function(s){ // Save and return to main menu button
-        s.button("Save and Return to Main Menu",false,15,storageQuotaExhausted);
+        s.button("Save and Return to Main Menu",false,15/* ,storageQuotaExhausted */);
     },function(){
-        if(!storageQuotaExhausted){
-            if(basin.saveSlot===0) saveBasinAsPanel.invoke(true);
+        // if(!storageQuotaExhausted){
+            if(basin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
             else{
-                basin.save();
-                returntomainmenu();
+                returntomainmenu(basin.save());
             }
-        }
+        // }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Return to main menu w/o saving button
         s.button("Return to Main Menu w/o Saving",false,15);
     },function(){
@@ -1181,16 +1259,16 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin button
         let txt = "Save Basin";
         if(basin.tick===basin.lastSaved) txt += " [Saved]";
-        s.button(txt,false,15,storageQuotaExhausted);
+        s.button(txt,false,15/* ,storageQuotaExhausted */);
     },function(){
-        if(!storageQuotaExhausted){
-            if(basin.saveSlot===0) saveBasinAsPanel.invoke();
+        // if(!storageQuotaExhausted){
+            if(basin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
             else basin.save();
-        }
+        // }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin as button
-        s.button("Save Basin As...",false,15,storageQuotaExhausted);
+        s.button("Save Basin As...",false,15/* ,storageQuotaExhausted */);
     },function(){
-        if(!storageQuotaExhausted) saveBasinAsPanel.invoke();
+        /* if(!storageQuotaExhausted) */ saveBasinAsPanel.invoke();
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Settings menu button
         s.button("Settings",false,15);
     },function(){
@@ -1199,7 +1277,7 @@ UI.init = function(){
         paused = true;
     });
 
-    saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,sideMenu.height/2,function(s){
+    saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,100,function(s){
         fill(COLORS.UI.box);
         noStroke();
         s.fullRect();
@@ -1211,45 +1289,72 @@ UI.init = function(){
         line(0,0,0,this.height);
     },true,false);
 
+    let saveBasinAsTextBox = saveBasinAsPanel.append(false,5,40,saveBasinAsPanel.width-10,25,[15,32]);
+
+    saveBasinAsTextBox.append(false,0,30,saveBasinAsPanel.width-10,25,function(s){
+        let n = UI.focusedInput===saveBasinAsTextBox ? textInput.value : saveBasinAsTextBox.value;
+        let grey = n==='' || n===AUTOSAVE_SAVE_NAME;
+        s.button('Ok',false,15,grey);
+    },function(){
+        let n = saveBasinAsTextBox.value;
+        if(n!=='' && n!==AUTOSAVE_SAVE_NAME){
+            if(n===basin.saveName){
+                basin.save();
+                saveBasinAsPanel.hide();
+            }else{
+                let f = ()=>{
+                    let p = basin.saveAs(n);
+                    saveBasinAsPanel.hide();
+                    if(saveBasinAsPanel.exit) returntomainmenu(p);
+                };
+                db.saves.where(':id').equals(n).count().then(c=>{
+                    if(c>0) areYouSure.dialog(f,'Overwrite "'+n+'"?');
+                    else f();
+                });
+            }
+        }
+    });
+
     saveBasinAsPanel.invoke = function(exit){
         saveBasinAsPanel.exit = exit;
         saveBasinAsPanel.toggleShow();
+        saveBasinAsTextBox.value = basin.saveName===AUTOSAVE_SAVE_NAME ? '' : basin.saveName;
     };
     
-    let saveslotbuttonrender = function(s){
-        let slotOccupied = getslotloadable(this.slotNum);
-        let txt = "Slot " + this.slotNum;
-        if(basin.saveSlot===this.slotNum) txt += " [This]";
-        else if(slotOccupied) txt += " [Overwrite]";
-        s.button(txt,false,15,storageQuotaExhausted);
-    };
+    // let saveslotbuttonrender = function(s){
+    //     let slotOccupied = getslotloadable(this.slotNum);
+    //     let txt = "Slot " + this.slotNum;
+    //     if(basin.saveSlot===this.slotNum) txt += " [This]";
+    //     else if(slotOccupied) txt += " [Overwrite]";
+    //     s.button(txt,false,15,storageQuotaExhausted);
+    // };
 
-    let saveslotbuttonclick = function(){
-        if(!storageQuotaExhausted){
-            if(basin.saveSlot===this.slotNum){
-                basin.save();
-                loadMenu.loadables = {};
-                saveBasinAsPanel.hide();
-            }else{
-                let slotOccupied = getslotloadable(this.slotNum);
-                let f = ()=>{
-                    basin.saveAs(this.slotNum);
-                    loadMenu.loadables = {};
-                    saveBasinAsPanel.hide();
-                    if(saveBasinAsPanel.exit) returntomainmenu();
-                };
-                if(slotOccupied) areYouSure.dialog(f);
-                else f();
-            }
-        }
-    };
+    // let saveslotbuttonclick = function(){
+    //     if(!storageQuotaExhausted){
+    //         if(basin.saveSlot===this.slotNum){
+    //             basin.save();
+    //             loadMenu.loadables = {};
+    //             saveBasinAsPanel.hide();
+    //         }else{
+    //             let slotOccupied = getslotloadable(this.slotNum);
+    //             let f = ()=>{
+    //                 basin.saveAs(this.slotNum);
+    //                 loadMenu.loadables = {};
+    //                 saveBasinAsPanel.hide();
+    //                 if(saveBasinAsPanel.exit) returntomainmenu();
+    //             };
+    //             if(slotOccupied) areYouSure.dialog(f);
+    //             else f();
+    //         }
+    //     }
+    // };
 
-    for(let i=1;i<SAVE_SLOTS;i++){  // 1-indexed as to not include the autosave slot 0
-        let x = i===1 ? 5 : 0;
-        let y = i===1 ? 40 : 30;
-        let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
-        b.slotNum = i;
-    }
+    // for(let i=1;i<SAVE_SLOTS;i++){  // 1-indexed as to not include the autosave slot 0
+    //     let x = i===1 ? 5 : 0;
+    //     let y = i===1 ? 40 : 30;
+    //     let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
+    //     b.slotNum = i;
+    // }
 
     helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(s){
         fill(COLORS.UI.box);

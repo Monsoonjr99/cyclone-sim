@@ -54,7 +54,7 @@ class NoiseChannel{
 }
 
 class NCMetadata{
-    constructor(field,index,loadstr){
+    constructor(field,index,loadData){
         this.field = field;
         this.index = index;
         this.channel = null;
@@ -64,7 +64,7 @@ class NCMetadata{
         this.yOff = random(r);
         this.zOff = random(r);
         this.history = {};
-        if(loadstr) this.load(loadstr);
+        if(loadData instanceof LoadData) this.load(loadData);
         if(!basin.envData[this.field]) basin.envData[this.field] = {};
         basin.envData[this.field][this.index] = this;
     }
@@ -90,16 +90,17 @@ class NCMetadata{
                 d = d.envData[this.field][this.index];
                 let h = this.history.arr = [];
                 for(let i=0;i<d.length;i++){
-                    if(i===0) h.push(d[0]);
-                    else{
-                        let o = h[i-1];
-                        let n = d[i];
-                        h.push({
-                            x: o.x + n.x,
-                            y: o.y + n.y,
-                            z: o.z + n.z
-                        });
-                    }
+                    h.push(d[i]);
+                    // if(i===0) h.push(d[0]);
+                    // else{
+                    //     let o = h[i-1];
+                    //     let n = d[i];
+                    //     h.push({
+                    //         x: o.x + n.x,
+                    //         y: o.y + n.y,
+                    //         z: o.z + n.z
+                    //     });
+                    // }
                 }
             }else this.history.arr = null;
         }
@@ -151,35 +152,59 @@ class NCMetadata{
         if(startingRecord) this.history.recordStarts = seas.envRecordStarts = (floor(basin.tick/ADVISORY_TICKS)*ADVISORY_TICKS-basin.seasonTick())/ADVISORY_TICKS;
         if(s.length===0) s.push(h[0]);
         else{
-            let o = h[h.length-2];
+            // let o = h[h.length-2];
             let n = h[h.length-1];
-            s.push({
-                x: n.x - o.x,
-                y: n.y - o.y,
-                z: n.z - o.z
-            });
+            // s.push({
+            //     x: n.x - o.x,
+            //     y: n.y - o.y,
+            //     z: n.z - o.z
+            // });
+            s.push(n);
         }
         seas.modified = true;
     }
 
     save(){
-        let arr = [];
-        arr.push(this.wobbleVector.y);
-        arr.push(this.wobbleVector.x);
-        arr.push(this.zOff);
-        arr.push(this.yOff);
-        arr.push(this.xOff);
-        return encodeB36StringArray(arr,ENVDATA_SAVE_FLOAT);
+        // new format
+
+        let obj = {};
+        let w = obj.wobbleVector = {};
+        w.x = this.wobbleVector.x;
+        w.y = this.wobbleVector.y;
+        for(let p of ['xOff','yOff','zOff']) obj[p] = this[p];
+        return obj;
+
+        // old format
+
+        // let arr = [];
+        // arr.push(this.wobbleVector.y);
+        // arr.push(this.wobbleVector.x);
+        // arr.push(this.zOff);
+        // arr.push(this.yOff);
+        // arr.push(this.xOff);
+        // return encodeB36StringArray(arr,ENVDATA_SAVE_FLOAT);
     }
 
-    load(str){
-        let arr = decodeB36StringArray(str);
-        this.xOff = arr.pop() || this.xOff;
-        this.yOff = arr.pop() || this.yOff;
-        this.zOff = arr.pop() || this.zOff;
-        let wx = arr.pop();
-        let wy = arr.pop();
-        if(wx!==undefined && wy!==undefined) this.wobbleVector = createVector(wx,wy);
+    load(data){
+        if(data instanceof LoadData){
+            let wx;
+            let wy;
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                for(let p of ['xOff','yOff','zOff']) if(obj[p]) this[p] = obj[p];
+                wx = obj.wobbleVector && obj.wobbleVector.x;
+                wy = obj.wobbleVector && obj.wobbleVector.y;
+            }else{
+                let str = data.value;
+                let arr = decodeB36StringArray(str);
+                this.xOff = arr.pop() || this.xOff;
+                this.yOff = arr.pop() || this.yOff;
+                this.zOff = arr.pop() || this.zOff;
+                wx = arr.pop();
+                wy = arr.pop();
+            }
+            if(wx!==undefined && wy!==undefined) this.wobbleVector = createVector(wx,wy);
+        }
     }
 }
 
@@ -208,7 +233,12 @@ class EnvField{
         }
         for(let i=0;i<this.noise.length;i++){
             if(!basin.envData[this.name]) basin.envData[this.name] = {};
-            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i,basin.envData.loadData.pop());
+            let d;
+            if(basin.envData.loadData instanceof LoadData){
+                d = basin.envData.loadData.value.pop();
+                d = basin.envData.loadData.sub(d);
+            }
+            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i,d);
         }
     }
 
@@ -556,8 +586,10 @@ Environment.init = function(){
     );
 
     for(let i in basin.envData){
-        for(let j in basin.envData[i]){
-            basin.envData[i][j].init();
+        if(i!=='loadData'){
+            for(let j in basin.envData[i]){
+                basin.envData[i][j].init();
+            }
         }
     }
 };
