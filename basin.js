@@ -10,6 +10,7 @@ class Basin{
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.hyper = opts.hyper;
+        this.hypoCats = opts.hypoCats;
         this.startYear = opts.year || (this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR);
         this.nameList = NAME_LIST_PRESETS[opts.names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
@@ -191,7 +192,8 @@ class Basin{
                 'tick',
                 'seed',
                 'startYear',
-                'nameList'
+                'nameList',
+                'hypoCats'
             ]) b[p] = this[p];
             return db.transaction('rw',db.saves,db.seasons,()=>{
                 db.saves.put(obj,this.saveName);
@@ -300,9 +302,10 @@ class Basin{
                             'tick',
                             'seed',
                             'startYear',
-                            'nameList'
+                            'nameList',
+                            'hypoCats'
                         ]) this[p] = obj[p];
-                    }else{
+                    }else{  // Format 1 backwards compatibility
                         // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
                         // let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
                         // let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
@@ -435,6 +438,8 @@ class Season{
         this.hurricanes = 0;
         this.majors = 0;
         this.c5s = 0;
+        this.c8s = 0;
+        this.hypercanes = 0;
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
@@ -491,6 +496,8 @@ class Season{
             'hurricanes',
             'majors',
             'c5s',
+            'c8s',
+            'hypercanes',
             'ACE',
             'deaths',
             'damage',
@@ -588,11 +595,13 @@ class Season{
                     'hurricanes',
                     'majors',
                     'c5s',
+                    'c8s',
+                    'hypercanes',
                     'ACE',
                     'deaths',
                     'damage',
                     'envRecordStarts'
-                ]) this[p] = obj[p];
+                ]) this[p] = obj[p] || 0;
                 for(let f of Env.fieldList){
                     let fd = this.envData[f] = {};
                     for(let i=0;i<Env.fields[f].noise.length;i++){
@@ -619,7 +628,7 @@ class Season{
                         this.systems.push(new Storm(v));
                     }
                 }
-            }else{
+            }else{  // Format 1 backwards compatibility
                 let str = data.value;
                 let mainparts = str.split(";");
                 let stats = decodeB36StringArray(mainparts[0]);

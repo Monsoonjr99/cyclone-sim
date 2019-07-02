@@ -9,6 +9,8 @@ class Storm{
         this.hurricane = false;
         this.major = false;
         this.c5 = false;
+        this.c8 = false;
+        this.hypercane = false;
 
         this.rotation = random(TAU);
 
@@ -57,11 +59,14 @@ class Storm{
         let ty = data ? data.type : null;
         let cat = data ? data.getCat() : null;
         let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
+        let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         return ty===TROP ?
-            (cat>0 ? hurricaneTerm :
+            (cat>10 ? hypercaneTerm :
+            cat>0 ? hurricaneTerm :
             cat>-1 ? "Tropical Storm" : "Tropical Depression") + " " + name :
         ty===SUBTROP ?
-            (cat>0 ? "Subtropical " + hurricaneTerm :
+            (cat>10 ? "Subtropical " + hypercaneTerm :
+            cat>0 ? "Subtropical " + hurricaneTerm :
             cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + " " + name :
         ty===TROPWAVE ?
             name ? "Remnants of " + name : "Unnamed Tropical Wave" :
@@ -121,11 +126,16 @@ class Storm{
                 stormIcons.fill(COLORS.storm.extL);
                 stormIcons.textSize(18);
             }else{
-                stormIcons.fill(0);
+                stormIcons.fill(cat>7 ? 240 : 0);
                 stormIcons.textSize(12);
             }
             stormIcons.textStyle(NORMAL);
-            stormIcons.text(tropOrSub(ty) ? cat>0 ? (ty===SUBTROP ? "S" : "") + cat : cat===0 ? ty===SUBTROP ? "SS" : "S" : ty===SUBTROP ? "SD" : "D" : "L", 0, 0);
+            stormIcons.text(tropOrSub(ty) ?
+                cat>0 ? (ty===SUBTROP ? "S" : "") + (cat>10 ? 'HY' : cat) :
+                cat===0 ? ty===SUBTROP ? "SS" : "S" :
+                ty===SUBTROP ? "SD" :
+                "D" :
+            "L", 0, 0);
             stormIcons.fill(0);
             if(simSettings.showStrength){
                 stormIcons.textSize(10);
@@ -223,6 +233,14 @@ class Storm{
         if(!this.c5 && isTropical && cat>=5){
             cSeason.c5s++;
             this.c5 = true;
+        }
+        if(basin.hypoCats && !this.c8 && isTropical && cat>=8){
+            cSeason.c8s++;
+            this.c8 = true;
+        }
+        if(basin.hypoCats && !this.hypercane && isTropical && cat>=11){
+            cSeason.hypercanes++;
+            this.hypercane = true;
         }
         // if(isTropical){
         //     let lnd = land.get(data.pos.x,data.pos.y);
@@ -327,6 +345,8 @@ class Storm{
                 if(trop && !this.hurricane && cat>=1) this.hurricane = true;
                 if(trop && !this.major && cat>=3) this.major = true;
                 if(trop && !this.c5 && cat>=5) this.c5 = true;
+                if(basin.hypoCats && trop && !this.c8 && cat>=8) this.c8 = true;
+                if(basin.hypoCats && trop && !this.hypercane && cat>=11) this.hypercane = true;
                 if(!this.TC || trop){
                     if(!this.peak) this.peak = d;
                     else if(d.pressure<this.peak.pressure) this.peak = d;
@@ -435,7 +455,13 @@ class StormData{
         if(w<96) return 2;
         if(w<113) return 3;
         if(w<137) return 4;
-        return 5;
+        if(!basin.hypoCats || w<165) return 5;
+        if(w<198) return 6;
+        if(w<255) return 7;
+        if(w<318) return 8;
+        if(w<378) return 9;
+        if(w<434) return 10;
+        return 11;
     }
 
     save(inArr){
@@ -594,7 +620,13 @@ class ActiveSystem extends StormData{
                 sType==="2" ? 975 :
                 sType==="3" ? 960 :
                 sType==="4" ? 945 :
-                sType==="5" ? 925 : 1000 :
+                sType==="5" ? 925 :
+                sType==='6' ? 890 :
+                sType==='7' ? 840 :
+                sType==='8' ? 800 :
+                sType==='9' ? 765 :
+                sType==='10' ? 730 :
+                sType==='y' ? 690 : 1000 :
             random(1000,1020);
             let w = spawn ?
                 sType==="x" ? 15 :
@@ -605,7 +637,13 @@ class ActiveSystem extends StormData{
                 sType==="2" ? 90 :
                 sType==="3" ? 105 :
                 sType==="4" ? 125 :
-                sType==="5" ? 145 : 35 :
+                sType==="5" ? 145 :
+                sType==='6' ? 170 :
+                sType==='7' ? 210 : 
+                sType==='8' ? 270 :
+                sType==='9' ? 330 :
+                sType==='10' ? 400 :
+                sType==='y' ? 440 : 35 :
             random(15,35);
             let ty = ext ? EXTROP : spawn ?
                 sType==="l" ? TROPWAVE :

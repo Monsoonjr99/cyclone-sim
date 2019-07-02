@@ -328,6 +328,18 @@ UI.init = function(){
                     g.sType = "4";
                 }else if(key === "5"){
                     g.sType = "5";
+                }else if(key === "6" && basin.hypoCats){
+                    g.sType = "6";
+                }else if(key === "7" && basin.hypoCats){
+                    g.sType = "7";
+                }else if(key === "8" && basin.hypoCats){
+                    g.sType = "8";
+                }else if(key === "9" && basin.hypoCats){
+                    g.sType = "9";
+                }else if(key === "0" && basin.hypoCats){
+                    g.sType = "10";
+                }else if((key === "y" || key === "Y") && basin.hypoCats){
+                    g.sType = "y";
                 }else if(key === "x" || key === "X"){
                     g.sType = "x";
                 }else return;
@@ -465,6 +477,11 @@ UI.init = function(){
         s.button('Activity Mode: '+mode,true);
     },function(){
         newBasinSettings.hyper = !newBasinSettings.hyper;
+    }).append(false,0,45,300,30,function(s){    // Hypothetical categories selector
+        let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
+        s.button('Hypothetical Categories: '+hypo,true);
+    },function(){
+        newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
     }).append(false,0,45,300,30,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
         list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby"][list];
@@ -972,7 +989,11 @@ UI.init = function(){
                 txt += "\nNamed storms: " + se.namedStorms;
                 txt += "\n" + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
                 txt += "\nMajor " + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.majors;
-                txt += "\nCategory 5s: " + se.c5s;
+                if(basin.hypoCats){
+                    txt += '\nCategory 5+: ' + se.c5s;
+                    txt += '\nCategory 8+: ' + se.c8s;
+                    txt += '\n' + HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
+                }else txt += "\nCategory 5s: " + se.c5s;
                 txt += "\nTotal ACE: " + se.ACE;
                 txt += "\nDamage: " + damageDisplayNumber(se.damage);
                 txt += "\nDeaths: " + se.deaths;
@@ -1362,7 +1383,7 @@ UI.init = function(){
         s.fullRect();
         fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
-        textSize(18);
+        textSize(15);
         text(HELP_TEXT,10,10);
     },true,false);
 

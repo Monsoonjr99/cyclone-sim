@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190702a:
+    + Added hypothetical categories (C6-C10 and hypercanes)
+        > Optionally enabled upon basin creation
+        > C8+ and hypercanes kept track of in season stats
+        > Can be spawned in god mode
 v20190630a:
     + Added ability to save basins with a custom name using a text box
     * Finished the full switch from localStorage to indexedDB

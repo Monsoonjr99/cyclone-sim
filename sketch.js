@@ -167,6 +167,7 @@ function init(load){    // clean this up when global variables are cleaned up
         opts.hurrTerm = newBasinSettings.hurrTerm;
         opts.mapType = newBasinSettings.mapType;
         opts.godMode = newBasinSettings.godMode;
+        opts.hypoCats = newBasinSettings.hypoCats;
         basin = new Basin(false,opts);
         newBasinSettings = {};
         paused = false;

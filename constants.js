@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190630a";
+const VERSION_NUMBER = "20190702a";
 
 const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -135,6 +135,7 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists
     ['Alu','Buri','Dodo','Emau','Fere','Hibu','Ila','Kama','Lobu','Maila']
 ];
 const HURRICANE_STRENGTH_TERM = ["Cyclone","Hurricane","Typhoon"];
+const HYPERCANE_STRENGTH_TERM = ["Hyperclone","Hypercane","Hyperphoon"];
 const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
 const KEY_F11 = 122;
@@ -199,7 +200,10 @@ const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\t\t\tL - Tropical Low/Wave\n" +
     "\t\t\t\tD - Tropical Depression\n" +
     "\t\t\t\tS - Tropical Storm\n" +
-    "\t\t\t\t[number key 1-5] - Category [1-5] Tropical Cyclone";
+    "\t\t\t\t[number key 1-5] - Category [1-5] Tropical Cyclone\n" +
+    '\t\t\t\t[number key 6-9] - Category [6-9] Tropical Cyclone (only w/ hypo categories enabled)\n' +
+    '\t\t\t\t0 - Category 10 Tropical Cyclone (only w/ hypo categories enabled)\n' +
+    '\t\t\t\tY - Hyperclone (only w/ hypo categories enabled)';
 
 const COLORS = {};      // For storing all colors used in the graphics
 
@@ -217,6 +221,12 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm[TROP][3] = color(240,20,20);
     COLORS.storm[TROP][4] = color(250,40,250);
     COLORS.storm[TROP][5] = color(250,140,250);
+    COLORS.storm[TROP][6] = color(250,200,250);
+    COLORS.storm[TROP][7] = color(240,90,90);
+    COLORS.storm[TROP][8] = color(190,60,60);
+    COLORS.storm[TROP][9] = color(130,10,10);
+    COLORS.storm[TROP][10] = color(120,10,120);
+    COLORS.storm[TROP][11] = color(20,0,140);
     COLORS.storm[SUBTROP] = {};
     COLORS.storm[SUBTROP][-1] = color(60,60,220);
     COLORS.storm[SUBTROP][0] = color(60,220,60);
