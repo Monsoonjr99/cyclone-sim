@@ -1,5 +1,12 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190704a:
+    + Added textbox to date navigator for directly entering a year to navigate to
+    + Added ability to copy a basin's seed from a text box accessible from a side menu button
+    + Added ability to enter a seed in new basin settings using a text box
+    * The loading ring on non-rendering waiting screens now looks like a TC
+    * Pressing enter on some text boxes now does the same thing as clicking their associated button
+    * Tropical waves now spawn more frequently during off-season in hyper mode
 v20190702a:
     + Added hypothetical categories (C6-C10 and hypercanes)
         > Optionally enabled upon basin creation

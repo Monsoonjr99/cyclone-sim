@@ -12,6 +12,7 @@ function setup(){
     newBasinSettings = {};
     waitingFor = 0;
     waitingDesc = '';
+    waitingTCSymbolSHem = false; // yes seriously, a global var for this
     simSettings = new Settings();
     // storageQuotaExhausted = false;
 
@@ -104,14 +105,20 @@ function draw(){
             UI.updateMouseOver();
             UI.renderAll();
         }else{
+            let d = 100;
             push();
             translate(WIDTH/2,HEIGHT/2);
             push();
-            noFill();
-            stroke(0,64,128);
-            strokeWeight(5);
-            rotate(millis()*PI/500);
-            arc(0,0,100,100,0,7*PI/4);
+            noStroke();
+            fill(0,64,128);
+            ellipse(0,0,d);
+            if(waitingTCSymbolSHem) scale(1,-1);
+            rotate(millis()*-PI/500);
+            beginShape();
+            vertex(d*5/8,-d);
+            bezierVertex(-d*3/2,-d*5/8,d*3/2,d*5/8,-d*5/8,d);
+            bezierVertex(d*5/8,0,-d*5/8,0,d*5/8,-d);
+            endShape();
             pop();
             textSize(48);
             textAlign(CENTER,CENTER);
@@ -195,7 +202,8 @@ function advanceSim(){
         }
         basin.activeSystems[i].update();
     }
-    if(random()<0.015*sq((seasonalSine(basin.tick)+1)/2)) basin.spawn(false);    // tropical waves
+    if(!basin.hyper && random()<0.015*sq((seasonalSine(basin.tick)+1)/2)) basin.spawn(false);    // tropical waves (normal mode)
+    if(basin.hyper && random()<(0.013*sq((seasonalSine(basin.tick)+1)/2)+0.002)) basin.spawn(false);    // tropical waves (hyper mode)
     if(random()<0.01-0.002*seasonalSine(basin.tick)) basin.spawn(true);    // extratropical cyclones
     let stormKilled = false;
     for(let i=basin.activeSystems.length-1;i>=0;i--){

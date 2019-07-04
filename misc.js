@@ -64,7 +64,10 @@ function cbrt(n){   // Cubed root function since p5 doesn't have one nor does po
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
 function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;
-    if(waitingFor<2) waitingDesc = desc;
+    if(waitingFor<2){
+        waitingDesc = desc;
+        waitingTCSymbolSHem = random()<0.5;
+    }
     else waitingDesc = "Waiting...";
     return func(...args).then(v=>{
         waitingFor--;

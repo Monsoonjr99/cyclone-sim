@@ -12,6 +12,7 @@ class UI{
         if(renderer instanceof Array){
             let size = renderer[0];
             let charLimit = renderer[1];
+            let enterFunc = renderer[2];
             this.isInput = true;
             this.value = '';
             this.clickFunc = function(){
@@ -26,6 +27,7 @@ class UI{
             this.renderFunc = function(s){
                 s.input(size);
             };
+            if(enterFunc) this.enterFunc = enterFunc;
         }else{
             this.clickFunc = onclick;
             this.isInput = false;
@@ -425,6 +427,8 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
+    let basinCreationMenuButtonSpacing = 40;
+
     let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(s){   // hemisphere selector
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
@@ -438,7 +442,7 @@ UI.init = function(){
         }
     });
 
-    let yearsel = hemsel.append(false,0,45,0,30,function(s){ // Year selector
+    let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){ // Year selector
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -472,17 +476,17 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    yearsel.append(false,0,45,300,30,function(s){    // Activity mode selector
+    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Activity mode selector
         let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
         s.button('Activity Mode: '+mode,true);
     },function(){
         newBasinSettings.hyper = !newBasinSettings.hyper;
-    }).append(false,0,45,300,30,function(s){    // Hypothetical categories selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
         let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
         s.button('Hypothetical Categories: '+hypo,true);
     },function(){
         newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
-    }).append(false,0,45,300,30,function(s){     // Name list selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
         list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby"][list];
         s.button('Name List: '+list,true);
@@ -490,30 +494,40 @@ UI.init = function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
         newBasinSettings.names++;
         newBasinSettings.names %= NAME_LIST_PRESETS.length;
-    }).append(false,0,45,300,30,function(s){     // Hurricane term selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Hurricane term selector
         let term = newBasinSettings.hurrTerm || 0;
         s.button('Hurricane-Strength Term: '+HURRICANE_STRENGTH_TERM[term],true);
     },function(){
         if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
-    }).append(false,0,45,300,30,function(s){     // Map type Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Map type Selector
         let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea"][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
-    }).append(false,0,45,300,30,function(s){     // God mode Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // God mode Selector
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
         s.button('God Mode: '+gMode,true);
     },function(){
         newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
+    let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){
+        textAlign(LEFT,CENTER);
+        text('Seed:',0,15);
+    }).append(false,50,0,250,30,[18,16,function(){
+        if(Number.isNaN(parseInt(this.value))) this.value = '';
+    }]);
+
     basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
+        let seed = parseInt(seedsel.value);
+        if(!Number.isNaN(seed)) newBasinSettings.seed = seed;
+        seedsel.value = '';
         init();
         basinCreationMenu.hide();
     }).append(false,0,40,300,30,function(s){ // "Cancel" button
@@ -773,10 +787,14 @@ UI.init = function(){
         dateNavigator.toggleShow();
     });
 
-    dateNavigator = primaryWrapper.append(false,0,30,140,50,function(s){     // Analysis navigator panel
+    dateNavigator = primaryWrapper.append(false,0,30,140,80,function(s){     // Analysis navigator panel
         fill(COLORS.UI.box);
         noStroke();
         s.fullRect();
+        fill(COLORS.UI.text);
+        textAlign(LEFT,TOP);
+        textSize(15);
+        text('Y:',15,53);
     },true,false);
 
     let navButtonRend = function(s){     // Navigator button render function
@@ -829,6 +847,32 @@ UI.init = function(){
         let button = dateNavigator.append(false,x,y,20,10,navButtonRend,navButtonClick);
         button.metadata = i;
     }
+
+    let dateNavYearInput = dateNavigator.append(false,30,50,70,20,[15,5,function(){
+        let v = this.value;
+        let n = parseInt(v);
+        if(!Number.isNaN(n) && paused){
+            let m = basin.tickMoment(viewTick);
+            m.year(n);
+            let t = basin.tickFromMoment(m);
+            if(t%ADVISORY_TICKS!==0) t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+            if(t>basin.tick) t = basin.tick;
+            if(t<0) t = 0;
+            changeViewTick(t);
+            this.value = '';
+        }
+    }]);
+
+    dateNavYearInput.append(false,80,0,20,20,function(s){
+        let v = UI.focusedInput === dateNavYearInput ? textInput.value : dateNavYearInput.value;
+        let grey;
+        if(Number.isNaN(parseInt(v))) grey = true;
+        s.button('',false,15,grey);
+        triangle(6,3,17,10,6,17);
+        rect(2,8,4,4);
+    },function(){
+        dateNavYearInput.enterFunc();
+    });
 
     topBar.append(false,WIDTH-29,3,24,24,function(s){    // Toggle button for storm info panel
         s.button('');
@@ -1296,6 +1340,11 @@ UI.init = function(){
         primaryWrapper.hide();
         settingsMenu.show();
         paused = true;
+    }).append(false,0,30,sideMenu.width-10,25,function(s){  // Basin seed button
+        s.button('Basin Seed',false,15);
+    },function(){
+        seedBox.toggleShow();
+        if(seedBox.showing) seedBox.clicked();
     });
 
     saveBasinAsPanel = sideMenu.append(false,sideMenu.width,0,sideMenu.width*3/4,100,function(s){
@@ -1310,14 +1359,8 @@ UI.init = function(){
         line(0,0,0,this.height);
     },true,false);
 
-    let saveBasinAsTextBox = saveBasinAsPanel.append(false,5,40,saveBasinAsPanel.width-10,25,[15,32]);
-
-    saveBasinAsTextBox.append(false,0,30,saveBasinAsPanel.width-10,25,function(s){
-        let n = UI.focusedInput===saveBasinAsTextBox ? textInput.value : saveBasinAsTextBox.value;
-        let grey = n==='' || n===AUTOSAVE_SAVE_NAME;
-        s.button('Ok',false,15,grey);
-    },function(){
-        let n = saveBasinAsTextBox.value;
+    let saveBasinAsTextBox = saveBasinAsPanel.append(false,5,40,saveBasinAsPanel.width-10,25,[15,32,function(){
+        let n = this.value;
         if(n!=='' && n!==AUTOSAVE_SAVE_NAME){
             if(n===basin.saveName){
                 basin.save();
@@ -1334,6 +1377,14 @@ UI.init = function(){
                 });
             }
         }
+    }]);
+
+    saveBasinAsTextBox.append(false,0,30,saveBasinAsPanel.width-10,25,function(s){
+        let n = UI.focusedInput===saveBasinAsTextBox ? textInput.value : saveBasinAsTextBox.value;
+        let grey = n==='' || n===AUTOSAVE_SAVE_NAME;
+        s.button('Ok',false,15,grey);
+    },function(){
+        saveBasinAsTextBox.enterFunc();
     });
 
     saveBasinAsPanel.invoke = function(exit){
@@ -1376,6 +1427,13 @@ UI.init = function(){
     //     let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
     //     b.slotNum = i;
     // }
+
+    seedBox = primaryWrapper.append(false,WIDTH/2-100,HEIGHT/2-15,200,30,[18,undefined,function(){  // textbox for copying the basin seed
+        this.value = basin.seed.toString();
+    }],function(){
+        textInput.value = this.value = basin.seed.toString();
+        textInput.setSelectionRange(0,textInput.value.length);
+    },false);
 
     helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(s){
         fill(COLORS.UI.box);
@@ -1421,7 +1479,9 @@ function keyPressed(){
             return false;
         }
         if(keyCode === ENTER){
+            let u = UI.focusedInput;
             textInput.blur();
+            if(u.enterFunc) u.enterFunc();
             return false;
         }
         return;
