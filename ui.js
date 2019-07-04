@@ -518,15 +518,14 @@ UI.init = function(){
     let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){
         textAlign(LEFT,CENTER);
         text('Seed:',0,15);
-    }).append(false,50,0,250,30,[18,16,function(){
-        if(Number.isNaN(parseInt(this.value))) this.value = '';
-    }]);
+    }).append(false,50,0,250,30,[18,16]);
 
     basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
-        let seed = parseInt(seedsel.value);
-        if(!Number.isNaN(seed)) newBasinSettings.seed = seed;
+        let seed = seedsel.value;
+        if(/^-?\d+$/g.test(seed)) newBasinSettings.seed = parseInt(seed);
+        else newBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
         init();
         basinCreationMenu.hide();
@@ -1492,7 +1491,7 @@ function keyPressed(){
         if(basin && primaryWrapper.showing) paused = !paused;
         break;
         case "a":
-        if(basin && paused && primaryWrapper.showing) advanceSim();
+        if(basin && paused && primaryWrapper.showing) basin.advanceSim();
         break;
         case "w":
         simSettings.setShowStrength("toggle");

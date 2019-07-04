@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190704b:
+    * Fixed non-integer seeds not working correctly
+    * advanceSim is now a method of Basin
 v20190704a:
     + Added textbox to date navigator for directly entering a year to navigate to
     + Added ability to copy a basin's seed from a text box accessible from a side menu button

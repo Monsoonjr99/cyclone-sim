@@ -24,6 +24,45 @@ class Basin{
         else Basin.deleteSave(AUTOSAVE_SAVE_NAME);
     }
 
+    advanceSim(){
+        let vp = this.viewingPresent();
+        let os = this.getSeason(-1);
+        this.tick++;
+        let vs = this.getSeason(viewTick);
+        viewTick = this.tick;
+        let curSeason = this.getSeason(-1);
+        if(curSeason!==os){
+            let e = new Season();
+            for(let s of this.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
+            this.seasons[curSeason] = e;
+        }
+        if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
+        Env.wobble();    // random change in environment for future forecast realism
+        for(let i=0;i<this.activeSystems.length;i++){
+            for(let j=i+1;j<this.activeSystems.length;j++){
+                this.activeSystems[i].interact(this.activeSystems[j],true);
+            }
+            this.activeSystems[i].update();
+        }
+        if(!this.hyper && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
+        if(this.hyper && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper mode)
+        if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
+        let stormKilled = false;
+        for(let i=this.activeSystems.length-1;i>=0;i--){
+            if(!this.activeSystems[i].fetchStorm().current){
+                this.activeSystems.splice(i,1);
+                stormKilled = true;
+            }
+        }
+        if(stormKilled) refreshTracks();
+        if(this.tick%ADVISORY_TICKS==0){
+            Env.displayLayer();
+            Env.record();
+        }
+        let curTime = this.tickMoment();
+        if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();
+    }
+
     startTime(){
         let y = this.startYear;
         let mo = moment.utc([y]);

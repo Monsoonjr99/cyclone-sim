@@ -85,7 +85,7 @@ function draw(){
                 if(!paused){
                     simSpeedFrameCounter++;
                     simSpeedFrameCounter%=pow(2,simSpeed);
-                    if(simSpeedFrameCounter===0) advanceSim();
+                    if(simSpeedFrameCounter===0) basin.advanceSim();
                 }
                 keyRepeatFrameCounter++;
                 if(keyIsPressed && document.activeElement!==textInput && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
@@ -182,44 +182,44 @@ function init(load){    // clean this up when global variables are cleaned up
     }
 }
 
-function advanceSim(){
-    let vp = basin.viewingPresent();
-    let os = basin.getSeason(-1);
-    basin.tick++;
-    let vs = basin.getSeason(viewTick);
-    viewTick = basin.tick;
-    let curSeason = basin.getSeason(-1);
-    if(curSeason!==os){
-        let e = new Season();
-        for(let s of basin.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
-        basin.seasons[curSeason] = e;
-    }
-    if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
-    Env.wobble();    // random change in environment for future forecast realism
-    for(let i=0;i<basin.activeSystems.length;i++){
-        for(let j=i+1;j<basin.activeSystems.length;j++){
-            basin.activeSystems[i].interact(basin.activeSystems[j],true);
-        }
-        basin.activeSystems[i].update();
-    }
-    if(!basin.hyper && random()<0.015*sq((seasonalSine(basin.tick)+1)/2)) basin.spawn(false);    // tropical waves (normal mode)
-    if(basin.hyper && random()<(0.013*sq((seasonalSine(basin.tick)+1)/2)+0.002)) basin.spawn(false);    // tropical waves (hyper mode)
-    if(random()<0.01-0.002*seasonalSine(basin.tick)) basin.spawn(true);    // extratropical cyclones
-    let stormKilled = false;
-    for(let i=basin.activeSystems.length-1;i>=0;i--){
-        if(!basin.activeSystems[i].fetchStorm().current){
-            basin.activeSystems.splice(i,1);
-            stormKilled = true;
-        }
-    }
-    if(stormKilled) refreshTracks();
-    if(basin.tick%ADVISORY_TICKS==0){
-        Env.displayLayer();
-        Env.record();
-    }
-    let curTime = basin.tickMoment();
-    if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
-}
+// function advanceSim(){
+//     let vp = basin.viewingPresent();
+//     let os = basin.getSeason(-1);
+//     basin.tick++;
+//     let vs = basin.getSeason(viewTick);
+//     viewTick = basin.tick;
+//     let curSeason = basin.getSeason(-1);
+//     if(curSeason!==os){
+//         let e = new Season();
+//         for(let s of basin.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
+//         basin.seasons[curSeason] = e;
+//     }
+//     if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
+//     Env.wobble();    // random change in environment for future forecast realism
+//     for(let i=0;i<basin.activeSystems.length;i++){
+//         for(let j=i+1;j<basin.activeSystems.length;j++){
+//             basin.activeSystems[i].interact(basin.activeSystems[j],true);
+//         }
+//         basin.activeSystems[i].update();
+//     }
+//     if(!basin.hyper && random()<0.015*sq((seasonalSine(basin.tick)+1)/2)) basin.spawn(false);    // tropical waves (normal mode)
+//     if(basin.hyper && random()<(0.013*sq((seasonalSine(basin.tick)+1)/2)+0.002)) basin.spawn(false);    // tropical waves (hyper mode)
+//     if(random()<0.01-0.002*seasonalSine(basin.tick)) basin.spawn(true);    // extratropical cyclones
+//     let stormKilled = false;
+//     for(let i=basin.activeSystems.length-1;i>=0;i--){
+//         if(!basin.activeSystems[i].fetchStorm().current){
+//             basin.activeSystems.splice(i,1);
+//             stormKilled = true;
+//         }
+//     }
+//     if(stormKilled) refreshTracks();
+//     if(basin.tick%ADVISORY_TICKS==0){
+//         Env.displayLayer();
+//         Env.record();
+//     }
+//     let curTime = basin.tickMoment();
+//     if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) basin.save();
+// }
 
 class Settings{
     constructor(){

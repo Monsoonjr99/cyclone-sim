@@ -61,6 +61,17 @@ function cbrt(n){   // Cubed root function since p5 doesn't have one nor does po
     return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
 }
 
+function hashCode(str){
+    let hash = 0;
+    if(str.length === 0) return hash;
+    for(let i = 0; i < str.length; i++){
+        let char = str.charCodeAt(i);
+        hash = ((hash<<5)-hash)+char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    return hash;
+}
+
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
 function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;
