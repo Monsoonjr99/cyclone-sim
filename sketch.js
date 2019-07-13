@@ -169,7 +169,7 @@ function init(load){    // clean this up when global variables are cleaned up
         opts.year = opts.hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         if(newBasinSettings.year!==undefined) opts.year = newBasinSettings.year;
         opts.seed = newBasinSettings.seed;
-        opts.hyper = newBasinSettings.hyper;
+        opts.actMode = newBasinSettings.actMode;
         opts.names = newBasinSettings.names;
         opts.hurrTerm = newBasinSettings.hurrTerm;
         opts.mapType = newBasinSettings.mapType;

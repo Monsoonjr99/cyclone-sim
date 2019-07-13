@@ -9,7 +9,7 @@ class Basin{
         this.lastSaved = 0;
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
-        this.hyper = opts.hyper;
+        this.actMode = opts.actMode;
         this.hypoCats = opts.hypoCats;
         this.startYear = opts.year || (this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR);
         this.nameList = NAME_LIST_PRESETS[opts.names || 0];
@@ -44,8 +44,9 @@ class Basin{
             }
             this.activeSystems[i].update();
         }
-        if(!this.hyper && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
-        if(this.hyper && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper mode)
+        if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
+        if(this.actMode===ACTIVITY_MODE_OP && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (OP mode)
+        if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
         if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
         let stormKilled = false;
         for(let i=this.activeSystems.length-1;i>=0;i--){
@@ -219,7 +220,7 @@ class Basin{
                 }
             }
             b.flags = 0;
-            b.flags |= this.hyper;
+            b.flags |= 0;   // former hyper mode
             b.flags <<= 1;
             b.flags |= this.godMode;
             b.flags <<= 1;
@@ -232,7 +233,8 @@ class Basin{
                 'seed',
                 'startYear',
                 'nameList',
-                'hypoCats'
+                'hypoCats',
+                'actMode'
             ]) b[p] = this[p];
             return db.transaction('rw',db.saves,db.seasons,()=>{
                 db.saves.put(obj,this.saveName);
@@ -322,6 +324,7 @@ class Basin{
             return db.saves.get(this.saveName).then(res=>{
                 if(res && res.format>=EARLIEST_COMPATIBLE_FORMAT){
                     let data = LoadData.wrap(res);
+                    let oldhyper;
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
                         for(let a of obj.activeSystems){
@@ -333,7 +336,7 @@ class Basin{
                         flags >>= 1;
                         this.godMode = flags & 1;
                         flags >>= 1;
-                        this.hyper = flags & 1;
+                        oldhyper = flags & 1;
                         for(let p of [
                             'mapType',
                             'hurricaneStrengthTerm',
@@ -342,7 +345,8 @@ class Basin{
                             'seed',
                             'startYear',
                             'nameList',
-                            'hypoCats'
+                            'hypoCats',
+                            'actMode'
                         ]) this[p] = obj[p];
                     }else{  // Format 1 backwards compatibility
                         // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
@@ -365,7 +369,7 @@ class Basin{
                             flags >>= 1;
                             this.godMode = flags & 1;
                             flags >>= 1;
-                            this.hyper = flags & 1;
+                            oldhyper = flags & 1;
                             if(this.startYear===undefined) this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
                             if(names){
                                 names = names.split(";");
@@ -387,6 +391,10 @@ class Basin{
                             }
                             if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
+                    }
+                    if(this.actMode===undefined){
+                        if(oldhyper) this.actMode = ACTIVITY_MODE_OP;
+                        else this.actMode = ACTIVITY_MODE_NORMAL;
                     }
                 }else{
                     let t = 'Could not load basin';

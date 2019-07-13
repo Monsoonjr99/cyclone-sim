@@ -357,6 +357,7 @@ class Storm{
                     this.ACE /= ACE_DIVISOR;
                 }
             }
+            this.ACE = round(this.ACE*ACE_DIVISOR)/ACE_DIVISOR;
             for(let a of basin.activeSystems){
                 if(a.storm instanceof StormRef){
                     if(a.storm.season === loadData.season && a.storm.refId === this.id){

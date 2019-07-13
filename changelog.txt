@@ -1,5 +1,12 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190713a:
+    + Added a third activity mode: Wild
+        > Features a weird season climatology where SSTs are more random and steering is drunken for part of the season
+        > Storms can form in nearly any watery location on the map
+        > Season is generally longer and more active than normal
+        > July in NHem (January in SHem) is very dry with high SSTs
+    * 'Hyper' activity mode is now called 'OP'
 v20190704b:
     * Fixed non-integer seeds not working correctly
     * advanceSim is now a method of Basin

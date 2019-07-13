@@ -477,10 +477,13 @@ UI.init = function(){
     });
 
     let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Activity mode selector
-        let mode = newBasinSettings.hyper ? "Hyper" : "Normal";
+        let mode = newBasinSettings.actMode || 0;
+        mode = ['Normal','OP','Wild'][mode];
         s.button('Activity Mode: '+mode,true);
     },function(){
-        newBasinSettings.hyper = !newBasinSettings.hyper;
+        if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
+        newBasinSettings.actMode++;
+        newBasinSettings.actMode %= 3;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
         let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
         s.button('Hypothetical Categories: '+hypo,true);
