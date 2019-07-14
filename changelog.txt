@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190714a:
+    * Renamed 'OP' activity mode back to 'Hyper' cuz it was sad
+    * ActiveSystem class no longer relies on 'basin' as a global variable
 v20190713a:
     + Added a third activity mode: Wild
         > Features a weird season climatology where SSTs are more random and steering is drunken for part of the season

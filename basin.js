@@ -45,7 +45,7 @@ class Basin{
             this.activeSystems[i].update();
         }
         if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
-        if(this.actMode===ACTIVITY_MODE_OP && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (OP mode)
+        if(this.actMode===ACTIVITY_MODE_HYPER && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (OP mode)
         if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
         if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
         let stormKilled = false;
@@ -104,7 +104,7 @@ class Basin{
     }
 
     spawn(...opts){
-        this.activeSystems.push(new ActiveSystem(...opts));
+        this.activeSystems.push(new ActiveSystem(this,...opts));
     }
 
     getSeason(t){       // returns the year number of a season given a sim tick
@@ -328,7 +328,7 @@ class Basin{
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
                         for(let a of obj.activeSystems){
-                            this.activeSystems.push(new ActiveSystem(data.sub(a)));
+                            this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
                         this.envData.loadData = data.sub(obj.envData);
                         let flags = obj.flags;
@@ -387,13 +387,13 @@ class Basin{
                             let activeSystemData = parts.pop();
                             if(activeSystemData){
                                 activeSystemData = activeSystemData.split(",");
-                                while(activeSystemData.length>0) this.activeSystems.push(new ActiveSystem(data.sub(activeSystemData.pop())));
+                                while(activeSystemData.length>0) this.activeSystems.push(new ActiveSystem(this,data.sub(activeSystemData.pop())));
                             }
                             if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
                     }
                     if(this.actMode===undefined){
-                        if(oldhyper) this.actMode = ACTIVITY_MODE_OP;
+                        if(oldhyper) this.actMode = ACTIVITY_MODE_HYPER;
                         else this.actMode = ACTIVITY_MODE_NORMAL;
                     }
                 }else{

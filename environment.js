@@ -376,7 +376,7 @@ class Environment{
 Environment.init = function(){
     Env = new Environment();    // Environmental fields that determine storm strength and steering
 
-    let OP = basin.actMode === ACTIVITY_MODE_OP;
+    let hyper = basin.actMode === ACTIVITY_MODE_HYPER;
     let wild = basin.actMode === ACTIVITY_MODE_WILD;
 
     let yearfrac = z=>(z%YEAR_LENGTH)/YEAR_LENGTH;
@@ -401,8 +401,8 @@ Environment.init = function(){
                 v = map(v,0,1,-r,r);
             }else{
                 let s = seasonalSine(z);
-                l = map(sqrt(map(s,-1,1,0,1)),0,1,OP?0.47:0.55,OP?0.25:0.35);
-                let r = map(s,-1,1,OP?0.45:0.5,OP?0.25:0.35);
+                l = map(sqrt(map(s,-1,1,0,1)),0,1,hyper?0.47:0.55,hyper?0.25:0.35);
+                let r = map(s,-1,1,hyper?0.45:0.5,hyper?0.25:0.35);
                 v = map(v,0,1,-r,r);
             }
             return (l+v)*HEIGHT;
@@ -495,7 +495,7 @@ Environment.init = function(){
                 hadley = (piecewise(s,[[1,4.5],[2.5,1.2],[4,0.5],[4.5,1.7],[5,0.6],[6.5,0.65],[7.5,0.65],[7.75,0.05],[8,1.3],[9,1.7],[10,2.3],[11.5,4.5]]))*jOP*(y>j0?1:0);
                 hAngle = piecewise(s,[[1,11*PI/8],[2.5,9*PI/8],[4,17*PI/16],[4.5,11*PI/8],[5,17*PI/16],[6.5,35*PI/32],[7.5,17*PI/16],[8,31*PI/16],[9,15*PI/8],[10,7*PI/4],[10.5,11*PI/8]]);
             }else{
-                hadley = (map(ridging,-0.3,0.2,OP?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
+                hadley = (map(ridging,-0.3,0.2,hyper?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
                 hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);
             }
             let ferrel = 2*jOP*(y<j0?wild?map(j0-y,0,400,1,0,true):1:0);                    // power of winds poleward of jetstream
@@ -591,10 +591,10 @@ Environment.init = function(){
             let h1 = (sqrt(h0)+h0)/2;
             let h2 = sqrt(sqrt(h0));
             let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
-            let ospt = OP ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
-            let pspt = OP ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
-            let ostt = OP ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
-            let pstt = OP ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
+            let ospt = hyper ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
+            let pspt = hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
+            let ostt = hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
+            let pstt = hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
             let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
             return t+anom;
         },
@@ -620,11 +620,11 @@ Environment.init = function(){
             if(wild) s = yearfrac(z);
             else s = seasonalSine(z);
             let l = land.get(x,basin.hemY(y));
-            let pm = OP ? 0.52 : 0.43;
+            let pm = hyper ? 0.52 : 0.43;
             let tm = wild ? piecewise(s,[
                 [0.5,0.35],[2,0.55],[4,0.6],[5.75,0.58],[6,0.1],[7,0.2],[7.25,0.6],[8.5,0.72],[10,0.55],[11.5,0.35]
-            ]) : OP ? 0.62 : 0.57;
-            let mm = OP ? 0.3 : 0.2;
+            ]) : hyper ? 0.62 : 0.57;
+            let mm = hyper ? 0.3 : 0.2;
             let m = map(l,0.5,0.7,wild?tm:map(y,0,HEIGHT,pm,tm),mm,true);
             if(!wild) m += map(s,-1,1,-0.08,0.08);
             m += map(v,0,1,-0.3,0.3);

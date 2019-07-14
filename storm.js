@@ -576,7 +576,8 @@ class StormData{
 }
 
 class ActiveSystem extends StormData{
-    constructor(ext,spawn){
+    constructor(basin,ext,spawn){
+        if(!(basin instanceof Basin)) return;
         if(ext instanceof LoadData){
             super();
             this.organization = undefined;
@@ -656,6 +657,7 @@ class ActiveSystem extends StormData{
             this.upperWarmCore = ext ? 0 : subt ? 0.5 : 1;
             this.depth = ext ? 1 : 0;
         }
+        this.basin = basin;
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
         this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
@@ -676,6 +678,7 @@ class ActiveSystem extends StormData{
     }
 
     update(){
+        let basin = this.basin;
         this.getSteering();
         this.pos.add(this.steering);
         
@@ -797,6 +800,7 @@ class ActiveSystem extends StormData{
     }
 
     getSteering(){
+        let basin = this.basin;
         let l = Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick);
         let u = Env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
         let d = sqrt(this.depth);
@@ -807,6 +811,7 @@ class ActiveSystem extends StormData{
     }
 
     interact(that,first){   // Quick and sloppy fujiwhara implementation
+        let basin = this.basin;
         let v = this.interaction.fujiStatic;
         v.set(this.pos);
         v.sub(that.pos);
@@ -829,6 +834,7 @@ class ActiveSystem extends StormData{
     }
 
     doTrackForecast(){
+        let basin = this.basin;
         let p = this.trackForecast.pVec;
         let s = this.trackForecast.stVec;
         this.trackForecast.points = [];
