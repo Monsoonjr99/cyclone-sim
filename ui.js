@@ -265,6 +265,9 @@ UI.click = function(){
     return false;
 };
 
+UI.viewBasin = undefined;
+// UI.viewTick = undefined;
+
 // Definitions for all UI elements
 
 UI.init = function(){
@@ -275,14 +278,15 @@ UI.init = function(){
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
-        if(basin){
+        if(UI.viewBasin instanceof Basin){
+            let basin = UI.viewBasin;
             if(basin.viewingPresent()) for(let S of basin.activeSystems) S.fetchStorm().renderIcon();
             else{
                 let seas = basin.fetchSeason(viewTick,true);
                 if(seas) for(let S of seas.forSystems(true)) S.renderIcon();
             }
     
-            if(Env.displaying>=0 && Env.layerIsOceanic) drawBuffer(envLayer);
+            if(basin.env.displaying>=0 && basin.env.layerIsOceanic) drawBuffer(envLayer);
             if(!land.drawn){
                 renderToDo = land.draw();
                 return;
@@ -296,9 +300,9 @@ UI.init = function(){
                 if(land.shaderDrawn) drawBuffer(landShader);
                 else renderToDo = land.drawShader();
             }
-            if(Env.displaying>=0 && !Env.layerIsOceanic){
+            if(basin.env.displaying>=0 && !basin.env.layerIsOceanic){
                 drawBuffer(envLayer);
-                if(!Env.layerIsVector) drawBuffer(coastLine);
+                if(!basin.env.layerIsVector) drawBuffer(coastLine);
             }
             drawBuffer(tracks);
             drawBuffer(forecastTracks);
@@ -307,7 +311,8 @@ UI.init = function(){
     },function(){
         helpBox.hide();
         sideMenu.hide();
-        if(basin){
+        if(UI.viewBasin instanceof Basin){
+            let basin = UI.viewBasin;
             if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
                 let g = {x: getMouseX(), y: getMouseY()};
                 if(key === "l" || key === "L"){
@@ -724,7 +729,7 @@ UI.init = function(){
         s.button("Back",true,20);
     },function(){
         settingsMenu.hide();
-        if(basin) primaryWrapper.show();
+        if(UI.viewBasin instanceof Basin) primaryWrapper.show();
         else mainMenu.show();
     });
 
@@ -776,6 +781,8 @@ UI.init = function(){
     },false);
 
     topBar.append(false,5,3,100,24,function(s){  // Date indicator
+        if(!(UI.viewBasin instanceof Basin)) return;
+        let basin = UI.viewBasin;
         let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (basin.viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
@@ -806,7 +813,8 @@ UI.init = function(){
     };
 
     let navButtonClick = function(){    // Navigator button click function
-        if(paused){
+        if(UI.viewBasin instanceof Basin && paused){
+            let basin = UI.viewBasin;
             let m = basin.tickMoment(viewTick);
             switch(this.metadata){
                 case 0:
@@ -851,6 +859,8 @@ UI.init = function(){
     }
 
     let dateNavYearInput = dateNavigator.append(false,30,50,70,20,[15,5,function(){
+        if(!(UI.viewBasin instanceof Basin)) return;
+        let basin = UI.viewBasin;
         let v = this.value;
         let n = parseInt(v);
         if(!Number.isNaN(n) && paused){
@@ -881,7 +891,7 @@ UI.init = function(){
         if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
         else triangle(6,9,18,9,12,15);
     },function(){
-        if(!stormInfoPanel.showing) stormInfoPanel.target = selectedStorm || basin.getSeason(viewTick);
+        if(!stormInfoPanel.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
         stormInfoPanel.toggleShow();
     }).append(false,-29,0,24,24,function(s){  // Pause/resume button
         s.button('');
@@ -946,9 +956,10 @@ UI.init = function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
     }).append(false,29,0,100,24,function(s){   // Map layer/environmental field indicator
+        let basin = UI.viewBasin;
         let txtStr = "Map Layer: ";
-        if(Env.displaying!==-1){
-            let f = Env.fieldList[Env.displaying];
+        if(basin.env.displaying!==-1){
+            let f = basin.env.fieldList[basin.env.displaying];
             txtStr += f + " -- ";
             let x;
             let y;
@@ -961,12 +972,12 @@ UI.init = function(){
                 x = getMouseX();
                 y = getMouseY();
             }
-            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (Env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(x,y))){
                 txtStr += "N/A";
             }else{
-                let v = Env.get(f,x,y,viewTick);
+                let v = basin.env.get(f,x,y,viewTick);
                 if(v===null) txtStr += "Unavailable";
-                else if(Env.fields[f].isVectorField){
+                else if(basin.env.fields[f].isVectorField){
                     let m = v.mag();
                     let h = v.heading();
                     txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
@@ -983,7 +994,7 @@ UI.init = function(){
         textAlign(LEFT,TOP);
         text(txtStr,3,3);
     },function(){
-        Env.displayNext();
+        UI.viewBasin.env.displayNext();
     });
 
     bottomBar.append(false,WIDTH-29,3,24,24,function(s){  // Help button
@@ -1011,8 +1022,8 @@ UI.init = function(){
             let formTime;
             let dissTime;
             if(S.TC){
-                formTime = basin.tickMoment(S.formationTime).format(TIME_FORMAT);
-                dissTime = basin.tickMoment(S.dissipationTime).format(TIME_FORMAT);
+                formTime = UI.viewBasin.tickMoment(S.formationTime).format(TIME_FORMAT);
+                dissTime = UI.viewBasin.tickMoment(S.dissipationTime).format(TIME_FORMAT);
                 txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
             }else txt += "Dates active: N/A";
             txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
@@ -1028,17 +1039,17 @@ UI.init = function(){
             let nh = countTextLines(n)*textLeading();
             text(n,this.width/2,35);
             textSize(15);
-            let se = basin.fetchSeason(S);
+            let se = UI.viewBasin.fetchSeason(S);
             let txt;
             if(se){
                 txt = "Depressions: " + se.depressions;
                 txt += "\nNamed storms: " + se.namedStorms;
-                txt += "\n" + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
-                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + "s: " + se.majors;
-                if(basin.hypoCats){
+                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
+                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.majors;
+                if(UI.viewBasin.hypoCats){
                     txt += '\nCategory 5+: ' + se.c5s;
                     txt += '\nCategory 8+: ' + se.c8s;
-                    txt += '\n' + HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
+                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
                 }else txt += "\nCategory 5s: " + se.c5s;
                 txt += "\nTotal ACE: " + se.ACE;
                 txt += "\nDamage: " + damageDisplayNumber(se.damage);
@@ -1051,20 +1062,20 @@ UI.init = function(){
 
     stormInfoPanel.append(false,3,3,24,24,function(s){   // info panel previous season button
         let S = stormInfoPanel.target;
-        s.button('',false,18,(S instanceof Storm) || S<=basin.getSeason(0));
+        s.button('',false,18,(S instanceof Storm) || S<=UI.viewBasin.getSeason(0));
         triangle(19,5,19,19,5,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s>basin.getSeason(0)) stormInfoPanel.target--;
+        if(!(s instanceof Storm) && s>UI.viewBasin.getSeason(0)) stormInfoPanel.target--;
     });
     
     stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(s){ // info panel next season button
         let S = stormInfoPanel.target;
-        s.button('',false,18,(S instanceof Storm) || S>=basin.getSeason(-1));
+        s.button('',false,18,(S instanceof Storm) || S>=UI.viewBasin.getSeason(-1));
         triangle(5,5,5,19,19,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s<basin.getSeason(-1)) stormInfoPanel.target++;
+        if(!(s instanceof Storm) && s<UI.viewBasin.getSeason(-1)) stormInfoPanel.target++;
     });
     
     stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
@@ -1077,7 +1088,7 @@ UI.init = function(){
                 t = s.birthTime;
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
-                t = basin.seasonTick(s);
+                t = UI.viewBasin.seasonTick(s);
             }
             changeViewTick(t);
         }
@@ -1100,9 +1111,9 @@ UI.init = function(){
                 let beginSeasonTick;
                 let endSeasonTick;
                 for(let sys of s.forSystems()){
-                    if(sys.TC && (basin.getSeason(sys.formationTime)===target || basin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || basin.getSeason(sys.dissipationTime-1)>=target))){
+                    if(sys.TC && (UI.viewBasin.getSeason(sys.formationTime)===target || UI.viewBasin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || UI.viewBasin.getSeason(sys.dissipationTime-1)>=target))){
                         TCs.push(sys);
-                        let dissTime = sys.dissipationTime || basin.tick;
+                        let dissTime = sys.dissipationTime || UI.viewBasin.tick;
                         if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
                         if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                     }
@@ -1116,13 +1127,13 @@ UI.init = function(){
                         if(n>0) n -= 2;
                     }
                 }
-                let sMoment = basin.tickMoment(beginSeasonTick);
+                let sMoment = UI.viewBasin.tickMoment(beginSeasonTick);
                 tb.sMonth = sMoment.month();
                 sMoment.startOf('month');
-                let beginPlotTick = basin.tickFromMoment(sMoment);
-                let eMoment = basin.tickMoment(endSeasonTick);
+                let beginPlotTick = UI.viewBasin.tickFromMoment(sMoment);
+                let eMoment = UI.viewBasin.tickMoment(endSeasonTick);
                 eMoment.endOf('month');
-                let endPlotTick = basin.tickFromMoment(eMoment);
+                let endPlotTick = UI.viewBasin.tickFromMoment(eMoment);
                 tb.months = eMoment.diff(sMoment,'months') + 1;
                 for(let t of TCs){
                     let part = {};
@@ -1201,11 +1212,11 @@ UI.init = function(){
                     tb.parts.push(part);
                 }
             };
-            if(basin.fetchSeason(target)) gen(basin.fetchSeason(target));
+            if(UI.viewBasin.fetchSeason(target)) gen(UI.viewBasin.fetchSeason(target));
             else{
                 tb.months = 12;
                 tb.sMonth = 0;
-                basin.fetchSeason(target,false,false,s=>{
+                UI.viewBasin.fetchSeason(target,false,false,s=>{
                     gen(s);
                 });
             }
@@ -1214,12 +1225,12 @@ UI.init = function(){
             tb.sMonth = 0;
         }
         tb.builtFor = target;
-        tb.builtAt = basin.tick;
+        tb.builtAt = UI.viewBasin.tick;
     };
 
     timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(s){
         let target = stormInfoPanel.target;
-        if(target!==this.builtFor || (target===basin.getSeason(-1) && basin.tick!==this.builtAt)) buildtimeline();
+        if(target!==this.builtFor || (target===UI.viewBasin.getSeason(-1) && UI.viewBasin.tick!==this.builtAt)) buildtimeline();
         fill(COLORS.UI.box);
         noStroke();
         s.fullRect();
@@ -1286,9 +1297,10 @@ UI.init = function(){
         timelineBox.hide();
         primaryWrapper.hide();
         land.clear();
-        for(let t in basin.seasonExpirationTimers) clearTimeout(basin.seasonExpirationTimers[t]);
+        timelineBox.builtAt = -1;
+        for(let t in UI.viewBasin.seasonExpirationTimers) clearTimeout(UI.viewBasin.seasonExpirationTimers[t]);
         let wait = ()=>{
-            basin = undefined;
+            UI.viewBasin = undefined;
             mainMenu.show();
         };
         if(p instanceof Promise) p.then(wait);
@@ -1314,9 +1326,9 @@ UI.init = function(){
         s.button("Save and Return to Main Menu",false,15/* ,storageQuotaExhausted */);
     },function(){
         // if(!storageQuotaExhausted){
-            if(basin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
+            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
             else{
-                returntomainmenu(basin.save());
+                returntomainmenu(UI.viewBasin.save());
             }
         // }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Return to main menu w/o saving button
@@ -1325,12 +1337,12 @@ UI.init = function(){
         areYouSure.dialog(returntomainmenu);
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin button
         let txt = "Save Basin";
-        if(basin.tick===basin.lastSaved) txt += " [Saved]";
+        if(UI.viewBasin.tick===UI.viewBasin.lastSaved) txt += " [Saved]";
         s.button(txt,false,15/* ,storageQuotaExhausted */);
     },function(){
         // if(!storageQuotaExhausted){
-            if(basin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
-            else basin.save();
+            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
+            else UI.viewBasin.save();
         // }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin as button
         s.button("Save Basin As...",false,15/* ,storageQuotaExhausted */);
@@ -1364,12 +1376,12 @@ UI.init = function(){
     let saveBasinAsTextBox = saveBasinAsPanel.append(false,5,40,saveBasinAsPanel.width-10,25,[15,32,function(){
         let n = this.value;
         if(n!=='' && n!==AUTOSAVE_SAVE_NAME){
-            if(n===basin.saveName){
-                basin.save();
+            if(n===UI.viewBasin.saveName){
+                UI.viewBasin.save();
                 saveBasinAsPanel.hide();
             }else{
                 let f = ()=>{
-                    let p = basin.saveAs(n);
+                    let p = UI.viewBasin.saveAs(n);
                     saveBasinAsPanel.hide();
                     if(saveBasinAsPanel.exit) returntomainmenu(p);
                 };
@@ -1392,7 +1404,7 @@ UI.init = function(){
     saveBasinAsPanel.invoke = function(exit){
         saveBasinAsPanel.exit = exit;
         saveBasinAsPanel.toggleShow();
-        saveBasinAsTextBox.value = basin.saveName===AUTOSAVE_SAVE_NAME ? '' : basin.saveName;
+        saveBasinAsTextBox.value = UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME ? '' : UI.viewBasin.saveName;
     };
     
     // let saveslotbuttonrender = function(s){
@@ -1431,9 +1443,9 @@ UI.init = function(){
     // }
 
     seedBox = primaryWrapper.append(false,WIDTH/2-100,HEIGHT/2-15,200,30,[18,undefined,function(){  // textbox for copying the basin seed
-        this.value = basin.seed.toString();
+        this.value = UI.viewBasin.seed.toString();
     }],function(){
-        textInput.value = this.value = basin.seed.toString();
+        textInput.value = this.value = UI.viewBasin.seed.toString();
         textInput.setSelectionRange(0,textInput.value.length);
     },false);
 
@@ -1491,16 +1503,16 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        if(basin && primaryWrapper.showing) paused = !paused;
+        if(UI.viewBasin && primaryWrapper.showing) paused = !paused;
         break;
         case "a":
-        if(basin && paused && primaryWrapper.showing) basin.advanceSim();
+        if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
         break;
         case "w":
         simSettings.setShowStrength("toggle");
         break;
         case "e":
-        if(basin) Env.displayNext();
+        if(UI.viewBasin) UI.viewBasin.env.displayNext();
         break;
         case "t":
         simSettings.setTrackMode("incmod",4);
@@ -1527,12 +1539,12 @@ function keyPressed(){
 }
 
 function changeViewTick(t){
-    let oldS = basin.getSeason(viewTick);
+    let oldS = UI.viewBasin.getSeason(viewTick);
     viewTick = t;
-    let newS = basin.getSeason(viewTick);
+    let newS = UI.viewBasin.getSeason(viewTick);
     let finish = ()=>{
         refreshTracks(oldS!==newS);
-        Env.displayLayer();
+        UI.viewBasin.env.displayLayer();
     };
     let requisites = s=>{
         let arr = [];
@@ -1541,20 +1553,20 @@ function changeViewTick(t){
             let r = s.systems[i];
             if(r instanceof StormRef && (r.lastApplicableAt===undefined || r.lastApplicableAt>=viewTick || simSettings.trackMode===2)){
                 arr.push(r.season);
-                allFound = allFound && basin.fetchSeason(r.season);
+                allFound = allFound && UI.viewBasin.fetchSeason(r.season);
             }
         }
         if(allFound) finish();
         else{
             for(let i=0;i<arr.length;i++){
-                arr[i] = basin.fetchSeason(arr[i],false,false,true);
+                arr[i] = UI.viewBasin.fetchSeason(arr[i],false,false,true);
             }
             Promise.all(arr).then(finish);
         }
     };
-    if(basin.fetchSeason(viewTick,true)){
-        requisites(basin.fetchSeason(viewTick,true));
-    }else basin.fetchSeason(viewTick,true,false,s=>{
+    if(UI.viewBasin.fetchSeason(viewTick,true)){
+        requisites(UI.viewBasin.fetchSeason(viewTick,true));
+    }else UI.viewBasin.fetchSeason(viewTick,true,false,s=>{
         requisites(s);
     });
 }
@@ -1632,7 +1644,7 @@ function damageDisplayNumber(d){
 }
 
 function seasonName(y,h){
-    if(h===undefined) h = basin && basin.SHem;
+    if(h===undefined) h = UI.viewBasin instanceof Basin && UI.viewBasin.SHem;
     if(h){
         return (y-1) + "-" + (y%100<10 ? "0" : "") + (y%100);
     }

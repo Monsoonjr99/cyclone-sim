@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190716a:
+    - Eliminated 'basin' as a global variable
+    - Eliminated 'Env' as a global variable
 v20190714a:
     * Renamed 'OP' activity mode back to 'Hyper' cuz it was sad
     * ActiveSystem class no longer relies on 'basin' as a global variable

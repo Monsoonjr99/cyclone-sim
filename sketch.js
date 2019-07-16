@@ -8,7 +8,7 @@ function setup(){
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
-    basin = undefined;
+    // basin = undefined;
     newBasinSettings = {};
     waitingFor = 0;
     waitingDesc = '';
@@ -67,7 +67,7 @@ function draw(){
         scale(scaler);
         background(COLORS.bg);
         if(waitingFor<1){   // waitingFor applies to asynchronous processes such as saving and loading
-            if(basin){
+            if(UI.viewBasin instanceof Basin){
                 if(renderToDo){     // renderToDo applies to synchronous single-threaded rendering functions
                     let t = renderToDo.next();
                     if(t.done){
@@ -85,7 +85,7 @@ function draw(){
                 if(!paused){
                     simSpeedFrameCounter++;
                     simSpeedFrameCounter%=pow(2,simSpeed);
-                    if(simSpeedFrameCounter===0) basin.advanceSim();
+                    if(simSpeedFrameCounter===0) UI.viewBasin.advanceSim();
                 }
                 keyRepeatFrameCounter++;
                 if(keyIsPressed && document.activeElement!==textInput && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
@@ -94,8 +94,8 @@ function draw(){
                             changeViewTick(ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS);
                         }else if(keyCode===RIGHT_ARROW){
                             let t;
-                            if(viewTick<basin.tick-ADVISORY_TICKS) t = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
-                            else t = basin.tick;
+                            if(viewTick<UI.viewBasin.tick-ADVISORY_TICKS) t = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+                            else t = UI.viewBasin.tick;
                             changeViewTick(t);
                         }
                     }
@@ -142,15 +142,16 @@ function draw(){
 
 function init(load){    // clean this up when global variables are cleaned up
     selectedStorm = undefined;
-    let whenBasinLoaded = ()=>{
+    let whenBasinLoaded = basin=>{
         viewTick = basin.tick;
+        UI.viewBasin = basin;
         if(load===undefined){
             noiseSeed(basin.seed);
-            Environment.init();
-            basin.seasons[basin.getSeason(-1)] = new Season();
-            Env.record();
+            Environment.init(basin);
+            basin.seasons[basin.getSeason(-1)] = new Season(basin);
+            basin.env.record();
         }
-        land = new Land();
+        land = new Land(basin);
         refreshTracks(true);
         primaryWrapper.show();
         renderToDo = land.init();
@@ -175,10 +176,10 @@ function init(load){    // clean this up when global variables are cleaned up
         opts.mapType = newBasinSettings.mapType;
         opts.godMode = newBasinSettings.godMode;
         opts.hypoCats = newBasinSettings.hypoCats;
-        basin = new Basin(false,opts);
+        let basin = new Basin(false,opts);
         newBasinSettings = {};
         paused = false;
-        whenBasinLoaded();
+        whenBasinLoaded(basin);
     }
 }
 

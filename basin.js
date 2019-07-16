@@ -32,12 +32,12 @@ class Basin{
         viewTick = this.tick;
         let curSeason = this.getSeason(-1);
         if(curSeason!==os){
-            let e = new Season();
-            for(let s of this.activeSystems) e.addSystem(new StormRef(s.fetchStorm()));
+            let e = new Season(this);
+            for(let s of this.activeSystems) e.addSystem(new StormRef(this,s.fetchStorm()));
             this.seasons[curSeason] = e;
         }
         if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
-        Env.wobble();    // random change in environment for future forecast realism
+        this.env.wobble();    // random change in environment for future forecast realism
         for(let i=0;i<this.activeSystems.length;i++){
             for(let j=i+1;j<this.activeSystems.length;j++){
                 this.activeSystems[i].interact(this.activeSystems[j],true);
@@ -57,8 +57,8 @@ class Basin{
         }
         if(stormKilled) refreshTracks();
         if(this.tick%ADVISORY_TICKS==0){
-            Env.displayLayer();
-            Env.record();
+            this.env.displayLayer();
+            this.env.record();
         }
         let curTime = this.tickMoment();
         if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();
@@ -107,6 +107,22 @@ class Basin{
         this.activeSystems.push(new ActiveSystem(this,...opts));
     }
 
+    getNewName(season,sNum){
+        let list;
+        if(this.sequentialNameIndex<0){
+            let numoflists = this.nameList.length-1;
+            list = this.nameList[(season+1)%numoflists];
+            if(sNum>=list.length){
+                let gNum = sNum-list.length;
+                let greeks = this.nameList[numoflists];
+                if(gNum>=greeks.length) return "Unnamed";
+                return greeks[gNum];
+            }
+            return list[sNum];
+        }
+        return this.nameList[sNum];
+    }
+
     getSeason(t){       // returns the year number of a season given a sim tick
         if(t===-1) t = this.tick;
         if(this.SHem){
@@ -133,7 +149,7 @@ class Basin{
                     return db.seasons.where('[saveName+season]').equals([this.saveName,n]).last().then(res=>{
                         if(res){
                             let d = LoadData.wrap(res);
-                            let seas = this.seasons[n] = new Season(d);
+                            let seas = this.seasons[n] = new Season(this,d);
                             this.expireSeasonTimer(n);
                             this.seasonsBusyLoading[n] = undefined;
                             seas.lastAccessed = moment().valueOf();
@@ -213,9 +229,9 @@ class Basin{
                 b.activeSystems.push(a.save());
             }
             b.envData = [];
-            for(let i=Env.fieldList.length-1;i>=0;i--){
-                let f = Env.fieldList[i];
-                for(let j=Env.fields[f].noise.length-1;j>=0;j--){
+            for(let i=this.env.fieldList.length-1;i>=0;i--){
+                let f = this.env.fieldList[i];
+                for(let j=this.env.fields[f].noise.length-1;j>=0;j--){
                     b.envData.push(this.envData[f][j].save());
                 }
             }
@@ -403,9 +419,8 @@ class Basin{
                 }
                 return this;
             }).then(b=>{
-                basin = b;  // Temporarily here until the global variable problem is solved
                 noiseSeed(b.seed);
-                Environment.init();
+                Environment.init(b);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
                     for(let i=0;i<s.systems.length;i++){
@@ -475,7 +490,8 @@ class Basin{
 }
 
 class Season{
-    constructor(loaddata){
+    constructor(basin,loaddata){
+        if(basin instanceof Basin) this.basin = basin;
         this.systems = [];
         this.envData = {};
         this.idSystemCache = {};
@@ -535,6 +551,7 @@ class Season{
     save(forceStormRefs){
         // new save format
 
+        let basin = this.basin;
         let val = {};
         for(let p of [
             'totalSystemCount',
@@ -551,9 +568,9 @@ class Season{
             'envRecordStarts'
         ]) val[p] = this[p];
         val.envData = {};
-        for(let f of Env.fieldList){
+        for(let f of basin.env.fieldList){
             let fd = val.envData[f] = {};
-            for(let i=0;i<Env.fields[f].noise.length;i++){
+            for(let i=0;i<basin.env.fields[f].noise.length;i++){
                 let nd = fd[i] = {};
                 let x = [];
                 let y = [];
@@ -632,6 +649,7 @@ class Season{
     }
 
     load(data){
+        let basin = this.basin;
         if(data instanceof LoadData && data.format>=EARLIEST_COMPATIBLE_FORMAT){
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
@@ -649,9 +667,9 @@ class Season{
                     'damage',
                     'envRecordStarts'
                 ]) this[p] = obj[p] || 0;
-                for(let f of Env.fieldList){
+                for(let f of basin.env.fieldList){
                     let fd = this.envData[f] = {};
-                    for(let i=0;i<Env.fields[f].noise.length;i++){
+                    for(let i=0;i<basin.env.fields[f].noise.length;i++){
                         let nd = fd[i] = [];
                         let sd = obj.envData[f][i];
                         let x = [...sd.x];
@@ -668,11 +686,11 @@ class Season{
                 }
                 for(let i=0;i<obj.systems.length;i++){
                     let s = obj.systems[i];
-                    if(s.isRef) this.systems.push(new StormRef(data.sub(s.val)));
+                    if(s.isRef) this.systems.push(new StormRef(basin,data.sub(s.val)));
                     else{
                         let v = data.sub(s.val);
                         v.season = data.season;
-                        this.systems.push(new Storm(v));
+                        this.systems.push(new Storm(basin,v));
                     }
                 }
             }else{  // Format 1 backwards compatibility
@@ -698,9 +716,9 @@ class Season{
                     let e = mainparts[1].split(",");
                     let i = 0;
                     let mapR = r=>n=>map(n,0,ENVDATA_SAVE_MULT,-r,r);
-                    for(let f of Env.fieldList){
-                        for(let j=0;j<Env.fields[f].noise.length;j++,i++){
-                            let c = Env.fields[f].noise[j];
+                    for(let f of basin.env.fieldList){
+                        for(let j=0;j<basin.env.fields[f].noise.length;j++,i++){
+                            let c = basin.env.fields[f].noise[j];
                             let s = e[i].split(".");
                             let k = decodeB36StringArray(s[0]);
                             k = {x:k[0],y:k[1],z:k[2]};
@@ -733,11 +751,11 @@ class Season{
                     i1 = storms.slice(i+1).search(/[~,]/g);
                     i1 = i1<0 ? storms.length : i+1+i1;
                     let s = storms.slice(i,i1);
-                    if(s.charAt(0)==="~") this.systems.push(new StormRef(data.sub(s.slice(1))));
+                    if(s.charAt(0)==="~") this.systems.push(new StormRef(basin,data.sub(s.slice(1))));
                     else if(s.charAt(0)===","){
                         let v = data.sub(s.slice(1));
                         v.season = data.season;
-                        this.systems.push(new Storm(v));
+                        this.systems.push(new Storm(basin,v));
                     }
                 }
             }

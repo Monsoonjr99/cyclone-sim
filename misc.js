@@ -4,9 +4,9 @@ function refreshTracks(force){
     forecastTracks.clear();
     if(selectedStorm) selectedStorm.renderTrack();
     else if(simSettings.trackMode===2){
-        for(let s of basin.fetchSeason(viewTick,true,true).forSystems()) if(s.TC) s.renderTrack();
-    }else if(basin.viewingPresent()) for(let s of basin.activeSystems) s.fetchStorm().renderTrack();
-    else for(let s of basin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
+        for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) if(s.TC) s.renderTrack();
+    }else if(UI.viewBasin.viewingPresent()) for(let s of UI.viewBasin.activeSystems) s.fetchStorm().renderTrack();
+    else for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
 }
 
 function createBuffer(w,h,noScale){
@@ -36,10 +36,10 @@ function toggleFullscreen(){
         canvas.requestFullscreen().then(function(){
             scaler = displayWidth/WIDTH;
             rescaleCanvases(scaler);
-            if(basin){
+            if(UI.viewBasin){
                 land.clear();
                 refreshTracks(true);
-                Env.displayLayer();
+                UI.viewBasin.env.displayLayer();
             }
         });
     }
@@ -172,10 +172,10 @@ document.onfullscreenchange = function(){
     if(document.fullscreenElement===null){
         scaler = 1;
         rescaleCanvases(scaler);
-        if(basin){
+        if(UI.viewBasin){
             land.clear();
             refreshTracks(true);
-            Env.displayLayer();
+            UI.viewBasin.env.displayLayer();
         }
     }
 };

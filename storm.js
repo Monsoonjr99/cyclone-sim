@@ -1,5 +1,6 @@
 class Storm{
-    constructor(data){
+    constructor(basin,data){
+        this.basin = basin instanceof Basin && basin;
         this.current = data instanceof ActiveSystem && data;
         this.id = undefined;
         if(this.current) basin.fetchSeason(-1,true,true).addSystem(this);
@@ -33,7 +34,7 @@ class Storm{
     }
 
     originSeason(){
-        return basin.getSeason(this.birthTime);
+        return this.basin.getSeason(this.birthTime);
     }
 
     aliveAt(t){
@@ -42,7 +43,7 @@ class Storm{
 
     getStormDataByTick(t,allowCurrent){
         if(!this.aliveAt(t)) return null;
-        if(t===basin.tick){
+        if(t===this.basin.tick){
             if(allowCurrent) return this.current;
             return this.record.length>0 ? this.record[this.record.length-1] : null;
         }
@@ -54,6 +55,7 @@ class Storm{
     }
 
     getFullNameByTick(t){
+        let basin = this.basin;
         let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
         let name = t==="peak" ? this.name : this.getNameByTick(t);
         let ty = data ? data.type : null;
@@ -77,6 +79,7 @@ class Storm{
 
     renderIcon(){
         if(this.aliveAt(viewTick)){
+            let basin = this.basin;
             let adv = this.getStormDataByTick(viewTick);
             let advC = this.getStormDataByTick(viewTick,true);
             let pr = advC.pressure;
@@ -179,7 +182,7 @@ class Storm{
                     }
                 }
             }
-            if(selectedStorm===this && basin.viewingPresent() && this.current){
+            if(selectedStorm===this && this.basin.viewingPresent() && this.current){
                 forecastTracks.clear();
                 let p = this.current.trackForecast.points;
                 for(let n=0;n<p.length;n++){
@@ -190,6 +193,7 @@ class Storm{
     }
 
     updateStats(data){
+        let basin = this.basin;
         let w = data.windSpeed;
         let p = data.pressure;
         let type = data.type;
@@ -212,7 +216,7 @@ class Storm{
                     this.nameNum = basin.sequentialNameIndex++;
                     basin.sequentialNameIndex %= basin.nameList.length;
                 }
-                this.name = getNewName(basin.getSeason(-1),this.nameNum);
+                this.name = basin.getNewName(basin.getSeason(-1),this.nameNum);
                 this.named = true;
                 this.namedTime = basin.tick;
             }
@@ -303,9 +307,10 @@ class Storm{
 
     load(loadData){
         if(loadData instanceof LoadData){
+            let basin = this.basin;
             if(loadData.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = loadData.value;
-                this.record = StormData.loadArr(loadData.sub(obj.record));
+                this.record = StormData.loadArr(basin,loadData.sub(obj.record));
                 for(let p of [
                     'id',
                     'depressionNum',
@@ -321,7 +326,7 @@ class Storm{
                 let data = loadData.value;
                 data = data.split(".");
                 let numData = decodeB36StringArray(data[0]);
-                this.record = StormData.loadArr(loadData.sub(data[1]));
+                this.record = StormData.loadArr(basin,loadData.sub(data[1]));
                 this.damage = numData.pop()*DAMAGE_DIVISOR || 0;
                 this.deaths = numData.pop() || 0;
                 this.birthTime = numData.pop() || 0;
@@ -368,14 +373,15 @@ class Storm{
             }
             if(!this.current) this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
             if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
-            if(this.nameNum!==undefined) this.name = getNewName(basin.getSeason(this.namedTime),this.nameNum);
+            if(this.nameNum!==undefined) this.name = basin.getNewName(basin.getSeason(this.namedTime),this.nameNum);
             else if(this.depressionNum!==undefined) this.name = this.depressionNum+DEPRESSION_LETTER;
         }
     }
 }
 
 class StormRef{
-    constructor(s){
+    constructor(basin,s){
+        if(basin instanceof Basin) this.basin = basin;
         if(s instanceof Storm){
             this.season = s.originSeason();
             this.refId = s.id;
@@ -391,6 +397,7 @@ class StormRef{
     }
 
     fetch(){
+        let basin = this.basin;
         if(this.ref && basin.seasons[this.season]) return this.ref;
         let seas = basin.fetchSeason(this.season);
         if(seas) this.ref = seas.fetchSystemById(this.refId);
@@ -433,7 +440,8 @@ class StormRef{
 }
 
 class StormData{
-    constructor(x,y,p,w,t){
+    constructor(basin,x,y,p,w,t){
+        if(basin instanceof Basin) this.basin = basin;
         this.pos = undefined;
         this.pressure = undefined;
         this.windSpeed = undefined; // in knots
@@ -456,7 +464,7 @@ class StormData{
         if(w<96) return 2;
         if(w<113) return 3;
         if(w<137) return 4;
-        if(!basin.hypoCats || w<165) return 5;
+        if(!this.basin.hypoCats || w<165) return 5;
         if(w<198) return 6;
         if(w<255) return 7;
         if(w<318) return 8;
@@ -545,8 +553,8 @@ class StormData{
         // return encodePointArray(positions,opts) + "/" + theRest.join("/");
     }
 
-    static loadArr(data){
-        if(data instanceof LoadData){
+    static loadArr(basin,data){
+        if(basin instanceof Basin && data instanceof LoadData){
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
                 let arr = [];
@@ -556,7 +564,7 @@ class StormData{
                 let windSpeed = [...obj.windSpeed];
                 let type = [...obj.type];
                 for(let i=0;i<x.length;i++){
-                    arr[i] = new StormData(x[i],y[i],pressure[i],windSpeed[i],type[i]);
+                    arr[i] = new StormData(basin,x[i],y[i],pressure[i],windSpeed[i],type[i]);
                 }
                 return arr;
             }else{
@@ -567,7 +575,7 @@ class StormData{
                 };
                 let positions = decodePointArray(arr.shift(),opts);
                 for(let i=0;i<arr.length;i++){
-                    arr[i] = new StormData(data.sub(arr[i]),positions[i]);
+                    arr[i] = new StormData(basin,data.sub(arr[i]),positions[i]);
                 }
                 return arr;
             }
@@ -579,7 +587,7 @@ class ActiveSystem extends StormData{
     constructor(basin,ext,spawn){
         if(!(basin instanceof Basin)) return;
         if(ext instanceof LoadData){
-            super();
+            super(basin);
             this.organization = undefined;
             this.lowerWarmCore = undefined;
             this.upperWarmCore = undefined;
@@ -606,7 +614,7 @@ class ActiveSystem extends StormData{
                     x = random()<0.2 && !ext ?
                             WIDTH-1:
                             random(0,WIDTH-1);
-                    y = basin.hemY(ext ? Env.get("jetstream",x,0,basin.tick)+random(-75,75) : random(HEIGHT*0.7,HEIGHT*0.9));
+                    y = basin.hemY(ext ? basin.env.get("jetstream",x,0,basin.tick)+random(-75,75) : random(HEIGHT*0.7,HEIGHT*0.9));
                     for(let i=0;i<basin.activeSystems.length;i++){
                         let p = basin.activeSystems[i].pos;
                         if(sqrt(sq(x-p.x)+sq(y-p.y))<50) tooClose = true;
@@ -651,13 +659,12 @@ class ActiveSystem extends StormData{
                 sType==="l" ? TROPWAVE :
                 subt ? SUBTROP : TROP :
             TROPWAVE;
-            super(x,y,p,w,ty);
+            super(basin,x,y,p,w,ty);
             this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
             this.lowerWarmCore = ext ? 0 : subt ? 0.6 : 1;
             this.upperWarmCore = ext ? 0 : subt ? 0.5 : 1;
             this.depth = ext ? 1 : 0;
         }
-        this.basin = basin;
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
         this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
@@ -672,7 +679,7 @@ class ActiveSystem extends StormData{
             this.storm = undefined;
             this.load(ext);
         }else{
-            this.storm = new Storm(this);
+            this.storm = new Storm(basin,this);
             if(basin.tick%ADVISORY_TICKS===0) this.advisory();
         }
     }
@@ -686,12 +693,12 @@ class ActiveSystem extends StormData{
         let y = this.pos.y;
         let z = basin.tick;
 
-        let SST = Env.get("SST",x,y,z);
-        let jet = Env.get("jetstream",x,y,z);
+        let SST = basin.env.get("SST",x,y,z);
+        let jet = basin.env.get("jetstream",x,y,z);
         jet = basin.hemY(y)-jet;
         let lnd = land.get(x,y);
-        let moisture = Env.get("moisture",x,y,z);
-        let shear = Env.get("shear",x,y,z).mag()+this.interaction.shear;
+        let moisture = basin.env.get("moisture",x,y,z);
+        let shear = basin.env.get("shear",x,y,z).mag()+this.interaction.shear;
         
         let targetWarmCore = (lnd ?
             this.lowerWarmCore :
@@ -792,7 +799,7 @@ class ActiveSystem extends StormData{
         let p = floor(this.pressure);
         let w = round(this.windSpeed/WINDSPEED_ROUNDING)*WINDSPEED_ROUNDING;
         let ty = this.type;
-        let adv = new StormData(x,y,p,w,ty);
+        let adv = new StormData(this.basin,x,y,p,w,ty);
         this.fetchStorm().updateStats(adv);
         this.fetchStorm().record.push(adv);
         this.doTrackForecast();
@@ -801,8 +808,8 @@ class ActiveSystem extends StormData{
 
     getSteering(){
         let basin = this.basin;
-        let l = Env.get("LLSteering",this.pos.x,this.pos.y,basin.tick);
-        let u = Env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
+        let l = basin.env.get("LLSteering",this.pos.x,this.pos.y,basin.tick);
+        let u = basin.env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
         let d = sqrt(this.depth);
         let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
         let y = lerp(l.y,u.y,d);
@@ -842,8 +849,8 @@ class ActiveSystem extends StormData{
         for(let f=0;f<120;f++){
             let t = basin.tick+f;
             // Copy-paste from getSteering (will do something better in future)
-            let l = Env.get("LLSteering",p.x,p.y,t);
-            let u = Env.get("ULSteering",p.x,p.y,t);
+            let l = basin.env.get("LLSteering",p.x,p.y,t);
+            let u = basin.env.get("ULSteering",p.x,p.y,t);
             let d = sqrt(this.depth);
             let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
             let y = lerp(l.y,u.y,d);
@@ -858,7 +865,7 @@ class ActiveSystem extends StormData{
         if(this.storm instanceof StormRef){
             console.error('ActiveSystem still needs to fetch StormRefs');
             let s = this.storm.fetch();
-            if(!s) return new Storm();
+            if(!s) return new Storm(this.basin);
             this.storm = s;
             this.storm.deathTime = undefined;
             if(this.storm.record.length>0 && tropOrSub(this.storm.record[this.storm.record.length-1].type)) this.storm.dissipationTime = undefined;
@@ -877,7 +884,7 @@ class ActiveSystem extends StormData{
             'upperWarmCore',
             'depth'
         ]) obj[p] = this[p];
-        obj.ref = new StormRef(this.fetchStorm()).save();
+        obj.ref = new StormRef(this.basin,this.fetchStorm()).save();
         return obj;
 
         // old format
@@ -905,7 +912,7 @@ class ActiveSystem extends StormData{
                     'upperWarmCore',
                     'depth'
                 ]) this[p] = obj[p];
-                this.storm = new StormRef(data.sub(obj.ref));
+                this.storm = new StormRef(this.basin,data.sub(obj.ref));
             }else{
                 let str = data.value;
                 let parts = str.split(".");
@@ -915,27 +922,27 @@ class ActiveSystem extends StormData{
                 this.upperWarmCore = activeData.pop();
                 this.lowerWarmCore = activeData.pop();
                 this.organization = activeData.pop();
-                this.storm = new StormRef(data.sub(parts[2]));
+                this.storm = new StormRef(this.basin,data.sub(parts[2]));
             }
         }
     }
 }
 
-function getNewName(season,sNum){
-    let list;
-    if(basin.sequentialNameIndex<0){
-        let numoflists = basin.nameList.length-1;
-        list = basin.nameList[(season+1)%numoflists];
-        if(sNum>=list.length){
-            let gNum = sNum-list.length;
-            let greeks = basin.nameList[numoflists];
-            if(gNum>=greeks.length) return "Unnamed";
-            return greeks[gNum];
-        }
-        return list[sNum];
-    }
-    return basin.nameList[sNum];
-}
+// function getNewName(season,sNum){
+//     let list;
+//     if(basin.sequentialNameIndex<0){
+//         let numoflists = basin.nameList.length-1;
+//         list = basin.nameList[(season+1)%numoflists];
+//         if(sNum>=list.length){
+//             let gNum = sNum-list.length;
+//             let greeks = basin.nameList[numoflists];
+//             if(gNum>=greeks.length) return "Unnamed";
+//             return greeks[gNum];
+//         }
+//         return list[sNum];
+//     }
+//     return basin.nameList[sNum];
+// }
 
 function tropOrSub(ty){
     return ty===TROP || ty===SUBTROP;

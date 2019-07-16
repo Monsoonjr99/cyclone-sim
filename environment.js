@@ -54,7 +54,8 @@ class NoiseChannel{
 }
 
 class NCMetadata{
-    constructor(field,index,loadData){
+    constructor(basin,field,index,loadData){
+        this.basin = basin instanceof Basin && basin;
         this.field = field;
         this.index = index;
         this.channel = null;
@@ -70,15 +71,15 @@ class NCMetadata{
     }
 
     init(){
-        if(Env){
-            this.channel = Env.fields[this.field].noise[this.index];
+        if(this.basin.env){
+            this.channel = this.basin.env.fields[this.field].noise[this.index];
             this.channel.bind(this);
         }
     }
 
     getHistoryCache(s,refresh){
         if(!refresh && this.history.season===s) return this.history.arr;
-        let d = basin.fetchSeason(s);
+        let d = this.basin.fetchSeason(s);
         if(!d){
             this.history.season = undefined;
             this.history.recordStarts = 0;
@@ -108,6 +109,7 @@ class NCMetadata{
     }
 
     fetch(t){
+        let basin = this.basin;
         if(t>=basin.tick) return {
             x: this.xOff,
             y: this.yOff,
@@ -124,6 +126,7 @@ class NCMetadata{
     }
 
     record(){
+        let basin = this.basin;
         let seas = basin.fetchSeason(-1,true,true);
         let h = this.getHistoryCache(basin.getSeason(-1));
         if(!h) h = this.history.arr = [];
@@ -209,7 +212,8 @@ class NCMetadata{
 }
 
 class EnvField{
-    constructor(name,mapFunc,opts,...noiseC){
+    constructor(basin,name,mapFunc,opts,...noiseC){
+        this.basin = basin instanceof Basin && basin;
         this.name = name;
         this.noise = [];
         this.isVectorField = opts.vector;
@@ -238,13 +242,13 @@ class EnvField{
                 d = basin.envData.loadData.value.pop();
                 d = basin.envData.loadData.sub(d);
             }
-            if(!basin.envData[this.name][i]) new NCMetadata(this.name,i,d);
+            if(!basin.envData[this.name][i]) new NCMetadata(basin,this.name,i,d);
         }
     }
 
     get(x,y,z,noHem){
         try{
-            if(!noHem) y = basin.hemY(y);
+            if(!noHem) y = this.basin.hemY(y);
             if(this.mapFunc){
                 let s = this.noise;
                 let n = function(num,x1,y1,z1){
@@ -331,7 +335,8 @@ class EnvField{
 }
 
 class Environment{
-    constructor(){
+    constructor(basin){
+        this.basin = basin instanceof Basin && basin;
         this.fields = {};
         this.fieldList = [];
         this.displaying = -1;
@@ -340,7 +345,7 @@ class Environment{
     }
 
     addField(name,...fieldArgs){
-        this.fields[name] = new EnvField(name,...fieldArgs);
+        this.fields[name] = new EnvField(this.basin,name,...fieldArgs);
         this.fieldList.push(name);
     }
 
@@ -373,8 +378,9 @@ class Environment{
     }
 }
 
-Environment.init = function(){
-    Env = new Environment();    // Environmental fields that determine storm strength and steering
+Environment.init = function(basin){
+    if(!(basin instanceof Basin)) return;
+    let Env = basin.env = new Environment(basin);    // Environmental fields that determine storm strength and steering
 
     let hyper = basin.actMode === ACTIVITY_MODE_HYPER;
     let wild = basin.actMode === ACTIVITY_MODE_WILD;
@@ -654,7 +660,8 @@ Environment.init = function(){
 };
 
 class Land{
-    constructor(){
+    constructor(basin){
+        this.basin = basin instanceof Basin && basin;
         this.noise = new NoiseChannel(9,0.5,100);
         this.map = [];
         this.oceanTile = [];
@@ -677,7 +684,7 @@ class Land{
             this.map[i] = [];
             for(let j=0;j<HEIGHT;j++){
                 let n = this.noise.get(i,j);
-                let mapTypeControls = MAP_TYPES[basin.mapType];
+                let mapTypeControls = MAP_TYPES[this.basin.mapType];
                 let landBiasFactors = mapTypeControls.landBiasFactors;
                 let landBias;
                 if(mapTypeControls.form == "linear"){
@@ -746,7 +753,7 @@ class Land{
             for(let j=0;j<height;j++){
                 let landVal = lget(i,j);
                 if(landVal){
-                    let l = 1-basin.hemY(j)/HEIGHT;
+                    let l = 1-this.basin.hemY(j)/HEIGHT;
                     let h = 0.95-landVal;
                     let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
                     for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);
