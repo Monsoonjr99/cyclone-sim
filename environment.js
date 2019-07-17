@@ -667,55 +667,80 @@ class Land{
         this.oceanTile = [];
         this.drawn = false;
         this.shaderDrawn = false;
+        this.calculate();
     }
 
     get(x,y){
         x = floor(x);
         y = floor(y);
         if(this.map[x] && this.map[x][y]){
-            let v = this.map[x][y];
+            let v = this.map[x][y].val;
             return v > 0.5 ? v : 0;
         }else return 0;
     }
 
-    *init(){
-        yield "Calculating land...";
+    inBasin(x,y){
+        x = floor(x);
+        y = floor(y);
+        if(this.map[x] && this.map[x][y]){
+            return this.map[x][y].inBasin;
+        }else return true;
+    }
+
+    calculate(){
+        let mapTypeControls = MAP_TYPES[this.basin.mapType];
+        if(mapTypeControls.form==='pixelmap') this.basin.mapImg.loadPixels();
         for(let i=0;i<WIDTH;i++){
             this.map[i] = [];
             for(let j=0;j<HEIGHT;j++){
-                let n = this.noise.get(i,j);
-                let mapTypeControls = MAP_TYPES[this.basin.mapType];
-                let landBiasFactors = mapTypeControls.landBiasFactors;
-                let landBias;
-                if(mapTypeControls.form == "linear"){
-                    let landBiasAnchor = WIDTH * landBiasFactors[0];
-                    landBias = i < landBiasAnchor ?
-                        map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
-                        map(i-landBiasAnchor,0,WIDTH-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
-                }else if(mapTypeControls.form == "radial"){
-                    let EWAnchor = WIDTH * landBiasFactors[0];
-                    let NSAnchor = HEIGHT * landBiasFactors[1];
-                    let pointDist = sqrt(sq(i-EWAnchor)+sq(j-NSAnchor));
-                    let distAnchor1 = landBiasFactors[2] * sqrt(WIDTH*HEIGHT);
-                    let distAnchor2 = landBiasFactors[3] * sqrt(WIDTH*HEIGHT);
-                    landBias = pointDist < distAnchor1 ?
-                        map(pointDist,0,distAnchor1,landBiasFactors[4],landBiasFactors[5]) : pointDist < distAnchor2 ?
-                        map(pointDist,distAnchor1,distAnchor2,landBiasFactors[5],landBiasFactors[6]) :
-                        landBiasFactors[6];
+                let p = this.map[i][j] = {};
+                if(mapTypeControls.form==='pixelmap'){
+                    let d = pixelDensity();
+                    let img = this.basin.mapImg;
+                    let x = map(i,0,WIDTH,0,img.width);
+                    x = round(x);
+                    let y = map(j,0,HEIGHT,0,img.height);
+                    y = round(y);
+                    let index = 4 * (y*img.width*sq(d)+x*d);
+                    let v = img.pixels[index];
+                    let ib = img.pixels[index+1];
+                    p.val = map(v,0,255,0,1);
+                    p.inBasin = ib<255;
+                }else{
+                    let n = this.noise.get(i,j);
+                    let landBiasFactors = mapTypeControls.landBiasFactors;
+                    let landBias;
+                    if(mapTypeControls.form == "linear"){
+                        let landBiasAnchor = WIDTH * landBiasFactors[0];
+                        landBias = i < landBiasAnchor ?
+                            map(i,0,landBiasAnchor,landBiasFactors[1],landBiasFactors[2]) :
+                            map(i-landBiasAnchor,0,WIDTH-landBiasAnchor,landBiasFactors[2],landBiasFactors[3]);
+                    }else if(mapTypeControls.form == "radial"){
+                        let EWAnchor = WIDTH * landBiasFactors[0];
+                        let NSAnchor = HEIGHT * landBiasFactors[1];
+                        let pointDist = sqrt(sq(i-EWAnchor)+sq(j-NSAnchor));
+                        let distAnchor1 = landBiasFactors[2] * sqrt(WIDTH*HEIGHT);
+                        let distAnchor2 = landBiasFactors[3] * sqrt(WIDTH*HEIGHT);
+                        landBias = pointDist < distAnchor1 ?
+                            map(pointDist,0,distAnchor1,landBiasFactors[4],landBiasFactors[5]) : pointDist < distAnchor2 ?
+                            map(pointDist,distAnchor1,distAnchor2,landBiasFactors[5],landBiasFactors[6]) :
+                            landBiasFactors[6];
+                    }
+                    p.val = n + landBias;
+                    p.inBasin = true;
                 }
-                this.map[i][j] = n + landBias;
                 let ox = floor(i/ENV_LAYER_TILE_SIZE);
                 let oy = floor(j/ENV_LAYER_TILE_SIZE);
                 if(!this.oceanTile[ox]) this.oceanTile[ox] = [];
-                if(this.map[i][j]<=0.5) this.oceanTile[ox][oy] = true;
+                if(p.val<=0.5) this.oceanTile[ox][oy] = true;
             }
         }
-        yield* this.draw();
     }
 
     *draw(){
         yield "Rendering land...";
         let lget = (x,y)=>this.get(x/scaler,y/scaler);
+        let bget = (x,y)=>this.inBasin(x/scaler,y/scaler);
         for(let i=0;i<width;i++){
             for(let j=0;j<height;j++){
                 let landVal = lget(i,j);
@@ -733,6 +758,8 @@ class Land{
                     if(i<WIDTH-1 && !lget(i+1,j)) touchingOcean = true;
                     if(j<HEIGHT-1 && !lget(i,j+1)) touchingOcean = true;
                     if(touchingOcean) coastLine.rect(i,j,1,1);
+                }else if(!bget(i,j)){
+                    outBasinBuffer.rect(i,j,1,1);
                 }
             }
         }

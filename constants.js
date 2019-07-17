@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190716a";
+const VERSION_NUMBER = "20190717a";
 
 const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -77,6 +77,10 @@ const MAP_TYPES = [     // Land generation controls for different map types
             0.2,
             0.3
         ]
+    },
+    {   // "Atlantic" map type
+        form: 'pixelmap',
+        path: 'resources/Atlantic.png'
     }
 ];
 const EXTROP = 0;//"extratropical";
@@ -246,6 +250,7 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.land.push([0.53, color(220,220,110)]);
     COLORS.land.push([0.5, color(250,250,90)]);
     COLORS.snow = color(240);
+    COLORS.outBasin = color(30,95,170);
     COLORS.UI = {};
     COLORS.UI.bar = color(200,100);
     COLORS.UI.box = color(200,170);

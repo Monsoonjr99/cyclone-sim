@@ -63,13 +63,13 @@ class Storm{
         let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         return ty===TROP ?
-            (cat>10 ? hypercaneTerm :
+            (name ? '' : 'Unnamed ') + (cat>10 ? hypercaneTerm :
             cat>0 ? hurricaneTerm :
-            cat>-1 ? "Tropical Storm" : "Tropical Depression") + " " + name :
+            cat>-1 ? "Tropical Storm" : "Tropical Depression") + (name ? " " + name : '') :
         ty===SUBTROP ?
-            (cat>10 ? "Subtropical " + hypercaneTerm :
+            (name ? '' : 'Unnamed ') + (cat>10 ? "Subtropical " + hypercaneTerm :
             cat>0 ? "Subtropical " + hurricaneTerm :
-            cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + " " + name :
+            cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + (name ? " " + name : '') :
         ty===TROPWAVE ?
             name ? "Remnants of " + name : "Unnamed Tropical Wave" :
         ty===EXTROP ?
@@ -200,8 +200,8 @@ class Storm{
         let cat = data.getCat();
         let cSeason = basin.fetchSeason(-1,true,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
-        let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
-        let isTropical = tropOrSub(type);
+        let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type)&&land.inBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : false;
+        let isTropical = tropOrSub(type)&&land.inBasin(data.pos.x,data.pos.y);
         if(!this.TC && isTropical){
             this.TC = true;
             this.formationTime = basin.tick;
@@ -340,7 +340,7 @@ class Storm{
             if(this.nameNum!==undefined) this.named = true;
             for(let i=0;i<this.record.length;i++){
                 let d = this.record[i];
-                let trop = tropOrSub(d.type);
+                let trop = tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y);
                 let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
                 if(trop && !this.formationTime) this.formationTime = t;
                 if(trop && this.dissipationTime) this.dissipationTime = undefined;

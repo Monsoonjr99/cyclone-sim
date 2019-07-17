@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190717a:
+    + Added the long-awaited Atlantic map mode
+    + Added the "out-basin" as a region where tropical cyclones may form but are not named nor included in stats
+        > The Eastern Pacific and Mediterranean portions of the Atlantic map are out-basin
+    * Fixed the environmental field indicator displaying "selected storm" even when a storm isn't selected
+    * Fixed newly-created normal activity mode basins not spawning tropical waves
 v20190716a:
     - Eliminated 'basin' as a global variable
     - Eliminated 'Env' as a global variable

@@ -9,6 +9,7 @@ function setup(){
     background(COLORS.bg);
     paused = false;
     // basin = undefined;
+    land = undefined;
     newBasinSettings = {};
     waitingFor = 0;
     waitingDesc = '';
@@ -38,6 +39,9 @@ function setup(){
     forecastTracks.stroke(240,240,0);
     landBuffer = createBuffer(WIDTH,HEIGHT,true);
     landBuffer.noStroke();
+    outBasinBuffer = createBuffer(WIDTH,HEIGHT,true);
+    outBasinBuffer.noStroke();
+    outBasinBuffer.fill(COLORS.outBasin);
     landShader = createBuffer(WIDTH,HEIGHT,true);
     landShader.noStroke();
     coastLine = createBuffer(WIDTH,HEIGHT,true);
@@ -145,16 +149,9 @@ function init(load){    // clean this up when global variables are cleaned up
     let whenBasinLoaded = basin=>{
         viewTick = basin.tick;
         UI.viewBasin = basin;
-        if(load===undefined){
-            noiseSeed(basin.seed);
-            Environment.init(basin);
-            basin.seasons[basin.getSeason(-1)] = new Season(basin);
-            basin.env.record();
-        }
-        land = new Land(basin);
         refreshTracks(true);
         primaryWrapper.show();
-        renderToDo = land.init();
+        renderToDo = land.draw();
     };
 
     if(load!==undefined){
@@ -179,7 +176,23 @@ function init(load){    // clean this up when global variables are cleaned up
         let basin = new Basin(false,opts);
         newBasinSettings = {};
         paused = false;
-        whenBasinLoaded(basin);
+        noiseSeed(basin.seed);
+        Environment.init(basin);
+        let theRest = basin=>{
+            land = new Land(basin);
+            basin.seasons[basin.getSeason(-1)] = new Season(basin);
+            basin.env.record();
+            whenBasinLoaded(basin);
+        };
+        if(MAP_TYPES[basin.mapType].form==='pixelmap'){
+            return loadImg(MAP_TYPES[basin.mapType].path).then(img=>{
+                img.loadPixels();
+                basin.mapImg = img;
+                theRest(basin);
+            }).catch(e=>{
+                console.error(e);
+            });
+        }else theRest(basin);
     }
 }
 

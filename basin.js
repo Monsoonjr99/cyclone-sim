@@ -9,7 +9,7 @@ class Basin{
         this.lastSaved = 0;
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
-        this.actMode = opts.actMode;
+        this.actMode = opts.actMode || 0;
         this.hypoCats = opts.hypoCats;
         this.startYear = opts.year || (this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR);
         this.nameList = NAME_LIST_PRESETS[opts.names || 0];
@@ -419,8 +419,18 @@ class Basin{
                 }
                 return this;
             }).then(b=>{
+                if(MAP_TYPES[b.mapType].form==='pixelmap'){
+                    return loadImg(MAP_TYPES[b.mapType].path).then(img=>{
+                        img.loadPixels();
+                        b.mapImg = img;
+                        return b;
+                    });
+                }
+                return b;
+            }).then(b=>{
                 noiseSeed(b.seed);
                 Environment.init(b);
+                land = new Land(b);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
                     for(let i=0;i<s.systems.length;i++){

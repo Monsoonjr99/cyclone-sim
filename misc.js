@@ -72,6 +72,14 @@ function hashCode(str){
     return hash;
 }
 
+function loadImg(path){     // wrap p5.loadImage in a promise
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>{
+            loadImage(path,resolve,reject);
+        });
+    });
+}
+
 // waitForAsyncProcess allows the simulator to wait for things to load; unneeded for saving
 function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks inside of func before returning the promise, but add .catch() to the returned promise of waitForAsyncProcess
     waitingFor++;

@@ -286,11 +286,12 @@ UI.init = function(){
                 if(seas) for(let S of seas.forSystems(true)) S.renderIcon();
             }
     
-            if(basin.env.displaying>=0 && basin.env.layerIsOceanic) drawBuffer(envLayer);
             if(!land.drawn){
                 renderToDo = land.draw();
                 return;
             }
+            drawBuffer(outBasinBuffer);
+            if(basin.env.displaying>=0 && basin.env.layerIsOceanic) drawBuffer(envLayer);
             drawBuffer(landBuffer);
             if(simSettings.snowLayers){
                 if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
@@ -510,7 +511,7 @@ UI.init = function(){
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Map type Selector
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea"][newBasinSettings.mapType || 0];
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic"][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
@@ -983,7 +984,7 @@ UI.init = function(){
                     txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
                 }else txtStr += round(v*1000)/1000;
             }
-            txtStr += " @ " + (s ? "selected storm" : "mouse pointer / finger");
+            txtStr += " @ " + (S ? "selected storm" : "mouse pointer / finger");
         }else txtStr += "none";
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
@@ -1170,7 +1171,7 @@ UI.init = function(){
                     for(let q=0;q<t.record.length;q++){
                         let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                         let d = t.record[q];
-                        if(tropOrSub(d.type)){
+                        if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
                             let cat = d.getCat();
                             if(!aSegment){
                                 aSegment = {};
