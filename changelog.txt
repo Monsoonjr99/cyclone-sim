@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190718b:
+    * Fixed graphical glitch where Atlantic out-basin coloration sticks after returning to main menu and loading another basin
 v20190718a:
     * Attempt at fixing a bug with the Atlantic map on HiDPI displays
 v20190717a:

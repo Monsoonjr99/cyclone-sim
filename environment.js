@@ -825,6 +825,7 @@ class Land{
 
     clear(){
         landBuffer.clear();
+        outBasinBuffer.clear();
         coastLine.clear();
         landShader.clear();
         this.clearSnow();
