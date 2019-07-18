@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190718a:
+    * Attempt at fixing a bug with the Atlantic map on HiDPI displays
 v20190717a:
     + Added the long-awaited Atlantic map mode
     + Added the "out-basin" as a region where tropical cyclones may form but are not named nor included in stats

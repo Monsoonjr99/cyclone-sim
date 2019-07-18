@@ -695,7 +695,7 @@ class Land{
             for(let j=0;j<HEIGHT;j++){
                 let p = this.map[i][j] = {};
                 if(mapTypeControls.form==='pixelmap'){
-                    let d = pixelDensity();
+                    let d = 1;//pixelDensity();
                     let img = this.basin.mapImg;
                     let x = map(i,0,WIDTH,0,img.width);
                     x = round(x);
