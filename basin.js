@@ -364,6 +364,7 @@ class Basin{
                             'hypoCats',
                             'actMode'
                         ]) this[p] = obj[p];
+                        this.lastSaved = this.tick;
                     }else{  // Format 1 backwards compatibility
                         // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
                         // let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;

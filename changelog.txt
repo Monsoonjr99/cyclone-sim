@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190721a:
+    + Added Hebrew alphabet to Atlantic and Eastern Pacific name lists for use after the Greek alphabet
+        > Only applies to new basins
+        > Technically not an official part of those name lists in the real world, but useful for extreme hyperactivity in this simulator
+    * Land is now calculated at twice the normal resolution of the 540p canvas, thus rendering nicely in 1080p in fullscreen
 v20190718b:
     * Fixed graphical glitch where Atlantic out-basin coloration sticks after returning to main menu and loading another basin
 v20190718a:
