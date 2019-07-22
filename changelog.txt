@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190722a:
+    + Added Western Pacific and Eastern Pacific map modes
+    * Fixed misalligned topography and some missing islands in the Atlantic map
 v20190721a:
     + Added Hebrew alphabet to Atlantic and Eastern Pacific name lists for use after the Greek alphabet
         > Only applies to new basins

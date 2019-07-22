@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190721a";
+const VERSION_NUMBER = "20190722a";
 
 const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -82,6 +82,14 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Atlantic" map type
         form: 'pixelmap',
         path: 'resources/Atlantic.png'
+    },
+    {   // "Eastern Pacific" map type
+        form: 'pixelmap',
+        path: 'resources/EasternPacific.png'
+    },
+    {   // "Western Pacific" map type
+        form: 'pixelmap',
+        path: 'resources/WesternPacific.png'
     }
 ];
 const EXTROP = 0;//"extratropical";
