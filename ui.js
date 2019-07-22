@@ -511,7 +511,7 @@ UI.init = function(){
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Map type Selector
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific'][newBasinSettings.mapType || 0];
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
