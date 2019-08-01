@@ -1,3 +1,29 @@
+var paused,
+    land,
+    newBasinSettings,
+    waitingFor,
+    waitingDesc,
+    waitingTCSymbolSHem,
+    simSettings,
+    textInput,
+    buffers,
+    scaler,
+    tracks,
+    stormIcons,
+    forecastTracks,
+    landBuffer,
+    outBasinBuffer,
+    landShader,
+    coastLine,
+    envLayer,
+    snow,
+    simSpeed,
+    simSpeedFrameCounter,
+    keyRepeatFrameCounter,
+    viewTick,
+    selectedStorm,
+    renderToDo;
+
 function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
     document.title = TITLE;
@@ -9,7 +35,6 @@ function setup(){
     background(COLORS.bg);
     paused = false;
     // basin = undefined;
-    land = undefined;
     newBasinSettings = {};
     waitingFor = 0;
     waitingDesc = '';
@@ -144,57 +169,56 @@ function draw(){
     }
 }
 
-function init(load){    // clean this up when global variables are cleaned up
-    selectedStorm = undefined;
-    let whenBasinLoaded = basin=>{
-        viewTick = basin.tick;
-        UI.viewBasin = basin;
-        refreshTracks(true);
-        primaryWrapper.show();
-        renderToDo = land.draw();
-    };
+// function init(load){
+//     // selectedStorm = undefined;
+//     // let whenBasinLoaded = basin=>{
+//     //     viewTick = basin.tick;
+//     //     UI.viewBasin = basin;
+//     //     refreshTracks(true);
+//     //     primaryWrapper.show();
+//     //     renderToDo = land.draw();
+//     // };
 
-    if(load!==undefined){
-        new Basin(load,{    // the basin global variable is currently set by a hardcoded line in the load function -- temporary until the global variable problem is fixed
-            onload: whenBasinLoaded
-        });
-        paused = true;
-    }else{
-        let opts = {};
-        if(newBasinSettings.hem===1) opts.hem = false;
-        else if(newBasinSettings.hem===2) opts.hem = true;
-        else opts.hem = random()<0.5;
-        opts.year = opts.hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-        if(newBasinSettings.year!==undefined) opts.year = newBasinSettings.year;
-        opts.seed = newBasinSettings.seed;
-        opts.actMode = newBasinSettings.actMode;
-        opts.names = newBasinSettings.names;
-        opts.hurrTerm = newBasinSettings.hurrTerm;
-        opts.mapType = newBasinSettings.mapType;
-        opts.godMode = newBasinSettings.godMode;
-        opts.hypoCats = newBasinSettings.hypoCats;
-        let basin = new Basin(false,opts);
-        newBasinSettings = {};
-        paused = false;
-        noiseSeed(basin.seed);
-        Environment.init(basin);
-        let theRest = basin=>{
-            land = new Land(basin);
-            basin.seasons[basin.getSeason(-1)] = new Season(basin);
-            basin.env.record();
-            whenBasinLoaded(basin);
-        };
-        if(MAP_TYPES[basin.mapType].form==='pixelmap'){
-            return loadImg(MAP_TYPES[basin.mapType].path).then(img=>{
-                img.loadPixels();
-                basin.mapImg = img;
-                theRest(basin);
-            }).catch(e=>{
-                console.error(e);
-            });
-        }else theRest(basin);
-    }
-}
+//     let basin;
+//     if(load!==undefined) basin = new Basin(load);
+//     else{
+//         let opts = {};
+//         if(newBasinSettings.hem===1) opts.hem = false;
+//         else if(newBasinSettings.hem===2) opts.hem = true;
+//         else opts.hem = random()<0.5;
+//         opts.year = opts.hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+//         if(newBasinSettings.year!==undefined) opts.year = newBasinSettings.year;
+//         opts.seed = newBasinSettings.seed;
+//         opts.actMode = newBasinSettings.actMode;
+//         opts.names = newBasinSettings.names;
+//         opts.hurrTerm = newBasinSettings.hurrTerm;
+//         opts.mapType = newBasinSettings.mapType;
+//         opts.godMode = newBasinSettings.godMode;
+//         opts.hypoCats = newBasinSettings.hypoCats;
+//         basin = new Basin(false,opts);
+//         newBasinSettings = {};
+//         // noiseSeed(basin.seed);
+//         // Environment.init(basin);
+//         // let theRest = basin=>{
+//         //     land = new Land(basin);
+//         //     basin.seasons[basin.getSeason(-1)] = new Season(basin);
+//         //     basin.env.record();
+//         //     whenBasinLoaded(basin);
+//         // };
+//         // if(MAP_TYPES[basin.mapType].form==='pixelmap'){
+//         //     return loadImg(MAP_TYPES[basin.mapType].path).then(img=>{
+//         //         img.loadPixels();
+//         //         basin.mapImg = img;
+//         //         theRest(basin);
+//         //     }).catch(e=>{
+//         //         console.error(e);
+//         //     });
+//         // }else theRest(basin);
+//     }
+//     basin.initialized.then(()=>{
+//         basin.mount();
+//     });
+// }
 
 // function advanceSim(){
 //     let vp = basin.viewingPresent();

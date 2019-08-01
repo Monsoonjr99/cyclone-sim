@@ -376,288 +376,288 @@ class Environment{
         }
         this.displayLayer();
     }
-}
 
-Environment.init = function(basin){
-    if(!(basin instanceof Basin)) return;
-    let Env = basin.env = new Environment(basin);    // Environmental fields that determine storm strength and steering
+    init(){
+        let basin = this.basin;
+        let Env = this;    // Environmental fields that determine storm strength and steering
 
-    let hyper = basin.actMode === ACTIVITY_MODE_HYPER;
-    let wild = basin.actMode === ACTIVITY_MODE_WILD;
+        let hyper = basin.actMode === ACTIVITY_MODE_HYPER;
+        let wild = basin.actMode === ACTIVITY_MODE_WILD;
 
-    let yearfrac = z=>(z%YEAR_LENGTH)/YEAR_LENGTH;
-    let piecewise = (s,arr)=>{
-        let x = [arr[arr.length-1][0]-12,arr[arr.length-1][1]];
-        for(let q of arr){
-            if(s*12<q[0]) return map(s*12,x[0],q[0],x[1],q[1]);
-            x = q;
-        }
-        return map(s*12,x[0],arr[0][0]+12,x[1],arr[0][1]);
-    };
-
-    Env.addField(
-        "jetstream",
-        function(n,x,y,z){
-            let v = n(0,x-z*3,0,z);
-            let l;
-            if(wild){
-                let s = yearfrac(z);
-                l = piecewise(s,[[1,0.65],[2.5,-0.15],[10,-0.15],[11.5,0.65]]);
-                let r = piecewise(s,[[0.5,0.3],[1.75,0.7],[3,0.2],[9.5,0.2],[10.75,0.7],[12,0.3]]);
-                v = map(v,0,1,-r,r);
-            }else{
-                let s = seasonalSine(z);
-                l = map(sqrt(map(s,-1,1,0,1)),0,1,hyper?0.47:0.55,hyper?0.25:0.35);
-                let r = map(s,-1,1,hyper?0.45:0.5,hyper?0.25:0.35);
-                v = map(v,0,1,-r,r);
+        let yearfrac = z=>(z%YEAR_LENGTH)/YEAR_LENGTH;
+        let piecewise = (s,arr)=>{
+            let x = [arr[arr.length-1][0]-12,arr[arr.length-1][1]];
+            for(let q of arr){
+                if(s*12<q[0]) return map(s*12,x[0],q[0],x[1],q[1]);
+                x = q;
             }
-            return (l+v)*HEIGHT;
-        },
-        {
-            invisible: true
-        },
-        [4,0.5,160,300,1,2]
-    );
+            return map(s*12,x[0],arr[0][0]+12,x[1],arr[0][1]);
+        };
 
-    Env.addField(
-        "LLSteering",
-        function(n,x,y,z){
-            this.vec.set(1);    // reset vector
+        Env.addField(
+            "jetstream",
+            function(n,x,y,z){
+                let v = n(0,x-z*3,0,z);
+                let l;
+                if(wild){
+                    let s = yearfrac(z);
+                    l = piecewise(s,[[1,0.65],[2.5,-0.15],[10,-0.15],[11.5,0.65]]);
+                    let r = piecewise(s,[[0.5,0.3],[1.75,0.7],[3,0.2],[9.5,0.2],[10.75,0.7],[12,0.3]]);
+                    v = map(v,0,1,-r,r);
+                }else{
+                    let s = seasonalSine(z);
+                    l = map(sqrt(map(s,-1,1,0,1)),0,1,hyper?0.47:0.55,hyper?0.25:0.35);
+                    let r = map(s,-1,1,hyper?0.45:0.5,hyper?0.25:0.35);
+                    v = map(v,0,1,-r,r);
+                }
+                return (l+v)*HEIGHT;
+            },
+            {
+                invisible: true
+            },
+            [4,0.5,160,300,1,2]
+        );
 
-            if(wild){
-                let s = yearfrac(z);
-                let wind = piecewise(s,[[1,3],[2.5,1],[4.5,0.5],[6,0.75],[7.5,0.65],[7.75,0.05],[8,1.1],[10,1.8],[11,3]]); // wind strength
-                let windAngle = piecewise(s,[[1,13*PI/8],[2.5,9*PI/8],[4.5,PI],[6,17*PI/16],[7.5,17*PI/16],[8,31*PI/16],[10,15*PI/8],[11.5,13*PI/8]]); // wind angle
+        Env.addField(
+            "LLSteering",
+            function(n,x,y,z){
+                this.vec.set(1);    // reset vector
+
+                if(wild){
+                    let s = yearfrac(z);
+                    let wind = piecewise(s,[[1,3],[2.5,1],[4.5,0.5],[6,0.75],[7.5,0.65],[7.75,0.05],[8,1.1],[10,1.8],[11,3]]); // wind strength
+                    let windAngle = piecewise(s,[[1,13*PI/8],[2.5,9*PI/8],[4.5,PI],[6,17*PI/16],[7.5,17*PI/16],[8,31*PI/16],[10,15*PI/8],[11.5,13*PI/8]]); // wind angle
+                    // noise angle
+                    let a = map(n(3),0,1,0,4*TAU);
+                    // noise magnitude
+                    let m = pow(1.5,map(n(2),0,1,-3,4));
+
+                    // apply to vector
+                    this.vec.rotate(a);
+                    this.vec.mult(m);
+                    this.vec.add(wind*cos(windAngle),wind*sin(windAngle));
+                    this.vec.y = basin.hem(this.vec.y); // hemisphere flip
+                    return this.vec;
+                }
+
+                // Jetstream
+                let j = Env.get("jetstream",x,y,z,true);
+                // Cosine curve from 0 at poleward side of map to 1 at equatorward side
+                let h = map(cos(map(y,0,HEIGHT,0,PI)),-1,1,1,0);
+                // westerlies
+                let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3)+map(j,0,HEIGHT,-0.4,0.4),2)*4,0,4);
+                // ridging and trades
+                let ridging = constrain(n(1)+map(j,0,HEIGHT,0.3,-0.3),0,1);
+                let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
+                let tAngle = map(h,0.9,1,511*PI/512,17*PI/16); // trades angle
                 // noise angle
                 let a = map(n(3),0,1,0,4*TAU);
                 // noise magnitude
-                let m = pow(1.5,map(n(2),0,1,-3,4));
+                let m = pow(1.5,map(n(2),0,1,-8,4));
 
                 // apply to vector
                 this.vec.rotate(a);
                 this.vec.mult(m);
-                this.vec.add(wind*cos(windAngle),wind*sin(windAngle));
+                this.vec.add(west+trades*cos(tAngle),trades*sin(tAngle));
                 this.vec.y = basin.hem(this.vec.y); // hemisphere flip
                 return this.vec;
-            }
-
-            // Jetstream
-            let j = Env.get("jetstream",x,y,z,true);
-            // Cosine curve from 0 at poleward side of map to 1 at equatorward side
-            let h = map(cos(map(y,0,HEIGHT,0,PI)),-1,1,1,0);
-            // westerlies
-            let west = constrain(pow(1-h+map(n(0),0,1,-0.3,0.3)+map(j,0,HEIGHT,-0.4,0.4),2)*4,0,4);
-            // ridging and trades
-            let ridging = constrain(n(1)+map(j,0,HEIGHT,0.3,-0.3),0,1);
-            let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
-            let tAngle = map(h,0.9,1,511*PI/512,17*PI/16); // trades angle
-            // noise angle
-            let a = map(n(3),0,1,0,4*TAU);
-            // noise magnitude
-            let m = pow(1.5,map(n(2),0,1,-8,4));
-
-            // apply to vector
-            this.vec.rotate(a);
-            this.vec.mult(m);
-            this.vec.add(west+trades*cos(tAngle),trades*sin(tAngle));
-            this.vec.y = basin.hem(this.vec.y); // hemisphere flip
-            return this.vec;
-        },
-        {
-            vector:true,
-            magMap:[0,3,0,16]
-        },
-        [4,0.5,80,100,1,3],
-        '',
-        '',
-        [4,0.5,170,300,1,3]
-    );
-
-    Env.addField(
-        "ULSteering",
-        function(n,x,y,z){
-            this.vec.set(1);                                                                // reset vector
-
-            const dx = 10;                                                                  // delta-x for jetstream differential
-
-            let m = n(1);
-
-            let s;
-            if(wild) s = yearfrac(z);
-            else s = seasonalSine(z);
-            let j0 = Env.get("jetstream",x,y,z,true);                                       // y-position of jetstream
-            let j1 = Env.get("jetstream",x+dx,y,z,true);                                    // y-position of jetstream dx to the east for differential
-            let j = abs(y-j0);                                                              // distance of point north/south of jetstream
-            let jet = pow(2,3-j/(wild?30:40));                                              // power of jetstream at point
-            let jOP = pow(0.7,jet);                                                         // factor for how strong other variables should be if 'overpowered' by jetstream
-            let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,wild?PI/15:PI/4,wild?-PI/17:-PI/4,true); // angle of jetstream at point
-            let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
-            let tAngle = -PI/16;                                                            // angle of push from jetstream dips
-            let ridging;
-            if(!wild) ridging = 0.45-j0/HEIGHT-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
-            let hadley;     // power of winds equatorward of jetstream
-            let hAngle;     // angle of winds equatorward of jetstream
-            if(wild){
-                hadley = (piecewise(s,[[1,4.5],[2.5,1.2],[4,0.5],[4.5,1.7],[5,0.6],[6.5,0.65],[7.5,0.65],[7.75,0.05],[8,1.3],[9,1.7],[10,2.3],[11.5,4.5]]))*jOP*(y>j0?1:0);
-                hAngle = piecewise(s,[[1,11*PI/8],[2.5,9*PI/8],[4,17*PI/16],[4.5,11*PI/8],[5,17*PI/16],[6.5,35*PI/32],[7.5,17*PI/16],[8,31*PI/16],[9,15*PI/8],[10,7*PI/4],[10.5,11*PI/8]]);
-            }else{
-                hadley = (map(ridging,-0.3,0.2,hyper?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
-                hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);
-            }
-            let ferrel = 2*jOP*(y<j0?wild?map(j0-y,0,400,1,0,true):1:0);                    // power of winds poleward of jetstream
-            let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
-
-            let a = map(n(0),0,1,0,4*TAU);                                                  // noise angle
-            if(wild) m = pow(1.5,map(m,0,1,-3,4))*jOP;
-            else m = pow(1.5,map(m,0,1,-8,4))*jOP;                                          // noise magnitude
-
-            // apply noise
-            this.vec.rotate(a);
-            this.vec.mult(m);
-
-            // apply UL winds
-            this.vec.add(jet*cos(jAngle),jet*sin(jAngle));                                  // apply jetstream
-            if(!wild) this.vec.add(trof*cos(tAngle),trof*sin(tAngle));                      // apply trough push
-            this.vec.add(hadley*cos(hAngle),hadley*sin(hAngle));                            // apply winds equatorward of jetstream
-            this.vec.add(ferrel*cos(fAngle),ferrel*sin(fAngle));                            // apply winds poleward of jetstream
-
-            this.vec.y = basin.hem(this.vec.y);                                                   // hemisphere flip
-            return this.vec;
-        },
-        {
-            vector: true,
-            magMap: [0,8,0,25]
-        },
-        [4,0.5,180,300,1,2],
-        [4,0.5,90,100,1,3]
-    );
-
-    Env.addField(
-        "shear",
-        function(n,x,y,z){
-            let l = Env.get("LLSteering",x,y,z,true);
-            let u = Env.get("ULSteering",x,y,z,true);
-            this.vec.set(u);
-            this.vec.sub(l);
-            return this.vec;
-        },
-        {
-            vector: true,
-            magMap: [0,8,0,25]
-        }
-    );
-
-    Env.addField(
-        "SSTAnomaly",
-        function(n,x,y){
-            let v = n(0);
-            v = v*2;
-            let i = v<1 ? -1 : 1;
-            v = 1-abs(1-v);
-            if(v===0) v = 0.000001;
-            v = log(v);
-            let r = wild ? 5 : map(y,0,HEIGHT,6,3);
-            v = -r*v;
-            v = v*i;
-            if(wild && v>1.5) v += pow(1.4,v-1.5)-1;
-            return v;
-        },
-        {
-            hueMap: function(v){
-                colorMode(HSB);
-                let cold = color(240,100,70);
-                let hot = color(0,100,70);
-                let cNeutral = color(240,1,90);
-                let hNeutral = color(0,1,90);
-                let c;
-                if(v<0) c = lerpColor(cold,cNeutral,map(v,-5,0,0,1));
-                else c = lerpColor(hNeutral,hot,map(v,0,5,0,1));
-                colorMode(RGB);
-                return c;
             },
-            oceanic: true
-        },
-        [6,0.5,150,3000,0.05,1.5]
-    );
+            {
+                vector:true,
+                magMap:[0,3,0,16]
+            },
+            [4,0.5,80,100,1,3],
+            '',
+            '',
+            [4,0.5,170,300,1,3]
+        );
 
-    Env.addField(
-        "SST",
-        function(n,x,y,z){
-            if(y<0) return 0;
-            let anom = Env.get("SSTAnomaly",x,y,z,true);
-            let s;
-            if(wild){
-                s = yearfrac(z);
-                let t = piecewise(s,[[0,22],[2,25.5],[4,25],[5,26.5],[6,27],[6.25,30],[6.75,31],[7,28],[9,27],[10,26],[11,23]]);
+        Env.addField(
+            "ULSteering",
+            function(n,x,y,z){
+                this.vec.set(1);                                                                // reset vector
+
+                const dx = 10;                                                                  // delta-x for jetstream differential
+
+                let m = n(1);
+
+                let s;
+                if(wild) s = yearfrac(z);
+                else s = seasonalSine(z);
+                let j0 = Env.get("jetstream",x,y,z,true);                                       // y-position of jetstream
+                let j1 = Env.get("jetstream",x+dx,y,z,true);                                    // y-position of jetstream dx to the east for differential
+                let j = abs(y-j0);                                                              // distance of point north/south of jetstream
+                let jet = pow(2,3-j/(wild?30:40));                                              // power of jetstream at point
+                let jOP = pow(0.7,jet);                                                         // factor for how strong other variables should be if 'overpowered' by jetstream
+                let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,wild?PI/15:PI/4,wild?-PI/17:-PI/4,true); // angle of jetstream at point
+                let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;   // pole-eastward push from jetstream dips
+                let tAngle = -PI/16;                                                            // angle of push from jetstream dips
+                let ridging;
+                if(!wild) ridging = 0.45-j0/HEIGHT-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);             // how much 'ridge' or 'trough' there is from jetstream
+                let hadley;     // power of winds equatorward of jetstream
+                let hAngle;     // angle of winds equatorward of jetstream
+                if(wild){
+                    hadley = (piecewise(s,[[1,4.5],[2.5,1.2],[4,0.5],[4.5,1.7],[5,0.6],[6.5,0.65],[7.5,0.65],[7.75,0.05],[8,1.3],[9,1.7],[10,2.3],[11.5,4.5]]))*jOP*(y>j0?1:0);
+                    hAngle = piecewise(s,[[1,11*PI/8],[2.5,9*PI/8],[4,17*PI/16],[4.5,11*PI/8],[5,17*PI/16],[6.5,35*PI/32],[7.5,17*PI/16],[8,31*PI/16],[9,15*PI/8],[10,7*PI/4],[10.5,11*PI/8]]);
+                }else{
+                    hadley = (map(ridging,-0.3,0.2,hyper?3:5,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
+                    hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);
+                }
+                let ferrel = 2*jOP*(y<j0?wild?map(j0-y,0,400,1,0,true):1:0);                    // power of winds poleward of jetstream
+                let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
+
+                let a = map(n(0),0,1,0,4*TAU);                                                  // noise angle
+                if(wild) m = pow(1.5,map(m,0,1,-3,4))*jOP;
+                else m = pow(1.5,map(m,0,1,-8,4))*jOP;                                          // noise magnitude
+
+                // apply noise
+                this.vec.rotate(a);
+                this.vec.mult(m);
+
+                // apply UL winds
+                this.vec.add(jet*cos(jAngle),jet*sin(jAngle));                                  // apply jetstream
+                if(!wild) this.vec.add(trof*cos(tAngle),trof*sin(tAngle));                      // apply trough push
+                this.vec.add(hadley*cos(hAngle),hadley*sin(hAngle));                            // apply winds equatorward of jetstream
+                this.vec.add(ferrel*cos(fAngle),ferrel*sin(fAngle));                            // apply winds poleward of jetstream
+
+                this.vec.y = basin.hem(this.vec.y);                                                   // hemisphere flip
+                return this.vec;
+            },
+            {
+                vector: true,
+                magMap: [0,8,0,25]
+            },
+            [4,0.5,180,300,1,2],
+            [4,0.5,90,100,1,3]
+        );
+
+        Env.addField(
+            "shear",
+            function(n,x,y,z){
+                let l = Env.get("LLSteering",x,y,z,true);
+                let u = Env.get("ULSteering",x,y,z,true);
+                this.vec.set(u);
+                this.vec.sub(l);
+                return this.vec;
+            },
+            {
+                vector: true,
+                magMap: [0,8,0,25]
+            }
+        );
+
+        Env.addField(
+            "SSTAnomaly",
+            function(n,x,y){
+                let v = n(0);
+                v = v*2;
+                let i = v<1 ? -1 : 1;
+                v = 1-abs(1-v);
+                if(v===0) v = 0.000001;
+                v = log(v);
+                let r = wild ? 5 : map(y,0,HEIGHT,6,3);
+                v = -r*v;
+                v = v*i;
+                if(wild && v>1.5) v += pow(1.4,v-1.5)-1;
+                return v;
+            },
+            {
+                hueMap: function(v){
+                    colorMode(HSB);
+                    let cold = color(240,100,70);
+                    let hot = color(0,100,70);
+                    let cNeutral = color(240,1,90);
+                    let hNeutral = color(0,1,90);
+                    let c;
+                    if(v<0) c = lerpColor(cold,cNeutral,map(v,-5,0,0,1));
+                    else c = lerpColor(hNeutral,hot,map(v,0,5,0,1));
+                    colorMode(RGB);
+                    return c;
+                },
+                oceanic: true
+            },
+            [6,0.5,150,3000,0.05,1.5]
+        );
+
+        Env.addField(
+            "SST",
+            function(n,x,y,z){
+                if(y<0) return 0;
+                let anom = Env.get("SSTAnomaly",x,y,z,true);
+                let s;
+                if(wild){
+                    s = yearfrac(z);
+                    let t = piecewise(s,[[0,22],[2,25.5],[4,25],[5,26.5],[6,27],[6.25,30],[6.75,31],[7,28],[9,27],[10,26],[11,23]]);
+                    return t+anom;
+                }
+                s = seasonalSine(z);
+                let w = map(cos(map(x,0,WIDTH,0,PI)),-1,1,0,1);
+                let h0 = y/HEIGHT;
+                let h1 = (sqrt(h0)+h0)/2;
+                let h2 = sqrt(sqrt(h0));
+                let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
+                let ospt = hyper ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
+                let pspt = hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
+                let ostt = hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
+                let pstt = hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
+                let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
                 return t+anom;
-            }
-            s = seasonalSine(z);
-            let w = map(cos(map(x,0,WIDTH,0,PI)),-1,1,0,1);
-            let h0 = y/HEIGHT;
-            let h1 = (sqrt(h0)+h0)/2;
-            let h2 = sqrt(sqrt(h0));
-            let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
-            let ospt = hyper ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
-            let pspt = hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
-            let ostt = hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
-            let pstt = hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
-            let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
-            return t+anom;
-        },
-        {
-            hueMap: function(v){
-                colorMode(HSB);
-                let c;
-                if(v<26) c = lerpColor(color(300,100,80),color(120,100,80),map(v,5,26,0,1));
-                else if(v<29) c = lerpColor(color(60,100,100),color(0,100,70),map(v,26,29,0,1));
-                else c = lerpColor(color(0,100,70),color(0,5,100),map(v,29,34,0,1));
-                colorMode(RGB);
-                return c;
             },
-            oceanic: true
-        }
-    );
-
-    Env.addField(
-        "moisture",
-        function(n,x,y,z){
-            let v = n(0);
-            let s;
-            if(wild) s = yearfrac(z);
-            else s = seasonalSine(z);
-            let l = land.get(x,basin.hemY(y));
-            let pm = hyper ? 0.52 : 0.43;
-            let tm = wild ? piecewise(s,[
-                [0.5,0.35],[2,0.55],[4,0.6],[5.75,0.58],[6,0.1],[7,0.2],[7.25,0.6],[8.5,0.72],[10,0.55],[11.5,0.35]
-            ]) : hyper ? 0.62 : 0.57;
-            let mm = hyper ? 0.3 : 0.2;
-            let m = map(l,0.5,0.7,wild?tm:map(y,0,HEIGHT,pm,tm),mm,true);
-            if(!wild) m += map(s,-1,1,-0.08,0.08);
-            m += map(v,0,1,-0.3,0.3);
-            m = constrain(m,0,1);
-            return m;
-        },
-        {
-            hueMap: function(v){
-                colorMode(HSB);
-                let c;
-                if(v<0.5) c = lerpColor(color(45,100,30),color(45,1,90),map(v,0,0.5,0,1));
-                else c = lerpColor(color(180,1,90),color(180,100,30),map(v,0.5,1,0,1));
-                colorMode(RGB);
-                return c;
+            {
+                hueMap: function(v){
+                    colorMode(HSB);
+                    let c;
+                    if(v<26) c = lerpColor(color(300,100,80),color(120,100,80),map(v,5,26,0,1));
+                    else if(v<29) c = lerpColor(color(60,100,100),color(0,100,70),map(v,26,29,0,1));
+                    else c = lerpColor(color(0,100,70),color(0,5,100),map(v,29,34,0,1));
+                    colorMode(RGB);
+                    return c;
+                },
+                oceanic: true
             }
-        },
-        [4,0.5,120,120,0.3,2]
-    );
+        );
 
-    for(let i in basin.envData){
-        if(i!=='loadData'){
-            for(let j in basin.envData[i]){
-                basin.envData[i][j].init();
+        Env.addField(
+            "moisture",
+            function(n,x,y,z){
+                let v = n(0);
+                let s;
+                if(wild) s = yearfrac(z);
+                else s = seasonalSine(z);
+                let l = land.get(x,basin.hemY(y));
+                let pm = hyper ? 0.52 : 0.43;
+                let tm = wild ? piecewise(s,[
+                    [0.5,0.35],[2,0.55],[4,0.6],[5.75,0.58],[6,0.1],[7,0.2],[7.25,0.6],[8.5,0.72],[10,0.55],[11.5,0.35]
+                ]) : hyper ? 0.62 : 0.57;
+                let mm = hyper ? 0.3 : 0.2;
+                let m = map(l,0.5,0.7,wild?tm:map(y,0,HEIGHT,pm,tm),mm,true);
+                if(!wild) m += map(s,-1,1,-0.08,0.08);
+                m += map(v,0,1,-0.3,0.3);
+                m = constrain(m,0,1);
+                return m;
+            },
+            {
+                hueMap: function(v){
+                    colorMode(HSB);
+                    let c;
+                    if(v<0.5) c = lerpColor(color(45,100,30),color(45,1,90),map(v,0,0.5,0,1));
+                    else c = lerpColor(color(180,1,90),color(180,100,30),map(v,0.5,1,0,1));
+                    colorMode(RGB);
+                    return c;
+                }
+            },
+            [4,0.5,120,120,0.3,2]
+        );
+
+        for(let i in basin.envData){
+            if(i!=='loadData'){
+                for(let j in basin.envData[i]){
+                    basin.envData[i][j].init();
+                }
             }
         }
     }
-};
+}
 
 class Land{
     constructor(basin){

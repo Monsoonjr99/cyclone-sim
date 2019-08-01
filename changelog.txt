@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190801a:
+    * Code improvements involving basin and environment initialization
+    * Global variables are now actually declared as they should be
+    * Stronger storms are now more deadly
 v20190722b:
     + Added Northern Indian Ocean, Australian Region, South Pacific, and South-West Indian Ocean map modes
     * Fixed some image-compression-related problems with the Eastern Pacific and Western Pacific maps

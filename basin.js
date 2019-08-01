@@ -19,9 +19,42 @@ class Basin{
         this.seed = opts.seed || moment().valueOf();
         this.envData = {};
         this.envData.loadData = [];
+        this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
-        if(load) this.load(opts.onload);
-        else Basin.deleteSave(AUTOSAVE_SAVE_NAME);
+        if(load) this.initialized = this.load();
+        else{
+            Basin.deleteSave(AUTOSAVE_SAVE_NAME);
+            let f = ()=>{
+                noiseSeed(this.seed);
+                this.env.init();
+                land = new Land(this);
+                this.seasons[this.getSeason(-1)] = new Season(this);
+                this.env.record();
+            };
+            if(MAP_TYPES[this.mapType].form==='pixelmap'){
+                this.initialized = loadImg(MAP_TYPES[this.mapType].path).then(img=>{
+                    img.loadPixels();
+                    this.mapImg = img;
+                    f();
+                    return this;
+                }).catch(e=>{
+                    console.error(e);
+                });
+            }else{
+                f();
+                this.initialized = Promise.resolve(this);
+            }
+        }
+    }
+
+    mount(){    // mounts the basin to the viewer
+        viewTick = this.tick;
+        UI.viewBasin = this;
+        selectedStorm = undefined;
+        paused = this.tick!==0;
+        refreshTracks(true);
+        primaryWrapper.show();
+        renderToDo = land.draw();
     }
 
     advanceSim(){
@@ -335,8 +368,8 @@ class Basin{
         });
     }
 
-    load(onload){
-        let promise = waitForAsyncProcess(()=>{
+    load(){
+        return waitForAsyncProcess(()=>{
             return db.saves.get(this.saveName).then(res=>{
                 if(res && res.format>=EARLIEST_COMPATIBLE_FORMAT){
                     let data = LoadData.wrap(res);
@@ -430,7 +463,8 @@ class Basin{
                 return b;
             }).then(b=>{
                 noiseSeed(b.seed);
-                Environment.init(b);
+                // Environment.init(b);
+                b.env.init();
                 land = new Land(b);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
@@ -443,9 +477,7 @@ class Basin{
                     return Promise.all(arr);
                 });
             }).then(()=>this);
-        },'Loading Basin...');
-        if(onload) promise.then(onload);
-        promise.catch(e=>{
+        },'Loading Basin...').catch(e=>{
             console.error(e);
         });
     }

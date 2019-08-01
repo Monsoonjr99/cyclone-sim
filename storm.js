@@ -773,7 +773,7 @@ class ActiveSystem extends StormData{
         if(tropOrSub(rType!==null ? rType : this.type)){
             let pop = lnd ? round(250000*(1+basin.hemY(y)/HEIGHT)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
             let damPot = pow(1.062,this.windSpeed)-1;   // damage potential
-            let dedPot = pow(1.02,this.windSpeed)-1;    // death potential
+            let dedPot = pow(1.045,this.windSpeed)-1;    // death potential
             let m = pow(1.5,randomGaussian());      // modifier
             damPot *= m;
             dedPot *= m;

@@ -536,7 +536,27 @@ UI.init = function(){
         if(/^-?\d+$/g.test(seed)) newBasinSettings.seed = parseInt(seed);
         else newBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
-        init();
+        // init();
+        let opts = {};
+        if(newBasinSettings.hem===1) opts.hem = false;
+        else if(newBasinSettings.hem===2) opts.hem = true;
+        else opts.hem = random()<0.5;
+        opts.year = opts.hem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+        if(newBasinSettings.year!==undefined) opts.year = newBasinSettings.year;
+        for(let o of [
+            'seed',
+            'actMode',
+            'names',
+            'hurrTerm',
+            'mapType',
+            'godMode',
+            'hypoCats'
+        ]) opts[o] = newBasinSettings[o];
+        let basin = new Basin(false,opts);
+        newBasinSettings = {};
+        basin.initialized.then(()=>{
+            basin.mount();
+        });
         basinCreationMenu.hide();
     }).append(false,0,40,300,30,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
@@ -635,7 +655,11 @@ UI.init = function(){
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
         if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
-            init(b.saveName);
+            // init(b.saveName);
+            let basin = new Basin(b.saveName);
+            basin.initialized.then(()=>{
+                basin.mount();
+            });
             loadMenu.hide();
         }
     };

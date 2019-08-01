@@ -88,13 +88,18 @@ function waitForAsyncProcess(func,desc,...args){  // add .then() callbacks insid
         waitingTCSymbolSHem = random()<0.5;
     }
     else waitingDesc = "Waiting...";
-    return func(...args).then(v=>{
-        waitingFor--;
-        return v;
-    }).catch(e=>{
-        waitingFor--;
-        throw e;
-    });
+    let p = func(...args);
+    if(p instanceof Promise || p instanceof Dexie.Promise){
+        return p.then(v=>{
+            waitingFor--;
+            return v;
+        }).catch(e=>{
+            waitingFor--;
+            throw e;
+        });
+    }
+    waitingFor--;
+    return Promise.resolve(p);
 }
 
 function makeAsyncProcess(func,...args){
