@@ -1,5 +1,18 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190804a:
+    + Added new activity mode: Megablobs
+        > Similar to normal mode, but with SST anomaly blobs that can reach extremely high temperatures (more-so than wild mode)
+        > Jetstream displaced a little poleward similarly to hyper mode
+    + Added the magnifying glass, which allows a more high-resolution view of environmental map layers around the pointer
+        > Can be enabled/disabled from the settings menu, or by pressing "m"
+    * Changed color scheme for the SST map layer
+        > Colors for temperatures up to 32C are now more similar to the color scheme of the graphics on Levi Cowan's tropicaltidbits.com website
+        > Colors for "hypothetical" temperatures beyond the above scale added particularly for megablobs mode
+        > Below 0 = white, 0-10 = white to blue, 10-20 = blue to cyan, 20-26 = cyan to green
+        > 26-29 = yellow to red, 29-34 = red to very light pink, 34-40 = very light pink to very light lime
+        > 40-50 = shades of lime ligher to darker, 50-75 = shades of creamsicle darker to lighter
+        > 75+ = rounds of grey darker to ligher resetting at each multiple of 150
 v20190801a:
     * Code improvements involving basin and environment initialization
     * Global variables are now actually declared as they should be

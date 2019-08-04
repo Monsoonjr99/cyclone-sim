@@ -16,13 +16,16 @@ var paused,
     landShader,
     coastLine,
     envLayer,
+    magnifyingGlass,
     snow,
     simSpeed,
     simSpeedFrameCounter,
     keyRepeatFrameCounter,
     viewTick,
     selectedStorm,
-    renderToDo;
+    renderToDo,
+    oldMouseX,
+    oldMouseY;
 
 function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
@@ -76,6 +79,10 @@ function setup(){
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
     envLayer.noStroke();
+    magnifyingGlass = createBuffer(ENV_LAYER_TILE_SIZE*4,ENV_LAYER_TILE_SIZE*4,true);
+    magnifyingGlass.colorMode(HSB);
+    magnifyingGlass.strokeWeight(2);
+    magnifyingGlass.noStroke();
     snow = [];
     for(let i=0;i<MAX_SNOW_LAYERS;i++){
         snow[i] = createBuffer(WIDTH,HEIGHT,true);
@@ -129,6 +136,7 @@ function draw(){
                         }
                     }
                 }
+                if((mouseX!==oldMouseX || mouseY!==oldMouseY) && simSettings.showMagGlass) UI.viewBasin.env.updateMagGlass();
             }
         
             UI.updateMouseOver();
@@ -154,6 +162,8 @@ function draw(){
             text(waitingDesc,0,0);
             pop();
         }
+        oldMouseX = mouseX;
+        oldMouseY = mouseY;
     }catch(err){            // BSOD
         resetMatrix();
         colorMode(RGB);
@@ -298,11 +308,11 @@ class Settings{
     }
 
     static order(){
-        return ["snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["showMagGlass","snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [2,false,0,false,true];  // add new defaults to the beginning of this array
+        return [false,2,false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){

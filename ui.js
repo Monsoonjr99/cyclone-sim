@@ -290,8 +290,23 @@ UI.init = function(){
                 renderToDo = land.draw();
                 return;
             }
+            let drawMagGlass = ()=>{
+                if(simSettings.showMagGlass){
+                    let magMeta = buffers.get(magnifyingGlass);
+                    image(
+                        magnifyingGlass,
+                        getMouseX()-magMeta.baseWidth/2,
+                        getMouseY()-magMeta.baseHeight/2,
+                        magMeta.baseWidth,
+                        magMeta.baseHeight
+                    );
+                }
+            };
             drawBuffer(outBasinBuffer);
-            if(basin.env.displaying>=0 && basin.env.layerIsOceanic) drawBuffer(envLayer);
+            if(basin.env.displaying>=0 && basin.env.layerIsOceanic){
+                drawBuffer(envLayer);
+                drawMagGlass();
+            }
             drawBuffer(landBuffer);
             if(simSettings.snowLayers){
                 if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
@@ -303,6 +318,7 @@ UI.init = function(){
             }
             if(basin.env.displaying>=0 && !basin.env.layerIsOceanic){
                 drawBuffer(envLayer);
+                drawMagGlass();
                 if(!basin.env.layerIsVector) drawBuffer(coastLine);
             }
             drawBuffer(tracks);
@@ -484,12 +500,12 @@ UI.init = function(){
 
     let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Activity mode selector
         let mode = newBasinSettings.actMode || 0;
-        mode = ['Normal','Hyper','Wild'][mode];
+        mode = ['Normal','Hyper','Wild','Megablobs'][mode];
         s.button('Activity Mode: '+mode,true);
     },function(){
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
-        newBasinSettings.actMode %= 3;
+        newBasinSettings.actMode %= ACTIVITY_MODES;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
         let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
         s.button('Hypothetical Categories: '+hypo,true);
@@ -748,6 +764,12 @@ UI.init = function(){
         s.button("Land Shader: "+b,true);
     },function(){
         simSettings.setUseShader("toggle");
+    }).append(false,0,45,300,30,function(s){     // magnifying glass
+        let b = simSettings.showMagGlass ? "Enabled" : "Disabled";
+        s.button("Magnifying Glass: "+b,true);
+    },function(){
+        simSettings.setShowMagGlass("toggle");
+        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -1492,7 +1514,7 @@ UI.init = function(){
 };
 
 function mouseInCanvas(){
-    return getMouseX() >= 0 && getMouseX() < WIDTH && getMouseY() >= 0 && getMouseY() < HEIGHT;
+    return coordinateInCanvas(getMouseX(),getMouseY());
 }
 
 function mouseClicked(){
@@ -1542,6 +1564,10 @@ function keyPressed(){
         case "t":
         simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
+        break;
+        case "m":
+        simSettings.setShowMagGlass("toggle");
+        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
         break;
         default:
         switch(keyCode){

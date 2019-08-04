@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190801a";
+const VERSION_NUMBER = "20190804a";
 
 const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -182,7 +182,8 @@ const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const ACTIVITY_MODE_NORMAL = 0;
 const ACTIVITY_MODE_HYPER = 1;
 const ACTIVITY_MODE_WILD = 2;
-const ACTIVITY_MODES = 3;
+const ACTIVITY_MODE_MEGABLOBS = 3;
+const ACTIVITY_MODES = 4;
 
 // Saving/loading-related constants
 
@@ -217,6 +218,10 @@ const HYPER_OFF_SEASON_POLAR_TEMP = 5;
 const HYPER_PEAK_SEASON_POLAR_TEMP = 20;
 const HYPER_OFF_SEASON_TROPICS_TEMP = 31;
 const HYPER_PEAK_SEASON_TROPICS_TEMP = 35;
+const MEGABLOBS_OFF_SEASON_POLAR_TEMP = -5;
+const MEGABLOBS_PEAK_SEASON_POLAR_TEMP = 20;
+const MEGABLOBS_OFF_SEASON_TROPICS_TEMP = 23;
+const MEGABLOBS_PEAK_SEASON_TROPICS_TEMP = 28.5;
 
 const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tSPACE - Pause/resume simulation\n" +
@@ -224,6 +229,7 @@ const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tE - Cycle through map layers\n" +
     "\t\tT - Cycle through track display modes\n" +
     "\t\tW - Toggle intensity indicators below storm icons (kts / hPa)\n" +
+    "\t\tM - Toggle magnifying glass for map layers\n" +
     "\t\t[ - Decrease simulation speed by half\n" +
     "\t\t] - Increase simulation speed by double\n" +
     "\t\tLEFT ARROW - Step backwards through analysis\n" +

@@ -57,6 +57,11 @@ function getMouseY(){
     return floor(mouseY/scaler);
 }
 
+function coordinateInCanvas(x,y,isPixelCoordinate){
+    if(isPixelCoordinate) return x >= 0 && x < width && y >= 0 && y < height;
+    return x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT;
+}
+
 function cbrt(n){   // Cubed root function since p5 doesn't have one nor does pow(n,1/3) work for negative numbers
     return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
 }

@@ -323,6 +323,63 @@ class EnvField{
                 
             }
         }
+        if(simSettings.showMagGlass) this.renderMagGlass();
+    }
+
+    renderMagGlass(){
+        let centerX = getMouseX();
+        let centerY = getMouseY();
+        magnifyingGlass.noFill();
+        let vCenter = this.get(centerX,centerY,viewTick);
+        if(this.isVectorField){
+            if(coordinateInCanvas(centerX,centerY) && (!this.oceanic || (land.tileContainsOcean(centerX,centerY) && !land.get(centerX,centerY)))){
+                let v = vCenter;
+                magnifyingGlass.push();
+                magnifyingGlass.stroke(0);
+                magnifyingGlass.scale(scaler);
+                let magMeta = buffers.get(magnifyingGlass);
+                magnifyingGlass.translate(magMeta.baseWidth/2,magMeta.baseHeight/2);
+                if(v!==null){
+                    magnifyingGlass.rotate(v.heading());
+                    let mg = v.mag();
+                    let mp = this.magMap;
+                    let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
+                    magnifyingGlass.line(0,0,l,0);
+                    magnifyingGlass.noStroke();
+                    magnifyingGlass.fill(0);
+                    magnifyingGlass.triangle(l+5,0,l,3,l,-3);
+                }else{
+                    magnifyingGlass.line(-3,-3,3,3);
+                    magnifyingGlass.line(-3,3,3,-3);
+                }
+                magnifyingGlass.pop();
+            }
+        }else{
+            if(vCenter!==null){
+                for(let i=floor(magnifyingGlass.width/4);i<3*magnifyingGlass.width/4;i++){
+                    for(let j=floor(magnifyingGlass.height/4);j<3*magnifyingGlass.height/4;j++){
+                        let i1 = i-magnifyingGlass.width/2;
+                        let j1 = j-magnifyingGlass.height/2;
+                        if(sqrt(sq(i1)+sq(j1))<magnifyingGlass.width/4){
+                            let x = centerX+i1/scaler;
+                            let y = centerY+j1/scaler;
+                            if(coordinateInCanvas(x,y) && (!this.oceanic || (land.tileContainsOcean(x,y) && !land.get(x,y)))){
+                                let v = this.get(x,y,viewTick);
+                                if(v!==null){
+                                    let h = this.hueMap;
+                                    if(h instanceof Function) magnifyingGlass.fill(h(v));
+                                    else magnifyingGlass.fill(map(v,h[0],h[1],h[2],h[3]),100,100);
+                                }else magnifyingGlass.fill(0,0,50);
+                                magnifyingGlass.rect(i,j,1,1);
+                            }
+                        }
+                    }
+                }
+            }else{
+                magnifyingGlass.fill(0,0,50);
+                magnifyingGlass.ellipse(magnifyingGlass.width/2,magnifyingGlass.height/2,magnifyingGlass.width,magnifyingGlass.height);
+            }
+        }
     }
 
     record(){
@@ -363,6 +420,7 @@ class Environment{
 
     displayLayer(){
         envLayer.clear();
+        magnifyingGlass.clear();
         if(this.displaying>=0) this.fields[this.fieldList[this.displaying]].render();
     }
 
@@ -377,12 +435,18 @@ class Environment{
         this.displayLayer();
     }
 
+    updateMagGlass(){
+        magnifyingGlass.clear();
+        if(simSettings.showMagGlass && this.displaying>=0) this.fields[this.fieldList[this.displaying]].renderMagGlass();
+    }
+
     init(){
         let basin = this.basin;
         let Env = this;    // Environmental fields that determine storm strength and steering
 
         let hyper = basin.actMode === ACTIVITY_MODE_HYPER;
         let wild = basin.actMode === ACTIVITY_MODE_WILD;
+        let megablobs = basin.actMode === ACTIVITY_MODE_MEGABLOBS;
 
         let yearfrac = z=>(z%YEAR_LENGTH)/YEAR_LENGTH;
         let piecewise = (s,arr)=>{
@@ -405,9 +469,10 @@ class Environment{
                     let r = piecewise(s,[[0.5,0.3],[1.75,0.7],[3,0.2],[9.5,0.2],[10.75,0.7],[12,0.3]]);
                     v = map(v,0,1,-r,r);
                 }else{
+                    let highJet = hyper || megablobs;
                     let s = seasonalSine(z);
-                    l = map(sqrt(map(s,-1,1,0,1)),0,1,hyper?0.47:0.55,hyper?0.25:0.35);
-                    let r = map(s,-1,1,hyper?0.45:0.5,hyper?0.25:0.35);
+                    l = map(sqrt(map(s,-1,1,0,1)),0,1,highJet?0.47:0.55,highJet?0.25:0.35);
+                    let r = map(s,-1,1,highJet?0.45:0.5,highJet?0.25:0.35);
                     v = map(v,0,1,-r,r);
                 }
                 return (l+v)*HEIGHT;
@@ -555,10 +620,11 @@ class Environment{
                 v = 1-abs(1-v);
                 if(v===0) v = 0.000001;
                 v = log(v);
-                let r = wild ? 5 : map(y,0,HEIGHT,6,3);
+                let r = wild ? 5 : megablobs ? 7 : map(y,0,HEIGHT,6,3);
                 v = -r*v;
                 v = v*i;
                 if(wild && v>1.5) v += pow(1.4,v-1.5)-1;
+                else if(megablobs && v>1) v += pow(1.8,v-1)-1;
                 return v;
             },
             {
@@ -596,10 +662,10 @@ class Environment{
                 let h1 = (sqrt(h0)+h0)/2;
                 let h2 = sqrt(sqrt(h0));
                 let h = map(cos(lerp(PI,0,lerp(h1,h2,sq(w)))),-1,1,0,1);
-                let ospt = hyper ? HYPER_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
-                let pspt = hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
-                let ostt = hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
-                let pstt = hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
+                let ospt = hyper ? HYPER_OFF_SEASON_POLAR_TEMP : megablobs ? MEGABLOBS_OFF_SEASON_POLAR_TEMP : OFF_SEASON_POLAR_TEMP;
+                let pspt = hyper ? HYPER_PEAK_SEASON_POLAR_TEMP : megablobs ? MEGABLOBS_PEAK_SEASON_POLAR_TEMP : PEAK_SEASON_POLAR_TEMP;
+                let ostt = hyper ? HYPER_OFF_SEASON_TROPICS_TEMP : megablobs ? MEGABLOBS_OFF_SEASON_TROPICS_TEMP : OFF_SEASON_TROPICS_TEMP;
+                let pstt = hyper ? HYPER_PEAK_SEASON_TROPICS_TEMP : megablobs ? MEGABLOBS_PEAK_SEASON_TROPICS_TEMP : PEAK_SEASON_TROPICS_TEMP;
                 let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
                 return t+anom;
             },
@@ -607,9 +673,16 @@ class Environment{
                 hueMap: function(v){
                     colorMode(HSB);
                     let c;
-                    if(v<26) c = lerpColor(color(300,100,80),color(120,100,80),map(v,5,26,0,1));
+                    if(v<10) c = lerpColor(color(240,1,100),color(240,100,70),map(v,0,10,0,1));
+                    else if(v<20) c = lerpColor(color(240,100,70),color(180,50,90),map(v,10,20,0,1));
+                    else if(v<26) c = lerpColor(color(180,50,90),color(120,100,65),map(v,20,26,0,1));
                     else if(v<29) c = lerpColor(color(60,100,100),color(0,100,70),map(v,26,29,0,1));
-                    else c = lerpColor(color(0,100,70),color(0,5,100),map(v,29,34,0,1));
+                    else if(v<34) c = lerpColor(color(359,100,70),color(300,5,100),map(v,29,34,0,1));
+                    else if(v<40) c = lerpColor(color(300,5,100),color(150,10,90),map(v,34,40,0,1));
+                    else if(v<50) c = lerpColor(color(150,10,90),color(150,60,75),map(v,40,50,0,1));
+                    else if(v<75) c = lerpColor(color(30,90,90),color(30,30,90),map(v,50,75,0,1));
+                    else if(v<150) c = lerpColor(color(0,0,35),color(0,0,95),map(v,75,150,0,1));
+                    else c = lerpColor(color(0,0,25),color(0,0,95),map(v%150,0,150,0,1));
                     colorMode(RGB);
                     return c;
                 },

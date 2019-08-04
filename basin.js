@@ -92,7 +92,7 @@ class Basin{
         if(this.tick%ADVISORY_TICKS==0){
             this.env.displayLayer();
             this.env.record();
-        }
+        }else if(simSettings.showMagGlass) this.env.updateMagGlass();
         let curTime = this.tickMoment();
         if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();
     }
