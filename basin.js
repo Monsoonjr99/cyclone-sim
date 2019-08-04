@@ -78,7 +78,7 @@ class Basin{
             this.activeSystems[i].update();
         }
         if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
-        if(this.actMode===ACTIVITY_MODE_HYPER && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (OP mode)
+        if((this.actMode===ACTIVITY_MODE_HYPER || this.actMode===ACTIVITY_MODE_MEGABLOBS) && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper and megablobs modes)
         if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
         if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
         let stormKilled = false;

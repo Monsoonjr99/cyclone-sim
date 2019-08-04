@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190804b:
+    * Fixed tropical waves not spawning in megablobs mode
 v20190804a:
     + Added new activity mode: Megablobs
         > Similar to normal mode, but with SST anomaly blobs that can reach extremely high temperatures (more-so than wild mode)
