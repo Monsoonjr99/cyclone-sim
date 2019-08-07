@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190807a:
+    * Fixed awful copy-paste fail in the PAGASA name list (won't fix existing basins)
 v20190804b:
     * Fixed tropical waves not spawning in megablobs mode
 v20190804a:
