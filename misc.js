@@ -9,14 +9,15 @@ function refreshTracks(force){
     else for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
 }
 
-function createBuffer(w,h,noScale){
+function createBuffer(w,h,alwaysFull,noScale){
     w = w || WIDTH;
     h = h || HEIGHT;
     let b = createGraphics(w,h);
     let metadata = {
         baseWidth: w,
         baseHeight: h,
-        noScale: noScale
+        alwaysFull,
+        noScale
     };
     buffers.set(b,metadata);
     return b;
@@ -24,8 +25,10 @@ function createBuffer(w,h,noScale){
 
 function rescaleCanvases(s){
     for(let [buffer, metadata] of buffers){
-        buffer.resizeCanvas(floor(metadata.baseWidth*s),floor(metadata.baseHeight*s));
-        if(!metadata.noScale) buffer.scale(s);
+        if(!metadata.alwaysFull){
+            buffer.resizeCanvas(floor(metadata.baseWidth*s),floor(metadata.baseHeight*s));
+            if(!metadata.noScale) buffer.scale(s);
+        }
     }
     resizeCanvas(floor(WIDTH*s),floor(HEIGHT*s));
 }
@@ -37,7 +40,7 @@ function toggleFullscreen(){
             scaler = displayWidth/WIDTH;
             rescaleCanvases(scaler);
             if(UI.viewBasin){
-                land.clear();
+                // land.clear();
                 refreshTracks(true);
                 UI.viewBasin.env.displayLayer();
             }
@@ -191,7 +194,7 @@ document.onfullscreenchange = function(){
         scaler = 1;
         rescaleCanvases(scaler);
         if(UI.viewBasin){
-            land.clear();
+            // land.clear();
             refreshTracks(true);
             UI.viewBasin.env.displayLayer();
         }

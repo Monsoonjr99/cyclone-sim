@@ -58,6 +58,8 @@ function setup(){
     buffers = new Map();
     scaler = 1;
 
+    let fullW = displayWidth;
+    let fullH = fullW*HEIGHT/WIDTH;
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
@@ -65,27 +67,27 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    landBuffer = createBuffer(WIDTH,HEIGHT,true);
+    landBuffer = createBuffer(fullW,fullH,true);
     landBuffer.noStroke();
-    outBasinBuffer = createBuffer(WIDTH,HEIGHT,true);
+    outBasinBuffer = createBuffer(fullW,fullH,true);
     outBasinBuffer.noStroke();
     outBasinBuffer.fill(COLORS.outBasin);
-    landShader = createBuffer(WIDTH,HEIGHT,true);
+    landShader = createBuffer(fullW,fullH,true);
     landShader.noStroke();
-    coastLine = createBuffer(WIDTH,HEIGHT,true);
+    coastLine = createBuffer(fullW,fullH,true);
     coastLine.fill(0);
     coastLine.noStroke();
-    envLayer = createBuffer(WIDTH,HEIGHT,true);
+    envLayer = createBuffer(WIDTH,HEIGHT,false,true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
     envLayer.noStroke();
-    magnifyingGlass = createBuffer(ENV_LAYER_TILE_SIZE*4,ENV_LAYER_TILE_SIZE*4,true);
+    magnifyingGlass = createBuffer(ENV_LAYER_TILE_SIZE*4,ENV_LAYER_TILE_SIZE*4,false,true);
     magnifyingGlass.colorMode(HSB);
     magnifyingGlass.strokeWeight(2);
     magnifyingGlass.noStroke();
     snow = [];
     for(let i=0;i<MAX_SNOW_LAYERS;i++){
-        snow[i] = createBuffer(WIDTH,HEIGHT,true);
+        snow[i] = createBuffer(fullW,fullH,true);
         snow[i].noStroke();
         snow[i].fill(COLORS.snow);
     }

@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190808a:
+    * Land, snow, and shader now initially render at full display resolution upon basin loading, and no longer re-render upon fullscreen switches
+        > Is not hi-res in normal view since it is automatically resized down
+        > Switching in and out of fullscreen is now a lot faster
 v20190807a:
     * Fixed awful copy-paste fail in the PAGASA name list (won't fix existing basins)
 v20190804b:

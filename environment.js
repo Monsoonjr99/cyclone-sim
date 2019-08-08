@@ -823,10 +823,13 @@ class Land{
 
     *draw(){
         yield "Rendering land...";
-        let lget = (x,y)=>this.get(x/scaler,y/scaler);
-        let bget = (x,y)=>this.inBasin(x/scaler,y/scaler);
-        for(let i=0;i<width;i++){
-            for(let j=0;j<height;j++){
+        let W = displayWidth;
+        let H = W*HEIGHT/WIDTH;
+        let scl = W/WIDTH;
+        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let bget = (x,y)=>this.inBasin(x/scl,y/scl);
+        for(let i=0;i<W;i++){
+            for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
                 if(landVal){
                     for(let k=0;k<COLORS.land.length;k++){
@@ -858,10 +861,13 @@ class Land{
 
     *drawSnow(){
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
-        let lget = (x,y)=>this.get(x/scaler,y/scaler);
+        let W = displayWidth;
+        let H = W*HEIGHT/WIDTH;
+        let scl = W/WIDTH;
+        let lget = (x,y)=>this.get(x/scl,y/scl);
         let snowLayers = simSettings.snowLayers * 10;
-        for(let i=0;i<width;i++){
-            for(let j=0;j<height;j++){
+        for(let i=0;i<W;i++){
+            for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
                 if(landVal){
                     let l = 1-this.basin.hemY(j)/height;
@@ -876,9 +882,12 @@ class Land{
 
     *drawShader(){
         yield "Rendering shader...";
-        let lget = (x,y)=>this.get(x/scaler,y/scaler);
-        for(let i=0;i<width;i++){
-            for(let j=0;j<height;j++){
+        let W = displayWidth;
+        let H = W*HEIGHT/WIDTH;
+        let scl = W/WIDTH;
+        let lget = (x,y)=>this.get(x/scl,y/scl);
+        for(let i=0;i<W;i++){
+            for(let j=0;j<H;j++){
                 let v = lget(i,j);
                 if(v===0) v = 0.5;
                 let m = 0;
