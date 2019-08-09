@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190809a:
+    * Attempted fix to land being low-res and pixelated in fullscreen after a basin is loaded while a mobile device is in portrait orientation
 v20190808a:
     * Land, snow, and shader now initially render at full display resolution upon basin loading, and no longer re-render upon fullscreen switches
         > Is not hi-res in normal view since it is automatically resized down

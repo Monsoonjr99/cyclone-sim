@@ -58,7 +58,7 @@ function setup(){
     buffers = new Map();
     scaler = 1;
 
-    let fullW = displayWidth;
+    let fullW = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
     let fullH = fullW*HEIGHT/WIDTH;
     tracks = createBuffer();
     tracks.strokeWeight(2);

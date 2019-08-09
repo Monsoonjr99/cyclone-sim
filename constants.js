@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190808a";
+const VERSION_NUMBER = "20190809a";
 
 const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -252,7 +252,6 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm[EXTROP] = color(220,220,220);
     COLORS.storm[TROPWAVE] = color(130,130,240);
     COLORS.storm[TROP] = {};
-    COLORS.storm[TROP][-2] = color(130,130,240);
     COLORS.storm[TROP][-1] = color(20,20,230);
     COLORS.storm[TROP][0] = color(20,230,20);
     COLORS.storm[TROP][1] = color(230,230,20);
