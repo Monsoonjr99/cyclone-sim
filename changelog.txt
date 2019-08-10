@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190810a:
+    + Added two "Periodic Table" name lists
+        > The regular one is a continuously looping list
+        > The "(Annual)" list resets at the beginning of each year
 v20190809a:
     * Attempted fix to land being low-res and pixelated in fullscreen after a basin is loaded while a mobile device is in portrait orientation
 v20190808a:

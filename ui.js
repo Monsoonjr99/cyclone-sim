@@ -513,7 +513,7 @@ UI.init = function(){
         newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby"][list];
+        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby","Periodic Table","Periodic Table (Annual)"][list];
         s.button('Name List: '+list,true);
     },function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
