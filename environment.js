@@ -1,55 +1,174 @@
 class NoiseChannel{
-    constructor(octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
+    constructor(octaves,falloff,zoom,zZoom,xOff,yOff,zOff){
         this.octaves = octaves || 4;
         this.falloff = falloff || 0.5;
         this.zoom = zoom || 100;
         this.zZoom = zZoom || this.zoom;
-        this.meta = undefined;
-        this.wobbleMax = wMax || 1;
-        this.zWobbleMax = zWMax || this.wobbleMax;
-        this.wobbleRotFactor = wRFac || PI/16;
+        // this.meta = undefined;
+        // this.wobbleMax = wMax || 1;
+        // this.zWobbleMax = zWMax || this.wobbleMax;
+        // this.wobbleRotFactor = wRFac || PI/16;
+        this.xOff = xOff || 0;
+        this.yOff = yOff || 0;
+        this.zOff = zOff || 0;
     }
 
-    get(x,y,z){
+    get(x,y,z,xo,yo,zo){
         x = x || 0;
         y = y || 0;
         z = z || 0;
-        let xo;
-        let yo;
-        let zo;
-        if(this.meta){
-            let m = this.meta.fetch(z);
-            if(!m) throw ENVDATA_NOT_FOUND_ERROR;
-            xo = m.x;
-            yo = m.y;
-            zo = m.z;
-        }else{
-            xo = 0;
-            yo = 0;
-            zo = 0;
-        }
+        xo = xo!==undefined ? xo : this.xOff;
+        yo = yo!==undefined ? yo : this.yOff;
+        zo = zo!==undefined ? zo : this.zOff;
+        // if(this.meta){
+        //     let m = this.meta.fetch(z);
+        //     if(!m) throw ENVDATA_NOT_FOUND_ERROR;
+        //     xo = m.x;
+        //     yo = m.y;
+        //     zo = m.z;
+        // }else{
+        //     xo = 0;
+        //     yo = 0;
+        //     zo = 0;
+        // }
         noiseDetail(this.octaves,this.falloff);
         return noise(x/this.zoom+xo,y/this.zoom+yo,z/this.zZoom+zo);
     }
 
-    bind(meta){
-        if(meta instanceof NCMetadata) this.meta = meta;
+    // bind(meta){
+    //     if(meta instanceof NCMetadata) this.meta = meta;
+    // }
+
+    // wobble(){
+    //     if(this.meta){
+    //         let m = this.meta;
+    //         let v = m.wobbleVector;
+    //         v.setMag(random(0.0001,this.wobbleMax));
+    //         m.xOff += v.x/this.zoom;
+    //         m.yOff += v.y/this.zoom;
+    //         m.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
+    //         v.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+    //     }
+    // }
+
+    // record(){
+    //     if(this.meta) this.meta.record();
+    // }
+}
+
+class EnvNoiseChannel extends NoiseChannel{
+    constructor(basin,field,index,loadData,octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
+        let r = NC_OFFSET_RANDOM_FACTOR;
+        super(octaves,falloff,zoom,zZoom,random(r),random(r),random(r));
+        this.wobbleMax = wMax || 1;
+        this.zWobbleMax = zWMax || this.wobbleMax;
+        this.wobbleRotFactor = wRFac || PI/16;
+        this.wobbleVector = p5.Vector.random2D();
+
+        this.basin = basin instanceof Basin && basin;
+        this.field = field;
+        this.index = index;
+        if(loadData instanceof LoadData) this.load(loadData);
     }
 
-    wobble(){
-        if(this.meta){
-            let m = this.meta;
-            let v = m.wobbleVector;
-            v.setMag(random(0.0001,this.wobbleMax));
-            m.xOff += v.x/this.zoom;
-            m.yOff += v.y/this.zoom;
-            m.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
-            v.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+    get(x,y,z){
+        let o = this.fetchOffsets(z);
+        if(!o) throw ENVDATA_NOT_FOUND_ERROR;
+        let {xo, yo, zo} = o;
+        return super.get(x,y,z,xo,yo,zo);
+    }
+
+    fetchOffsets(t){
+        let basin = this.basin;
+        if(t>=basin.tick) return {
+            xo: this.xOff,
+            yo: this.yOff,
+            zo: this.zOff
+        };
+        else{
+            t = floor(t/ADVISORY_TICKS)*ADVISORY_TICKS;
+            let s = basin.getSeason(t);
+            t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
+            let d = basin.fetchSeason(s);
+            if(d && d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
+                t -= d.envRecordStarts;
+                let o = d.envData[this.field][this.index][t];
+                return {
+                    xo: o.x,
+                    yo: o.y,
+                    zo: o.z
+                };
+            }
         }
     }
 
+    wobble(){
+        let v = this.wobbleVector;
+        v.setMag(random(0.0001,this.wobbleMax));
+        this.xOff += v.x/this.zoom;
+        this.yOff += v.y/this.zoom;
+        this.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
+        v.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+    }
+
     record(){
-        if(this.meta) this.meta.record();
+        let basin = this.basin;
+        let seas = basin.fetchSeason(-1,true,true);
+        let s = seas;
+        let startingRecord;
+        if(!s.envData){
+            s.envData = {};
+            startingRecord = true;
+        }
+        s = s.envData;
+        if(!s[this.field]){
+            s[this.field] = {};
+            startingRecord = true;
+        }
+        s = s[this.field];
+        if(!s[this.index]){
+            s[this.index] = [];
+            startingRecord = true;
+        }
+        s = s[this.index];
+        if(startingRecord) seas.envRecordStarts = floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS;
+        s.push({
+            x: this.xOff,
+            y: this.yOff,
+            z: this.zOff
+        });
+        seas.modified = true;
+    }
+
+    save(){
+        let obj = {};
+        let w = obj.wobbleVector = {};
+        w.x = this.wobbleVector.x;
+        w.y = this.wobbleVector.y;
+        for(let p of ['xOff','yOff','zOff']) obj[p] = this[p];
+        return obj;
+    }
+
+    load(data){
+        if(data instanceof LoadData){
+            let wx;
+            let wy;
+            if(data.format>=FORMAT_WITH_INDEXEDDB){
+                let obj = data.value;
+                for(let p of ['xOff','yOff','zOff']) if(obj[p]) this[p] = obj[p];
+                wx = obj.wobbleVector && obj.wobbleVector.x;
+                wy = obj.wobbleVector && obj.wobbleVector.y;
+            }else{
+                let str = data.value;
+                let arr = decodeB36StringArray(str);
+                this.xOff = arr.pop() || this.xOff;
+                this.yOff = arr.pop() || this.yOff;
+                this.zOff = arr.pop() || this.zOff;
+                wx = arr.pop();
+                wy = arr.pop();
+            }
+            if(wx!==undefined && wy!==undefined) this.wobbleVector = createVector(wx,wy);
+        }
     }
 }
 
