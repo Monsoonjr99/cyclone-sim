@@ -1,7 +1,7 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190810a";
+const VERSION_NUMBER = "--DEV--";
 
-const SAVE_FORMAT = 2;  // Format #2 in use starting in v20190630a
+const SAVE_FORMAT = 3;  // Format #3 in use starting in TEST
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -197,6 +197,7 @@ const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
 const FORMAT_WITH_SAVED_SEASONS = 1;
 const FORMAT_WITH_INDEXEDDB = 2;
+const FORMAT_WITH_IMPROVED_ENV = 3;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
@@ -213,20 +214,20 @@ const SAVING_RADIX = 36;
 const ENVDATA_SAVE_MULT = 10000;
 // const ACTIVESYSTEM_SAVE_FLOAT = -2;
 
-// SST constants
+// SST constants (defunct; see env-defs.js)
 
-const OFF_SEASON_POLAR_TEMP = -3;
-const PEAK_SEASON_POLAR_TEMP = 10;
-const OFF_SEASON_TROPICS_TEMP = 26;
-const PEAK_SEASON_TROPICS_TEMP = 29;
-const HYPER_OFF_SEASON_POLAR_TEMP = 5;
-const HYPER_PEAK_SEASON_POLAR_TEMP = 20;
-const HYPER_OFF_SEASON_TROPICS_TEMP = 31;
-const HYPER_PEAK_SEASON_TROPICS_TEMP = 35;
-const MEGABLOBS_OFF_SEASON_POLAR_TEMP = -5;
-const MEGABLOBS_PEAK_SEASON_POLAR_TEMP = 20;
-const MEGABLOBS_OFF_SEASON_TROPICS_TEMP = 23;
-const MEGABLOBS_PEAK_SEASON_TROPICS_TEMP = 28.5;
+// const OFF_SEASON_POLAR_TEMP = -3;
+// const PEAK_SEASON_POLAR_TEMP = 10;
+// const OFF_SEASON_TROPICS_TEMP = 26;
+// const PEAK_SEASON_TROPICS_TEMP = 29;
+// const HYPER_OFF_SEASON_POLAR_TEMP = 5;
+// const HYPER_PEAK_SEASON_POLAR_TEMP = 20;
+// const HYPER_OFF_SEASON_TROPICS_TEMP = 31;
+// const HYPER_PEAK_SEASON_TROPICS_TEMP = 35;
+// const MEGABLOBS_OFF_SEASON_POLAR_TEMP = -5;
+// const MEGABLOBS_PEAK_SEASON_POLAR_TEMP = 20;
+// const MEGABLOBS_OFF_SEASON_TROPICS_TEMP = 23;
+// const MEGABLOBS_PEAK_SEASON_TROPICS_TEMP = 28.5;
 
 const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tSPACE - Pause/resume simulation\n" +
@@ -235,8 +236,8 @@ const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tT - Cycle through track display modes\n" +
     "\t\tW - Toggle intensity indicators below storm icons (kts / hPa)\n" +
     "\t\tM - Toggle magnifying glass for map layers\n" +
-    "\t\t[ - Decrease simulation speed by half\n" +
-    "\t\t] - Increase simulation speed by double\n" +
+    "\t\t[ - Decrease simulation speed (half)\n" +
+    "\t\t] - Increase simulation speed (double)\n" +
     "\t\tLEFT ARROW - Step backwards through analysis\n" +
     "\t\tRIGHT ARROW - Step forewards through analysis\n" +
     "\t\tCLICK + [special key] - Spawn [corresponding storm system]\n" +

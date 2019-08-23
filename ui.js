@@ -498,10 +498,10 @@ UI.init = function(){
         }else newBasinSettings.year--;
     });
 
-    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Activity mode selector
+    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
         mode = ['Normal','Hyper','Wild','Megablobs'][mode];
-        s.button('Activity Mode: '+mode,true);
+        s.button('Simulation Mode: '+mode,true);
     },function(){
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
@@ -1005,6 +1005,7 @@ UI.init = function(){
     }).append(false,29,0,100,24,function(s){   // Map layer/environmental field indicator
         let basin = UI.viewBasin;
         let txtStr = "Map Layer: ";
+        let red = false;
         if(basin.env.displaying!==-1){
             let f = basin.env.fieldList[basin.env.displaying];
             txtStr += f + " -- ";
@@ -1023,21 +1024,28 @@ UI.init = function(){
                 txtStr += "N/A";
             }else{
                 let v = basin.env.get(f,x,y,viewTick);
-                if(v===null) txtStr += "Unavailable";
-                else if(basin.env.fields[f].isVectorField){
+                if(v===null){
+                    txtStr += "Unavailable";
+                    red = true;
+                }else if(basin.env.fields[f].isVectorField){
                     let m = v.mag();
                     let h = v.heading();
                     txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
                 }else txtStr += round(v*1000)/1000;
             }
             txtStr += " @ " + (S ? "selected storm" : "mouse pointer / finger");
+            if(viewTick<=basin.env.fields[f].accurateAfter){
+                txtStr += ' [MAY BE INACCURATE]';
+                red = true;
+            }
         }else txtStr += "none";
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
             s.fullRect();
         }
-        fill(COLORS.UI.text);
+        if(red) fill('red');
+        else fill(COLORS.UI.text);
         textAlign(LEFT,TOP);
         text(txtStr,3,3);
     },function(){

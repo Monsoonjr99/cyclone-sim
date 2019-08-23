@@ -17,8 +17,8 @@ class Basin{
         this.hurricaneStrengthTerm = opts.hurrTerm || 0;
         this.mapType = opts.mapType || 0;
         this.seed = opts.seed || moment().valueOf();
-        this.envData = {};
-        this.envData.loadData = [];
+        // this.envData = {};
+        // this.envData.loadData = [];
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if(load) this.initialized = this.load();
@@ -261,11 +261,14 @@ class Basin{
             for(let a of this.activeSystems){
                 b.activeSystems.push(a.save());
             }
-            b.envData = [];
-            for(let i=this.env.fieldList.length-1;i>=0;i--){
-                let f = this.env.fieldList[i];
-                for(let j=this.env.fields[f].noise.length-1;j>=0;j--){
-                    b.envData.push(this.envData[f][j].save());
+            b.envData = {};
+            for(let f of this.env.fieldList){
+                let fd = b.envData[f] = {};
+                fd.version = this.env.fields[f].version;
+                fd.accurateAfter = this.env.fields[f].accurateAfter;
+                let d = fd.noiseData = [];
+                for(let c of this.env.fields[f].noise){
+                    d.push(c.save());
                 }
             }
             b.flags = 0;
@@ -374,12 +377,13 @@ class Basin{
                 if(res && res.format>=EARLIEST_COMPATIBLE_FORMAT){
                     let data = LoadData.wrap(res);
                     let oldhyper;
+                    let envData;
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
-                        this.envData.loadData = data.sub(obj.envData);
+                        envData = data.sub(obj.envData);
                         let flags = obj.flags;
                         this.SHem = flags & 1;
                         flags >>= 1;
@@ -433,7 +437,7 @@ class Basin{
                             }
                             if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
                             let envLoadData = parts.pop();
-                            if(envLoadData) this.envData.loadData = data.sub(envLoadData.split(','));
+                            if(envLoadData) envData = data.sub(envLoadData.split(','));
                             let activeSystemData = parts.pop();
                             if(activeSystemData){
                                 activeSystemData = activeSystemData.split(",");
@@ -446,6 +450,7 @@ class Basin{
                         if(oldhyper) this.actMode = ACTIVITY_MODE_HYPER;
                         else this.actMode = ACTIVITY_MODE_NORMAL;
                     }
+                    this.env.init(envData);
                 }else{
                     let t = 'Could not load basin';
                     console.error(t);
@@ -464,7 +469,7 @@ class Basin{
             }).then(b=>{
                 noiseSeed(b.seed);
                 // Environment.init(b);
-                b.env.init();
+                // b.env.init();
                 land = new Land(b);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
@@ -710,20 +715,22 @@ class Season{
                     'damage',
                     'envRecordStarts'
                 ]) this[p] = obj[p] || 0;
-                for(let f of basin.env.fieldList){
-                    let fd = this.envData[f] = {};
-                    for(let i=0;i<basin.env.fields[f].noise.length;i++){
-                        let nd = fd[i] = [];
-                        let sd = obj.envData[f][i];
-                        let x = [...sd.x];
-                        let y = [...sd.y];
-                        let z = [...sd.z];
-                        for(let j=0;j<x.length;j++){
-                            nd.push({
-                                x: x[j],
-                                y: y[j],
-                                z: z[j]
-                            });
+                if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){
+                    for(let f of basin.env.fieldList){
+                        let fd = this.envData[f] = {};
+                        for(let i=0;i<basin.env.fields[f].noise.length;i++){
+                            let nd = fd[i] = [];
+                            let sd = obj.envData[f][i];
+                            let x = [...sd.x];
+                            let y = [...sd.y];
+                            let z = [...sd.z];
+                            for(let j=0;j<x.length;j++){
+                                nd.push({
+                                    x: x[j],
+                                    y: y[j],
+                                    z: z[j]
+                                });
+                            }
                         }
                     }
                 }
