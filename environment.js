@@ -612,7 +612,9 @@ class Environment{  // Environmental fields that determine storm strength and st
             newData.jetstream = o(v[8]);
             newData.LLSteering = o(v[7],v[6],v[5],v[4]);
             newData.ULSteering = o(v[3],v[2]);
+            newData.shear = o();
             newData.SSTAnomaly = o(v[1]);
+            newData.SST = o();
             newData.moisture = o(v[0]);
             data = data.sub(newData);
         }
