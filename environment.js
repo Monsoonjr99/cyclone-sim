@@ -348,7 +348,7 @@ class EnvField{
         this.magMap = attribs.magMap || [0,1,0,10];
         this.invisible = attribs.invisible;
         this.oceanic = attribs.oceanic;
-        this.simModeModifiers = attribs.modifiers;
+        this.modifiers = attribs.modifiers;
         if(this.isVectorField) this.vec = createVector();
         if(attribs.mapFunc instanceof Function) this.mapFunc = attribs.mapFunc;
         let a = null;
@@ -413,7 +413,7 @@ class EnvField{
                     return map(m,x[0],arr[0][0]+12,x[1],arr[0][1]);
                 };
                 u.vec = this.vec;
-                u.modifiers = this.simModeModifiers || {};
+                u.modifiers = this.modifiers || {};
                 let res = this.mapFunc(u,x,y,z);
                 if(this.isVectorField && !this.noVectorFlip) res.y = this.basin.hem(res.y);
                 return res;

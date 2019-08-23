@@ -1,5 +1,15 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190823a:
+    * NCMetadata class replaced with EnvNoiseChannel, which allows more efficient loading of environmental field data
+    * "Activity Modes" are now "Simulation Modes" (still referred to by the old name in much of the code)
+    * Environmental fields now defined in env-defs.js in a more flexible manner for future changes and simulation modes
+        > Field definitions among simulation modes are now laid out more neatly
+        > Console hacks to environmental fields are now a bit easier due to the removal of closures from the map functions and the addition of modifiers
+        > The new 'u' utility mini-class offers tools for use in map functions
+        > Modifiers allow the use of a single map function for multiple simulation modes without cluttering the function with conditionals
+    * Environmental fields are now versioned so that future algorithm changes may flag older basins' histories as inaccurate
+    * Saves upgraded to format 3, which more flexibly stores environmental field data along with versioning
 v20190810a:
     + Added two "Periodic Table" name lists
         > The regular one is a continuously looping list
