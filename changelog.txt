@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190827b:
+    * Made the crash screen a little better
 v20190827a:
     * The "Starting year" selector in the New Basin Settings menu now uses a text input box to make selecting a year easier
         > Accepts both valid NHem and SHem years (regardless of hemisphere selected with the button above)
