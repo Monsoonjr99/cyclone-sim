@@ -518,6 +518,7 @@ UI.init = function(){
                     else newBasinSettings.year = undefined;
                 }else newBasinSettings.year = year1;
             }else if(v!=='') newBasinSettings.year = undefined;
+            if(newBasinSettings.year && !moment.utc([newBasinSettings.year,0,1]).isValid()) newBasinSettings.year = undefined;
             yearselbox.value = '';
             yearselbox.hide();
         }
