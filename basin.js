@@ -11,7 +11,8 @@ class Basin{
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
         this.hypoCats = opts.hypoCats;
-        this.startYear = opts.year || (this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR);
+        if(opts.year!==undefined) this.startYear = opts.year;
+        else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         this.nameList = NAME_LIST_PRESETS[opts.names || 0];
         this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
         this.hurricaneStrengthTerm = opts.hurrTerm || 0;

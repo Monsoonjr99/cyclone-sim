@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190827c:
+    * Fixed bug where 0001 B.C.E. (or 0002-01 B.C.E.) in the "Starting year" selector doesn't work and the basin uses the default instead
 v20190827b:
     * Made the crash screen a little better
 v20190827a:
