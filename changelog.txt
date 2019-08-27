@@ -1,5 +1,14 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190827a:
+    * The "Starting year" selector in the New Basin Settings menu now uses a text input box to make selecting a year easier
+        > Accepts both valid NHem and SHem years (regardless of hemisphere selected with the button above)
+        > Can use "B.C.E.", "BCE", "BC", "b.c.", etc. for years prior to 1 C.E. ("A.D.", "ce", "C.E.", etc. also treated as valid)
+        > SHem years accept both two-digit and full year numbers after the "-" as valid as long as it represents the year following the one before the "-"
+        > A variant of "B.C.E." may be used before the "-" in a SHem year for the special case of 0001 B.C.E.-01 C.E. ("C.E." before "-" is invalid however)
+        > Any invalid year value may be used to return to the default "Current year"
+    * Dates before year 1 are now displayed with "B.C.E." instead of a negative number
+    * Fixed broken SHem years before "-1-00" (0002-01 B.C.E.)
 v20190823a:
     * NCMetadata class replaced with EnvNoiseChannel, which allows more efficient loading of environmental field data
     * "Activity Modes" are now "Simulation Modes" (still referred to by the old name in much of the code)

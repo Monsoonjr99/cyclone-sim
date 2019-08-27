@@ -271,10 +271,16 @@ UI.viewBasin = undefined;
 // Definitions for all UI elements
 
 UI.init = function(){
+    // hoist!
+
+    let yearselbox;
+
     // "scene" wrappers
 
     mainMenu = new UI(null,0,0,WIDTH,HEIGHT);
-    basinCreationMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    basinCreationMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,function(){
+        yearselbox.enterFunc();
+    },false);
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
@@ -457,6 +463,7 @@ UI.init = function(){
         if(newBasinSettings.hem===2) hem = "Southern";
         s.button('Hemisphere: '+hem,true);
     },function(){
+        yearselbox.enterFunc();
         if(newBasinSettings.hem===undefined) newBasinSettings.hem = 1;
         else{
             newBasinSettings.hem++;
@@ -465,6 +472,11 @@ UI.init = function(){
     });
 
     let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){ // Year selector
+        textAlign(LEFT,CENTER);
+        text("Starting year: ",0,15);
+    });
+
+    yearsel.append(false,110,0,190,30,function(s){
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -476,33 +488,65 @@ UI.init = function(){
                 yName = seasonName(y,false) + " or " + seasonName(y,true);
             }else yName = seasonName(y,h);
         }
-        textAlign(CENTER,CENTER);
-        text("Starting year: "+yName,150,15);
+        textAlign(LEFT,CENTER);
+        let fontSize = 18;
+        textSize(fontSize);
+        while(textWidth(yName)>this.width-10 && fontSize>8){
+            fontSize--;
+            textSize(fontSize);
+        }
+        s.button(yName,true,fontSize);
+    },function(){
+        yearselbox.toggleShow();
+        if(yearselbox.showing) yearselbox.clicked();
     });
+
+    yearselbox = yearsel.append(false,110,0,190,30,[18,16,function(){
+        if(yearselbox.showing){
+            let v = yearselbox.value;
+            let m = v.match(/^\s*(\d+)(\s+B\.?C\.?(?:E\.?)?)?(?:\s*-\s*(\d+))?(?:\s+(?:(B\.?C\.?(?:E\.?)?)|A\.?D\.?|C\.?E\.?))?\s*$/i);
+            if(m){
+                let bce = m[2] || m[4];
+                let bce2 = m[4];
+                let year1 = parseInt(m[1]);
+                if(bce) year1 = 1-year1;
+                let year2;
+                if(m[3]){
+                    year2 = parseInt(m[3]);
+                    if(bce2) year2 = 1-year2;
+                    if(year1+1===year2 || (year1+1)%100===year2) newBasinSettings.year = year1+1;
+                    else newBasinSettings.year = undefined;
+                }else newBasinSettings.year = year1;
+            }else if(v!=='') newBasinSettings.year = undefined;
+            yearselbox.value = '';
+            yearselbox.hide();
+        }
+    }],undefined,false);
     
-    yearsel.append(false,0,0,20,10,function(s){ // Year increment button
-        s.button('',true);
-        triangle(2,8,10,2,18,8);
-    },function(){
-        if(newBasinSettings.year===undefined){
-            if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
-            else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
-        }else newBasinSettings.year++;
-    }).append(false,0,20,20,10,function(s){  // Year decrement button
-        s.button('',true);
-        triangle(2,2,18,2,10,8);
-    },function(){
-        if(newBasinSettings.year===undefined){
-            if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
-            else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
-        }else newBasinSettings.year--;
-    });
+    // yearsel.append(false,0,0,20,10,function(s){ // Year increment button
+    //     s.button('',true);
+    //     triangle(2,8,10,2,18,8);
+    // },function(){
+    //     if(newBasinSettings.year===undefined){
+    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
+    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
+    //     }else newBasinSettings.year++;
+    // }).append(false,0,20,20,10,function(s){  // Year decrement button
+    //     s.button('',true);
+    //     triangle(2,2,18,2,10,8);
+    // },function(){
+    //     if(newBasinSettings.year===undefined){
+    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
+    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
+    //     }else newBasinSettings.year--;
+    // });
 
     let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
         mode = ['Normal','Hyper','Wild','Megablobs'][mode];
         s.button('Simulation Mode: '+mode,true);
     },function(){
+        yearselbox.enterFunc();
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
         newBasinSettings.actMode %= ACTIVITY_MODES;
@@ -510,12 +554,14 @@ UI.init = function(){
         let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
         s.button('Hypothetical Categories: '+hypo,true);
     },function(){
+        yearselbox.enterFunc();
         newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
         list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby","Periodic Table","Periodic Table (Annual)"][list];
         s.button('Name List: '+list,true);
     },function(){
+        yearselbox.enterFunc();
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
         newBasinSettings.names++;
         newBasinSettings.names %= NAME_LIST_PRESETS.length;
@@ -523,6 +569,7 @@ UI.init = function(){
         let term = newBasinSettings.hurrTerm || 0;
         s.button('Hurricane-Strength Term: '+HURRICANE_STRENGTH_TERM[term],true);
     },function(){
+        yearselbox.enterFunc();
         if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
         newBasinSettings.hurrTerm++;
         newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
@@ -530,6 +577,7 @@ UI.init = function(){
         let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
+        yearselbox.enterFunc();
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
@@ -537,17 +585,21 @@ UI.init = function(){
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
         s.button('God Mode: '+gMode,true);
     },function(){
+        yearselbox.enterFunc();
         newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
     let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){
         textAlign(LEFT,CENTER);
         text('Seed:',0,15);
-    }).append(false,50,0,250,30,[18,16]);
+    }).append(false,50,0,250,30,[18,16],function(){
+        yearselbox.enterFunc();
+    });
 
     basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
+        yearselbox.enterFunc();
         let seed = seedsel.value;
         if(/^-?\d+$/g.test(seed)) newBasinSettings.seed = parseInt(seed);
         else newBasinSettings.seed = hashCode(seed);
@@ -577,6 +629,8 @@ UI.init = function(){
     }).append(false,0,40,300,30,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
     },function(){
+        yearselbox.value = '';
+        yearselbox.hide();
         basinCreationMenu.hide();
         mainMenu.show();
     });
@@ -830,7 +884,7 @@ UI.init = function(){
     topBar.append(false,5,3,100,24,function(s){  // Date indicator
         if(!(UI.viewBasin instanceof Basin)) return;
         let basin = UI.viewBasin;
-        let txtStr = basin.tickMoment(viewTick).format(TIME_FORMAT) + (basin.viewingPresent() ? '' : ' [Analysis]');
+        let txtStr = formatDate(basin.tickMoment(viewTick)) + (basin.viewingPresent() ? '' : ' [Analysis]');
         this.setBox(undefined,undefined,textWidth(txtStr)+6);
         if(this.isHovered()){
             fill(COLORS.UI.buttonHover);
@@ -1077,8 +1131,8 @@ UI.init = function(){
             let formTime;
             let dissTime;
             if(S.TC){
-                formTime = UI.viewBasin.tickMoment(S.formationTime).format(TIME_FORMAT);
-                dissTime = UI.viewBasin.tickMoment(S.dissipationTime).format(TIME_FORMAT);
+                formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
+                dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
                 txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
             }else txt += "Dates active: N/A";
             txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
@@ -1702,10 +1756,38 @@ function damageDisplayNumber(d){
     return "$ " + (round(d/1000000000)/1000) + " T";
 }
 
+function formatDate(m){
+    if(m instanceof moment){
+        const f = 'HH[z] MMM DD';
+        let str = m.format(f);
+        let y = m.year();
+        let bce;
+        if(y<1){
+            y = 1-y;
+            bce = true;
+        }
+        str += ' ' + zeroPad(y,4);
+        if(bce) str += ' B.C.E.';
+        return str;
+    }
+}
+
 function seasonName(y,h){
     if(h===undefined) h = UI.viewBasin instanceof Basin && UI.viewBasin.SHem;
+    let str = '';
+    let eraYear = yr=>{
+        if(yr<1) return 1-yr;
+        return yr;
+    };
+    const bce = ' B.C.E.';
     if(h){
-        return (y-1) + "-" + (y%100<10 ? "0" : "") + (y%100);
+        str += zeroPad(eraYear(y-1),4);
+        if(y===1) str += bce;
+        str += '-' + zeroPad(eraYear(y)%100,2);
+        if(y<1) str += bce;
+        return str;
     }
-    return y + "";
+    str += zeroPad(eraYear(y),4);
+    if(y<1) str += bce;
+    return str;
 }

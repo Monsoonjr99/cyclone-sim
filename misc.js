@@ -69,6 +69,24 @@ function cbrt(n){   // Cubed root function since p5 doesn't have one nor does po
     return n<0 ? -pow(abs(n),1/3) : pow(n,1/3);
 }
 
+function zeroPad(n,d){
+    n = parseFloat(n);
+    if(!Number.isNaN(n)){
+        let str;
+        let int = parseInt(n);
+        if(int<0){
+            int = int.toString().slice(1);
+            str = '-' + int.padStart(d,'0');
+        }else{
+            int = int.toString();
+            str = int.padStart(d,'0');
+        }
+        str = str.slice(0,-int.length);
+        str += abs(n).toString();
+        return str;
+    }
+}
+
 function hashCode(str){
     let hash = 0;
     if(str.length === 0) return hash;
