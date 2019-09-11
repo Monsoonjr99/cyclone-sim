@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20190911a:
+    + Added a landfall counter to storm and season stats
 v20190827d:
     * Limited "Starting year" selector to only allow years within the valid range of the Javascript Dates
 v20190827c:

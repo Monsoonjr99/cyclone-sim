@@ -1141,6 +1141,7 @@ UI.init = function(){
             txt += "\nACE: " + S.ACE;
             txt += "\nDamage: " + damageDisplayNumber(S.damage);
             txt += "\nDeaths: " + S.deaths;
+            txt += "\nLandfalls: " + S.landfalls;
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nameHeight);
         }else{
@@ -1164,6 +1165,7 @@ UI.init = function(){
                 txt += "\nTotal ACE: " + se.ACE;
                 txt += "\nDamage: " + damageDisplayNumber(se.damage);
                 txt += "\nDeaths: " + se.deaths;
+                txt += "\nLandfalls: " + se.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);

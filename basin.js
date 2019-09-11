@@ -555,6 +555,7 @@ class Season{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
+        this.landfalls = 0;
         this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
@@ -614,6 +615,7 @@ class Season{
             'ACE',
             'deaths',
             'damage',
+            'landfalls',
             'envRecordStarts'
         ]) val[p] = this[p];
         val.envData = {};
@@ -714,6 +716,7 @@ class Season{
                     'ACE',
                     'deaths',
                     'damage',
+                    'landfalls',
                     'envRecordStarts'
                 ]) this[p] = obj[p] || 0;
                 if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){

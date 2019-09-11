@@ -30,6 +30,7 @@ class Storm{
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
+        this.landfalls = 0;
         if(!this.current && data instanceof LoadData) this.load(data);
     }
 
@@ -286,7 +287,8 @@ class Storm{
             'nameNum',
             'birthTime',
             'deaths',
-            'damage'
+            'damage',
+            'landfalls'
         ]) obj[p] = this[p];
         obj.record = StormData.saveArr(this.record);
         return obj;
@@ -317,11 +319,13 @@ class Storm{
                     'nameNum',
                     'birthTime',
                     'deaths',
-                    'damage'
+                    'damage',
+                    'landfalls'
                 ]) this[p] = obj[p];
                 if(!this.birthTime) this.birthTime = 0;
                 if(!this.deaths) this.deaths = 0;
                 if(!this.damage) this.damage = 0;
+                if(!this.landfalls) this.landfalls = 0;
             }else{
                 let data = loadData.value;
                 data = data.split(".");
@@ -686,6 +690,7 @@ class ActiveSystem extends StormData{
 
     update(){
         let basin = this.basin;
+        let prevland = land.get(this.pos.x,this.pos.y);
         this.getSteering();
         this.pos.add(this.steering);
         
@@ -786,6 +791,10 @@ class ActiveSystem extends StormData{
             s.damage += dam;
             s.damage = round(s.damage*100)/100;
             s.deaths += ded;
+            if(!prevland && lnd){
+                this.fetchStorm().landfalls++;
+                s.landfalls++;
+            }
             s.modified = true;
         }
 
