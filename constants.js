@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20190911a";
+const VERSION_NUMBER = "20191003a";
 
 const SAVE_FORMAT = 3;  // Format #3 in use starting in v20190823a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -184,11 +184,11 @@ const DAMAGE_DIVISOR = 1000;
 const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
 const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
-const ACTIVITY_MODE_NORMAL = 0;
-const ACTIVITY_MODE_HYPER = 1;
-const ACTIVITY_MODE_WILD = 2;
-const ACTIVITY_MODE_MEGABLOBS = 3;
-const ACTIVITY_MODES = 4;
+// const ACTIVITY_MODE_NORMAL = 0;
+// const ACTIVITY_MODE_HYPER = 1;
+// const ACTIVITY_MODE_WILD = 2;
+// const ACTIVITY_MODE_MEGABLOBS = 3;
+// const ACTIVITY_MODES = 4;
 
 // Saving/loading-related constants
 

@@ -1,5 +1,13 @@
 About: A p5.js tropical cyclone simulation game
 
+v20191003a:
+    + Added "Experimental" simulation mode
+        > Currently a normal mode clone with very extreme SSTs
+        > Expect it to frequently change as it will be used for testing purposes
+    * env-defs.js is now sim-mode-defs.js to better encompass what it is for
+    * each simulation mode's wave/ET spawning function is defined in sim-mode-defs.js now instead of directly in the Basin.advanceSim method
+    * renamed simulation-mode-related constants
+    * out-basin now based on a "subBasin number" and a Basin.subBasins object (partial addition of upcoming sub-basins system)
 v20190911a:
     + Added a landfall counter to storm and season stats
 v20190827d:

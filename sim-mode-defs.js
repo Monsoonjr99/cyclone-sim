@@ -1,12 +1,44 @@
+// ---- Simulation Modes ---- //
+
+const SIMULATION_MODES = ['Normal','Hyper','Wild','Megablobs','Experimental']; // Labels for sim mode selector UI
+const SIM_MODE_NORMAL = 0;
+const SIM_MODE_HYPER = 1;
+const SIM_MODE_WILD = 2;
+const SIM_MODE_MEGABLOBS = 3;
+const SIM_MODE_EXPERIMENTAL = 4;
+
+// ---- Spawn Rules ---- //
+
+const SPAWN_RULES = {};
+
+SPAWN_RULES[SIM_MODE_NORMAL] = function(b){
+    if(random()<0.015*sq((seasonalSine(b.tick)+1)/2)) b.spawn(false);           // tropical waves
+    if(random()<0.01-0.002*seasonalSine(b.tick)) b.spawn(true);                 // extratropical cyclones
+};
+SPAWN_RULES[SIM_MODE_HYPER] = function(b){
+    if(random()<(0.013*sq((seasonalSine(b.tick)+1)/2)+0.002)) b.spawn(false);   // tropical waves
+    if(random()<0.01-0.002*seasonalSine(b.tick)) b.spawn(true);                 // extratropical cyclones
+};
+SPAWN_RULES[SIM_MODE_WILD] = function(b){
+    if(random()<0.015) b.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves
+    if(random()<0.01-0.002*seasonalSine(b.tick)) b.spawn(true);                 // extratropical cyclones
+};
+SPAWN_RULES[SIM_MODE_MEGABLOBS] = function(b){
+    if(random()<(0.013*sq((seasonalSine(b.tick)+1)/2)+0.002)) b.spawn(false);   // tropical waves
+    if(random()<0.01-0.002*seasonalSine(b.tick)) b.spawn(true);                 // extratropical cyclones
+};
+SPAWN_RULES[SIM_MODE_EXPERIMENTAL] = SPAWN_RULES[SIM_MODE_HYPER];
+
 // ---- Definitions of Environmental Fields ---- //
 
 const ENV_DEFS = {};
 
 ENV_DEFS.defaults = {}; // Env field attributes that are the same across multiple simulation modes
-ENV_DEFS[ACTIVITY_MODE_NORMAL] = {}; // Register env fields as part of "Normal" simulation mode and define unique attributes
-ENV_DEFS[ACTIVITY_MODE_HYPER] = {}; // Same for "Hyper" simulation mode
-ENV_DEFS[ACTIVITY_MODE_WILD] = {};  // "Wild" simulation mode
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS] = {}; // "Megablobs" simulation mode
+ENV_DEFS[SIM_MODE_NORMAL] = {}; // Register env fields as part of "Normal" simulation mode and define unique attributes
+ENV_DEFS[SIM_MODE_HYPER] = {}; // Same for "Hyper" simulation mode
+ENV_DEFS[SIM_MODE_WILD] = {};  // "Wild" simulation mode
+ENV_DEFS[SIM_MODE_MEGABLOBS] = {}; // "Megablobs" simulation mode
+ENV_DEFS[SIM_MODE_EXPERIMENTAL] = {}; // "Experimental" simulation mode
 
 // -- Sample Env Field -- //
 
@@ -27,14 +59,15 @@ ENV_DEFS[ACTIVITY_MODE_MEGABLOBS] = {}; // "Megablobs" simulation mode
 //         [6,0.5,150,3000,0.05,1.5]
 //     ]
 // };
-// ENV_DEFS[ACTIVITY_MODE_NORMAL].sample = {};
-// ENV_DEFS[ACTIVITY_MODE_HYPER].sample = {
+// ENV_DEFS[SIM_MODE_NORMAL].sample = {};
+// ENV_DEFS[SIM_MODE_HYPER].sample = {
 //     mapFunc: (u,x,y,z)=>{
 //         // Insert code here
 //     }
 // };
-// ENV_DEFS[ACTIVITY_MODE_WILD].sample = {};
-// ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].sample = {};
+// ENV_DEFS[SIM_MODE_WILD].sample = {};
+// ENV_DEFS[SIM_MODE_MEGABLOBS].sample = {};
+// ENV_DEFS[SIM_MODE_EXPERIMENTAL].sample = {};
 
 // -- jetstream -- //
 
@@ -54,13 +87,13 @@ ENV_DEFS.defaults.jetstream = {
         [4,0.5,160,300,1,2]
     ]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].jetstream = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].jetstream = {
+ENV_DEFS[SIM_MODE_NORMAL].jetstream = {};
+ENV_DEFS[SIM_MODE_HYPER].jetstream = {
     modifiers: {
         highJet: true
     }
 };
-ENV_DEFS[ACTIVITY_MODE_WILD].jetstream = {
+ENV_DEFS[SIM_MODE_WILD].jetstream = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0,x-z*3,0,z);
         let s = u.yearfrac(z);
@@ -70,11 +103,12 @@ ENV_DEFS[ACTIVITY_MODE_WILD].jetstream = {
         return (l+v)*HEIGHT;
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].jetstream = {
+ENV_DEFS[SIM_MODE_MEGABLOBS].jetstream = {
     modifiers: {
         highJet: true
     }
 };
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].jetstream = {};
 
 // -- LLSteering -- //
 
@@ -113,9 +147,9 @@ ENV_DEFS.defaults.LLSteering = {
         [4,0.5,170,300,1,3]
     ]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].LLSteering = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].LLSteering = {};
-ENV_DEFS[ACTIVITY_MODE_WILD].LLSteering = {
+ENV_DEFS[SIM_MODE_NORMAL].LLSteering = {};
+ENV_DEFS[SIM_MODE_HYPER].LLSteering = {};
+ENV_DEFS[SIM_MODE_WILD].LLSteering = {
     mapFunc: (u,x,y,z)=>{
         u.vec.set(1);    // reset vector
 
@@ -134,7 +168,8 @@ ENV_DEFS[ACTIVITY_MODE_WILD].LLSteering = {
         return u.vec;
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].LLSteering = {};
+ENV_DEFS[SIM_MODE_MEGABLOBS].LLSteering = {};
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].LLSteering = {};
 
 // -- ULSteering -- //
 
@@ -189,13 +224,13 @@ ENV_DEFS.defaults.ULSteering = {
         [4,0.5,90,100,1,3]
     ]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].ULSteering = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].ULSteering = {
+ENV_DEFS[SIM_MODE_NORMAL].ULSteering = {};
+ENV_DEFS[SIM_MODE_HYPER].ULSteering = {
     modifiers: {
         hadleyUpperBound: 3
     }
 };
-ENV_DEFS[ACTIVITY_MODE_WILD].ULSteering = {
+ENV_DEFS[SIM_MODE_WILD].ULSteering = {
     mapFunc: (u,x,y,z)=>{
         u.vec.set(1);                                                                   // reset vector
 
@@ -232,7 +267,8 @@ ENV_DEFS[ACTIVITY_MODE_WILD].ULSteering = {
         return u.vec;
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].ULSteering = {};
+ENV_DEFS[SIM_MODE_MEGABLOBS].ULSteering = {};
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].ULSteering = {};
 
 // -- shear -- //
 
@@ -249,10 +285,11 @@ ENV_DEFS.defaults.shear = {
     noVectorFlip: true,
     magMap: [0,8,0,25]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].shear = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].shear = {};
-ENV_DEFS[ACTIVITY_MODE_WILD].shear = {};
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].shear = {};
+ENV_DEFS[SIM_MODE_NORMAL].shear = {};
+ENV_DEFS[SIM_MODE_HYPER].shear = {};
+ENV_DEFS[SIM_MODE_WILD].shear = {};
+ENV_DEFS[SIM_MODE_MEGABLOBS].shear = {};
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].shear = {};
 
 // -- SSTAnomaly -- //
 
@@ -290,22 +327,23 @@ ENV_DEFS.defaults.SSTAnomaly = {
         [6,0.5,150,3000,0.05,1.5]
     ]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].SSTAnomaly = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].SSTAnomaly = {};
-ENV_DEFS[ACTIVITY_MODE_WILD].SSTAnomaly = {
+ENV_DEFS[SIM_MODE_NORMAL].SSTAnomaly = {};
+ENV_DEFS[SIM_MODE_HYPER].SSTAnomaly = {};
+ENV_DEFS[SIM_MODE_WILD].SSTAnomaly = {
     modifiers: {
         r: 5,
         bigBlobBase: 1.4,
         bigBlobExponentThreshold: 1.5
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].SSTAnomaly = {
+ENV_DEFS[SIM_MODE_MEGABLOBS].SSTAnomaly = {
     modifiers: {
         r: 7,
         bigBlobBase: 1.8,
         bigBlobExponentThreshold: 1
     }
 };
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].SSTAnomaly = {};
 
 // -- SST -- //
 
@@ -351,8 +389,8 @@ ENV_DEFS.defaults.SST = {
         peakSeasonTropicsTemp: 29
     }
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].SST = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].SST = {
+ENV_DEFS[SIM_MODE_NORMAL].SST = {};
+ENV_DEFS[SIM_MODE_HYPER].SST = {
     modifiers: {
         offSeasonPolarTemp: 5,
         peakSeasonPolarTemp: 20,
@@ -360,7 +398,7 @@ ENV_DEFS[ACTIVITY_MODE_HYPER].SST = {
         peakSeasonTropicsTemp: 35
     }
 };
-ENV_DEFS[ACTIVITY_MODE_WILD].SST = {
+ENV_DEFS[SIM_MODE_WILD].SST = {
     mapFunc: (u,x,y,z)=>{
         if(y<0) return 0;
         let anom = u.field('SSTAnomaly');
@@ -369,12 +407,20 @@ ENV_DEFS[ACTIVITY_MODE_WILD].SST = {
         return t+anom;
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].SST = {
+ENV_DEFS[SIM_MODE_MEGABLOBS].SST = {
     modifiers: {
         offSeasonPolarTemp: -5,
         peakSeasonPolarTemp: 20,
         offSeasonTropicsTemp: 23,
         peakSeasonTropicsTemp: 28.5
+    }
+};
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].SST = {
+    modifiers: {
+        offSeasonPolarTemp: -15,
+        peakSeasonPolarTemp: 25,
+        offSeasonTropicsTemp: 0,
+        peakSeasonTropicsTemp: 75
     }
 };
 
@@ -412,15 +458,15 @@ ENV_DEFS.defaults.moisture = {
         [4,0.5,120,120,0.3,2]
     ]
 };
-ENV_DEFS[ACTIVITY_MODE_NORMAL].moisture = {};
-ENV_DEFS[ACTIVITY_MODE_HYPER].moisture = {
+ENV_DEFS[SIM_MODE_NORMAL].moisture = {};
+ENV_DEFS[SIM_MODE_HYPER].moisture = {
     modifiers: {
         polarMoisture: 0.52,
         tropicalMoisture: 0.62,
         mountainMoisture: 0.3
     }
 };
-ENV_DEFS[ACTIVITY_MODE_WILD].moisture = {
+ENV_DEFS[SIM_MODE_WILD].moisture = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
         let s = u.yearfrac(z);
@@ -435,4 +481,5 @@ ENV_DEFS[ACTIVITY_MODE_WILD].moisture = {
         return m;
     }
 };
-ENV_DEFS[ACTIVITY_MODE_MEGABLOBS].moisture = {};
+ENV_DEFS[SIM_MODE_MEGABLOBS].moisture = {};
+ENV_DEFS[SIM_MODE_EXPERIMENTAL].moisture = {};

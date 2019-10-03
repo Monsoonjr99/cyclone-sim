@@ -938,13 +938,24 @@ class Land{
         }else return 0;
     }
 
-    inBasin(x,y){
+    getSubBasin(x,y){
         let d = this.mapDefinition;
         x = floor(x*d);
         y = floor(y*d);
         if(this.map[x] && this.map[x][y]){
-            return this.map[x][y].inBasin;
-        }else return true;
+            return this.map[x][y].subBasin;
+        }else return 0;
+    }
+
+    inBasin(x,y){
+        let r = this.getSubBasin(x,y);
+        let defs = this.basin.subBasins;
+        if(defs[r]){
+            if(defs[r].outBasin) return false;
+            return true;
+        }
+        if(r===255) return false;
+        return true;
     }
 
     calculate(){
@@ -971,9 +982,8 @@ class Land{
                     let img = this.basin.mapImg;
                     let index = 4 * (j*W*sq(d)+i*d);
                     let v = img.pixels[index];
-                    let ib = img.pixels[index+1];
                     p.val = map(v,0,255,0,1);
-                    p.inBasin = ib<255;
+                    p.subBasin = img.pixels[index+1];
                 }else{
                     let n = this.noise.get(x,y);
                     let landBiasFactors = mapTypeControls.landBiasFactors;
@@ -995,7 +1005,7 @@ class Land{
                             landBiasFactors[6];
                     }
                     p.val = n + landBias;
-                    p.inBasin = true;
+                    p.subBasin = 0;
                 }
                 let ox = floor(x/ENV_LAYER_TILE_SIZE);
                 let oy = floor(y/ENV_LAYER_TILE_SIZE);

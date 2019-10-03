@@ -544,13 +544,13 @@ UI.init = function(){
 
     let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
-        mode = ['Normal','Hyper','Wild','Megablobs'][mode];
+        mode = SIMULATION_MODES[mode];
         s.button('Simulation Mode: '+mode,true);
     },function(){
         yearselbox.enterFunc();
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
-        newBasinSettings.actMode %= ACTIVITY_MODES;
+        newBasinSettings.actMode %= SIMULATION_MODES.length;
     }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
         let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
         s.button('Hypothetical Categories: '+hypo,true);

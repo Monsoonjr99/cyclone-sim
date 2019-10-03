@@ -5,6 +5,7 @@ class Basin{
         this.seasonsBusyLoading = {};
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
+        this.subBasins = {};
         this.tick = 0;
         this.lastSaved = 0;
         this.godMode = opts.godMode;
@@ -78,10 +79,11 @@ class Basin{
             }
             this.activeSystems[i].update();
         }
-        if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
-        if((this.actMode===ACTIVITY_MODE_HYPER || this.actMode===ACTIVITY_MODE_MEGABLOBS) && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper and megablobs modes)
-        if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
-        if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
+        SPAWN_RULES[this.actMode](this);
+        // if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
+        // if((this.actMode===ACTIVITY_MODE_HYPER || this.actMode===ACTIVITY_MODE_MEGABLOBS) && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper and megablobs modes)
+        // if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
+        // if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
         let stormKilled = false;
         for(let i=this.activeSystems.length-1;i>=0;i--){
             if(!this.activeSystems[i].fetchStorm().current){
@@ -448,8 +450,8 @@ class Basin{
                         }
                     }
                     if(this.actMode===undefined){
-                        if(oldhyper) this.actMode = ACTIVITY_MODE_HYPER;
-                        else this.actMode = ACTIVITY_MODE_NORMAL;
+                        if(oldhyper) this.actMode = SIM_MODE_HYPER;
+                        else this.actMode = SIM_MODE_NORMAL;
                     }
                     this.env.init(envData);
                 }else{
