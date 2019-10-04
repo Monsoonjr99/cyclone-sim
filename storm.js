@@ -15,9 +15,12 @@ class Storm{
 
         this.rotation = random(TAU);
 
-        this.depressionNum = undefined;
-        this.nameNum = undefined;
-        this.name = undefined;
+        this.designations = {};
+        this.designations.primary = [];
+        this.designations.secondary = [];
+        // this.depressionNum = undefined;
+        // this.nameNum = undefined;
+        // this.name = undefined;
 
         this.birthTime = this.current ? basin.tick : undefined;       // Time formed as a disturbance/low
         this.formationTime = undefined;                             // Time formed as a TC
@@ -52,30 +55,165 @@ class Storm{
     }
 
     getNameByTick(t){
-        return this.aliveAt(t) ? t<this.formationTime ? undefined : t<this.namedTime ? this.depressionNum+DEPRESSION_LETTER : this.name : this.name;
+        let D = this.designations;
+        let str = '';
+        if(this.aliveAt(t)){
+            let p;
+            let s = [];
+            let snamed;
+            for(let i=0;i<D.primary.length;i++){
+                let d = D.primary[i];
+                if(!(d instanceof Designation)) continue;
+                if(t>=d.effectiveTick){
+                    if(!p) p = d;
+                    else if(!p.isName() && d.isName()) p = d;
+                    else if(d.effectiveTick>p.effectiveTick && (!p.isName() || d.isName())) p = d;
+                }
+            }
+            for(let i=0;i<D.secondary.length;i++){
+                let d = D.secondary[i];
+                if(!(d instanceof Designation)) continue;
+                if(t>=d.effectiveTick){
+                    if(d.isName() && !snamed){
+                        s = [];
+                        snamed = true;
+                    }
+                    if(d.isName() || !snamed) s.push(d);
+                }
+            }
+            s.sort((a,b)=>a.effectiveTick-b.effectiveTick);
+            let ii;
+            for(let i=s.length-1;i>=0;i--){
+                if(p && p.isName()) break;
+                if(s[i].isName() || !p){
+                    p = s[i];
+                    ii = i;
+                }
+            }
+            if(ii!==undefined) s.splice(ii,1);
+            if(p){
+                str += p.value;
+                if(s.length>0 && (snamed || !p.isName())){
+                    str += ' (';
+                    for(let i=0;i<s.length;i++){
+                        if(i>0) str += ', ';
+                        str += s[i].value;
+                    }
+                    str += ')';
+                }
+            }
+        }else{
+            let p = [];
+            let s = [];
+            let pnamed;
+            let snamed;
+            for(let i=0;i<D.primary.length;i++){
+                let d = D.primary[i];
+                if(!(d instanceof Designation)) continue;
+                if(d.isName() && !pnamed){
+                    p = [];
+                    pnamed = true;
+                }
+                if(d.isName() || !pnamed) p.push(d);
+            }
+            p.sort((a,b)=>a.effectiveTick-b.effectiveTick);
+            for(let i=0;i<D.secondary.length;i++){
+                let d = D.secondary[i];
+                if(!(d instanceof Designation)) continue;
+                if(d.isName() && !snamed){
+                    s = [];
+                    snamed = true;
+                }
+                if(d.isName() || !snamed) s.push(d);
+            }
+            s.sort((a,b)=>a.effectiveTick-b.effectiveTick);
+            let ii;
+            for(let i=s.length-1;i>=0;i--){
+                if(p.length>0 && pnamed) break;
+                if(s[i].isName() || p.length<1){
+                    p = [];
+                    p.push(s[i]);
+                    if(s[i].isName()) pnamed = true;
+                    ii = i;
+                }
+            }
+            if(ii!==undefined) s.splice(ii,1);
+            for(let i=0;i<p.length;i++){
+                if(i>0) str += '-';
+                if(t===-2) str += p[i].truncate();
+                else str += p[i].value;
+            }
+            if(s.length>0 && (snamed || !pnamed) && t!==-2){
+                str += ' (';
+                for(let i=0;i<s.length;i++){
+                    if(i>0) str += ', ';
+                    str += s[i].value;
+                }
+                str += ')';
+            }
+        }
+        return str;
+        // return this.aliveAt(t) ? t<this.formationTime ? undefined : t<this.namedTime ? this.depressionNum+DEPRESSION_LETTER : this.name : this.name;
     }
 
     getFullNameByTick(t){
         let basin = this.basin;
         let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
-        let name = t==="peak" ? this.name : this.getNameByTick(t);
+        let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
         let cat = data ? data.getCat() : null;
+        let hasbeenTC;
+        if(t==='peak') hasbeenTC = this.TC;
+        else if(t>=this.formationTime) hasbeenTC = true;
+        else hasbeenTC = false;
         let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
-        return ty===TROP ?
-            (name ? '' : 'Unnamed ') + (cat>10 ? hypercaneTerm :
-            cat>0 ? hurricaneTerm :
-            cat>-1 ? "Tropical Storm" : "Tropical Depression") + (name ? " " + name : '') :
-        ty===SUBTROP ?
-            (name ? '' : 'Unnamed ') + (cat>10 ? "Subtropical " + hypercaneTerm :
-            cat>0 ? "Subtropical " + hurricaneTerm :
-            cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + (name ? " " + name : '') :
-        ty===TROPWAVE ?
-            name ? "Remnants of " + name : "Unnamed Tropical Wave" :
-        ty===EXTROP ?
-            name ? "Post-Tropical Cyclone " + name : "Unnamed Extratropical Cyclone" :
-        name ? name : "Unknown Cyclone";
+        let str = '';
+        if(!name) str += 'Unnamed ';
+        switch(ty){
+            case TROP:
+            case SUBTROP:
+                if(ty===SUBTROP) str += 'Subtropical ';
+                else if(cat<1) str += 'Tropical ';
+                if(cat>10) str += hypercaneTerm;
+                else if(cat>0) str += hurricaneTerm;
+                else if(cat>-1) str += 'Storm';
+                else str += 'Depression';
+                if(name) str += ' ' + name;
+                break;
+            case TROPWAVE:
+                if(hasbeenTC){
+                    if(name) str += 'Remnants of ' + name;
+                    else str += 'Remnant Low';
+                }else{
+                    if(name) str += 'Invest ' + name;
+                    else str += 'Tropical Wave';
+                }
+                break;
+            case EXTROP:
+                if(hasbeenTC){
+                    str += 'Post-Tropical Cyclone';
+                    if(name) str += ' ' + name;
+                }else{
+                    if(name) str += 'Invest ' + name;
+                    else str += 'Extratropical Cyclone';
+                }
+                break;
+        }
+        return str;
+        // return ty===TROP ?
+        //     (name ? '' : 'Unnamed ') + (cat>10 ? hypercaneTerm :
+        //     cat>0 ? hurricaneTerm :
+        //     cat>-1 ? "Tropical Storm" : "Tropical Depression") + (name ? " " + name : '') :
+        // ty===SUBTROP ?
+        //     (name ? '' : 'Unnamed ') + (cat>10 ? "Subtropical " + hypercaneTerm :
+        //     cat>0 ? "Subtropical " + hurricaneTerm :
+        //     cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + (name ? " " + name : '') :
+        // ty===TROPWAVE ?
+        //     name ? "Remnants of " + name : "Unnamed Tropical Wave" :
+        // ty===EXTROP ?
+        //     name ? "Post-Tropical Cyclone " + name : "Unnamed Extratropical Cyclone" :
+        // name ? name : "Unknown Cyclone";
     }
 
     renderIcon(){
@@ -206,20 +344,24 @@ class Storm{
         if(!this.TC && isTropical){
             this.TC = true;
             this.formationTime = basin.tick;
-            this.depressionNum = ++cSeason.depressions;
+            // this.depressionNum = ++cSeason.depressions;
+            this.designations.primary.push(new Designation(++cSeason.depressions,basin.tick));
             this.peak = undefined;
-            this.name = this.depressionNum + DEPRESSION_LETTER;
+            // this.name = this.depressionNum + DEPRESSION_LETTER;
         }
         if(isTropical && cat>=0){
             if(!this.named){
-                this.nameNum = cSeason.namedStorms++;
+                let nameNum = cSeason.namedStorms++;
+                // this.nameNum = cSeason.namedStorms++;
                 if(basin.sequentialNameIndex>=0){
-                    this.nameNum = basin.sequentialNameIndex++;
+                    // this.nameNum = basin.sequentialNameIndex++;
+                    nameNum = basin.sequentialNameIndex++;
                     basin.sequentialNameIndex %= basin.nameList.length;
                 }
-                this.name = basin.getNewName(basin.getSeason(-1),this.nameNum);
+                // this.name = basin.getNewName(basin.getSeason(-1),this.nameNum);
+                this.designations.primary.push(new Designation(basin.getNewName(basin.getSeason(-1),nameNum),basin.tick));
                 this.named = true;
-                this.namedTime = basin.tick;
+                // this.namedTime = basin.tick;
             }
             let a = pow(w,2)/ACE_DIVISOR;
             this.ACE += a;
@@ -283,14 +425,25 @@ class Storm{
         let obj = {};
         for(let p of [
             'id',
-            'depressionNum',
-            'nameNum',
+            // 'depressionNum',
+            // 'nameNum',
             'birthTime',
             'deaths',
             'damage',
             'landfalls'
         ]) obj[p] = this[p];
         obj.record = StormData.saveArr(this.record);
+        obj.designations = {};
+        obj.designations.primary = [];
+        obj.designations.secondary = [];
+        let P = this.designations.primary;
+        let S = this.designations.secondary;
+        for(let i=0;i<P.length;i++){
+            obj.designations.primary.push(P[i].save());
+        }
+        for(let i=0;i<S.length;i++){
+            obj.designations.secondary.push(S[i].save());
+        }
         return obj;
 
         // old format
@@ -310,13 +463,17 @@ class Storm{
     load(loadData){
         if(loadData instanceof LoadData){
             let basin = this.basin;
+            let nameNum;
+            let namedTime;
+            let depNum;
+            let designations;
             if(loadData.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = loadData.value;
                 this.record = StormData.loadArr(basin,loadData.sub(obj.record));
                 for(let p of [
                     'id',
-                    'depressionNum',
-                    'nameNum',
+                    // 'depressionNum',
+                    // 'nameNum',
                     'birthTime',
                     'deaths',
                     'damage',
@@ -326,6 +483,9 @@ class Storm{
                 if(!this.deaths) this.deaths = 0;
                 if(!this.damage) this.damage = 0;
                 if(!this.landfalls) this.landfalls = 0;
+                if(obj.depressionNum!==undefined) depNum = obj.depressionNum;
+                if(obj.nameNum!==undefined) nameNum = obj.nameNum;
+                if(obj.designations!==undefined) designations = obj.designations;
             }else{
                 let data = loadData.value;
                 data = data.split(".");
@@ -334,14 +494,14 @@ class Storm{
                 this.damage = numData.pop()*DAMAGE_DIVISOR || 0;
                 this.deaths = numData.pop() || 0;
                 this.birthTime = numData.pop() || 0;
-                this.nameNum = numData.pop();
-                if(this.nameNum<0) this.nameNum = undefined;
-                this.depressionNum = numData.pop();
-                if(this.depressionNum<0) this.depressionNum = undefined;
+                nameNum = numData.pop();
+                if(nameNum<0) nameNum = undefined;
+                depNum = numData.pop();
+                if(depNum<0) depNum = undefined;
                 this.id = numData.pop() || 0;
             }
-            if(this.depressionNum!==undefined) this.TC = true;
-            if(this.nameNum!==undefined) this.named = true;
+            // if(this.depressionNum!==undefined) this.TC = true;
+            // if(this.nameNum!==undefined) this.named = true;
             for(let i=0;i<this.record.length;i++){
                 let d = this.record[i];
                 let trop = tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y);
@@ -350,7 +510,9 @@ class Storm{
                 if(trop && this.dissipationTime) this.dissipationTime = undefined;
                 if(!trop && this.formationTime && !this.dissipationTime) this.dissipationTime = t;
                 let cat = d.getCat();
-                if(trop && !this.namedTime && cat>=0) this.namedTime = t;
+                if(trop && !namedTime && cat>=0) namedTime = t;
+                if(trop && !this.TC) this.TC = true;
+                if(trop && !this.named && cat>=0) this.named = true;
                 if(trop && !this.hurricane && cat>=1) this.hurricane = true;
                 if(trop && !this.major && cat>=3) this.major = true;
                 if(trop && !this.c5 && cat>=5) this.c5 = true;
@@ -377,8 +539,19 @@ class Storm{
             }
             if(!this.current) this.deathTime = (this.record.length-1+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS+1;
             if(this.TC && !this.dissipationTime) this.dissipationTime = this.deathTime;
-            if(this.nameNum!==undefined) this.name = basin.getNewName(basin.getSeason(this.namedTime),this.nameNum);
-            else if(this.depressionNum!==undefined) this.name = this.depressionNum+DEPRESSION_LETTER;
+            if(designations){
+                let P = designations.primary;
+                let S = designations.secondary;
+                for(let i=0;i<P.length;i++){
+                    this.designations.primary.push(new Designation(loadData.sub(P[i])));
+                }
+                for(let i=0;i<S.length;i++){
+                    this.designations.secondary.push(new Designation(loadData.sub(S[i])));
+                }
+            }else{
+                if(nameNum!==undefined) this.designations.primary.push(new Designation(basin.getNewName(basin.getSeason(namedTime),nameNum),namedTime));
+                if(depNum!==undefined) this.designations.primary.push(new Designation(depNum,this.formationTime));
+            }
         }
     }
 }

@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20191004a:
+    + Added "designations" system for more flexible and robust storm numbering and naming
+        > Includes support for secondary (PAGASA-style) names (though currently not implemented)
+        > Includes support for designations prior to TC formation (Invests) (Also not yet implemented)
 v20191003a:
     + Added "Experimental" simulation mode
         > Currently a normal mode clone with very extreme SSTs

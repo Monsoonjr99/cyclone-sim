@@ -1250,34 +1250,35 @@ UI.init = function(){
                 for(let t of TCs){
                     let part = {};
                     part.segments = [];
-                    part.label = t.named ?
-                        ({
-                            'Alpha':'\u03B1',
-                            'Beta':'\u03B2',
-                            'Gamma':'\u03B3',
-                            'Delta':'\u03B4',
-                            'Epsilon':'\u03B5',
-                            'Zeta':'\u03B6',
-                            'Eta':'\u03B7',
-                            'Theta':'\u03B8',
-                            'Iota':'\u03B9',
-                            'Kappa':'\u03BA',
-                            'Lambda':'\u03BB',
-                            'Mu':'\u03BC',
-                            'Nu':'\u03BD',
-                            'Xi':'\u03BE',
-                            'Omicron':'\u03BF',
-                            'Pi':'\u03C0',
-                            'Rho':'\u03C1',
-                            'Sigma':'\u03C3',
-                            'Tau':'\u03C4',
-                            'Upsilon':'\u03C5',
-                            'Phi':'\u03C6',
-                            'Chi':'\u03C7',
-                            'Psi':'\u03C8',
-                            'Omega':'\u03C9'
-                        })[t.name] || t.name.slice(0,1) :
-                        t.depressionNum + '';
+                    // part.label = t.named ?
+                    //     ({
+                    //         'Alpha':'\u03B1',
+                    //         'Beta':'\u03B2',
+                    //         'Gamma':'\u03B3',
+                    //         'Delta':'\u03B4',
+                    //         'Epsilon':'\u03B5',
+                    //         'Zeta':'\u03B6',
+                    //         'Eta':'\u03B7',
+                    //         'Theta':'\u03B8',
+                    //         'Iota':'\u03B9',
+                    //         'Kappa':'\u03BA',
+                    //         'Lambda':'\u03BB',
+                    //         'Mu':'\u03BC',
+                    //         'Nu':'\u03BD',
+                    //         'Xi':'\u03BE',
+                    //         'Omicron':'\u03BF',
+                    //         'Pi':'\u03C0',
+                    //         'Rho':'\u03C1',
+                    //         'Sigma':'\u03C3',
+                    //         'Tau':'\u03C4',
+                    //         'Upsilon':'\u03C5',
+                    //         'Phi':'\u03C6',
+                    //         'Chi':'\u03C7',
+                    //         'Psi':'\u03C8',
+                    //         'Omega':'\u03C9'
+                    //     })[t.name] || t.name.slice(0,1) :
+                    //     t.depressionNum + '';
+                    part.label = t.getNameByTick(-2);
                     let aSegment;
                     for(let q=0;q<t.record.length;q++){
                         let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;

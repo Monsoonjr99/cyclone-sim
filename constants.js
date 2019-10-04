@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20191003a";
+const VERSION_NUMBER = "20191004a";
 
 const SAVE_FORMAT = 3;  // Format #3 in use starting in v20190823a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
