@@ -4,7 +4,9 @@ function refreshTracks(force){
     forecastTracks.clear();
     if(selectedStorm) selectedStorm.renderTrack();
     else if(simSettings.trackMode===2){
-        for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) if(s.TC) s.renderTrack();
+        let target = UI.viewBasin.getSeason(viewTick);
+        let valid = sys=>(sys.TC && (UI.viewBasin.getSeason(sys.formationTime)===target || UI.viewBasin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || UI.viewBasin.getSeason(sys.dissipationTime-1)>=target)));
+        for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) if(valid(s)) s.renderTrack();
     }else if(UI.viewBasin.viewingPresent()) for(let s of UI.viewBasin.activeSystems) s.fetchStorm().renderTrack();
     else for(let s of UI.viewBasin.fetchSeason(viewTick,true,true).forSystems()) s.renderTrack();
 }

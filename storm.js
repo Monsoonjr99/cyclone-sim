@@ -960,13 +960,16 @@ class ActiveSystem extends StormData{
             this.fetchStorm().damage += dam;
             this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
             this.fetchStorm().deaths += ded;
+            let ib = land.inBasin(x,y);
             let s = basin.fetchSeason(-1,true,true);
-            s.damage += dam;
-            s.damage = round(s.damage*100)/100;
-            s.deaths += ded;
+            if(ib){
+                s.damage += dam;
+                s.damage = round(s.damage*100)/100;
+                s.deaths += ded;
+            }
             if(!prevland && lnd){
                 this.fetchStorm().landfalls++;
-                s.landfalls++;
+                if(ib) s.landfalls++;
             }
             s.modified = true;
         }

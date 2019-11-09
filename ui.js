@@ -1343,7 +1343,7 @@ UI.init = function(){
 
     timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(s){
         let target = stormInfoPanel.target;
-        if(target!==this.builtFor || (target===UI.viewBasin.getSeason(-1) && UI.viewBasin.tick!==this.builtAt)) buildtimeline();
+        if(target!==this.builtFor || (UI.viewBasin.tick!==this.builtAt && (UI.viewBasin.getSeason(this.builtAt)===target || UI.viewBasin.getSeason(this.builtAt)===(target+1)))) buildtimeline();
         fill(COLORS.UI.box);
         noStroke();
         s.fullRect();

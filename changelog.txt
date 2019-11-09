@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20191109a:
+    * Fixed season summary track mode including:
+        > storms from previous years whose remnants lasted into the relevant year
+        > storms from following years whose precursors formed during the relevant year
+    * Fixed timelines not updating after the end of the year without having to view a different season's timeline first
+    * Fixed out-basin storms being included in damage, deaths, and landfall stats
 v20191004a:
     + Added "designations" system for more flexible and robust storm numbering and naming
         > Includes support for secondary (PAGASA-style) names (though currently not implemented)
