@@ -841,6 +841,49 @@ class Season{
     }
 }
 
+class SubBasin{
+    constructor(basin,data){
+        this.basin = basin instanceof Basin && basin;
+        this.isMain = false;
+        this.parent = 0;
+        this.designationSystems = [];
+        if(data instanceof LoadData) this.load(data);
+    }
+
+    outBasin(origin){
+        if(this.isMain) return false;
+        if(this.parent===0) return false;
+        if(this.parent===undefined) return true;
+        if(this.parent===origin) return true;
+        let p = this.basin.subBasins[this.parent];
+        if(p instanceof SubBasin) return p.outBasin(origin || this.parent);
+        if(this.parent===255) return true;
+        return false;
+    }
+
+    save(){
+        let d = {};
+        for(let p of [
+            'isMain',
+            'parent'
+        ]) d[p] = this[p];
+        d.desSys = [];
+        for(let s of this.designationSystems) if(s instanceof DesignationSystem) d.desSys.push(s.save());
+        return d;
+    }
+
+    load(data){
+        if(data instanceof LoadData){
+            let d = data.value;
+            for(let p of [
+                'isMain',
+                'parent'
+            ]) this[p] = d[p];
+            for(let s of d.desSys) this.designationSystems.push(new DesignationSystem(this.basin,data.sub(s)));
+        }
+    }
+}
+
 // saving/loading helpers
 
 function setupDatabase(){

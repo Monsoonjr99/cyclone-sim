@@ -949,11 +949,8 @@ class Land{
 
     inBasin(x,y){
         let r = this.getSubBasin(x,y);
-        let defs = this.basin.subBasins;
-        if(defs[r]){
-            if(defs[r].outBasin) return false;
-            return true;
-        }
+        let def = this.basin.subBasins[r];
+        if(def instanceof SubBasin) return !def.outBasin();
         if(r===255) return false;
         return true;
     }

@@ -1,12 +1,13 @@
 class Designation{
     constructor(value,tick,sub){
-        if(typeof value === 'number'){
-            this.value = value + DEPRESSION_LETTER; // DEPRESSION_LETTER constant with "H" is temporary until DesignationSystem is finished
-            this.num = value;
-        }else{
-            this.value = value;
-            this.num = undefined;
-        }
+        this.num = undefined;
+        if(value instanceof Array){
+            let n;
+            if(value.length>2) n = value[1];
+            else n = value[0];
+            this.value = value.join('');
+            if(typeof n === 'number') this.num = n;
+        }else this.value = value;
         this.effectiveTick = tick;
         this.subBasin = sub || 0;
         if(this.value instanceof LoadData) this.load(this.value);
@@ -67,6 +68,26 @@ class Designation{
                 'effectiveTick',
                 'subBasin'
             ]) this[p] = o[p];
+        }
+    }
+}
+
+class DesignationSystem{
+    constructor(basin,data){
+        this.basin = basin instanceof Basin && basin;
+        // WIP
+        if(data instanceof LoadData) this.load(data);
+    }
+
+    save(){
+        let d = {};
+        // WIP
+        return d;
+    }
+
+    load(data){
+        if(data instanceof LoadData){
+            // WIP
         }
     }
 }
