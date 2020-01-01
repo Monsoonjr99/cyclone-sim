@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v20200101a:
+    * Slight code changes to set up upcoming scale system
 v20191231a:
     * Updated South-West Indian Ocean names for the 2021-22 list
     * Some other under-the-hood changes

@@ -847,6 +847,7 @@ class SubBasin{
         this.isMain = false;
         this.parent = 0;
         this.designationSystems = [];
+        this.scale = undefined; // Scale system to be added in later update; currently only Saffir-Simpson exists
         if(data instanceof LoadData) this.load(data);
     }
 
@@ -869,6 +870,7 @@ class SubBasin{
         ]) d[p] = this[p];
         d.desSys = [];
         for(let s of this.designationSystems) if(s instanceof DesignationSystem) d.desSys.push(s.save());
+        if(this.scale instanceof Scale) d.scale = this.scale.save();
         return d;
     }
 
@@ -880,6 +882,7 @@ class SubBasin{
                 'parent'
             ]) this[p] = d[p];
             for(let s of d.desSys) this.designationSystems.push(new DesignationSystem(this.basin,data.sub(s)));
+            if(d.scale) this.scale = new Scale(this.basin,data.sub(d.scale));
         }
     }
 }
