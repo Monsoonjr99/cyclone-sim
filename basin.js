@@ -6,6 +6,7 @@ class Basin{
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
         this.subBasins = {};
+        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,DesignationSystem.convertFromOldNameList(NAME_LIST_PRESETS[opts.names || 0]));
         this.tick = 0;
         this.lastSaved = 0;
         this.godMode = opts.godMode;
@@ -14,8 +15,8 @@ class Basin{
         this.hypoCats = opts.hypoCats;
         if(opts.year!==undefined) this.startYear = opts.year;
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-        this.nameList = NAME_LIST_PRESETS[opts.names || 0];
-        this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
+        // this.nameList = NAME_LIST_PRESETS[opts.names || 0];
+        // this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
         this.hurricaneStrengthTerm = opts.hurrTerm || 0;
         this.mapType = opts.mapType || 0;
         this.seed = opts.seed || moment().valueOf();
@@ -143,21 +144,33 @@ class Basin{
         this.activeSystems.push(new ActiveSystem(this,...opts));
     }
 
-    getNewName(season,sNum){
-        let list;
-        if(this.sequentialNameIndex<0){
-            let numoflists = this.nameList.length-1;
-            list = this.nameList[(season+1)%numoflists];
-            if(sNum>=list.length){
-                let gNum = sNum-list.length;
-                let greeks = this.nameList[numoflists];
-                if(gNum>=greeks.length) return "Unnamed";
-                return greeks[gNum];
-            }
-            return list[sNum];
-        }
-        return this.nameList[sNum];
+    addSubBasin(id,...args){
+        id = parseInt(id);
+        this.subBasins[id] = new SubBasin(this,id,...args);
     }
+
+    subInBasin(sub){
+        let s = this.subBasins[sub];
+        if(s instanceof SubBasin) return !s.outBasin();
+        if(sub===DEFAULT_OUTBASIN_SUBBASIN) return false;
+        return true;
+    }
+
+    // getNewName(season,sNum){
+    //     let list;
+    //     if(this.sequentialNameIndex<0){
+    //         let numoflists = this.nameList.length-1;
+    //         list = this.nameList[((season+1)%numoflists+numoflists)%numoflists];
+    //         if(sNum>=list.length){
+    //             let gNum = sNum-list.length;
+    //             let greeks = this.nameList[numoflists];
+    //             if(gNum>=greeks.length) return "Unnamed";
+    //             return greeks[gNum];
+    //         }
+    //         return list[sNum];
+    //     }
+    //     return this.nameList[sNum];
+    // }
 
     getSeason(t){       // returns the year number of a season given a sim tick
         if(t===-1) t = this.tick;
@@ -274,6 +287,11 @@ class Basin{
                     d.push(c.save());
                 }
             }
+            b.subBasins = {};
+            for(let i in this.subBasins){
+                let s = this.subBasins[i];
+                if(s instanceof SubBasin) b.subBasins[i] = s.save();
+            }
             b.flags = 0;
             b.flags |= 0;   // former hyper mode
             b.flags <<= 1;
@@ -283,11 +301,11 @@ class Basin{
             for(let p of [
                 'mapType',
                 'hurricaneStrengthTerm',
-                'sequentialNameIndex',
+                // 'sequentialNameIndex',
                 'tick',
                 'seed',
                 'startYear',
-                'nameList',
+                // 'nameList',
                 'hypoCats',
                 'actMode'
             ]) b[p] = this[p];
@@ -381,12 +399,20 @@ class Basin{
                     let data = LoadData.wrap(res);
                     let oldhyper;
                     let envData;
+                    let oldNameList;
+                    let oldSeqNameIndex;
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
                         envData = data.sub(obj.envData);
+                        if(obj.subBasins){
+                            for(let i in obj.subBasins){
+                                let s = obj.subBasins[i];
+                                if(typeof s === "object") this.addSubBasin(i,data.sub(s));
+                            }
+                        }
                         let flags = obj.flags;
                         this.SHem = flags & 1;
                         flags >>= 1;
@@ -396,14 +422,16 @@ class Basin{
                         for(let p of [
                             'mapType',
                             'hurricaneStrengthTerm',
-                            'sequentialNameIndex',
+                            // 'sequentialNameIndex',
                             'tick',
                             'seed',
                             'startYear',
-                            'nameList',
+                            // 'nameList',
                             'hypoCats',
                             'actMode'
                         ]) this[p] = obj[p];
+                        if(obj.nameList) oldNameList = obj.nameList;
+                        if(obj.sequentialNameIndex) oldSeqNameIndex = obj.sequentialNameIndex;
                         this.lastSaved = this.tick;
                     }else{  // Format 1 backwards compatibility
                         // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
@@ -419,7 +447,7 @@ class Basin{
                             this.startYear = arr.pop();
                             this.seed = arr.pop() || moment().valueOf();
                             this.lastSaved = this.tick = arr.pop() || 0;
-                            this.sequentialNameIndex = arr.pop();
+                            oldSeqNameIndex = arr.pop();
                             this.hurricaneStrengthTerm = arr.pop() || 0;
                             this.mapType = arr.pop() || 0;
                             this.SHem = flags & 1;
@@ -436,9 +464,9 @@ class Basin{
                                     }
                                     if(names[0][0]==="") names[0].shift();
                                 }
-                                this.nameList = names;
+                                oldNameList = names;
                             }
-                            if(this.sequentialNameIndex===undefined) this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
+                            if(oldSeqNameIndex===undefined) oldSeqNameIndex = typeof oldNameList[0] === "string" ? 0 : -1;
                             let envLoadData = parts.pop();
                             if(envLoadData) envData = data.sub(envLoadData.split(','));
                             let activeSystemData = parts.pop();
@@ -454,6 +482,11 @@ class Basin{
                         else this.actMode = SIM_MODE_NORMAL;
                     }
                     this.env.init(envData);
+                    if(oldNameList){
+                        let desSys = DesignationSystem.convertFromOldNameList(oldNameList);
+                        if(!desSys.naming.annual) desSys.naming.continuousNameIndex = oldSeqNameIndex;
+                        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,desSys);
+                    }
                 }else{
                     let t = 'Could not load basin';
                     console.error(t);
@@ -546,6 +579,7 @@ class Season{
         this.systems = [];
         this.envData = {};
         this.idSystemCache = {};
+        this.subBasinStats = {};
         this.totalSystemCount = 0;
         this.depressions = 0;
         this.namedStorms = 0;
@@ -842,34 +876,66 @@ class Season{
 }
 
 class SubBasin{
-    constructor(basin,data){
+    constructor(basin,id,data,dName,parent,scale,desSys){
         this.basin = basin instanceof Basin && basin;
-        this.isMain = false;
-        this.parent = 0;
-        this.designationSystems = [];
-        this.scale = undefined; // Scale system to be added in later update; currently only Saffir-Simpson exists
+        this.id = id || DEFAULT_MAIN_SUBBASIN;
+        this.parent = undefined;
+        if(parent) this.parent = parent;
+        else if(this.id!==DEFAULT_MAIN_SUBBASIN && this.id!==DEFAULT_OUTBASIN_SUBBASIN && parent!==false) this.parent = DEFAULT_MAIN_SUBBASIN;
+        this.displayName = undefined;
+        if(dName) this.displayName = dName;
+        this.designationSystem = undefined;
+        this.scale = undefined;
+        if(desSys instanceof DesignationSystem){
+            desSys.subBasin = this;
+            this.designationSystem = desSys;
+        }
+        if(scale instanceof Scale) this.scale = scale; // Scale system to be added in later update; currently only Saffir-Simpson exists
         if(data instanceof LoadData) this.load(data);
     }
 
     outBasin(origin){
-        if(this.isMain) return false;
-        if(this.parent===0) return false;
+        if(this.id===DEFAULT_MAIN_SUBBASIN) return false;
+        if(this.parent===DEFAULT_MAIN_SUBBASIN) return false;
         if(this.parent===undefined) return true;
         if(this.parent===origin) return true;
         let p = this.basin.subBasins[this.parent];
-        if(p instanceof SubBasin) return p.outBasin(origin || this.parent);
-        if(this.parent===255) return true;
+        if(p instanceof SubBasin) return p.outBasin(origin || this.id);
+        if(this.parent===DEFAULT_OUTBASIN_SUBBASIN) return true;
         return false;
+    }
+
+    getDisplayName(){
+        if(this.displayName) return this.displayName;
+        if(this.id===DEFAULT_MAIN_SUBBASIN) return 'Main Basin';
+        return 'SubBasin ' + this.id;
+    }
+
+    *forParents(origin){
+        if(this.id!==DEFAULT_MAIN_SUBBASIN && this.parent!==undefined && this.parent!==origin){
+            yield this.parent;
+            if(this.parent!==DEFAULT_MAIN_SUBBASIN){
+                let p = this.basin.subBasins[this.parent];
+                if(p instanceof SubBasin) yield* p.forParents(origin || this.id);
+                else if(this.parent!==DEFAULT_OUTBASIN_SUBBASIN) yield DEFAULT_MAIN_SUBBASIN;
+            }
+        }
+    }
+
+    *forChain(){
+        yield this.id;
+        yield* this.forParents();
     }
 
     save(){
         let d = {};
         for(let p of [
-            'isMain',
-            'parent'
+            'parent',
+            'displayName'
         ]) d[p] = this[p];
-        d.desSys = [];
-        for(let s of this.designationSystems) if(s instanceof DesignationSystem) d.desSys.push(s.save());
+        d.desSys = undefined;
+        d.scale = undefined;
+        if(this.designationSystem instanceof DesignationSystem) d.desSys = this.designationSystem.save();
         if(this.scale instanceof Scale) d.scale = this.scale.save();
         return d;
     }
@@ -878,10 +944,10 @@ class SubBasin{
         if(data instanceof LoadData){
             let d = data.value;
             for(let p of [
-                'isMain',
-                'parent'
+                'parent',
+                'displayName'
             ]) this[p] = d[p];
-            for(let s of d.desSys) this.designationSystems.push(new DesignationSystem(this.basin,data.sub(s)));
+            if(d.desSys) this.designationSystem = new DesignationSystem(this,data.sub(d.desSys));
             if(d.scale) this.scale = new Scale(this.basin,data.sub(d.scale));
         }
     }

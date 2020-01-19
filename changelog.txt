@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v20200119a:
+    * Partial implementation of SubBasin and DesignationSystem classes
+    * Old name list system replaced with DesignationSystem objects to allow more flexible numbering and naming
+        > Still WIP and doesn't yet have all the intended flexibility
+    * Basins now given a main SubBasin for the implementation of DesignationSystem
+        > Other sub-basins such as PAGASA are still planned for a future update
 v20200101a:
     * Slight code changes to set up upcoming scale system
 v20191231a:
