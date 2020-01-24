@@ -174,18 +174,14 @@ class DesignationSystem{
             let y = basin.getSeason(t);
             let season = basin.fetchSeason(y,false,true);
             let i;
-            if(this.naming.annual) i = season.namedStorms; // .namedStorms is temporary until subBasin season stats added
-            else i = this.naming.continuousNameIndex;
-            let nameDesig = this.getName(t,y,i);
-            if(this.naming.annual){
-                // WIP (subBasin season stats counter increment)
-            }else{
-                this.naming.continuousNameIndex++;
+            if(this.naming.annual) i = season.stats(sb.id).designationCounters.name++;
+            else{
+                i = this.naming.continuousNameIndex++;
                 let totalLength = 0;
                 for(let l of this.naming.mainLists) totalLength += l.length;
                 if(this.naming.continuousNameIndex>=totalLength) this.naming.continuousNameIndex = 0;
             }
-            return nameDesig;
+            return this.getName(t,y,i);
         }
         return undefined;
     }
@@ -195,7 +191,7 @@ class DesignationSystem{
         let suf = this.numbering.suffix;
         if(altPre!==undefined) pre = altPre;
         if(altSuf!==undefined) suf = altSuf;
-        let num = [pre,index+1,suf];
+        let num = [pre,index,suf];
         return new Designation(num,tick,this.subBasin ? this.subBasin.id : 0);
     }
 
@@ -205,9 +201,8 @@ class DesignationSystem{
             let basin = sb.basin;
             let t = basin.tick;
             let season = basin.fetchSeason(t,true,true);
-            let i = season.depressions; // .depressions is temporary until subBasin season stats added
+            let i = ++season.stats(sb.id).designationCounters.number; // prefix increment because numbering starts at 01
             let numDesig = this.getNum(t,i,altPre,altSuf);
-            // add subBasin season stats counter increment here
             return numDesig;
         }
         return undefined;

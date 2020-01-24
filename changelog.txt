@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v20200124a:
+    * Season stats now saved by sub-basin
+        > Another step towards full sub-basin implementation
+        > Includes sub-basin-specific counters for designations (numbers and annual names)
 v20200122a:
     * Updated PAGASA name list preset with replacements for the 2017 and 2018 typhoon seasons
     * Fixed a single storm being named "Unnamed" after names are exhausted for certain preset naming lists

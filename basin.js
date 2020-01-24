@@ -581,17 +581,17 @@ class Season{
         this.idSystemCache = {};
         this.subBasinStats = {};
         this.totalSystemCount = 0;
-        this.depressions = 0;
-        this.namedStorms = 0;
-        this.hurricanes = 0;
-        this.majors = 0;
-        this.c5s = 0;
-        this.c8s = 0;
-        this.hypercanes = 0;
-        this.ACE = 0;
-        this.deaths = 0;
-        this.damage = 0;
-        this.landfalls = 0;
+        // this.depressions = 0;
+        // this.namedStorms = 0;
+        // this.hurricanes = 0;
+        // this.majors = 0;
+        // this.c5s = 0;
+        // this.c8s = 0;
+        // this.hypercanes = 0;
+        // this.ACE = 0;
+        // this.deaths = 0;
+        // this.damage = 0;
+        // this.landfalls = 0;
         this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
@@ -634,6 +634,13 @@ class Season{
         }
     }
 
+    stats(sub){
+        let s = this.subBasinStats[sub];
+        if(s instanceof SeasonStats) return s;
+        let n = this.subBasinStats[sub] = new SeasonStats(this.basin,sub);
+        return n;
+    }
+
     save(forceStormRefs){
         // new save format
 
@@ -641,19 +648,24 @@ class Season{
         let val = {};
         for(let p of [
             'totalSystemCount',
-            'depressions',
-            'namedStorms',
-            'hurricanes',
-            'majors',
-            'c5s',
-            'c8s',
-            'hypercanes',
-            'ACE',
-            'deaths',
-            'damage',
-            'landfalls',
+            // 'depressions',
+            // 'namedStorms',
+            // 'hurricanes',
+            // 'majors',
+            // 'c5s',
+            // 'c8s',
+            // 'hypercanes',
+            // 'ACE',
+            // 'deaths',
+            // 'damage',
+            // 'landfalls',
             'envRecordStarts'
         ]) val[p] = this[p];
+        val.stats = {};
+        for(let sub in this.subBasinStats){
+            let s = this.subBasinStats[sub];
+            if(s instanceof SeasonStats) val.stats[sub] = s.save();
+        }
         val.envData = {};
         for(let f of basin.env.fieldList){
             let fd = val.envData[f] = {};
@@ -738,23 +750,42 @@ class Season{
     load(data){
         let basin = this.basin;
         if(data instanceof LoadData && data.format>=EARLIEST_COMPATIBLE_FORMAT){
+            let oldStats = {};
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
                 for(let p of [
                     'totalSystemCount',
-                    'depressions',
-                    'namedStorms',
-                    'hurricanes',
-                    'majors',
-                    'c5s',
-                    'c8s',
-                    'hypercanes',
-                    'ACE',
-                    'deaths',
-                    'damage',
-                    'landfalls',
+                    // 'depressions',
+                    // 'namedStorms',
+                    // 'hurricanes',
+                    // 'majors',
+                    // 'c5s',
+                    // 'c8s',
+                    // 'hypercanes',
+                    // 'ACE',
+                    // 'deaths',
+                    // 'damage',
+                    // 'landfalls',
                     'envRecordStarts'
                 ]) this[p] = obj[p] || 0;
+                if(data.format<FORMAT_WITH_SUBBASIN_SEASON_STATS){
+                    for(let p of [
+                        'depressions',
+                        'namedStorms',
+                        'hurricanes',
+                        'majors',
+                        'c5s',
+                        'c8s',
+                        'hypercanes',
+                        'ACE',
+                        'deaths',
+                        'damage',
+                        'landfalls'
+                    ]) oldStats[p] = obj[p];
+                }
+                if(obj.stats){
+                    for(let sub in obj.stats) this.subBasinStats[sub] = new SeasonStats(basin,sub,data.sub(obj.stats[sub]));
+                }
                 if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){
                     for(let f of basin.env.fieldList){
                         let fd = this.envData[f] = {};
@@ -793,14 +824,14 @@ class Season{
                     return;
                 }
                 this.envRecordStarts = stats.pop() || 0;
-                this.damage = stats.pop()*DAMAGE_DIVISOR || 0;
-                this.deaths = stats.pop() || 0;
-                this.ACE = stats.pop()/ACE_DIVISOR || 0;
-                this.c5s = stats.pop() || 0;
-                this.majors = stats.pop() || 0;
-                this.hurricanes = stats.pop() || 0;
-                this.namedStorms = stats.pop() || 0;
-                this.depressions = stats.pop() || 0;
+                oldStats.damage = stats.pop()*DAMAGE_DIVISOR || 0;
+                oldStats.deaths = stats.pop() || 0;
+                oldStats.ACE = stats.pop()/ACE_DIVISOR || 0;
+                oldStats.c5s = stats.pop() || 0;
+                oldStats.majors = stats.pop() || 0;
+                oldStats.hurricanes = stats.pop() || 0;
+                oldStats.namedStorms = stats.pop() || 0;
+                oldStats.depressions = stats.pop() || 0;
                 this.totalSystemCount = stats.pop() || 0;
                 if(data.format>=ENVDATA_COMPATIBLE_FORMAT && mainparts[1]!==""){
                     let e = mainparts[1].split(",");
@@ -849,6 +880,28 @@ class Season{
                     }
                 }
             }
+            if(data.format<FORMAT_WITH_SUBBASIN_SEASON_STATS){
+                let s = this.stats(DEFAULT_MAIN_SUBBASIN);
+                for(let p of [
+                    'ACE',
+                    'deaths',
+                    'damage',
+                    'landfalls'
+                ]) s[p] = oldStats[p] || 0;
+                let cCounters = s.classificationCounters;
+                cCounters[-1] = oldStats.depressions || 0;
+                cCounters[0] = oldStats.namedStorms || 0;
+                cCounters[1] = oldStats.hurricanes || 0;
+                cCounters[3] = oldStats.majors || 0;
+                cCounters[5] = oldStats.c5s || 0;
+                if(basin.hypoCats){
+                    cCounters[8] = oldStats.c8s || 0;
+                    cCounters[11] = oldStats.hypercanes || 0;
+                }
+                let dCounters = s.designationCounters;
+                dCounters.number = oldStats.depressions || 0;
+                dCounters.name = oldStats.namedStorms || 0;
+            }
             if(data.format===SAVE_FORMAT) this.modified = false;
             else{
                 db.transaction('rw',db.seasons,()=>{
@@ -872,6 +925,73 @@ class Season{
                 });
             }
         }else this.envData = null;
+    }
+}
+
+class SeasonStats{
+    constructor(basin,sub,data){
+        this.basin = basin instanceof Basin && basin;
+        this.subBasinId = sub;
+        if(this.basin) this.subBasin = this.basin.subBasins[this.subBasinId];
+
+        this.ACE = 0;
+        this.deaths = 0;
+        this.damage = 0;
+        this.landfalls = 0;
+
+        this.classificationCounters = {};       // counters for systems by classification on the sub-basin's scale (e.g. tropical depression, tropical storm, etc.)
+        // saffir-simpson (with hypothetical categories if applicable) initialization (new scales will get added in the future)
+        let cats = this.basin.hypoCats ? 11 : 5;
+        for(let i=-1;i<=cats;i++) this.classificationCounters[i] = 0;
+
+        this.designationCounters = {};
+        this.designationCounters.number = 0;    // counter for numerical designations
+        this.designationCounters.name = 0;      // counter for annual-based name designations
+
+        if(data instanceof LoadData) this.load(data);
+    }
+
+    addACE(v){
+        this.ACE = round((this.ACE + v) * ACE_DIVISOR) / ACE_DIVISOR;
+    }
+
+    save(){
+        let d = {};
+        if(this.subBasin instanceof SubBasin ? !this.subBasin.outBasin() : this.subBasinId!==DEFAULT_OUTBASIN_SUBBASIN){
+            for(let p of [
+                'ACE',
+                'deaths',
+                'damage',
+                'landfalls'
+            ]) d[p] = this[p];
+            d.cCounters = {};
+            for(let i in this.classificationCounters) d.cCounters[i] = this.classificationCounters[i];
+        }
+        d.dCounters = {};
+        d.dCounters.number = this.designationCounters.number;
+        d.dCounters.name = this.designationCounters.name;
+        return d;
+    }
+
+    load(data){
+        if(data instanceof LoadData){
+            let d = data.value;
+            if(this.subBasin instanceof SubBasin ? !this.subBasin.outBasin() : this.subBasinId!==DEFAULT_OUTBASIN_SUBBASIN){
+                for(let p of [
+                    'ACE',
+                    'deaths',
+                    'damage',
+                    'landfalls'
+                ]) this[p] = d[p];
+                if(d.cCounters){
+                    for(let i in d.cCounters) this.classificationCounters[i] = d.cCounters[i];
+                }
+            }
+            if(d.dCounters){
+                this.designationCounters.number = d.dCounters.number;
+                this.designationCounters.name = d.dCounters.name;
+            }
+        }
     }
 }
 

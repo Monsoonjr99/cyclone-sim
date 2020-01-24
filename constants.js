@@ -1,7 +1,7 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20200122a";
+const VERSION_NUMBER = "20200124a";
 
-const SAVE_FORMAT = 3;  // Format #3 in use starting in v20190823a
+const SAVE_FORMAT = 4;  // Format #4 in use starting in v20200124a
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -200,6 +200,7 @@ const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds a
 const FORMAT_WITH_SAVED_SEASONS = 1;
 const FORMAT_WITH_INDEXEDDB = 2;
 const FORMAT_WITH_IMPROVED_ENV = 3;
+const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 

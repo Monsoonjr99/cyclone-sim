@@ -1152,20 +1152,22 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             let txt;
-            if(se){
-                txt = "Depressions: " + se.depressions;
-                txt += "\nNamed storms: " + se.namedStorms;
-                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.hurricanes;
-                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + se.majors;
+            if(se instanceof Season){
+                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let c = stats.classificationCounters;
+                txt = "Depressions: " + c[-1];
+                txt += "\nNamed storms: " + c[0];
+                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[1];
+                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[3];
                 if(UI.viewBasin.hypoCats){
-                    txt += '\nCategory 5+: ' + se.c5s;
-                    txt += '\nCategory 8+: ' + se.c8s;
-                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + se.hypercanes;
-                }else txt += "\nCategory 5s: " + se.c5s;
-                txt += "\nTotal ACE: " + se.ACE;
-                txt += "\nDamage: " + damageDisplayNumber(se.damage);
-                txt += "\nDeaths: " + se.deaths;
-                txt += "\nLandfalls: " + se.landfalls;
+                    txt += '\nCategory 5+: ' + c[5];
+                    txt += '\nCategory 8+: ' + c[8];
+                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + c[11];
+                }else txt += "\nCategory 5s: " + c[5];
+                txt += "\nTotal ACE: " + stats.ACE;
+                txt += "\nDamage: " + damageDisplayNumber(stats.damage);
+                txt += "\nDeaths: " + stats.deaths;
+                txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
             text(txt,this.width/2,35+nh);

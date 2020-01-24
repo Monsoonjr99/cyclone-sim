@@ -343,6 +343,8 @@ class Storm{
         let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : sub;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type)&&land.inBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : false; // TC and in basin
         let isTropical = tropOrSub(type)&&land.inBasin(data.pos.x,data.pos.y); // TC and in basin
+        let stats = cSeason.stats(DEFAULT_MAIN_SUBBASIN);
+        let cCounters = stats.classificationCounters;
         if(!this.TC && isTropical){
             this.TC = true;
             this.formationTime = basin.tick;
@@ -351,7 +353,8 @@ class Storm{
                 let desig = sb.designationSystem.getNewNum();
                 if(desig) this.designations.primary.push(desig);
             }
-            cSeason.depressions++;
+            // cSeason.depressions++;
+            cCounters[-1]++;
 
             // this.designations.primary.push(new Designation([++cSeason.depressions,DEPRESSION_LETTER],basin.tick));
             this.peak = undefined;
@@ -363,7 +366,8 @@ class Storm{
                     let desig = sb.designationSystem.getNewName();
                     if(desig) this.designations.primary.push(desig);
                 }
-                cSeason.namedStorms++;
+                // cSeason.namedStorms++;
+                cCounters[0]++;
 
                 // let nameNum = cSeason.namedStorms++;
                 // if(basin.sequentialNameIndex>=0){
@@ -375,28 +379,34 @@ class Storm{
             }
             let a = pow(w,2)/ACE_DIVISOR;
             this.ACE += a;
-            cSeason.ACE += a;
+            // cSeason.ACE += a;
             this.ACE = round(this.ACE*ACE_DIVISOR)/ACE_DIVISOR;
-            cSeason.ACE = round(cSeason.ACE*ACE_DIVISOR)/ACE_DIVISOR;
+            stats.addACE(a);
+            // cSeason.ACE = round(cSeason.ACE*ACE_DIVISOR)/ACE_DIVISOR;
         }
         if(!this.hurricane && isTropical && cat>=1){
-            cSeason.hurricanes++;
+            // cSeason.hurricanes++;
+            cCounters[1]++;
             this.hurricane = true;
         }
         if(!this.major && isTropical && cat>=3){
-            cSeason.majors++;
+            // cSeason.majors++;
+            cCounters[3]++;
             this.major = true;
         }
         if(!this.c5 && isTropical && cat>=5){
-            cSeason.c5s++;
+            // cSeason.c5s++;
+            cCounters[5]++;
             this.c5 = true;
         }
         if(basin.hypoCats && !this.c8 && isTropical && cat>=8){
-            cSeason.c8s++;
+            // cSeason.c8s++;
+            cCounters[8]++;
             this.c8 = true;
         }
         if(basin.hypoCats && !this.hypercane && isTropical && cat>=11){
-            cSeason.hypercanes++;
+            // cSeason.hypercanes++;
+            cCounters[11]++;
             this.hypercane = true;
         }
         // if(isTropical){
@@ -579,7 +589,7 @@ class Storm{
                         if(desig) this.designations.primary.push(desig);
                     }
                     if(depNum!==undefined){
-                        let desig = sb.designationSystem.getNum(this.formationTime,depNum-1);
+                        let desig = sb.designationSystem.getNum(this.formationTime,depNum);
                         if(desig) this.designations.primary.push(desig);
                     }
                 }
@@ -996,7 +1006,7 @@ class ActiveSystem extends StormData{
             this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
             this.fetchStorm().deaths += ded;
             let ib = land.inBasin(x,y);
-            let s = basin.fetchSeason(-1,true,true);
+            let s = basin.fetchSeason(-1,true,true).stats(DEFAULT_MAIN_SUBBASIN);
             if(ib){
                 s.damage += dam;
                 s.damage = round(s.damage*100)/100;
