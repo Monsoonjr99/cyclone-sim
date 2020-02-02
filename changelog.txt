@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.1.1.1 (b20200202c):
+    * Fixed bug where storms that go off the edge of the map as an in-basin TC remain "currently active" and glitch the timeline after the season ends
 v0.1.1 (b20200202b):
     * Season timelines now pack better and take the width of the label into account
     * Timeline bars can now be clicked to bring up that storm's info in the side panel

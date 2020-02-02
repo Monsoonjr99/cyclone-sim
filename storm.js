@@ -1191,7 +1191,8 @@ class ActiveSystem extends StormData{
 
         if(this.pressure>1030 || (this.pos.x >= WIDTH || this.pos.x < 0 || this.pos.y >= HEIGHT || this.pos.y < 0) || this.interaction.kill){
             this.fetchStorm().deathTime = basin.tick;
-            if(this.fetchStorm().dissipationTime===undefined) this.fetchStorm().dissipationTime = basin.tick;
+            if(this.fetchStorm().TC && this.fetchStorm().dissipationTime===undefined) this.fetchStorm().dissipationTime = basin.tick;
+            if(this.fetchStorm().inBasinTC && this.fetchStorm().exitTime===undefined) this.fetchStorm().exitTime = basin.tick;
             this.fetchStorm().current = undefined;
             return;
         }
