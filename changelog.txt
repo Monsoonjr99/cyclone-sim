@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.1.1 (b20200202b):
+    * Season timelines now pack better and take the width of the label into account
+    * Timeline bars can now be clicked to bring up that storm's info in the side panel
+        > Individual storm timelines not yet added
+    * The "Jump to" button for TCs now jumps to when the storm entered the basin or formed rather than when it initially spawned as a disturbance
 v0.1 (b20200202a):
     + Added CPac and PAGASA designation-systems for newly-created EPac and WPac map type basins respectively
     * Sub-basins and designation-systems now fully implemented for storm statistics and naming

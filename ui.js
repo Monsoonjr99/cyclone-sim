@@ -1208,7 +1208,9 @@ UI.init = function(){
             let s = stormInfoPanel.target;
             let t;
             if(s instanceof Storm){
-                t = s.birthTime;
+                if(s.enterTime) t = s.enterTime;
+                else if(s.formationTime) t = s.formationTime;
+                else t = s.birthTime;
                 t = ceil(t/ADVISORY_TICKS)*ADVISORY_TICKS;
             }else{
                 t = UI.viewBasin.seasonTick(s);
@@ -1260,6 +1262,7 @@ UI.init = function(){
                 tb.months = eMoment.diff(sMoment,'months') + 1;
                 for(let t of TCs){
                     let part = {};
+                    part.storm = t;
                     part.segments = [];
                     // part.label = t.named ?
                     //     ({
@@ -1315,16 +1318,18 @@ UI.init = function(){
                     }
                     let rowFits;
                     part.row = -1;
-                    let labelZone = 20;
+                    textSize(12);
+                    let thisLabelZone = textWidth(part.label) + 6;
                     do{
                         part.row++;
                         rowFits = true;
                         for(let q=0;q<tb.parts.length;q++){
                             let p = tb.parts[q];
+                            let otherLabelZone = textWidth(p.label) + 6;
                             let thisS = part.segments[0].startX;
-                            let thisE = part.segments[part.segments.length-1].endX + labelZone;
+                            let thisE = part.segments[part.segments.length-1].endX + thisLabelZone;
                             let otherS = p.segments[0].startX;
-                            let otherE = p.segments[p.segments.length-1].endX + labelZone;
+                            let otherE = p.segments[p.segments.length-1].endX + otherLabelZone;
                             if(p.row===part.row){
                                 if(thisS>=otherS && thisS<=otherE ||
                                     thisE>=otherS && thisE<=otherE ||
@@ -1389,6 +1394,11 @@ UI.init = function(){
         for(let i=0;i<this.parts.length;i++){
             let p = this.parts[i];
             let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
+            else noStroke();
             for(let j=0;j<p.segments.length;j++){
                 let S = p.segments[j];
                 if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
@@ -1398,10 +1408,27 @@ UI.init = function(){
             let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
             fill(COLORS.UI.text);
             textAlign(LEFT,CENTER);
-            textSize(12);
-            text(p.label,labelLeftBound+5,y+5);
+            text(p.label,labelLeftBound+3,y+5);
         }
-    },true,false);
+    },function(){
+        let w = this.width;
+        let h = this.height;
+        let lBound = w*0.05;
+        let tBound = h*0.2;
+        let newTarget;
+        for(let i=this.parts.length-1;i>=0;i--){
+            let p = this.parts[i];
+            let y = tBound+p.row*15;
+            let mx = getMouseX()-this.getX();
+            let my = getMouseY()-this.getY();
+            textSize(12);
+            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10){
+                newTarget = p.storm;
+                break;
+            }
+        }
+        if(newTarget) stormInfoPanel.target = newTarget;
+    },false);
 
     timelineBox.months = 12;
     timelineBox.sMonth = 0;
