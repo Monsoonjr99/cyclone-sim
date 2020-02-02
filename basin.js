@@ -7,6 +7,15 @@ class Basin{
         this.activeSystems = [];
         this.subBasins = {};
         this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,DesignationSystem.convertFromOldNameList(NAME_LIST_PRESETS[opts.names || 0]));
+        let suf = ({
+            6: 'L',
+            7: 'E',
+            8: 'W',
+            10: 'U',
+            11: 'F',
+            12: ''
+        })[opts.mapType];   // Quick map-type-based suffix thing until name list presets get converted to designation systems
+        if(suf!==undefined) this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = suf;
         this.tick = 0;
         this.lastSaved = 0;
         this.godMode = opts.godMode;
@@ -19,6 +28,23 @@ class Basin{
         // this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
         this.hurricaneStrengthTerm = opts.hurrTerm || 0;
         this.mapType = opts.mapType || 0;
+        if(MAP_TYPES[this.mapType].special==='CPac'){
+            this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                suffix: 'C',
+                numCross: DESIG_CROSSMODE_KEEP,
+                mainLists: [NAME_LIST_PRESETS[2]],
+                nameCross: DESIG_CROSSMODE_KEEP
+            }));
+        }else if(MAP_TYPES[this.mapType].special==='PAGASA'){
+            this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                secondary: true,
+                numEnable: false,
+                mainLists: [NAME_LIST_PRESETS[4][0],NAME_LIST_PRESETS[4][1],NAME_LIST_PRESETS[4][2],NAME_LIST_PRESETS[4][3]],
+                annual: true,
+                anchor: 1963,
+                nameThresh: -1
+            }));
+        }
         this.seed = opts.seed || moment().valueOf();
         // this.envData = {};
         // this.envData.loadData = [];
@@ -154,6 +180,42 @@ class Basin{
         if(s instanceof SubBasin) return !s.outBasin();
         if(sub===DEFAULT_OUTBASIN_SUBBASIN) return false;
         return true;
+    }
+
+    *forSubBasinChain(id){
+        let s = this.subBasins[id];
+        if(s instanceof SubBasin) yield* s.forChain();
+        else{
+            yield id;
+            if(id!==DEFAULT_OUTBASIN_SUBBASIN) yield DEFAULT_MAIN_SUBBASIN;
+        }
+    }
+
+    relevantPrimaryDesignationSubBasins(id){
+        if(id !== undefined){
+            let numbering;
+            let naming;
+            let altPre;
+            let altSuf;
+            for(let subId of this.forSubBasinChain(id)){
+                let sb = this.subBasins[subId];
+                if(sb instanceof SubBasin && sb.designationSystem){
+                    let ds = sb.designationSystem;
+                    if(!ds.secondary){
+                        if(numbering===undefined){
+                            if(ds.numbering.enabled) numbering = subId;
+                            else{
+                                if(ds.numbering.prefix!==undefined) altPre = ds.numbering.prefix;
+                                if(ds.numbering.suffix!==undefined) altSuf = ds.numbering.suffix;
+                            }
+                        }
+                        if(naming===undefined && ds.naming.mainLists.length>0) naming = subId;
+                    }
+                }
+                if(numbering!==undefined && naming!==undefined) break;
+            }
+            return {numbering, naming, altPre, altSuf};
+        }
     }
 
     // getNewName(season,sNum){
@@ -687,9 +749,9 @@ class Season{
         val.systems = [];
         for(let i=0;i<this.systems.length;i++){
             let s = this.systems[i];
-            if(s instanceof StormRef && (forceStormRefs || s.fetch() && (s.fetch().TC || s.fetch().current))){
+            if(s instanceof StormRef && (forceStormRefs || s.fetch() && (s.fetch().inBasinTC || s.fetch().current))){
                 val.systems.push({isRef:true,val:s.save()});
-            }else if(s.TC || s.current){
+            }else if(s.inBasinTC || s.current){
                 val.systems.push({isRef:false,val:s.save()});
             }
         }
@@ -942,7 +1004,7 @@ class SeasonStats{
         this.classificationCounters = {};       // counters for systems by classification on the sub-basin's scale (e.g. tropical depression, tropical storm, etc.)
         // saffir-simpson (with hypothetical categories if applicable) initialization (new scales will get added in the future)
         let cats = this.basin.hypoCats ? 11 : 5;
-        for(let i=-1;i<=cats;i++) this.classificationCounters[i] = 0;
+        for(let i=SAFFIR_SIMPSON_INDEX;i<=cats;i++) this.classificationCounters[i] = 0;
 
         this.designationCounters = {};
         this.designationCounters.number = 0;    // counter for numerical designations

@@ -1129,13 +1129,22 @@ UI.init = function(){
             text(n,this.width/2,35);
             textSize(15);
             let txt = "";
-            let formTime;
-            let dissTime;
-            if(S.TC){
-                formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
-                dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
-                txt += "Dates active: " + formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
-            }else txt += "Dates active: N/A";
+            txt += 'Dates active: ';
+            if(S.inBasinTC){
+                let enterTime = formatDate(UI.viewBasin.tickMoment(S.enterTime));
+                let exitTime = formatDate(UI.viewBasin.tickMoment(S.exitTime));
+                txt += enterTime;
+                if(S.enterTime>S.formationTime) txt += ' (entered basin)';
+                txt += ' - ';
+                if(S.exitTime){
+                    txt += exitTime;
+                    if(!S.dissipationTime || S.exitTime<S.dissipationTime) txt += ' (left basin)';
+                }else txt += 'currently active';
+            }else if(S.TC){
+                let formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
+                let dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
+                txt += formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
+            }else txt += "N/A";
             txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
             txt += "\nWind speed @ peak: " + (S.peak ? S.peak.windSpeed + " kts" : "N/A");
             txt += "\nACE: " + S.ACE;
@@ -1225,17 +1234,17 @@ UI.init = function(){
                 let beginSeasonTick;
                 let endSeasonTick;
                 for(let sys of s.forSystems()){
-                    if(sys.TC && (UI.viewBasin.getSeason(sys.formationTime)===target || UI.viewBasin.getSeason(sys.formationTime)<target && (sys.dissipationTime===undefined || UI.viewBasin.getSeason(sys.dissipationTime-1)>=target))){
+                    if(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target))){
                         TCs.push(sys);
-                        let dissTime = sys.dissipationTime || UI.viewBasin.tick;
-                        if(beginSeasonTick===undefined || sys.formationTime<beginSeasonTick) beginSeasonTick = sys.formationTime;
+                        let dissTime = sys.exitTime || UI.viewBasin.tick;
+                        if(beginSeasonTick===undefined || sys.enterTime<beginSeasonTick) beginSeasonTick = sys.enterTime;
                         if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                     }
                 }
                 for(let n=0;n<TCs.length-1;n++){
                     let t0 = TCs[n];
                     let t1 = TCs[n+1];
-                    if(t0.formationTime>t1.formationTime){
+                    if(t0.enterTime>t1.enterTime){
                         TCs[n] = t1;
                         TCs[n+1] = t0;
                         if(n>0) n -= 2;

@@ -1,7 +1,8 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "20200124a";
+const VERSION_NUMBER = "0.1";
+const BUILD_NUMBER = "20200202a";
 
-const SAVE_FORMAT = 4;  // Format #4 in use starting in v20200124a
+const SAVE_FORMAT = 5;  // Format #5 in use starting in v0.1
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -85,11 +86,13 @@ const MAP_TYPES = [     // Land generation controls for different map types
     },
     {   // "Eastern Pacific" map type
         form: 'pixelmap',
-        path: 'resources/EasternPacific.png'
+        path: 'resources/EasternPacific.png',
+        special: 'CPac'
     },
     {   // "Western Pacific" map type
         form: 'pixelmap',
-        path: 'resources/WesternPacific.png'
+        path: 'resources/WesternPacific.png',
+        special: 'PAGASA'
     },
     {   // "Northern Indian Ocean" map type
         form: 'pixelmap',
@@ -135,7 +138,7 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists (old pre-Desi
     ["Akoni","Ema","Hone","Iona","Keli","Lala","Moke","Nolo","Olana","Pena","Ulana","Wale","Aka","Ekeka","Hene","Iolana","Keoni","Lino","Mele","Nona","Oliwa","Pama","Upana","Wene","Alika","Ele","Huko","Iopa","Kika","Lana","Maka","Neki","Omeka","Pewa","Unala","Wali","Ana","Ela","Halola","Iune","Kilo","Loke","Malia","Niala","Oho","Pali","Ulika","Walaka"],
     ["Damrey","Haikui","Kirogi","Yun-yeung","Koinu","Bolaven","Sanba","Jelawat","Ewiniar","Maliksi","Gaemi","Prapiroon","Maria","Son-Tinh","Ampil","Wukong","Jongdari","Shanshan","Yagi","Leepi","Bebinca","Rumbia","Soulik","Cimaron","Jebi","Mangkhut","Barijat","Trami","Kong-rey","Yutu","Toraji","Man-yi","Usagi","Pabuk","Wutip","Sepat","Mun","Danas","Nari","Wipha","Francisco","Lekima","Krosa","Bailu","Podul","Lingling","Kajiki","Faxai","Peipah","Tapah","Mitag","Hagibis","Neoguri","Bualoi","Matmo","Halong","Nakri","Fengshen","Kalmaegi","Fung-wong","Kammuri","Phanfone","Vongfong","Nuri","Sinlaku","Hagupit","Jangmi","Mekkhala","Higos","Bavi","Maysak","Haishen","Noul","Dolphin","Kujira","Chan-hom","Linfa","Nangka","Saudel","Molave","Goni","Atsani","Etau","Vamco","Krovanh","Dujuan","Surigae","Choi-wan","Koguma","Champi","In-fa","Cempaka","Nepartak","Lupit","Mirinae","Nida","Omais","Conson","Chanthu","Dianmu","Mindulle","Lionrock","Kompasu","Namtheun","Malou","Nyatoh","Rai","Malakas","Megi","Chaba","Aere","Songda","Trases","Mulan","Meari","Ma-on","Tokage","Hinnamnor","Muifa","Merbok","Nanmadol","Talas","Noru","Kulap","Roke","Sonca","Nesat","Haitang","Nalgae","Banyan","Yamaneko","Pakhar","Sanvu","Mawar","Guchol","Talim","Doksuri","Khanun","Lan","Saola"],
     [
-        ["Amang","Betty","Chedeng","Dodong","Egay","Falcon","Goring","Hanna","Ineng","Jenny","Kabayan","Liwayway","Marilyn","Nimfa","Onyok","Perla","Quiel","Ramon","Sarah","Tisoy"/* Retired */,"Ursula"/* Retired */,"Viring","Weng","Yoyoy","Zigzag","Abe","Berto","Charo","Dado","Estoy","Felion","Gening","Herman","Irma","Jaime"],
+        ["Amang","Betty","Chedeng","Dodong","Egay","Falcon","Goring","Hanna","Ineng","Jenny","Kabayan","Liwayway","Marilyn","Nimfa","Onyok","Perla","Quiel","Ramon","Sarah","Tamaraw","Ugong","Viring","Weng","Yoyoy","Zigzag","Abe","Berto","Charo","Dado","Estoy","Felion","Gening","Herman","Irma","Jaime"],
         ["Ambo","Butchoy","Carina","Dindo","Enteng","Ferdie","Gener","Helen","Igme","Julian","Kristine","Leon","Marce","Nika","Ofel","Pepito","Quinta","Rolly","Siony","Tonyo","Ulysses","Vicky","Warren","Yoyong","Zosimo","Alakdan","Baldo","Clara","Dencio","Estong","Felipe","Gomer","Heling","Ismael","Julio"],
         ["Auring","Bising","Crising","Dante","Emong","Fabian","Gorio","Huaning","Isang","Jolina","Kiko","Lannie","Maring","Nando","Odette","Paolo","Quedan","Ramil","Salome","Tino","Uwan","Verbena","Wilma","Yasmin","Zoraida","Alamid","Bruno","Conching","Dolor","Ernie","Florante","Gerardo","Hernan","Isko","Jerome"],
         ["Agaton","Basyang","Caloy","Domeng","Ester","Florita","Gardo","Henry","Inday","Josie","Karding","Luis","Maymay","Neneng","Obet","Paeng","Queenie","Rosal","Samuel","Tomas","Umberto","Venus","Waldo","Yayang","Zeny","Agila","Bagwis","Chito","Diego","Elena","Felino","Gunding","Harriet","Indang","Jessa"],
@@ -186,6 +189,12 @@ const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const DEFAULT_MAIN_SUBBASIN = 0;
 const DEFAULT_OUTBASIN_SUBBASIN = 255;
+const SAFFIR_SIMPSON_INDEX = -1;
+const DESIG_CROSSMODE_ALWAYS = 0;
+const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
+const DESIG_CROSSMODE_REGEN = 2;
+const DESIG_CROSSMODE_STRICT_REGEN = 3;
+const DESIG_CROSSMODE_KEEP = 4;
 // const ACTIVITY_MODE_NORMAL = 0;
 // const ACTIVITY_MODE_HYPER = 1;
 // const ACTIVITY_MODE_WILD = 2;
@@ -201,6 +210,7 @@ const FORMAT_WITH_SAVED_SEASONS = 1;
 const FORMAT_WITH_INDEXEDDB = 2;
 const FORMAT_WITH_IMPROVED_ENV = 3;
 const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
+const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 

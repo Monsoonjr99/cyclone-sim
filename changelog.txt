@@ -1,5 +1,13 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.1 (b20200202a):
+    + Added CPac and PAGASA designation-systems for newly-created EPac and WPac map type basins respectively
+    * Sub-basins and designation-systems now fully implemented for storm statistics and naming
+        > No UI yet to see statistics for sub-basins other than the main basin, but the stats are saved
+    * Tracks now include out-basin portions for in-basin storms
+    * Side-panel "Dates active" info for storms now notes if a storm has entered or left the basin
+    * First version with traditional version numbering
+    * Updated PAGASA name list preset with replacements for the 2019 typhoon season
 v20200124a:
     * Season stats now saved by sub-basin
         > Another step towards full sub-basin implementation
