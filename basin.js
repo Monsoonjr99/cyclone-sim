@@ -44,6 +44,18 @@ class Basin{
                 anchor: 1963,
                 nameThresh: -1
             }));
+        }else if(MAP_TYPES[this.mapType].special==='NIO'){
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.prefix = undefined;
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = undefined;
+            this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                prefix: 'ARB',
+                numCross: DESIG_CROSSMODE_KEEP
+            }));
+            this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                prefix: 'BOB',
+                numCross: DESIG_CROSSMODE_KEEP
+            }));
         }
         this.seed = opts.seed || moment().valueOf();
         // this.envData = {};

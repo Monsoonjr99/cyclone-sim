@@ -1,6 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.1.1.1";
-const BUILD_NUMBER = "20200202c";
+const VERSION_NUMBER = "0.1.2";
+const BUILD_NUMBER = "20200203a";
 
 const SAVE_FORMAT = 5;  // Format #5 in use starting in v0.1
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -96,7 +96,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
     },
     {   // "Northern Indian Ocean" map type
         form: 'pixelmap',
-        path: 'resources/NIO.png'
+        path: 'resources/NIO.png',
+        special: 'NIO'
     },
     {   // "Australian Region" map type
         form: 'pixelmap',

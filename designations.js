@@ -122,7 +122,10 @@ class DesignationSystem{
         // a suffix for numbered designations (e.g. "L" and "E")
         this.numbering.suffix = undefined;
         if(opts.suffix!==undefined) this.numbering.suffix = opts.suffix;
-        else if(this.numbering.enabled) this.numbering.suffix = DEPRESSION_LETTER;
+        else if(this.numbering.enabled){
+            if(opts.prefix!==undefined) this.numbering.suffix = '';
+            else this.numbering.suffix = DEPRESSION_LETTER;
+        }
         // scale category threshold for numbering a system (defaults to tropical depression)
         this.numbering.threshold = opts.numThresh===undefined ? -1 : opts.numThresh;
         // behavior for primary designations of basin-crossing systems [may need more testing]

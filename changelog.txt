@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.1.2 (b20200203a):
+    + Added ARB and BOB sub-basins to the North Indian Ocean map mode with numbering included
+    * Corrected the boundaries of the NIO basin (including in Western Pacific map mode)
 v0.1.1.1 (b20200202c):
     * Fixed bug where storms that go off the edge of the map as an in-basin TC remain "currently active" and glitch the timeline after the season ends
 v0.1.1 (b20200202b):
