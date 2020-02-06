@@ -6,7 +6,10 @@ class Basin{
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
         this.subBasins = {};
-        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,DesignationSystem.convertFromOldNameList(NAME_LIST_PRESETS[opts.names || 0]));
+        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,
+            Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0),
+            DesignationSystem.convertFromOldNameList(NAME_LIST_PRESETS[opts.names || 0])
+        );
         let suf = ({
             6: 'L',
             7: 'E',
@@ -21,12 +24,12 @@ class Basin{
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
-        this.hypoCats = opts.hypoCats;
+        // this.hypoCats = opts.hypoCats;
         if(opts.year!==undefined) this.startYear = opts.year;
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         // this.nameList = NAME_LIST_PRESETS[opts.names || 0];
         // this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-        this.hurricaneStrengthTerm = opts.hurrTerm || 0;
+        // this.hurricaneStrengthTerm = opts.hurrTerm || 0;
         this.mapType = opts.mapType || 0;
         if(MAP_TYPES[this.mapType].special==='CPac'){
             this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
@@ -42,7 +45,7 @@ class Basin{
                 mainLists: [NAME_LIST_PRESETS[4][0],NAME_LIST_PRESETS[4][1],NAME_LIST_PRESETS[4][2],NAME_LIST_PRESETS[4][3]],
                 annual: true,
                 anchor: 1963,
-                nameThresh: -1
+                nameThresh: 0
             }));
         }else if(MAP_TYPES[this.mapType].special==='NIO'){
             this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
@@ -230,6 +233,21 @@ class Basin{
         }
     }
 
+    getScale(sub){
+        let scale;
+        for(let subId of this.forSubBasinChain(sub)){
+            let sb = this.subBasins[subId];
+            if(sb instanceof SubBasin && sb.scale){
+                scale = sb.scale;
+                break;
+            }
+        }
+        if(scale) return scale;
+        let mainSB = this.subBasins[DEFAULT_MAIN_SUBBASIN];
+        if(mainSB instanceof SubBasin && mainSB.scale) return mainSB.scale;
+        return Scale.saffirSimpson;
+    }
+
     // getNewName(season,sNum){
     //     let list;
     //     if(this.sequentialNameIndex<0){
@@ -374,13 +392,13 @@ class Basin{
             b.flags |= this.SHem;
             for(let p of [
                 'mapType',
-                'hurricaneStrengthTerm',
+                // 'hurricaneStrengthTerm',
                 // 'sequentialNameIndex',
                 'tick',
                 'seed',
                 'startYear',
                 // 'nameList',
-                'hypoCats',
+                // 'hypoCats',
                 'actMode'
             ]) b[p] = this[p];
             return db.transaction('rw',db.saves,db.seasons,()=>{
@@ -475,6 +493,8 @@ class Basin{
                     let envData;
                     let oldNameList;
                     let oldSeqNameIndex;
+                    let oldHypoCats;
+                    let oldHurricaneStrengthTerm;
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
                         for(let a of obj.activeSystems){
@@ -495,17 +515,19 @@ class Basin{
                         oldhyper = flags & 1;
                         for(let p of [
                             'mapType',
-                            'hurricaneStrengthTerm',
+                            // 'hurricaneStrengthTerm',
                             // 'sequentialNameIndex',
                             'tick',
                             'seed',
                             'startYear',
                             // 'nameList',
-                            'hypoCats',
+                            // 'hypoCats',
                             'actMode'
                         ]) this[p] = obj[p];
                         if(obj.nameList) oldNameList = obj.nameList;
-                        if(obj.sequentialNameIndex) oldSeqNameIndex = obj.sequentialNameIndex;
+                        if(obj.sequentialNameIndex!==undefined) oldSeqNameIndex = obj.sequentialNameIndex;
+                        if(obj.hypoCats) oldHypoCats = obj.hypoCats;
+                        if(obj.hurricaneStrengthTerm!==undefined) oldHurricaneStrengthTerm = obj.hurricaneStrengthTerm;
                         this.lastSaved = this.tick;
                     }else{  // Format 1 backwards compatibility
                         // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
@@ -522,7 +544,7 @@ class Basin{
                             this.seed = arr.pop() || moment().valueOf();
                             this.lastSaved = this.tick = arr.pop() || 0;
                             oldSeqNameIndex = arr.pop();
-                            this.hurricaneStrengthTerm = arr.pop() || 0;
+                            oldHurricaneStrengthTerm = arr.pop() || 0;
                             this.mapType = arr.pop() || 0;
                             this.SHem = flags & 1;
                             flags >>= 1;
@@ -560,6 +582,15 @@ class Basin{
                         let desSys = DesignationSystem.convertFromOldNameList(oldNameList);
                         if(!desSys.naming.annual) desSys.naming.continuousNameIndex = oldSeqNameIndex;
                         this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,desSys);
+                    }
+                    if(data.format<FORMAT_WITH_SCALES){
+                        if(!this.subBasins[DEFAULT_MAIN_SUBBASIN]) this.addSubBasin(DEFAULT_MAIN_SUBBASIN);
+                        let sb = this.subBasins[DEFAULT_MAIN_SUBBASIN];
+                        if(sb instanceof SubBasin){
+                            if(oldHypoCats) sb.scale = Scale.extendedSaffirSimpson.clone();
+                            else sb.scale = Scale.saffirSimpson.clone();
+                            if(oldHurricaneStrengthTerm!==undefined) sb.scale.flavor(oldHurricaneStrengthTerm===0 ? 2 : oldHurricaneStrengthTerm-1);
+                        }
                     }
                 }else{
                     let t = 'Could not load basin';
@@ -963,14 +994,14 @@ class Season{
                     'landfalls'
                 ]) s[p] = oldStats[p] || 0;
                 let cCounters = s.classificationCounters;
-                cCounters[-1] = oldStats.depressions || 0;
-                cCounters[0] = oldStats.namedStorms || 0;
-                cCounters[1] = oldStats.hurricanes || 0;
-                cCounters[3] = oldStats.majors || 0;
-                cCounters[5] = oldStats.c5s || 0;
-                if(basin.hypoCats){
-                    cCounters[8] = oldStats.c8s || 0;
-                    cCounters[11] = oldStats.hypercanes || 0;
+                cCounters[0] = oldStats.depressions || 0;
+                cCounters[1] = oldStats.namedStorms || 0;
+                cCounters[2] = oldStats.hurricanes || 0;
+                cCounters[4] = oldStats.majors || 0;
+                cCounters[7] = oldStats.c5s || 0;
+                if(basin.getScale(DEFAULT_MAIN_SUBBASIN).classifications.length>8){
+                    cCounters[10] = oldStats.c8s || 0;
+                    cCounters[13] = oldStats.hypercanes || 0;
                 }
                 let dCounters = s.designationCounters;
                 dCounters.number = oldStats.depressions || 0;
@@ -1014,9 +1045,8 @@ class SeasonStats{
         this.landfalls = 0;
 
         this.classificationCounters = {};       // counters for systems by classification on the sub-basin's scale (e.g. tropical depression, tropical storm, etc.)
-        // saffir-simpson (with hypothetical categories if applicable) initialization (new scales will get added in the future)
-        let cats = this.basin.hypoCats ? 11 : 5;
-        for(let i=SAFFIR_SIMPSON_INDEX;i<=cats;i++) this.classificationCounters[i] = 0;
+        let clsns = this.basin.getScale(this.subBasinId).classifications.length;
+        for(let i=0;i<clsns;i++) this.classificationCounters[i] = 0;
 
         this.designationCounters = {};
         this.designationCounters.number = 0;    // counter for numerical designations
@@ -1058,7 +1088,13 @@ class SeasonStats{
                     'landfalls'
                 ]) this[p] = d[p];
                 if(d.cCounters){
-                    for(let i in d.cCounters) this.classificationCounters[i] = d.cCounters[i];
+                    for(let i in d.cCounters){
+                        if(data.format>=FORMAT_WITH_SCALES) this.classificationCounters[i] = d.cCounters[i];
+                        else{   // convert pre-v0.2 values
+                            this.classificationCounters[Scale.convertOldValue(+i)] = d.cCounters[i];
+                            if(i==='5') this.classificationCounters['6'] = d.cCounters[i];
+                        }
+                    }
                 }
             }
             if(d.dCounters){
@@ -1142,7 +1178,7 @@ class SubBasin{
                 'displayName'
             ]) this[p] = d[p];
             if(d.desSys) this.designationSystem = new DesignationSystem(this,data.sub(d.desSys));
-            if(d.scale) this.scale = new Scale(this.basin,data.sub(d.scale));
+            if(d.scale) this.scale = new Scale(data.sub(d.scale));
         }
     }
 }

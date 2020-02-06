@@ -166,24 +166,26 @@ class Storm{
         let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
         let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
-        let cat = data ? data.getCat() : null;
+        // let cat = data ? data.getCat() : null;
+        let clsnNom = data ? basin.getScale(land.getSubBasin(data.pos.x,data.pos.y)).getStormNom(data) : null;
         let hasbeenTC;
         if(t==='peak') hasbeenTC = this.TC;
         else if(t>=this.formationTime) hasbeenTC = true;
         else hasbeenTC = false;
-        let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
-        let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
+        // let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
+        // let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         let str = '';
         if(!name) str += 'Unnamed ';
         switch(ty){
             case TROP:
             case SUBTROP:
-                if(ty===SUBTROP) str += 'Subtropical ';
-                else if(cat<1) str += 'Tropical ';
-                if(cat>10) str += hypercaneTerm;
-                else if(cat>0) str += hurricaneTerm;
-                else if(cat>-1) str += 'Storm';
-                else str += 'Depression';
+                // if(ty===SUBTROP) str += 'Subtropical ';
+                // else if(cat<1) str += 'Tropical ';
+                // if(cat>10) str += hypercaneTerm;
+                // else if(cat>0) str += hurricaneTerm;
+                // else if(cat>-1) str += 'Storm';
+                // else str += 'Depression';
+                str += clsnNom;
                 if(name) str += ' ' + name;
                 break;
             case TROPWAVE:
@@ -226,11 +228,15 @@ class Storm{
             let basin = this.basin;
             let adv = this.getStormDataByTick(viewTick);
             let advC = this.getStormDataByTick(viewTick,true);
+            let advX = adv ? adv : advC;
             let pr = advC.pressure;
             let st = advC.windSpeed;
             let pos = advC.pos;
-            let cat = adv ? adv.getCat() : advC.getCat();
-            let ty = adv ? adv.type : advC.type;
+            // let cat = adv ? adv.getCat() : advC.getCat();
+            let sb = land.getSubBasin(advX.pos.x,advX.pos.y);
+            let scale = basin.getScale(sb);
+            let scaleIconData = scale.getIcon(advX);
+            let ty = advX.type;
             let name = this.getNameByTick(viewTick);
             this.rotation -= 0.03*pow(1.01,ktsToMph(min(270,st)));
             stormIcons.push();
@@ -243,7 +249,7 @@ class Storm{
                     stormIcons.textSize(18);
                     stormIcons.text("L",0,0);
                 }else stormIcons.ellipse(0,0,DIAMETER);
-                if(cat>=0 && tropOrSub(ty)){
+                if(tropOrSub(ty) && scaleIconData.arms){
                     stormIcons.push();
                     if(basin.SHem) stormIcons.scale(1,-1);
                     stormIcons.rotate(this.rotation);
@@ -255,10 +261,10 @@ class Storm{
                     stormIcons.pop();
                 }
             }
-            stormIcons.fill(getColor(cat,ty));
+            stormIcons.fill(scaleIconData.color);
             stormIcons.noStroke();
             if(ty!==EXTROP) stormIcons.ellipse(0,0,DIAMETER);
-            if(cat>=0 && tropOrSub(ty)){
+            if(tropOrSub(ty) && scaleIconData.arms){
                 stormIcons.push();
                 if(basin.SHem) stormIcons.scale(1,-1);
                 stormIcons.rotate(this.rotation);
@@ -273,16 +279,11 @@ class Storm{
                 stormIcons.fill(COLORS.storm.extL);
                 stormIcons.textSize(18);
             }else{
-                stormIcons.fill(cat>7 ? 240 : 0);
+                stormIcons.fill(brightness(scaleIconData.color)<75 ? 240 : 0);
                 stormIcons.textSize(12);
             }
             stormIcons.textStyle(NORMAL);
-            stormIcons.text(tropOrSub(ty) ?
-                cat>0 ? (ty===SUBTROP ? "S" : "") + (cat>10 ? 'HY' : cat) :
-                cat===0 ? ty===SUBTROP ? "SS" : "S" :
-                ty===SUBTROP ? "SD" :
-                "D" :
-            "L", 0, 0);
+            stormIcons.text(tropOrSub(ty) ? scaleIconData.symbol : "L", 0, 0);
             stormIcons.fill(0);
             if(simSettings.showStrength){
                 stormIcons.textSize(10);
@@ -304,7 +305,8 @@ class Storm{
                     if(this.record.length>1 && (selectedStorm===this || selectedStorm===undefined)){
                         let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
                         let adv = this.record[this.record.length-2];
-                        let col = getColor(adv.getCat(),adv.type);
+                        // let col = getColor(adv.getCat(),adv.type);
+                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[this.record.length-1].pos;
@@ -318,7 +320,8 @@ class Storm{
                             if(t>=this.dissipationTime) break;
                         }
                         let adv = this.record[n];
-                        let col = getColor(adv.getCat(),adv.type);
+                        // let col = getColor(adv.getCat(),adv.type);
+                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[n+1].pos;
@@ -341,7 +344,7 @@ class Storm{
         let w = data.windSpeed;
         let p = data.pressure;
         let type = data.type;
-        let cat = data.getCat();
+        // let cat = data.getCat();
         let year = basin.getSeason(-1);
         let cSeason = basin.fetchSeason(year,false,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
@@ -378,20 +381,20 @@ class Storm{
             if(wasTCB4Update) refreshTracks(true);
         }
         let newACE = 0;
-        if(cat>=0 && (inBasinTropical || (isTropical && !this.inBasinTC))){
+        if(w>=ACE_WIND_THRESHOLD && (inBasinTropical || (isTropical && !this.inBasinTC))){
             newACE = pow(w,2)/ACE_DIVISOR;
             this.ACE += newACE;
             this.ACE = round(this.ACE*ACE_DIVISOR)/ACE_DIVISOR;
         }
         for(let subId of basin.forSubBasinChain(sub)){
             let sb = basin.subBasins[subId];
-            let classification = data.getCat(); // temporary until scales added
+            let classification = basin.getScale(subId).get(data);
             // update classification counters for sub-basin
             if(basin.subInBasin(subId)){
                 let stats = cSeason.stats(subId);
                 let cCounters = stats.classificationCounters;
                 if(isTropical){
-                    for(let i=SAFFIR_SIMPSON_INDEX;i<=classification;i++){
+                    for(let i=0;i<=classification;i++){
                         if(!this.subBasinData(subId,year,i,true)) cCounters[i]++;
                     }
                 }
@@ -435,7 +438,6 @@ class Storm{
                     continue;
                 }
                 ds = namingDS.naming;
-                classification = data.getCat(); // replace with classification from namingDS.scale
                 flag = 'name';
             }else{
                 subId = primaryDesSBs.numbering;
@@ -444,9 +446,9 @@ class Storm{
                     continue;
                 }
                 ds = numberingDS.numbering;
-                classification = data.getCat(); // replace with classification from numberingSB.scale
                 flag = 'num';
             }
+            classification = basin.getScale(subId).get(data);
             let altPre = primaryDesSBs.altPre;
             let altSuf = primaryDesSBs.altSuf;
             if(isTropical && classification>=ds.threshold && !this.subBasinData(subId,year,flag,true)){
@@ -701,7 +703,28 @@ class Storm{
                 if(obj.depressionNum!==undefined) depNum = obj.depressionNum;
                 if(obj.nameNum!==undefined) nameNum = obj.nameNum;
                 if(obj.designations!==undefined) designations = obj.designations;
-                if(obj.sbData) this.sbData = obj.sbData;
+                if(obj.sbData){
+                    this.sbData = obj.sbData;
+                    if(loadData.format<FORMAT_WITH_SCALES){     // convert from pre-v0.2 values
+                        for(let sub in this.sbData){
+                            let l = this.sbData[sub].classLog;
+                            if(l){
+                                for(let s in l){
+                                    let l1 = l[s];
+                                    let l2 = {};
+                                    for(let c in l1){
+                                        let n = +c;
+                                        if(l1[c]!==undefined){
+                                            l2[Scale.convertOldValue(n)] = l1[c];
+                                            if(c==='5') l2['6'] = l1[c];
+                                        }
+                                    }
+                                    l[s] = l2;
+                                }
+                            }
+                        }
+                    }
+                }
             }else{
                 let data = loadData.value;
                 data = data.split(".");
@@ -731,14 +754,15 @@ class Storm{
                 if(inBasinTrop && !this.enterTime) this.enterTime = t;
                 if(inBasinTrop && this.exitTime) this.exitTime = undefined;
                 if(!inBasinTrop && this.enterTime && !this.exitTime) this.exitTime = t;
-                let cat = d.getCat();
-                if(inBasinTrop && !namedTime && cat>=0) namedTime = t;  // backwards-compatibility name conversion
+                // let cat = d.getCat();
+                let clsn = Scale.extendedSaffirSimpson.get(d);  // hardcoded to extended Saffir-Simpson since this is only used for backwards-compatibility
+                if(inBasinTrop && !namedTime && clsn>=1) namedTime = t;  // backwards-compatibility name conversion
                 if(loadData.format<FORMAT_WITH_STORM_SUBBASIN_DATA && inBasinTrop){
                     for(let subId of basin.forSubBasinChain(sub)){
-                        for(let j=SAFFIR_SIMPSON_INDEX;j<=cat;j++) this.subBasinData(subId,yr,j,true);
+                        for(let j=0;j<=clsn;j++) this.subBasinData(subId,yr,j,true);
                     }
                     this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'num',true);
-                    if(cat>=0) this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'name',true);
+                    if(clsn>=1) this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'name',true);
                 }
                 if(trop && !this.TC){
                     this.TC = true;
@@ -759,7 +783,7 @@ class Storm{
                     if(!this.peak) this.peak = d;
                     else if(d.pressure<this.peak.pressure) this.peak = d;
                 }
-                if(cat>=0 && (inBasinTrop || (trop && !this.inBasinTC))){
+                if(d.windSpeed>=ACE_WIND_THRESHOLD && (inBasinTrop || (trop && !this.inBasinTC))){
                     this.ACE *= ACE_DIVISOR;
                     this.ACE += pow(d.windSpeed,2);
                     this.ACE /= ACE_DIVISOR;
@@ -883,22 +907,22 @@ class StormData{
         }
     }
 
-    getCat(){
-        let w = this.windSpeed;
-        if(w<34) return -1;
-        if(w<64) return 0;
-        if(w<83) return 1;
-        if(w<96) return 2;
-        if(w<113) return 3;
-        if(w<137) return 4;
-        if(!this.basin.hypoCats || w<165) return 5;
-        if(w<198) return 6;
-        if(w<255) return 7;
-        if(w<318) return 8;
-        if(w<378) return 9;
-        if(w<434) return 10;
-        return 11;
-    }
+    // getCat(){
+    //     let w = this.windSpeed;
+    //     if(w<34) return -1;
+    //     if(w<64) return 0;
+    //     if(w<83) return 1;
+    //     if(w<96) return 2;
+    //     if(w<113) return 3;
+    //     if(w<137) return 4;
+    //     if(!this.basin.hypoCats || w<165) return 5;
+    //     if(w<198) return 6;
+    //     if(w<255) return 7;
+    //     if(w<318) return 8;
+    //     if(w<378) return 9;
+    //     if(w<434) return 10;
+    //     return 11;
+    // }
 
     save(inArr){
         // new format
@@ -1404,16 +1428,16 @@ function tropOrSub(ty){
     return ty===TROP || ty===SUBTROP;
 }
 
-function getColor(c,ty){
-    switch(ty){
-        case EXTROP:
-            return COLORS.storm[EXTROP];
-        case SUBTROP:
-            if(c<1) return COLORS.storm[SUBTROP][c];
-            return COLORS.storm[TROP][c];
-        case TROP:
-            return COLORS.storm[TROP][c];
-        case TROPWAVE:
-            return COLORS.storm[TROPWAVE];
-    }
-}
+// function getColor(c,ty){
+//     switch(ty){
+//         case EXTROP:
+//             return COLORS.storm[EXTROP];
+//         case SUBTROP:
+//             if(c<1) return COLORS.storm[SUBTROP][c];
+//             return COLORS.storm[TROP][c];
+//         case TROP:
+//             return COLORS.storm[TROP][c];
+//         case TROPWAVE:
+//             return COLORS.storm[TROPWAVE];
+//     }
+// }

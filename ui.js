@@ -358,17 +358,17 @@ UI.init = function(){
                     g.sType = "4";
                 }else if(key === "5"){
                     g.sType = "5";
-                }else if(key === "6" && basin.hypoCats){
+                }else if(key === "6" /* && basin.hypoCats */){
                     g.sType = "6";
-                }else if(key === "7" && basin.hypoCats){
+                }else if(key === "7" /* && basin.hypoCats */){
                     g.sType = "7";
-                }else if(key === "8" && basin.hypoCats){
+                }else if(key === "8" /* && basin.hypoCats */){
                     g.sType = "8";
-                }else if(key === "9" && basin.hypoCats){
+                }else if(key === "9" /* && basin.hypoCats */){
                     g.sType = "9";
-                }else if(key === "0" && basin.hypoCats){
+                }else if(key === "0" /* && basin.hypoCats */){
                     g.sType = "10";
-                }else if((key === "y" || key === "Y") && basin.hypoCats){
+                }else if((key === "y" || key === "Y") /* && basin.hypoCats */){
                     g.sType = "y";
                 }else if(key === "x" || key === "X"){
                     g.sType = "x";
@@ -455,9 +455,10 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let basinCreationMenuButtonSpacing = 40;
+    let basinCreationMenuButtonSpacing = 36;
+    let basinCreationMenuButtonHeights = 28;
 
-    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,30,function(s){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,basinCreationMenuButtonHeights,function(s){   // hemisphere selector
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
@@ -471,12 +472,12 @@ UI.init = function(){
         }
     });
 
-    let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){ // Year selector
+    let yearsel = hemsel.append(false,0,basinCreationMenuButtonSpacing,0,basinCreationMenuButtonHeights,function(s){ // Year selector
         textAlign(LEFT,CENTER);
-        text("Starting year: ",0,15);
+        text("Starting year: ",0,basinCreationMenuButtonHeights/2);
     });
 
-    yearsel.append(false,110,0,190,30,function(s){
+    yearsel.append(false,110,0,190,basinCreationMenuButtonHeights,function(s){
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -501,7 +502,7 @@ UI.init = function(){
         if(yearselbox.showing) yearselbox.clicked();
     });
 
-    yearselbox = yearsel.append(false,110,0,190,30,[18,16,function(){
+    yearselbox = yearsel.append(false,110,0,190,basinCreationMenuButtonHeights,[18,16,function(){
         if(yearselbox.showing){
             let v = yearselbox.value;
             let m = v.match(/^\s*(\d+)(\s+B\.?C\.?(?:E\.?)?)?(?:\s*-\s*(\d+))?(?:\s+(?:(B\.?C\.?(?:E\.?)?)|A\.?D\.?|C\.?E\.?))?\s*$/i);
@@ -542,7 +543,7 @@ UI.init = function(){
     //     }else newBasinSettings.year--;
     // });
 
-    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Simulation mode selector
+    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
         mode = SIMULATION_MODES[mode];
         s.button('Simulation Mode: '+mode,true);
@@ -551,13 +552,46 @@ UI.init = function(){
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
         newBasinSettings.actMode %= SIMULATION_MODES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){    // Hypothetical categories selector
-        let hypo = newBasinSettings.hypoCats ? "Enabled" : "Disabled";
-        s.button('Hypothetical Categories: '+hypo,true);
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){    // Scale selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale].displayName;
+        s.button('Scale: '+scale,true);
     },function(){
         yearselbox.enterFunc();
-        newBasinSettings.hypoCats = !newBasinSettings.hypoCats;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Name list selector
+        if(newBasinSettings.scale===undefined) newBasinSettings.scale = 0;
+        newBasinSettings.scale++;
+        newBasinSettings.scale %= Scale.presetScales.length;
+        newBasinSettings.scaleFlavor = 0;
+        newBasinSettings.scaleColorScheme = 0;
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        let flavor = newBasinSettings.scaleFlavor || 0;
+        let grey = scale.flavorDisplayNames.length<2;
+        s.button('Scale Flavor: '+(scale.flavorDisplayNames[flavor] || 'N/A'),true,18,grey);
+    },function(){
+        yearselbox.enterFunc();
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        if(scale.flavorDisplayNames.length<2) return;
+        if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
+        newBasinSettings.scaleFlavor++;
+        newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        let scheme = newBasinSettings.scaleColorScheme || 0;
+        let grey = scale.colorSchemeDisplayNames.length<2;
+        s.button('Scale Color Scheme: '+(scale.colorSchemeDisplayNames[scheme] || 'N/A'),true,18,grey);
+    },function(){
+        yearselbox.enterFunc();
+        let scale = newBasinSettings.scale || 0;
+        scale = Scale.presetScales[scale];
+        if(scale.colorSchemeDisplayNames.length<2) return;
+        if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
+        newBasinSettings.scaleColorScheme++;
+        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Name list selector
         let list = newBasinSettings.names || 0;
         list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby","Periodic Table","Periodic Table (Annual)"][list];
         s.button('Name List: '+list,true);
@@ -566,15 +600,7 @@ UI.init = function(){
         if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
         newBasinSettings.names++;
         newBasinSettings.names %= NAME_LIST_PRESETS.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Hurricane term selector
-        let term = newBasinSettings.hurrTerm || 0;
-        s.button('Hurricane-Strength Term: '+HURRICANE_STRENGTH_TERM[term],true);
-    },function(){
-        yearselbox.enterFunc();
-        if(newBasinSettings.hurrTerm===undefined) newBasinSettings.hurrTerm = 0;
-        newBasinSettings.hurrTerm++;
-        newBasinSettings.hurrTerm %= HURRICANE_STRENGTH_TERM.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // Map type Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Map type Selector
         let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
@@ -582,7 +608,7 @@ UI.init = function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,30,function(s){     // God mode Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // God mode Selector
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
         s.button('God Mode: '+gMode,true);
     },function(){
@@ -590,14 +616,14 @@ UI.init = function(){
         newBasinSettings.godMode = !newBasinSettings.godMode;
     });
 
-    let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,30,function(s){
+    let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,basinCreationMenuButtonHeights,function(s){
         textAlign(LEFT,CENTER);
-        text('Seed:',0,15);
-    }).append(false,50,0,250,30,[18,16],function(){
+        text('Seed:',0,basinCreationMenuButtonHeights/2);
+    }).append(false,50,0,250,basinCreationMenuButtonHeights,[18,16],function(){
         yearselbox.enterFunc();
     });
 
-    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){    // "Start" button
+    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,basinCreationMenuButtonHeights,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
@@ -616,10 +642,11 @@ UI.init = function(){
             'seed',
             'actMode',
             'names',
-            'hurrTerm',
             'mapType',
             'godMode',
-            'hypoCats'
+            'scale',
+            'scaleFlavor',
+            'scaleColorScheme'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false,opts);
         newBasinSettings = {};
@@ -627,7 +654,7 @@ UI.init = function(){
             basin.mount();
         });
         basinCreationMenu.hide();
-    }).append(false,0,40,300,30,function(s){ // "Cancel" button
+    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
     },function(){
         yearselbox.value = '';
@@ -1164,16 +1191,19 @@ UI.init = function(){
             if(se instanceof Season){
                 let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
                 let c = stats.classificationCounters;
-                txt = "Depressions: " + c[-1];
-                txt += "\nNamed storms: " + c[0];
-                txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[1];
-                txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[3];
-                if(UI.viewBasin.hypoCats){
-                    txt += '\nCategory 5+: ' + c[5];
-                    txt += '\nCategory 8+: ' + c[8];
-                    txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + c[11];
-                }else txt += "\nCategory 5s: " + c[5];
-                txt += "\nTotal ACE: " + stats.ACE;
+                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                txt = '';
+                for(let {statName, cNumber} of scale.statDisplay()) txt += statName + ': ' + c[cNumber] + '\n';
+                // txt = "Depressions: " + c[-1];
+                // txt += "\nNamed storms: " + c[0];
+                // txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[1];
+                // txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[3];
+                // if(UI.viewBasin.hypoCats){
+                //     txt += '\nCategory 5+: ' + c[5];
+                //     txt += '\nCategory 8+: ' + c[8];
+                //     txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + c[11];
+                // }else txt += "\nCategory 5s: " + c[5];
+                txt += "Total ACE: " + stats.ACE;
                 txt += "\nDamage: " + damageDisplayNumber(stats.damage);
                 txt += "\nDeaths: " + stats.deaths;
                 txt += "\nLandfalls: " + stats.landfalls;
@@ -1298,15 +1328,16 @@ UI.init = function(){
                         let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                         let d = t.record[q];
                         if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                            let cat = d.getCat();
+                            // let cat = d.getCat();
+                            let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
                             if(!aSegment){
                                 aSegment = {};
                                 part.segments.push(aSegment);
                                 aSegment.startTick = rt;
-                                aSegment.maxCat = cat;
+                                aSegment.maxCat = clsn;
                                 aSegment.fullyTrop = (d.type===TROP);
                             }
-                            if(cat > aSegment.maxCat) aSegment.maxCat = cat;
+                            if(clsn > aSegment.maxCat) aSegment.maxCat = clsn;
                             aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
                             aSegment.endTick = rt;
                         }else if(aSegment) aSegment = undefined;
@@ -1401,8 +1432,9 @@ UI.init = function(){
             else noStroke();
             for(let j=0;j<p.segments.length;j++){
                 let S = p.segments[j];
-                if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
-                else fill(getColor(S.maxCat,SUBTROP));
+                // if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
+                // else fill(getColor(S.maxCat,SUBTROP));
+                fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
                 rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
             }
             let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;

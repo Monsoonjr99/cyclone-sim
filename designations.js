@@ -127,7 +127,7 @@ class DesignationSystem{
             else this.numbering.suffix = DEPRESSION_LETTER;
         }
         // scale category threshold for numbering a system (defaults to tropical depression)
-        this.numbering.threshold = opts.numThresh===undefined ? -1 : opts.numThresh;
+        this.numbering.threshold = opts.numThresh===undefined ? 0 : opts.numThresh;
         // behavior for primary designations of basin-crossing systems [may need more testing]
         // 0 = always redesignate (use previous designation from this sub-basin if exists)
         // 1 = strictly redesignate (use new designation even if a previous one from this sub-basin exists)
@@ -152,7 +152,7 @@ class DesignationSystem{
         // counter for continuous name assignment (only applicable to continuous naming)
         this.naming.continuousNameIndex = opts.indexOffset || 0;
         // scale category threshold for naming a system (defaults to tropical storm)
-        this.naming.threshold = opts.nameThresh || 0;
+        this.naming.threshold = opts.nameThresh===undefined ? 1 : opts.nameThresh;
         // behavior for primary designations of basin-crossing systems (see above)
         this.naming.crossingMode = opts.nameCross===undefined ? DESIG_CROSSMODE_STRICT_REGEN : opts.nameCross;
         if(data instanceof LoadData) this.load(data);
@@ -298,6 +298,10 @@ class DesignationSystem{
             for(let i=Namg.auxiliaryLists.length-1;i>=0;i--){
                 let a = Namg.auxiliaryLists[i];
                 if(a.length===1 && a[0]==="Unnamed") Namg.auxiliaryLists.splice(i,1);
+            }
+            if(data.format<FORMAT_WITH_SCALES){ // convert thresholds from pre-v0.2 values
+                Numg.threshold = Scale.convertOldValue(Numg.threshold);
+                Namg.threshold = Scale.convertOldValue(Namg.threshold);
             }
         }
     }

@@ -1,5 +1,16 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2 (b20200206a):
+    + Added scale system
+        > replaces old hardcoded Saffir-Simpson scale with something more flexible and customizable
+        > sub-basin-specific and saved/loaded with basin
+        > allows for different color schemes and "flavors" of nomenclature
+    + Added "Wiki" color scheme
+        > uses Wikipedia category colors for storm icons/tracks/timeline bars
+        > C6+ colors in Extended Saffir-Simpson scale sourced from Hypothetical Hurricanes Wiki
+        > can be accessed with the "Scale Color Scheme" option in New Basin Settings
+    * "Hypothetical Categories" option replaced with Extended Saffir-Simpson scale
+    * "Hurricane-Strength Term" option replaced with "Scale Flavor" option
 v0.1.2 (b20200203a):
     + Added ARB and BOB sub-basins to the North Indian Ocean map mode with numbering included
     * Corrected the boundaries of the NIO basin (including in Western Pacific map mode)

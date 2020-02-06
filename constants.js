@@ -1,8 +1,8 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.1.2";
-const BUILD_NUMBER = "20200203a";
+const VERSION_NUMBER = "0.2";
+const BUILD_NUMBER = "20200206a";
 
-const SAVE_FORMAT = 5;  // Format #5 in use starting in v0.1
+const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -172,8 +172,8 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists (old pre-Desi
         ["Unnamed"]
     ]
 ];
-const HURRICANE_STRENGTH_TERM = ["Cyclone","Hurricane","Typhoon"];
-const HYPERCANE_STRENGTH_TERM = ["Hyperclone","Hypercane","Hyperphoon"];
+// const HURRICANE_STRENGTH_TERM = ["Cyclone","Hurricane","Typhoon"];
+// const HYPERCANE_STRENGTH_TERM = ["Hyperclone","Hypercane","Hyperphoon"];
 const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
 const KEY_F11 = 122;
@@ -183,6 +183,7 @@ const MAX_SNOW_LAYERS = 50;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
 const NC_OFFSET_RANDOM_FACTOR = 4096;
+const ACE_WIND_THRESHOLD = 34;
 const ACE_DIVISOR = 10000;
 const DAMAGE_DIVISOR = 1000;
 const ENVDATA_NOT_FOUND_ERROR = "envdata-not-found";
@@ -190,12 +191,15 @@ const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const DEFAULT_MAIN_SUBBASIN = 0;
 const DEFAULT_OUTBASIN_SUBBASIN = 255;
-const SAFFIR_SIMPSON_INDEX = -1;
+// const SAFFIR_SIMPSON_INDEX = -1;
 const DESIG_CROSSMODE_ALWAYS = 0;
 const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
 const DESIG_CROSSMODE_REGEN = 2;
 const DESIG_CROSSMODE_STRICT_REGEN = 3;
 const DESIG_CROSSMODE_KEEP = 4;
+const SCALE_MEASURE_ONE_MIN_WIND = 0;
+const SCALE_MEASURE_TEN_MIN_WIND = 1;
+const SCALE_MEASURE_PRESSURE = 2;
 // const ACTIVITY_MODE_NORMAL = 0;
 // const ACTIVITY_MODE_HYPER = 1;
 // const ACTIVITY_MODE_WILD = 2;
@@ -212,6 +216,7 @@ const FORMAT_WITH_INDEXEDDB = 2;
 const FORMAT_WITH_IMPROVED_ENV = 3;
 const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
 const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
+const FORMAT_WITH_SCALES = 6;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
@@ -271,23 +276,23 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.storm = {};
     COLORS.storm[EXTROP] = color(220,220,220);
     COLORS.storm[TROPWAVE] = color(130,130,240);
-    COLORS.storm[TROP] = {};
-    COLORS.storm[TROP][-1] = color(20,20,230);
-    COLORS.storm[TROP][0] = color(20,230,20);
-    COLORS.storm[TROP][1] = color(230,230,20);
-    COLORS.storm[TROP][2] = color(240,170,20);
-    COLORS.storm[TROP][3] = color(240,20,20);
-    COLORS.storm[TROP][4] = color(250,40,250);
-    COLORS.storm[TROP][5] = color(250,140,250);
-    COLORS.storm[TROP][6] = color(250,200,250);
-    COLORS.storm[TROP][7] = color(240,90,90);
-    COLORS.storm[TROP][8] = color(190,60,60);
-    COLORS.storm[TROP][9] = color(130,10,10);
-    COLORS.storm[TROP][10] = color(120,10,120);
-    COLORS.storm[TROP][11] = color(20,0,140);
-    COLORS.storm[SUBTROP] = {};
-    COLORS.storm[SUBTROP][-1] = color(60,60,220);
-    COLORS.storm[SUBTROP][0] = color(60,220,60);
+    // COLORS.storm[TROP] = {};
+    // COLORS.storm[TROP][-1] = color(20,20,230);
+    // COLORS.storm[TROP][0] = color(20,230,20);
+    // COLORS.storm[TROP][1] = color(230,230,20);
+    // COLORS.storm[TROP][2] = color(240,170,20);
+    // COLORS.storm[TROP][3] = color(240,20,20);
+    // COLORS.storm[TROP][4] = color(250,40,250);
+    // COLORS.storm[TROP][5] = color(250,140,250);
+    // COLORS.storm[TROP][6] = color(250,200,250);
+    // COLORS.storm[TROP][7] = color(240,90,90);
+    // COLORS.storm[TROP][8] = color(190,60,60);
+    // COLORS.storm[TROP][9] = color(130,10,10);
+    // COLORS.storm[TROP][10] = color(120,10,120);
+    // COLORS.storm[TROP][11] = color(20,0,140);
+    // COLORS.storm[SUBTROP] = {};
+    // COLORS.storm[SUBTROP][-1] = color(60,60,220);
+    // COLORS.storm[SUBTROP][0] = color(60,220,60);
     COLORS.storm.extL = "red";
     COLORS.land = [];
     COLORS.land.push([0.85, color(190,190,190)]);
