@@ -107,7 +107,7 @@ class Designation{
 }
 
 class DesignationSystem{
-    constructor(subBasin,data,opts/*,secondary,numEnable,numPrefix,numSuffix,numThresh,mainLists,auxLists,repLists,annual,anchor,nameThresh*/){
+    constructor(subBasin,data,opts){
         this.subBasin = subBasin instanceof SubBasin && subBasin;
         if(!opts) opts = {};
         // if designations should be secondary instead of primary

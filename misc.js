@@ -42,7 +42,6 @@ function toggleFullscreen(){
             scaler = displayWidth/WIDTH;
             rescaleCanvases(scaler);
             if(UI.viewBasin){
-                // land.clear();
                 refreshTracks(true);
                 UI.viewBasin.env.displayLayer();
             }
@@ -214,7 +213,6 @@ document.onfullscreenchange = function(){
         scaler = 1;
         rescaleCanvases(scaler);
         if(UI.viewBasin){
-            // land.clear();
             refreshTracks(true);
             UI.viewBasin.env.displayLayer();
         }

@@ -1,5 +1,5 @@
 class Basin{
-    constructor(load,opts/*,year,SHem,godMode,hyper,seed,names,hurrTerm,mapType*/){
+    constructor(load,opts){
         if(!opts) opts = {};
         this.seasons = {};
         this.seasonsBusyLoading = {};
@@ -24,12 +24,8 @@ class Basin{
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
-        // this.hypoCats = opts.hypoCats;
         if(opts.year!==undefined) this.startYear = opts.year;
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
-        // this.nameList = NAME_LIST_PRESETS[opts.names || 0];
-        // this.sequentialNameIndex = typeof this.nameList[0] === "string" ? 0 : -1;
-        // this.hurricaneStrengthTerm = opts.hurrTerm || 0;
         this.mapType = opts.mapType || 0;
         if(MAP_TYPES[this.mapType].special==='CPac'){
             this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
@@ -61,8 +57,6 @@ class Basin{
             }));
         }
         this.seed = opts.seed || moment().valueOf();
-        // this.envData = {};
-        // this.envData.loadData = [];
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if(load) this.initialized = this.load();
@@ -115,31 +109,27 @@ class Basin{
         }
         if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
         this.env.wobble();    // random change in environment for future forecast realism
-        for(let i=0;i<this.activeSystems.length;i++){
+        for(let i=0;i<this.activeSystems.length;i++){   // update active storm systems
             for(let j=i+1;j<this.activeSystems.length;j++){
                 this.activeSystems[i].interact(this.activeSystems[j],true);
             }
             this.activeSystems[i].update();
         }
-        SPAWN_RULES[this.actMode](this);
-        // if(this.actMode===ACTIVITY_MODE_NORMAL && random()<0.015*sq((seasonalSine(this.tick)+1)/2)) this.spawn(false);    // tropical waves (normal mode)
-        // if((this.actMode===ACTIVITY_MODE_HYPER || this.actMode===ACTIVITY_MODE_MEGABLOBS) && random()<(0.013*sq((seasonalSine(this.tick)+1)/2)+0.002)) this.spawn(false);    // tropical waves (hyper and megablobs modes)
-        // if(this.actMode===ACTIVITY_MODE_WILD && random()<0.015) this.spawn(false,{x:random(0,WIDTH),y:random(0.2*HEIGHT,0.9*HEIGHT),sType:'l'}); // tropical waves (wild mode)
-        // if(random()<0.01-0.002*seasonalSine(this.tick)) this.spawn(true);    // extratropical cyclones
+        SPAWN_RULES[this.actMode](this);    // spawn new storm systems
         let stormKilled = false;
-        for(let i=this.activeSystems.length-1;i>=0;i--){
+        for(let i=this.activeSystems.length-1;i>=0;i--){    // remove dead storm systems from activeSystems array
             if(!this.activeSystems[i].fetchStorm().current){
                 this.activeSystems.splice(i,1);
                 stormKilled = true;
             }
         }
-        if(stormKilled) refreshTracks();
-        if(this.tick%ADVISORY_TICKS==0){
+        if(stormKilled) refreshTracks();    // redraw tracks whenever a storm system dies
+        if(this.tick%ADVISORY_TICKS===0){   // redraw map layer and record environmental field state every advisory
             this.env.displayLayer();
             this.env.record();
-        }else if(simSettings.showMagGlass) this.env.updateMagGlass();
+        }else if(simSettings.showMagGlass) this.env.updateMagGlass();   // redraw magnifying glass if displayed (and if it wasn't already redrawn with the map layer)
         let curTime = this.tickMoment();
-        if(simSettings.doAutosave && /* !storageQuotaExhausted && */ (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();
+        if(simSettings.doAutosave && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();    // autosave at 00z on the 1st and 15th days of every month
     }
 
     startTime(){
@@ -248,22 +238,6 @@ class Basin{
         return Scale.saffirSimpson;
     }
 
-    // getNewName(season,sNum){
-    //     let list;
-    //     if(this.sequentialNameIndex<0){
-    //         let numoflists = this.nameList.length-1;
-    //         list = this.nameList[((season+1)%numoflists+numoflists)%numoflists];
-    //         if(sNum>=list.length){
-    //             let gNum = sNum-list.length;
-    //             let greeks = this.nameList[numoflists];
-    //             if(gNum>=greeks.length) return "Unnamed";
-    //             return greeks[gNum];
-    //         }
-    //         return list[sNum];
-    //     }
-    //     return this.nameList[sNum];
-    // }
-
     getSeason(t){       // returns the year number of a season given a sim tick
         if(t===-1) t = this.tick;
         if(this.SHem){
@@ -298,17 +272,6 @@ class Basin{
                         }else return undefined;
                     });
                 },'Retrieving Season...');
-                //makeAsyncProcess,'Retrieving Season...',()=>{
-                //     let sKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + n;
-                //     let str = localStorage.getItem(sKey);
-                //     if(str){
-                //         let seas = this.seasons[n] = new Season({format:FORMAT_WITH_SAVED_SEASONS,value:str});
-                //         this.expireSeasonTimer(n);
-                //         this.seasonsBusyLoading[n] = undefined;
-                //         seas.lastAccessed = moment().valueOf();
-                //         return seas;
-                //     }else return undefined;
-                // });
             }
         }
         if(season) season.lastAccessed = moment().valueOf();
@@ -337,14 +300,6 @@ class Basin{
         this.seasonExpirationTimers[n] = setTimeout(f,LOADED_SEASON_EXPIRATION);
     }
 
-    // static storagePrefix(s){    // legacy
-    //     return LOCALSTORAGE_KEY_PREFIX + LOCALSTORAGE_KEY_SAVEDBASIN + s + '-';
-    // }
-
-    // storagePrefix(){    // legacy
-    //     return Basin.storagePrefix(this.saveSlot);
-    // }
-
     save(){
         let reqSeasons = [];
         for(let k in this.seasons){
@@ -358,10 +313,6 @@ class Basin{
             }
         }
         return Promise.all(reqSeasons).then(()=>{
-            // console.log('basin not saved for testing purposes');
-
-            // new indexedDB saving & Format 2
-
             let obj = {};
             obj.format = SAVE_FORMAT;
             let b = obj.value = {};
@@ -392,13 +343,9 @@ class Basin{
             b.flags |= this.SHem;
             for(let p of [
                 'mapType',
-                // 'hurricaneStrengthTerm',
-                // 'sequentialNameIndex',
                 'tick',
                 'seed',
                 'startYear',
-                // 'nameList',
-                // 'hypoCats',
                 'actMode'
             ]) b[p] = this[p];
             return db.transaction('rw',db.saves,db.seasons,()=>{
@@ -429,55 +376,6 @@ class Basin{
                     if(this.seasons[k]) this.seasons[k].modified = false;
                 }
             });
-
-            // old localStorage save code (Format 1) (defunct)
-
-            // let lastSaved = this.lastSaved;
-            // let savedSeasons = [];
-            // modifyLocalStorage(()=>{
-            //     let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
-            //     let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-            //     let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-            //     localStorage.setItem(formatKey,SAVE_FORMAT.toString(SAVING_RADIX));
-            //     let str = "";
-            //     for(let i=this.activeSystems.length-1;i>=0;i--){
-            //         str += this.activeSystems[i].save();
-            //         if(i>0) str += ",";
-            //     }
-            //     str += ";";
-            //     for(let i=Env.fieldList.length-1;i>=0;i--){
-            //         let f = Env.fieldList[i];
-            //         for(let j=Env.fields[f].noise.length-1;j>=0;j--){
-            //             str += this.envData[f][j].save();
-            //             if(i>0 || j>0) str += ",";
-            //         }
-            //     }
-            //     str += ";";
-            //     let flags = 0;
-            //     flags |= this.hyper;
-            //     flags <<= 1;
-            //     flags |= this.godMode;
-            //     flags <<= 1;
-            //     flags |= this.SHem;
-            //     let arr = [this.mapType,this.hurricaneStrengthTerm,this.sequentialNameIndex,this.tick,this.seed,this.startYear,flags]; // add new properties to the beginning of this array for backwards compatibility
-            //     str += encodeB36StringArray(arr);
-            //     localStorage.setItem(basinKey,str);
-            //     let names = this.nameList.join(";");
-            //     if(typeof this.nameList[0]==="object" && this.nameList[0].length<2) names = "," + names;
-            //     localStorage.setItem(namesKey,names);
-            //     for(let k in this.seasons){
-            //         if(this.seasons[k] && this.seasons[k].modified){
-            //             let seasonKey = this.storagePrefix() + LOCALSTORAGE_KEY_SEASON + k;
-            //             savedSeasons.push(k);
-            //             localStorage.setItem(seasonKey,this.seasons[k].save());
-            //         }
-            //     }
-            //     this.lastSaved = this.tick;
-            // },()=>{
-            //     this.lastSaved = lastSaved;
-            //     for(let k of savedSeasons) this.seasons[k].modified = true;
-            //     alert("localStorage quota for origin " + origin + " exceeded; unable to save");
-            // });
         }).catch(e=>{
             console.warn("Could not save due to an error");
             console.error(e);
@@ -515,13 +413,9 @@ class Basin{
                         oldhyper = flags & 1;
                         for(let p of [
                             'mapType',
-                            // 'hurricaneStrengthTerm',
-                            // 'sequentialNameIndex',
                             'tick',
                             'seed',
                             'startYear',
-                            // 'nameList',
-                            // 'hypoCats',
                             'actMode'
                         ]) this[p] = obj[p];
                         if(obj.nameList) oldNameList = obj.nameList;
@@ -529,13 +423,10 @@ class Basin{
                         if(obj.hypoCats) oldHypoCats = obj.hypoCats;
                         if(obj.hurricaneStrengthTerm!==undefined) oldHurricaneStrengthTerm = obj.hurricaneStrengthTerm;
                         this.lastSaved = this.tick;
-                    }else{  // Format 1 backwards compatibility
-                        // let basinKey = this.storagePrefix() + LOCALSTORAGE_KEY_BASIN;
-                        // let formatKey = this.storagePrefix() + LOCALSTORAGE_KEY_FORMAT;
-                        // let namesKey = this.storagePrefix() + LOCALSTORAGE_KEY_NAMES;
-                        let str = data.value.str;// localStorage.getItem(basinKey);
-                        let format = data.format;// parseInt(localStorage.getItem(formatKey),SAVING_RADIX);
-                        let names = data.value.names;// localStorage.getItem(namesKey);
+                    }else{  // localstorage format backwards compatibility
+                        let str = data.value.str;
+                        let format = data.format;
+                        let names = data.value.names;
                         if(str){
                             let parts = str.split(";");
                             let arr = decodeB36StringArray(parts.pop());
@@ -609,8 +500,6 @@ class Basin{
                 return b;
             }).then(b=>{
                 noiseSeed(b.seed);
-                // Environment.init(b);
-                // b.env.init();
                 land = new Land(b);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
@@ -648,24 +537,6 @@ class Basin{
                 this.save();
             });
         });
-
-        // let oldPre = this.storagePrefix();
-        // let newPre = Basin.storagePrefix(newSlot);
-        // modifyLocalStorage(()=>{
-        //     Basin.deleteSave(newSlot);
-        //     for(let i=0;i<localStorage.length;i++){
-        //         let k = localStorage.key(i);
-        //         if(k.startsWith(oldPre)){
-        //             let suffix = k.slice(oldPre.length);
-        //             localStorage.setItem(newPre+suffix,localStorage.getItem(k));
-        //         }
-        //     }
-        // },()=>{
-        //     newSlot = this.saveSlot;
-        // },()=>{
-        //     this.saveSlot = newSlot;
-        //     this.save();
-        // });
     }
 
     static deleteSave(name,callback){
@@ -686,17 +557,6 @@ class Season{
         this.idSystemCache = {};
         this.subBasinStats = {};
         this.totalSystemCount = 0;
-        // this.depressions = 0;
-        // this.namedStorms = 0;
-        // this.hurricanes = 0;
-        // this.majors = 0;
-        // this.c5s = 0;
-        // this.c8s = 0;
-        // this.hypercanes = 0;
-        // this.ACE = 0;
-        // this.deaths = 0;
-        // this.damage = 0;
-        // this.landfalls = 0;
         this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
@@ -747,23 +607,10 @@ class Season{
     }
 
     save(forceStormRefs){
-        // new save format
-
         let basin = this.basin;
         let val = {};
         for(let p of [
             'totalSystemCount',
-            // 'depressions',
-            // 'namedStorms',
-            // 'hurricanes',
-            // 'majors',
-            // 'c5s',
-            // 'c8s',
-            // 'hypercanes',
-            // 'ACE',
-            // 'deaths',
-            // 'damage',
-            // 'landfalls',
             'envRecordStarts'
         ]) val[p] = this[p];
         val.stats = {};
@@ -799,57 +646,6 @@ class Season{
             }
         }
         return val;
-
-        // old save format
-
-        // let str = "";
-        // let stats = [];
-        // stats.push(this.totalSystemCount);
-        // stats.push(this.depressions);
-        // stats.push(this.namedStorms);
-        // stats.push(this.hurricanes);
-        // stats.push(this.majors);
-        // stats.push(this.c5s);
-        // stats.push(this.ACE*ACE_DIVISOR);
-        // stats.push(this.deaths);
-        // stats.push(this.damage/DAMAGE_DIVISOR);
-        // stats.push(this.envRecordStarts);
-        // stats.push(SAVE_FORMAT);
-        // str += encodeB36StringArray(stats);
-        // str += ";";
-        // if(this.envData){
-        //     let mapR = r=>n=>map(n,-r,r,0,ENVDATA_SAVE_MULT);
-        //     for(let f of Env.fieldList){
-        //         for(let i=0;i<Env.fields[f].noise.length;i++){
-        //             let a = this.envData[f][i];
-        //             let c = Env.fields[f].noise[i];
-        //             let k = a[0];
-        //             let m = a.slice(1);
-        //             k = [k.x,k.y,k.z];
-        //             str += encodeB36StringArray(k,ENVDATA_SAVE_FLOAT);
-        //             str += ".";
-        //             let opts = {};
-        //             opts.h = opts.w = ENVDATA_SAVE_MULT;
-        //             let xyrange = (c.wobbleMax/c.zoom)*ADVISORY_TICKS;
-        //             let zrange = (c.zWobbleMax/c.zZoom)*ADVISORY_TICKS;
-        //             opts.mapY = opts.mapX = mapR(xyrange);
-        //             opts.mapZ = mapR(zrange);
-        //             str += encodePointArray(m,opts);
-        //             str += ",";
-        //         }
-        //     }
-        // }else str += ";";
-        // if(str.charAt(str.length-1)===",") str = str.slice(0,str.length-1) + ";";
-        // for(let i=0;i<this.systems.length;i++){
-        //     let s = this.systems[i];
-        //     if(s instanceof StormRef && s.fetch() && (s.fetch().TC || s.fetch().current)){
-        //         str += "~" + s.save();
-        //     }else if(s.TC || s.current){
-        //         str += "," + s.save();
-        //     }
-        // }
-        // this.modified = false;
-        // return str;
     }
 
     load(data){
@@ -860,17 +656,6 @@ class Season{
                 let obj = data.value;
                 for(let p of [
                     'totalSystemCount',
-                    // 'depressions',
-                    // 'namedStorms',
-                    // 'hurricanes',
-                    // 'majors',
-                    // 'c5s',
-                    // 'c8s',
-                    // 'hypercanes',
-                    // 'ACE',
-                    // 'deaths',
-                    // 'damage',
-                    // 'landfalls',
                     'envRecordStarts'
                 ]) this[p] = obj[p] || 0;
                 if(data.format<FORMAT_WITH_SUBBASIN_SEASON_STATS){
@@ -919,7 +704,7 @@ class Season{
                         this.systems.push(new Storm(basin,v));
                     }
                 }
-            }else{  // Format 1 backwards compatibility
+            }else{  // localstorage format backwards compatibility
                 let str = data.value;
                 let mainparts = str.split(";");
                 let stats = decodeB36StringArray(mainparts[0]);
@@ -1024,7 +809,6 @@ class Season{
                     });
                 }).then(()=>{
                     this.modified = false;
-                    // console.log('season ' + data.season + ' of "' + data.saveName + '" upgraded to format ' + SAVE_FORMAT);
                 }).catch(e=>{
                     console.error(e);
                 });
@@ -1120,7 +904,7 @@ class SubBasin{
             desSys.subBasin = this;
             this.designationSystem = desSys;
         }
-        if(scale instanceof Scale) this.scale = scale; // Scale system to be added in later update; currently only Saffir-Simpson exists
+        if(scale instanceof Scale) this.scale = scale;
         if(data instanceof LoadData) this.load(data);
     }
 
@@ -1217,39 +1001,7 @@ class LoadData{
     }
 }
 
-// legacy saving/loading helpers (encoders are commented out; decoders aren't for backwards compatibility)
-
-// function encodeB36StringArray(arr,fl){
-//     const R = SAVING_RADIX;
-//     const numLen = n=>constrain(floor(log(abs(n)/pow(R,fl)*2+(n<0?1:0))/log(R))+1,1,R);
-//     if(fl===undefined) fl = 0;
-//     if(fl>R/2) fl = 0;
-//     if(fl<=-R/2) fl = 0;
-//     let str = (fl<0 ? fl+R : fl).toString(R);
-//     let nLen;
-//     let lenRun;
-//     let strpart = "";
-//     for(let i=0;i<arr.length;i++){
-//         let n = arr[i];
-//         let newLen = numLen(n);
-//         if(newLen!==nLen || lenRun>=R){
-//             if(lenRun!==undefined){
-//                 str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
-//                 strpart = "";
-//             }
-//             nLen = newLen;
-//             lenRun = 1;
-//         }else lenRun++;
-//         n /= pow(R,fl);
-//         n = floor(n);
-//         n = n<0 ? abs(n)*2+1 : n*2;
-//         n = n.toString(R);
-//         if(n.length>R) n = n.slice(0,R);
-//         strpart += n;
-//     }
-//     if(lenRun!==undefined) str += ((lenRun-1).toString(R)) + ((nLen-1).toString(R)) + strpart;
-//     return str;
-// }
+// legacy localstorage decoders (for backwards compatibility)
 
 function decodeB36StringArray(str){
     const R = SAVING_RADIX;
@@ -1274,29 +1026,6 @@ function decodeB36StringArray(str){
     return arr;
 }
 
-// function encodePoint(x,y,z,o){
-//     if(typeof x === "object"){
-//         o = y;
-//         z = x.z || 0;
-//         y = x.y || 0;
-//         x = x.x || 0;
-//     }else{
-//         x = x || 0;
-//         y = y || 0;
-//         z = z || 0;
-//     }
-//     if(!o) o = {};
-//     let w = floor(o.w || WIDTH);
-//     let h = floor(o.h || HEIGHT);
-//     if(o.mapX instanceof Function) x = o.mapX(x);
-//     if(o.mapY instanceof Function) y = o.mapY(y);
-//     if(o.mapZ instanceof Function) z = o.mapZ(z);
-//     x = abs(x);
-//     y = abs(y);
-//     z = abs(z);
-//     return floor(z)*w*h+floor(y)*w+floor(x);
-// }
-
 function decodePoint(n,o){
     if(!o) o = {};
     let w = floor(o.w || WIDTH);
@@ -1313,14 +1042,6 @@ function decodePoint(n,o){
     return {x,y,z};
 }
 
-// function encodePointArray(a,o){
-//     let arr = [];
-//     for(let i=0;i<a.length;i++){
-//         arr[i] = encodePoint(a[i],o);
-//     }
-//     return encodeB36StringArray(arr);
-// }
-
 function decodePointArray(s,o){
     let arr = decodeB36StringArray(s);
     for(let i=0;i<arr.length;i++){
@@ -1328,28 +1049,3 @@ function decodePointArray(s,o){
     }
     return arr;
 }
-
-// function modifyLocalStorage(action,error,callback){
-//     let lsCache = {};
-//     for(let i=0;i<localStorage.length;i++){
-//         let k = localStorage.key(i);
-//         if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) lsCache[k] = localStorage.getItem(k);
-//     }
-//     try{
-//         action();
-//     }catch(e){
-//         for(let i=localStorage.length-1;i>=0;i--){
-//             let k = localStorage.key(i);
-//             if(k.startsWith(LOCALSTORAGE_KEY_PREFIX)) localStorage.removeItem(k);
-//         }
-//         for(let k in lsCache){
-//             localStorage.setItem(k,lsCache[k]);
-//         }
-//         storageQuotaExhausted = true;
-//         if(error) error(e);
-//         else console.error(e);
-//         return;
-//     }
-//     lsCache = undefined;
-//     if(callback) callback();
-// }

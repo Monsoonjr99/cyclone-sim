@@ -7,12 +7,6 @@ class Storm{
 
         this.TC = false;
         this.inBasinTC = false;
-        // this.named = false;
-        // this.hurricane = false;
-        // this.major = false;
-        // this.c5 = false;
-        // this.c8 = false;
-        // this.hypercane = false;
         this.sbData = {};
 
         this.rotation = random(TAU);
@@ -20,9 +14,6 @@ class Storm{
         this.designations = {};
         this.designations.primary = [];
         this.designations.secondary = [];
-        // this.depressionNum = undefined;
-        // this.nameNum = undefined;
-        // this.name = undefined;
 
         this.birthTime = this.current ? basin.tick : undefined;     // tick formed as a disturbance/low
         this.formationTime = undefined;                             // tick formed as a TC
@@ -30,7 +21,6 @@ class Storm{
         this.exitTime = undefined;                                  // tick degenerated in/left basin as a TC
         this.dissipationTime = undefined;                           // tick degenerated/dissipated as a TC
         this.deathTime = undefined;                                 // tick completely dissipated/left map
-        // this.namedTime = undefined;
 
         this.record = [];
         this.peak = undefined;
@@ -158,7 +148,6 @@ class Storm{
             }
         }
         return str;
-        // return this.aliveAt(t) ? t<this.formationTime ? undefined : t<this.namedTime ? this.depressionNum+DEPRESSION_LETTER : this.name : this.name;
     }
 
     getFullNameByTick(t){
@@ -166,25 +155,16 @@ class Storm{
         let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
         let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
-        // let cat = data ? data.getCat() : null;
         let clsnNom = data ? basin.getScale(land.getSubBasin(data.pos.x,data.pos.y)).getStormNom(data) : null;
         let hasbeenTC;
         if(t==='peak') hasbeenTC = this.TC;
         else if(t>=this.formationTime) hasbeenTC = true;
         else hasbeenTC = false;
-        // let hurricaneTerm = HURRICANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
-        // let hypercaneTerm = HYPERCANE_STRENGTH_TERM[basin.hurricaneStrengthTerm];
         let str = '';
         if(!name) str += 'Unnamed ';
         switch(ty){
             case TROP:
             case SUBTROP:
-                // if(ty===SUBTROP) str += 'Subtropical ';
-                // else if(cat<1) str += 'Tropical ';
-                // if(cat>10) str += hypercaneTerm;
-                // else if(cat>0) str += hurricaneTerm;
-                // else if(cat>-1) str += 'Storm';
-                // else str += 'Depression';
                 str += clsnNom;
                 if(name) str += ' ' + name;
                 break;
@@ -208,19 +188,6 @@ class Storm{
                 break;
         }
         return str;
-        // return ty===TROP ?
-        //     (name ? '' : 'Unnamed ') + (cat>10 ? hypercaneTerm :
-        //     cat>0 ? hurricaneTerm :
-        //     cat>-1 ? "Tropical Storm" : "Tropical Depression") + (name ? " " + name : '') :
-        // ty===SUBTROP ?
-        //     (name ? '' : 'Unnamed ') + (cat>10 ? "Subtropical " + hypercaneTerm :
-        //     cat>0 ? "Subtropical " + hurricaneTerm :
-        //     cat>-1 ? "Subtropical Storm" : "Subtropical Depression") + (name ? " " + name : '') :
-        // ty===TROPWAVE ?
-        //     name ? "Remnants of " + name : "Unnamed Tropical Wave" :
-        // ty===EXTROP ?
-        //     name ? "Post-Tropical Cyclone " + name : "Unnamed Extratropical Cyclone" :
-        // name ? name : "Unknown Cyclone";
     }
 
     renderIcon(){
@@ -232,7 +199,6 @@ class Storm{
             let pr = advC.pressure;
             let st = advC.windSpeed;
             let pos = advC.pos;
-            // let cat = adv ? adv.getCat() : advC.getCat();
             let sb = land.getSubBasin(advX.pos.x,advX.pos.y);
             let scale = basin.getScale(sb);
             let scaleIconData = scale.getIcon(advX);
@@ -305,7 +271,6 @@ class Storm{
                     if(this.record.length>1 && (selectedStorm===this || selectedStorm===undefined)){
                         let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
                         let adv = this.record[this.record.length-2];
-                        // let col = getColor(adv.getCat(),adv.type);
                         let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
@@ -320,7 +285,6 @@ class Storm{
                             if(t>=this.dissipationTime) break;
                         }
                         let adv = this.record[n];
-                        // let col = getColor(adv.getCat(),adv.type);
                         let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
@@ -344,30 +308,18 @@ class Storm{
         let w = data.windSpeed;
         let p = data.pressure;
         let type = data.type;
-        // let cat = data.getCat();
         let year = basin.getSeason(-1);
         let cSeason = basin.fetchSeason(year,false,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
         let sub = land.getSubBasin(data.pos.x,data.pos.y);
         let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : sub;
-        let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type)/* && land.inBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) */ : false;
-        let isTropical = tropOrSub(type)/* && land.inBasin(data.pos.x,data.pos.y) */;
+        let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
+        let isTropical = tropOrSub(type);
         let inBasinTropical = isTropical && basin.subInBasin(sub);
         let prevInBasinTropical = wasTCB4Update && basin.subInBasin(prevSub);
-        // let stats = cSeason.stats(DEFAULT_MAIN_SUBBASIN);
-        // let cCounters = stats.classificationCounters;
         if(!this.TC && isTropical){
             this.TC = true;
             this.formationTime = basin.tick;
-            // let sb = basin.subBasins[DEFAULT_MAIN_SUBBASIN];
-            // if(sb instanceof SubBasin && sb.designationSystem){
-            //     let desig = sb.designationSystem.getNewNum();
-            //     if(desig) this.designations.primary.push(desig);
-            // }
-            // // cSeason.depressions++;
-            // cCounters[-1]++;
-
-            // this.designations.primary.push(new Designation([++cSeason.depressions,DEPRESSION_LETTER],basin.tick));
             this.peak = undefined;
         }
         if(!this.inBasinTC && inBasinTropical){
@@ -527,75 +479,6 @@ class Storm{
             }
         }
 
-        // if(isTropical && cat>=0){
-        //     if(!this.named){
-        //         let sb = basin.subBasins[DEFAULT_MAIN_SUBBASIN];
-        //         if(sb instanceof SubBasin && sb.designationSystem){
-        //             let desig = sb.designationSystem.getNewName();
-        //             if(desig) this.designations.primary.push(desig);
-        //         }
-        //         // cSeason.namedStorms++;
-        //         cCounters[0]++;
-
-        //         // let nameNum = cSeason.namedStorms++;
-        //         // if(basin.sequentialNameIndex>=0){
-        //         //     nameNum = basin.sequentialNameIndex++;
-        //         //     basin.sequentialNameIndex %= basin.nameList.length;
-        //         // }
-        //         // this.designations.primary.push(new Designation(basin.getNewName(basin.getSeason(-1),nameNum),basin.tick));
-        //         this.named = true;
-        //     }
-        //     let a = pow(w,2)/ACE_DIVISOR;
-        //     this.ACE += a;
-        //     // cSeason.ACE += a;
-        //     this.ACE = round(this.ACE*ACE_DIVISOR)/ACE_DIVISOR;
-        //     stats.addACE(a);
-        //     // cSeason.ACE = round(cSeason.ACE*ACE_DIVISOR)/ACE_DIVISOR;
-        // }
-        // if(!this.hurricane && isTropical && cat>=1){
-        //     // cSeason.hurricanes++;
-        //     cCounters[1]++;
-        //     this.hurricane = true;
-        // }
-        // if(!this.major && isTropical && cat>=3){
-        //     // cSeason.majors++;
-        //     cCounters[3]++;
-        //     this.major = true;
-        // }
-        // if(!this.c5 && isTropical && cat>=5){
-        //     // cSeason.c5s++;
-        //     cCounters[5]++;
-        //     this.c5 = true;
-        // }
-        // if(basin.hypoCats && !this.c8 && isTropical && cat>=8){
-        //     // cSeason.c8s++;
-        //     cCounters[8]++;
-        //     this.c8 = true;
-        // }
-        // if(basin.hypoCats && !this.hypercane && isTropical && cat>=11){
-        //     // cSeason.hypercanes++;
-        //     cCounters[11]++;
-        //     this.hypercane = true;
-        // }
-
-        // if(isTropical){
-        //     let lnd = land.get(data.pos.x,data.pos.y);
-        //     let pop = lnd ? round(250000*(1+hemY(data.pos.y)/height)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
-        //     let damPot = pow(1.062,data.windSpeed)-1;   // damage potential
-        //     let dedPot = pow(1.02,data.windSpeed)-1;    // death potential
-        //     let m = pow(1.5,randomGaussian());      // modifier
-        //     damPot *= m;
-        //     dedPot *= m;
-        //     let dam = pop*damPot*20*pow(1.1,random(-1,1));
-        //     let ded = round(pop*dedPot*0.00001*pow(1.1,random(-1,1)));
-        //     this.damage += dam;
-        //     this.damage = round(this.damage*100)/100;
-        //     this.deaths += ded;
-        //     cSeason.damage += dam;
-        //     cSeason.damage = round(cSeason.damage*100)/100;
-        //     cSeason.deaths += ded;
-        // }
-
         if(wasTCB4Update && !isTropical) this.dissipationTime = basin.tick;
         if(!wasTCB4Update && isTropical){
             this.dissipationTime = undefined;
@@ -636,13 +519,9 @@ class Storm{
     }
 
     save(){
-        // new format
-
         let obj = {};
         for(let p of [
             'id',
-            // 'depressionNum',
-            // 'nameNum',
             'birthTime',
             'deaths',
             'damage',
@@ -662,19 +541,6 @@ class Storm{
         }
         if(this.current) obj.sbData = this.sbData;
         return obj;
-
-        // old format
-
-        // let numData = [];
-        // numData.push(this.id);
-        // numData.push(this.depressionNum!==undefined ? this.depressionNum : -1);
-        // numData.push(this.nameNum!==undefined ? this.nameNum : -1);
-        // numData.push(this.birthTime);
-        // numData.push(this.deaths);
-        // numData.push(this.damage/DAMAGE_DIVISOR);
-        // let record = StormData.saveArr(this.record);
-        // numData = encodeB36StringArray(numData);
-        // return numData + "." + record;
     }
 
     load(loadData){
@@ -689,8 +555,6 @@ class Storm{
                 this.record = StormData.loadArr(basin,loadData.sub(obj.record));
                 for(let p of [
                     'id',
-                    // 'depressionNum',
-                    // 'nameNum',
                     'birthTime',
                     'deaths',
                     'damage',
@@ -739,12 +603,10 @@ class Storm{
                 if(depNum<0) depNum = undefined;
                 this.id = numData.pop() || 0;
             }
-            // if(this.depressionNum!==undefined) this.TC = true;
-            // if(this.nameNum!==undefined) this.named = true;
             for(let i=0;i<this.record.length;i++){
                 let d = this.record[i];
                 let sub = land.getSubBasin(d.pos.x,d.pos.y);
-                let trop = tropOrSub(d.type)/*&&land.inBasin(d.pos.x,d.pos.y)*/;
+                let trop = tropOrSub(d.type);
                 let inBasinTrop = trop && basin.subInBasin(sub);
                 let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
                 let yr = basin.getSeason(t);
@@ -754,7 +616,6 @@ class Storm{
                 if(inBasinTrop && !this.enterTime) this.enterTime = t;
                 if(inBasinTrop && this.exitTime) this.exitTime = undefined;
                 if(!inBasinTrop && this.enterTime && !this.exitTime) this.exitTime = t;
-                // let cat = d.getCat();
                 let clsn = Scale.extendedSaffirSimpson.get(d);  // hardcoded to extended Saffir-Simpson since this is only used for backwards-compatibility
                 if(inBasinTrop && !namedTime && clsn>=1) namedTime = t;  // backwards-compatibility name conversion
                 if(loadData.format<FORMAT_WITH_STORM_SUBBASIN_DATA && inBasinTrop){
@@ -773,12 +634,6 @@ class Storm{
                     this.peak = undefined;
                     this.ACE = 0;
                 }
-                // if(trop && !this.named && cat>=0) this.named = true;
-                // if(trop && !this.hurricane && cat>=1) this.hurricane = true;
-                // if(trop && !this.major && cat>=3) this.major = true;
-                // if(trop && !this.c5 && cat>=5) this.c5 = true;
-                // if(basin.hypoCats && trop && !this.c8 && cat>=8) this.c8 = true;
-                // if(basin.hypoCats && trop && !this.hypercane && cat>=11) this.hypercane = true;
                 if((!this.inBasinTC && (!this.TC || trop)) || inBasinTrop){
                     if(!this.peak) this.peak = d;
                     else if(d.pressure<this.peak.pressure) this.peak = d;
@@ -822,9 +677,6 @@ class Storm{
                         if(desig) this.designations.primary.push(desig);
                     }
                 }
-
-                // if(nameNum!==undefined) this.designations.primary.push(new Designation(basin.getNewName(basin.getSeason(namedTime),nameNum),namedTime));
-                // if(depNum!==undefined) this.designations.primary.push(new Designation([depNum,DEPRESSION_LETTER],this.formationTime));
             }
         }
     }
@@ -836,7 +688,7 @@ class StormRef{
         if(s instanceof Storm){
             this.season = s.originSeason();
             this.refId = s.id;
-            this.lastApplicableAt = s.deathTime;    // this property will optimize season loading, but for now I won't bother saving it in localStorage
+            this.lastApplicableAt = s.deathTime;
             this.ref = undefined;
         }else if(s instanceof LoadData){
             this.season = undefined;
@@ -862,18 +714,9 @@ class StormRef{
     }
 
     save(){
-        // new format
-
         let obj = {};
         for(let p of ['refId','season','lastApplicableAt']) obj[p] = this[p];
         return obj;
-
-        // old format
-
-        // let arr = [];
-        // arr.push(this.refId);
-        // arr.push(this.season);
-        // return encodeB36StringArray(arr);
     }
 
     load(data){
@@ -907,42 +750,11 @@ class StormData{
         }
     }
 
-    // getCat(){
-    //     let w = this.windSpeed;
-    //     if(w<34) return -1;
-    //     if(w<64) return 0;
-    //     if(w<83) return 1;
-    //     if(w<96) return 2;
-    //     if(w<113) return 3;
-    //     if(w<137) return 4;
-    //     if(!this.basin.hypoCats || w<165) return 5;
-    //     if(w<198) return 6;
-    //     if(w<255) return 7;
-    //     if(w<318) return 8;
-    //     if(w<378) return 9;
-    //     if(w<434) return 10;
-    //     return 11;
-    // }
-
-    save(inArr){
-        // new format
-
+    save(){
         let obj = {};
         obj.pos = {x: this.pos.x, y: this.pos.y};
         for(let p of ['pressure','windSpeed','type']) obj[p] = this[p];
         return obj;
-
-        // old format
-
-        // let arr = [];
-        // if(!inArr){
-        //     let opts = {};
-        //     arr.push(encodePoint(this.pos,opts));
-        // }
-        // arr.push(this.pressure);
-        // arr.push(this.windSpeed);
-        // arr.push(this.type);
-        // return encodeB36StringArray(arr);
     }
 
     load(data,posInArr){
@@ -969,8 +781,6 @@ class StormData{
     }
 
     static saveArr(arr){
-        // new format
-
         let x = [];
         let y = [];
         let pressure = [];
@@ -991,17 +801,6 @@ class StormData{
         obj.windSpeed = new Uint16Array(windSpeed);
         obj.type = new Uint8ClampedArray(type);
         return obj;
-
-        // old format
-
-        // let opts = {};
-        // let positions = [];
-        // let theRest = [];
-        // for(let i=0;i<arr.length;i++){
-        //     positions.push(arr[i].pos);
-        //     theRest.push(arr[i].save(true));
-        // }
-        // return encodePointArray(positions,opts) + "/" + theRest.join("/");
     }
 
     static loadArr(basin,data){
@@ -1251,17 +1050,6 @@ class ActiveSystem extends StormData{
                     s.landfalls += lf;
                 }
             }
-            // let ib = land.inBasin(x,y);
-            // let s = basin.fetchSeason(-1,true,true).stats(DEFAULT_MAIN_SUBBASIN);
-            // if(ib){
-            //     s.damage += dam;
-            //     s.damage = round(s.damage*100)/100;
-            //     s.deaths += ded;
-            // }
-            // if(!prevland && lnd){
-            //     this.fetchStorm().landfalls++;
-            //     if(ib) s.landfalls++;
-            // }
             seas.modified = true;
         }
 
@@ -1355,8 +1143,6 @@ class ActiveSystem extends StormData{
     }
 
     save(){
-        // new format
-
         let obj = super.save();
         for(let p of [
             'organization',
@@ -1366,19 +1152,6 @@ class ActiveSystem extends StormData{
         ]) obj[p] = this[p];
         obj.ref = new StormRef(this.basin,this.fetchStorm()).save();
         return obj;
-
-        // old format
-
-        // let base = super.save();
-        // let activeData = [];
-        // activeData.push(this.organization);
-        // activeData.push(this.lowerWarmCore);
-        // activeData.push(this.upperWarmCore);
-        // activeData.push(this.depth);
-        // activeData = encodeB36StringArray(activeData,ACTIVESYSTEM_SAVE_FLOAT);
-        // let ref = new StormRef(this.fetchStorm());
-        // ref = ref.save();
-        // return base + "." + activeData + "." + ref;
     }
 
     load(data){
@@ -1408,36 +1181,6 @@ class ActiveSystem extends StormData{
     }
 }
 
-// function getNewName(season,sNum){
-//     let list;
-//     if(basin.sequentialNameIndex<0){
-//         let numoflists = basin.nameList.length-1;
-//         list = basin.nameList[(season+1)%numoflists];
-//         if(sNum>=list.length){
-//             let gNum = sNum-list.length;
-//             let greeks = basin.nameList[numoflists];
-//             if(gNum>=greeks.length) return "Unnamed";
-//             return greeks[gNum];
-//         }
-//         return list[sNum];
-//     }
-//     return basin.nameList[sNum];
-// }
-
 function tropOrSub(ty){
     return ty===TROP || ty===SUBTROP;
 }
-
-// function getColor(c,ty){
-//     switch(ty){
-//         case EXTROP:
-//             return COLORS.storm[EXTROP];
-//         case SUBTROP:
-//             if(c<1) return COLORS.storm[SUBTROP][c];
-//             return COLORS.storm[TROP][c];
-//         case TROP:
-//             return COLORS.storm[TROP][c];
-//         case TROPWAVE:
-//             return COLORS.storm[TROPWAVE];
-//     }
-// }

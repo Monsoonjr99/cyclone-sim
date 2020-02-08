@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.1 (b20200208a):
+    * Some minor tweaks and code de-cluttering
 v0.2 (b20200206a):
     + Added scale system
         > replaces old hardcoded Saffir-Simpson scale with something more flexible and customizable

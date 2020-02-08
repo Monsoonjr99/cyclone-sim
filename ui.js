@@ -63,10 +63,6 @@ class UI{
         }
     }
 
-    // fullRect(){
-    //     rect(0,0,this.width,this.height);   // Easy method for use in the render function
-    // }
-
     schematics(){
         let s = {};
         s.fullRect = ()=>{
@@ -334,6 +330,7 @@ UI.init = function(){
     },function(){
         helpBox.hide();
         sideMenu.hide();
+        seedBox.hide();
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
             if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
@@ -358,17 +355,17 @@ UI.init = function(){
                     g.sType = "4";
                 }else if(key === "5"){
                     g.sType = "5";
-                }else if(key === "6" /* && basin.hypoCats */){
+                }else if(key === "6"){
                     g.sType = "6";
-                }else if(key === "7" /* && basin.hypoCats */){
+                }else if(key === "7"){
                     g.sType = "7";
-                }else if(key === "8" /* && basin.hypoCats */){
+                }else if(key === "8"){
                     g.sType = "8";
-                }else if(key === "9" /* && basin.hypoCats */){
+                }else if(key === "9"){
                     g.sType = "9";
-                }else if(key === "0" /* && basin.hypoCats */){
+                }else if(key === "0"){
                     g.sType = "10";
-                }else if((key === "y" || key === "Y") /* && basin.hypoCats */){
+                }else if(key === "y" || key === "Y"){
                     g.sType = "y";
                 }else if(key === "x" || key === "X"){
                     g.sType = "x";
@@ -443,7 +440,7 @@ UI.init = function(){
     },function(){
         mainMenu.hide();
         settingsMenu.show();
-    })/* .append(false,0,60,200,30,[18,5]).append(false,0,60,200,30,[18,32]) */;     // test test test
+    });
 
     // basin creation menu
 
@@ -524,24 +521,6 @@ UI.init = function(){
             yearselbox.hide();
         }
     }],undefined,false);
-    
-    // yearsel.append(false,0,0,20,10,function(s){ // Year increment button
-    //     s.button('',true);
-    //     triangle(2,8,10,2,18,8);
-    // },function(){
-    //     if(newBasinSettings.year===undefined){
-    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR + 1;
-    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR + 1;
-    //     }else newBasinSettings.year++;
-    // }).append(false,0,20,20,10,function(s){  // Year decrement button
-    //     s.button('',true);
-    //     triangle(2,2,18,2,10,8);
-    // },function(){
-    //     if(newBasinSettings.year===undefined){
-    //         if(newBasinSettings.hem===2) newBasinSettings.year = SHEM_DEFAULT_YEAR - 1;
-    //         else newBasinSettings.year = NHEM_DEFAULT_YEAR - 1;
-    //     }else newBasinSettings.year--;
-    // });
 
     let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
@@ -631,7 +610,6 @@ UI.init = function(){
         if(/^-?\d+$/g.test(seed)) newBasinSettings.seed = parseInt(seed);
         else newBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
-        // init();
         let opts = {};
         if(newBasinSettings.hem===1) opts.hem = false;
         else if(newBasinSettings.hem===2) opts.hem = true;
@@ -693,18 +671,6 @@ UI.init = function(){
                         format: formats[i]
                     });
                 }
-                // for(let i=0;i<SAVE_SLOTS;i++){
-                //     let newStyleSaveName;
-                //     if(i===0) newStyleSaveName = AUTOSAVE_SAVE_NAME;
-                //     else newStyleSaveName = LEGACY_SAVE_NAME_PREFIX + i;
-                //     let f = localStorage.getItem(Basin.storagePrefix(i) + LOCALSTORAGE_KEY_FORMAT);
-                //     if(f!==null){
-                //         loadMenu.loadables.push({
-                //             saveName: newStyleSaveName,
-                //             format: parseInt(f,SAVING_RADIX)
-                //         });
-                //     }
-                // }
                 loadMenu.loadables.sort((a,b)=>{
                     a = a.saveName;
                     b = b.saveName;
@@ -717,15 +683,6 @@ UI.init = function(){
             console.error(e);
         });
     };
-
-    // let getslotloadable = function(s){
-    //     let l = loadMenu.loadables[s];
-    //     if(l===undefined){
-    //         let f = localStorage.getItem(Basin.storagePrefix(s) + LOCALSTORAGE_KEY_FORMAT);
-    //         l = loadMenu.loadables[s] = f===null ? 0 : f>=EARLIEST_COMPATIBLE_FORMAT ? 1 : -1;
-    //     }
-    //     return l;
-    // };
 
     let loadbuttonrender = function(s){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
@@ -753,7 +710,6 @@ UI.init = function(){
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
         if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
-            // init(b.saveName);
             let basin = new Basin(b.saveName);
             basin.initialized.then(()=>{
                 basin.mount();
@@ -1076,11 +1032,6 @@ UI.init = function(){
         rect(3,6,18,2);
         rect(3,11,18,2);
         rect(3,16,18,2);
-        // if(storageQuotaExhausted){
-        //     fill(COLORS.UI.redText);
-        //     textAlign(CENTER,TOP);
-        //     text("!",24,3);
-        // }
     },function(){
         sideMenu.toggleShow();
         saveBasinAsPanel.hide();
@@ -1194,15 +1145,6 @@ UI.init = function(){
                 let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
                 txt = '';
                 for(let {statName, cNumber} of scale.statDisplay()) txt += statName + ': ' + c[cNumber] + '\n';
-                // txt = "Depressions: " + c[-1];
-                // txt += "\nNamed storms: " + c[0];
-                // txt += "\n" + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[1];
-                // txt += "\nMajor " + HURRICANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + "s: " + c[3];
-                // if(UI.viewBasin.hypoCats){
-                //     txt += '\nCategory 5+: ' + c[5];
-                //     txt += '\nCategory 8+: ' + c[8];
-                //     txt += '\n' + HYPERCANE_STRENGTH_TERM[UI.viewBasin.hurricaneStrengthTerm] + 's: ' + c[11];
-                // }else txt += "\nCategory 5s: " + c[5];
                 txt += "Total ACE: " + stats.ACE;
                 txt += "\nDamage: " + damageDisplayNumber(stats.damage);
                 txt += "\nDeaths: " + stats.deaths;
@@ -1294,41 +1236,12 @@ UI.init = function(){
                     let part = {};
                     part.storm = t;
                     part.segments = [];
-                    // part.label = t.named ?
-                    //     ({
-                    //         'Alpha':'\u03B1',
-                    //         'Beta':'\u03B2',
-                    //         'Gamma':'\u03B3',
-                    //         'Delta':'\u03B4',
-                    //         'Epsilon':'\u03B5',
-                    //         'Zeta':'\u03B6',
-                    //         'Eta':'\u03B7',
-                    //         'Theta':'\u03B8',
-                    //         'Iota':'\u03B9',
-                    //         'Kappa':'\u03BA',
-                    //         'Lambda':'\u03BB',
-                    //         'Mu':'\u03BC',
-                    //         'Nu':'\u03BD',
-                    //         'Xi':'\u03BE',
-                    //         'Omicron':'\u03BF',
-                    //         'Pi':'\u03C0',
-                    //         'Rho':'\u03C1',
-                    //         'Sigma':'\u03C3',
-                    //         'Tau':'\u03C4',
-                    //         'Upsilon':'\u03C5',
-                    //         'Phi':'\u03C6',
-                    //         'Chi':'\u03C7',
-                    //         'Psi':'\u03C8',
-                    //         'Omega':'\u03C9'
-                    //     })[t.name] || t.name.slice(0,1) :
-                    //     t.depressionNum + '';
                     part.label = t.getNameByTick(-2);
                     let aSegment;
                     for(let q=0;q<t.record.length;q++){
                         let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                         let d = t.record[q];
                         if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                            // let cat = d.getCat();
                             let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
                             if(!aSegment){
                                 aSegment = {};
@@ -1432,8 +1345,6 @@ UI.init = function(){
             else noStroke();
             for(let j=0;j<p.segments.length;j++){
                 let S = p.segments[j];
-                // if(S.fullyTrop) fill(getColor(S.maxCat,TROP));
-                // else fill(getColor(S.maxCat,SUBTROP));
                 fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
                 rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
             }
@@ -1498,22 +1409,15 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         text("Menu",this.width/2,10);
-        // if(storageQuotaExhausted){
-        //     textSize(14);
-        //     fill(COLORS.UI.redText);
-        //     text("localStorage quota for origin\n" + origin + "\nexceeded; unable to save",this.width/2,this.height-60);
-        // }
     },true,false);
 
     sideMenu.append(false,5,30,sideMenu.width-10,25,function(s){ // Save and return to main menu button
-        s.button("Save and Return to Main Menu",false,15/* ,storageQuotaExhausted */);
+        s.button("Save and Return to Main Menu",false,15);
     },function(){
-        // if(!storageQuotaExhausted){
-            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
-            else{
-                returntomainmenu(UI.viewBasin.save());
-            }
-        // }
+        if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke(true);
+        else{
+            returntomainmenu(UI.viewBasin.save());
+        }
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Return to main menu w/o saving button
         s.button("Return to Main Menu w/o Saving",false,15);
     },function(){
@@ -1521,16 +1425,14 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin button
         let txt = "Save Basin";
         if(UI.viewBasin.tick===UI.viewBasin.lastSaved) txt += " [Saved]";
-        s.button(txt,false,15/* ,storageQuotaExhausted */);
+        s.button(txt,false,15);
     },function(){
-        // if(!storageQuotaExhausted){
-            if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
-            else UI.viewBasin.save();
-        // }
+        if(UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME) saveBasinAsPanel.invoke();
+        else UI.viewBasin.save();
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Save basin as button
-        s.button("Save Basin As...",false,15/* ,storageQuotaExhausted */);
+        s.button("Save Basin As...",false,15);
     },function(){
-        /* if(!storageQuotaExhausted) */ saveBasinAsPanel.invoke();
+        saveBasinAsPanel.invoke();
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Settings menu button
         s.button("Settings",false,15);
     },function(){
@@ -1589,41 +1491,6 @@ UI.init = function(){
         saveBasinAsPanel.toggleShow();
         saveBasinAsTextBox.value = UI.viewBasin.saveName===AUTOSAVE_SAVE_NAME ? '' : UI.viewBasin.saveName;
     };
-    
-    // let saveslotbuttonrender = function(s){
-    //     let slotOccupied = getslotloadable(this.slotNum);
-    //     let txt = "Slot " + this.slotNum;
-    //     if(basin.saveSlot===this.slotNum) txt += " [This]";
-    //     else if(slotOccupied) txt += " [Overwrite]";
-    //     s.button(txt,false,15,storageQuotaExhausted);
-    // };
-
-    // let saveslotbuttonclick = function(){
-    //     if(!storageQuotaExhausted){
-    //         if(basin.saveSlot===this.slotNum){
-    //             basin.save();
-    //             loadMenu.loadables = {};
-    //             saveBasinAsPanel.hide();
-    //         }else{
-    //             let slotOccupied = getslotloadable(this.slotNum);
-    //             let f = ()=>{
-    //                 basin.saveAs(this.slotNum);
-    //                 loadMenu.loadables = {};
-    //                 saveBasinAsPanel.hide();
-    //                 if(saveBasinAsPanel.exit) returntomainmenu();
-    //             };
-    //             if(slotOccupied) areYouSure.dialog(f);
-    //             else f();
-    //         }
-    //     }
-    // };
-
-    // for(let i=1;i<SAVE_SLOTS;i++){  // 1-indexed as to not include the autosave slot 0
-    //     let x = i===1 ? 5 : 0;
-    //     let y = i===1 ? 40 : 30;
-    //     let b = saveBasinAsPanel.append(0,x,y,saveBasinAsPanel.width-10,25,saveslotbuttonrender,saveslotbuttonclick);
-    //     b.slotNum = i;
-    // }
 
     seedBox = primaryWrapper.append(false,WIDTH/2-100,HEIGHT/2-15,200,30,[18,undefined,function(){  // textbox for copying the basin seed
         this.value = UI.viewBasin.seed.toString();
