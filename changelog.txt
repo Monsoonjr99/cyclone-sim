@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.2 (b20200209a):
+    + Added support for scales with other measurements such as pressure in inHg, 10-minute wind speed, and mph and km/h wind
+    + Added Australian and Typhoon scales
+    * Fixed 2020-21 South-West Indian Ocean name list preset
 v0.2.1 (b20200208a):
     * Some minor tweaks and code de-cluttering
 v0.2 (b20200206a):

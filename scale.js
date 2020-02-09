@@ -5,7 +5,7 @@ class Scale{
         if(data && !(data instanceof LoadData)) opts = data;
         else opts = {};
         this.displayName = opts.displayName;
-        this.measure = opts.measure || SCALE_MEASURE_ONE_MIN_WIND;   // 0 = 1-minute wind speed; 2 = pressure (10-minute wind speed not yet implemented)
+        this.measure = opts.measure || SCALE_MEASURE_ONE_MIN_KNOTS;   // 0 = 1-minute wind speed; 2 = pressure (10-minute wind speed not yet implemented)
         this.classifications = [];
         let cData;
         if(opts instanceof Array) cData = opts;
@@ -15,7 +15,7 @@ class Scale{
                 let clsn = {};
                 clsn.threshold = c.threshold;
                 if(clsn.threshold===undefined){
-                    if(this.measure===SCALE_MEASURE_PRESSURE) clsn.threshold = 1000;
+                    if(this.measure===SCALE_MEASURE_MILLIBARS) clsn.threshold = 1000;
                     else clsn.threshold = 35;
                 }
                 clsn.color = c.color===undefined ? 'white' : c.color;
@@ -41,12 +41,16 @@ class Scale{
         if(stormData instanceof StormData){
             let m;
             let c = 0;
-            if(this.measure===SCALE_MEASURE_ONE_MIN_WIND){
-                m = stormData.windSpeed;
-                while(c+1<this.classifications.length && m>=this.classifications[c+1].threshold) c++;
-            }else if(this.measure===SCALE_MEASURE_PRESSURE){
-                m = stormData.pressure;
+            if(this.measure===SCALE_MEASURE_MILLIBARS || this.measure===SCALE_MEASURE_INHG){    // pressure
+                m = stormData.pressure;     // millibars by default
+                if(this.measure===SCALE_MEASURE_INHG) m = mbToInHg(m);
                 while(c+1<this.classifications.length && m<=this.classifications[c+1].threshold) c++;
+            }else{                                                                              // wind speed
+                m = stormData.windSpeed;    // 1-minute knots by default
+                if(this.measure===SCALE_MEASURE_TEN_MIN_KNOTS || this.measure===SCALE_MEASURE_TEN_MIN_MPH || this.measure===SCALE_MEASURE_TEN_MIN_KMH) m = oneMinToTenMin(m);    // one-minute to ten-minute wind conversion
+                if(this.measure===SCALE_MEASURE_ONE_MIN_MPH || this.measure===SCALE_MEASURE_TEN_MIN_MPH) m = ktsToMph(m);   // knots-to-mph conversion
+                if(this.measure===SCALE_MEASURE_ONE_MIN_KMH || this.measure===SCALE_MEASURE_TEN_MIN_KMH) m = ktsToKmh(m);   // knots-to-km/h conversion
+                while(c+1<this.classifications.length && m>=this.classifications[c+1].threshold) c++;
             }
             return c;
         }
@@ -398,7 +402,117 @@ Scale.extendedSaffirSimpson = new Scale({
     ]
 });
 
+Scale.australian = new Scale({
+    measure: SCALE_MEASURE_TEN_MIN_KNOTS,
+    displayName: 'Australian',
+    colorSchemeDisplayNames: ['Classic','Wiki'],
+    flavorDisplayNames: ['Cyclone'],
+    classifications: [
+        {
+            threshold: 0,
+            color: ['rgb(20,20,230)','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            symbol: 'D',
+            arms: 0,
+            stormNom: 'Tropical Depression',
+            subtropicalStormNom: 'Subtropical Depression',
+            stat: 'Depressions',
+            cName: 'Depression'
+        },
+        {
+            threshold: 34,
+            color: ['rgb(20,230,20)','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            symbol: '1',
+            stormNom: 'Tropical Cyclone',
+            subtropicalStormNom: 'Subtropical Cyclone',
+            stat: 'Cyclones',
+            cName: 'Category 1'
+        },
+        {
+            threshold: 48,
+            color: ['rgb(180,230,20)','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            symbol: '2',
+            stat: 'Category 2+',
+            cName: 'Category 2'
+        },
+        {
+            threshold: 64,
+            color: ['rgb(230,230,20)','#ffffcc'],
+            symbol: '3',
+            stat: 'Category 3+',
+            cName: 'Category 3'
+        },
+        {
+            threshold: 86,
+            color: ['rgb(240,20,20)','#ffc140'],
+            symbol: '4',
+            stat: 'Category 4+',
+            cName: 'Category 4'
+        },
+        {
+            threshold: 108,
+            color: ['rgb(250,140,250)','#ff6060'],
+            symbol: '5',
+            stat: 'Category 5s',
+            cName: 'Category 5'
+        }
+    ]
+});
+
+Scale.typhoonCommittee = new Scale({
+    measure: SCALE_MEASURE_TEN_MIN_KNOTS,
+    displayName: 'WMO Typhoon Committee',
+    colorSchemeDisplayNames: ['Classic','Wiki'],
+    flavorDisplayNames: ['Typhoon'],
+    classifications: [
+        {
+            threshold: 0,
+            color: ['rgb(20,20,230)','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            symbol: 'D',
+            arms: 0,
+            stormNom: 'Tropical Depression',
+            subtropicalStormNom: 'Subtropical Depression',
+            stat: 'Depressions',
+            cName: 'Depression'
+        },
+        {
+            threshold: 34,
+            color: ['rgb(20,230,20)','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            symbol: 'S',
+            stormNom: 'Tropical Storm',
+            subtropicalStormNom: 'Subtropical Storm',
+            stat: 'Named Storms',
+            cName: 'Storm'
+        },
+        {
+            threshold: 48,
+            color: ['rgb(180,230,20)','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            symbol: 'STS',
+            subtropicalSymbol: 'SSS',
+            stormNom: 'Severe Tropical Storm',
+            subtropicalStormNom: 'Severe Subtropical Storm',
+            stat: 'Severe',
+            cName: 'Severe'
+        },
+        {
+            threshold: 64,
+            color: ['rgb(240,130,20)','#fdaf9a'],
+            symbol: 'TY',
+            stormNom: 'Typhoon',
+            stat: 'Typhoons',
+            cName: 'Typhoon'
+        }
+    ]
+});
+
 Scale.presetScales = [
     Scale.saffirSimpson,
-    Scale.extendedSaffirSimpson
+    Scale.extendedSaffirSimpson,
+    Scale.australian,
+    Scale.typhoonCommittee
 ];

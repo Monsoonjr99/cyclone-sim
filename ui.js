@@ -1689,6 +1689,18 @@ function ktsToKmh(k,rnd){
     return val;
 }
 
+function oneMinToTenMin(w,rnd){
+    let val = w*7/8;    // simple ratio
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}
+
+function mbToInHg(mb,rnd){
+    let val = mb*0.02953;
+    if(rnd) val = round(val/rnd)*rnd;
+    return val;
+}
+
 function damageDisplayNumber(d){
     if(d===0) return "none";
     if(d<50000000) return "minimal";

@@ -16,7 +16,7 @@ class Basin{
             8: 'W',
             10: 'U',
             11: 'F',
-            12: ''
+            12: 'R'
         })[opts.mapType];   // Quick map-type-based suffix thing until name list presets get converted to designation systems
         if(suf!==undefined) this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = suf;
         this.tick = 0;

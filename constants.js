@@ -1,6 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.2.1";
-const BUILD_NUMBER = "20200208a";
+const VERSION_NUMBER = "0.2.2";
+const BUILD_NUMBER = "20200209a";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -156,7 +156,7 @@ const NAME_LIST_PRESETS = [        // Presets for basin name lists (old pre-Desi
     ],
     ['Onil','Agni','Hibaru','Pyarr','Baaz','Fanoos','Mala','Mukda','Ogni','Akash','Gonu','Yemyin','Sidr','Nargis','Rashmi','Khai-Muk','Nisha','Bijli','Aila','Phyan','Ward','Laila','Bandu','Phet','Giri','Jal','Keila','Thane','Murjan','Nilam','Viyaru','Phailin','Helen','Lehar','Madi','Nanauk','Hudhud','Nilofar','Ashobaa','Komen','Chapala','Megh','Roanu','Kyant','Nada','Vardah','Maarutha','Mora','Ockhi','Sagar','Mekunu','Daye','Luban','Titli','Gaja','Phethai','Fani','Vayu','Hikaa','Kyarr','Maha','Bulbul','Pawan','Amphan'],
     [
-        ['Ava','Berguitta','Cebile','Dumazile','Eliakim','Fakir','Guambe','Habana','Iman','Jobo','Kanga','Ludzi','Melina','Nathan','Onias','Pelagie','Quamar','Rita','Solani','Tarik','Urilia','Vuyane','Wagner','Xusa','Yarona','Zacarias'],
+        ['Ava','Bongoyo','Chalane','Danilo','Eloise','Faraji','Guambe','Habana','Iman','Jobo','Kanga','Ludzi','Melina','Nathan','Onias','Pelagie','Quamar','Rita','Solani','Tarik','Urilia','Vuyane','Wagner','Xusa','Yarona','Zacarias'],
         ['Ana','Batsirai','Cliff','Damako','Emnati','Fezile','Gombe','Halima','Issa','Jasmine','Karim','Letlama','Maipelo','Njazi','Oscar','Pamela','Quentin','Rajab','Savana','Themba','Uyapo','Viviane','Walter','Xangy','Yemurai','Zanele'],
         ['Ambali','Belna','Calvinia','Diane','Esami','Francisco','Gabekile','Herold','Irondro','Jeruto','Kundai','Lisebo','Michel','Nousra','Olivier','Pokera','Quincy','Rebaone','Salama','Tristan','Ursula','Violet','Wilson','Xila','Yekela','Zania'],
         ['Unnamed']
@@ -193,9 +193,14 @@ const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
 const DESIG_CROSSMODE_REGEN = 2;
 const DESIG_CROSSMODE_STRICT_REGEN = 3;
 const DESIG_CROSSMODE_KEEP = 4;
-const SCALE_MEASURE_ONE_MIN_WIND = 0;
-const SCALE_MEASURE_TEN_MIN_WIND = 1;
-const SCALE_MEASURE_PRESSURE = 2;
+const SCALE_MEASURE_ONE_MIN_KNOTS = 0;
+const SCALE_MEASURE_TEN_MIN_KNOTS = 1;
+const SCALE_MEASURE_MILLIBARS = 2;
+const SCALE_MEASURE_INHG = 3;
+const SCALE_MEASURE_ONE_MIN_MPH = 4;
+const SCALE_MEASURE_TEN_MIN_MPH = 5;
+const SCALE_MEASURE_ONE_MIN_KMH = 6;
+const SCALE_MEASURE_TEN_MIN_KMH = 7;
 
 // Saving/loading-related constants
 
