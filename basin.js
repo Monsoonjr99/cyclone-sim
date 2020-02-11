@@ -28,6 +28,8 @@ class Basin{
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         this.mapType = opts.mapType || 0;
         if(MAP_TYPES[this.mapType].special==='CPac'){
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
             this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
                 suffix: 'C',
                 numCross: DESIG_CROSSMODE_KEEP,
@@ -54,6 +56,19 @@ class Basin{
             this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
                 prefix: 'BOB',
                 numCross: DESIG_CROSSMODE_KEEP
+            }));
+        }else if(MAP_TYPES[this.mapType].special==='AUS'){
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
+            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
+            this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                numEnable: false,
+                mainLists: [NAME_LIST_PRESETS[11]],
+                nameCross: DESIG_CROSSMODE_KEEP
+            }));
+            this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
+                numEnable: false,
+                mainLists: [NAME_LIST_PRESETS[12]],
+                nameCross: DESIG_CROSSMODE_KEEP
             }));
         }
         this.seed = opts.seed || moment().valueOf();

@@ -1,6 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.2.2";
-const BUILD_NUMBER = "20200209a";
+const VERSION_NUMBER = "0.2.3";
+const BUILD_NUMBER = "20200211a";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -100,7 +100,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
     },
     {   // "Australian Region" map type
         form: 'pixelmap',
-        path: 'resources/Aus.png'
+        path: 'resources/Aus.png',
+        special: 'AUS'
     },
     {   // "South Pacific" map type
         form: 'pixelmap',

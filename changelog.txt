@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.3 (b20200211a):
+    + Added Jakarta and Port Moresby sub-basins and naming to Australian region map mode
 v0.2.2 (b20200209a):
     + Added support for scales with other measurements such as pressure in inHg, 10-minute wind speed, and mph and km/h wind
     + Added Australian and Typhoon scales
