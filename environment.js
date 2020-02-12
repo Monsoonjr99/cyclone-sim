@@ -450,6 +450,7 @@ class Land{
         this.oceanTile = [];
         this.mapDefinition = undefined;
         this.drawn = false;
+        this.snowDrawn = false;
         this.shaderDrawn = false;
         this.calculate();
     }
@@ -536,18 +537,29 @@ class Land{
 
     *draw(){
         yield "Rendering land...";
-        let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-        let H = W*HEIGHT/WIDTH;
+        let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(x/scl,y/scl);
+        let sget = (x,y)=>this.getSubBasin(x/scl,y/scl);
         let bget = (x,y)=>this.inBasin(x/scl,y/scl);
+        let outOfSub = (s0,s1)=>{
+            for(let sub of this.basin.forSubBasinChain(s1)){
+                if(sub===s0) return false;
+            }
+            return true;
+        };
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
                 if(landVal){
                     for(let k=0;k<COLORS.land.length;k++){
                         if(landVal > COLORS.land[k][0]){
-                            landBuffer.fill(COLORS.land[k][1]);
+                            let c = COLORS.land[k][1];
+                            if(simSettings.smoothLandColor && k>0){
+                                let c1 = COLORS.land[k-1][1];
+                                let f = map(landVal,COLORS.land[k][0],COLORS.land[k-1][0],0,1);
+                                landBuffer.fill(lerpColor(c,c1,f));
+                            }else landBuffer.fill(c);
                             landBuffer.rect(i,j,1,1);
                             break;
                         }
@@ -555,18 +567,46 @@ class Land{
                     let touchingOcean = false;
                     if(i>0 && !lget(i-1,j)) touchingOcean = true;
                     if(j>0 && !lget(i,j-1)) touchingOcean = true;
-                    if(i<width-1 && !lget(i+1,j)) touchingOcean = true;
-                    if(j<height-1 && !lget(i,j+1)) touchingOcean = true;
+                    if(i<W-1 && !lget(i+1,j)) touchingOcean = true;
+                    if(j<H-1 && !lget(i,j+1)) touchingOcean = true;
                     if(touchingOcean) coastLine.rect(i,j,1,1);
-                }else if(!bget(i,j)){
-                    outBasinBuffer.rect(i,j,1,1);
+                }else{
+                    if(!bget(i,j)){
+                        outBasinBuffer.rect(i,j,1,1);
+                    }
+                    // for(let s of this.basin.forSubBasinChain(sget(i,j))){
+                    //     let sb = this.basin.subBasins[s];
+                    //     if(sb instanceof SubBasin && sb.mapOutline){
+                    //         let outline = sb.mapOutline;
+                    //         let edge = false;
+                    //         if(i>0){
+                    //             if(lget(i-1,j)) edge = true;
+                    //             else if(outOfSub(s,sget(i-1,j))) edge = true;
+                    //         }else edge = true;
+                    //         if(j>0){
+                    //             if(lget(i,j-1)) edge = true;
+                    //             else if(outOfSub(s,sget(i,j-1))) edge = true;
+                    //         }else edge = true;
+                    //         if(i<W-1){
+                    //             if(lget(i+1,j)) edge = true;
+                    //             if(outOfSub(s,sget(i+1,j))) edge = true;
+                    //         }else edge = true;
+                    //         if(j<H-1){
+                    //             if(lget(i,j+1)) edge = true;
+                    //             if(outOfSub(s,sget(i,j+1))) edge = true;
+                    //         }else edge = true;
+                    //         if(edge) outline.fill(COLORS.subBasinOutline);
+                    //         else outline.fill(red(COLORS.subBasinOutline),green(COLORS.subBasinOutline),blue(COLORS.subBasinOutline),64);
+                    //         outline.rect(i,j,1,1);
+                    //     }
+                    // }
                 }
             }
         }
-        if(simSettings.snowLayers){
+        if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
-        if(simSettings.useShader){
+        if(simSettings.useShader && !this.shaderDrawn){
             yield* this.drawShader();
         }
         this.drawn = true;
@@ -583,7 +623,7 @@ class Land{
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
                 if(landVal){
-                    let l = 1-this.basin.hemY(j)/height;
+                    let l = 1-this.basin.hemY(j/scl)/HEIGHT;
                     let h = 0.95-landVal;
                     let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
                     for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);

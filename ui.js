@@ -323,6 +323,8 @@ UI.init = function(){
                 drawMagGlass();
                 if(!basin.env.layerIsVector) drawBuffer(coastLine);
             }
+            // let sub = land.getSubBasin(getMouseX(),getMouseY());
+            // if(basin.subBasins[sub] instanceof SubBasin && basin.subBasins[sub].mapOutline) drawBuffer(basin.subBasins[sub].mapOutline);   // test
             drawBuffer(tracks);
             drawBuffer(forecastTracks);
             drawBuffer(stormIcons);
@@ -780,34 +782,43 @@ UI.init = function(){
         s.button("Intensity Indicator: "+b,true);
     },function(){
         simSettings.setShowStrength("toggle");
-    }).append(false,0,45,300,30,function(s){     // autosaving
+    }).append(false,0,37,300,30,function(s){     // autosaving
         let b = simSettings.doAutosave ? "Enabled" : "Disabled";
         s.button("Autosaving: "+b,true);
     },function(){
         simSettings.setDoAutosave("toggle");
-    }).append(false,0,45,300,30,function(s){     // track mode
+    }).append(false,0,37,300,30,function(s){     // track mode
         let m = ["Active TC Tracks","Full Active Tracks","Season Summary","No Tracks"][simSettings.trackMode];
         s.button("Track Mode: "+m,true);
     },function(){
         simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
-    }).append(false,0,45,300,30,function(s){     // snow
+    }).append(false,0,37,300,30,function(s){     // snow
         let b = simSettings.snowLayers ? (simSettings.snowLayers*10) + " layers" : "Disabled";
         s.button("Snow: "+b,true);
     },function(){
         simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
         if(land) land.clearSnow();
-    }).append(false,0,45,300,30,function(s){     // shader
+    }).append(false,0,37,300,30,function(s){     // shader
         let b = simSettings.useShader ? "Enabled" : "Disabled";
         s.button("Land Shader: "+b,true);
     },function(){
         simSettings.setUseShader("toggle");
-    }).append(false,0,45,300,30,function(s){     // magnifying glass
+    }).append(false,0,37,300,30,function(s){     // magnifying glass
         let b = simSettings.showMagGlass ? "Enabled" : "Disabled";
         s.button("Magnifying Glass: "+b,true);
     },function(){
         simSettings.setShowMagGlass("toggle");
         if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+    }).append(false,0,37,300,30,function(s){     // smooth land color
+        let b = simSettings.smoothLandColor ? "Enabled" : "Disabled";
+        s.button("Smooth Land Color: "+b,true);
+    },function(){
+        simSettings.setSmoothLandColor("toggle");
+        if(land){
+            landBuffer.clear();
+            land.drawn = false;
+        }
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -1393,6 +1404,10 @@ UI.init = function(){
         land.clear();
         timelineBox.builtAt = -1;
         for(let t in UI.viewBasin.seasonExpirationTimers) clearTimeout(UI.viewBasin.seasonExpirationTimers[t]);
+        for(let s in UI.viewBasin.subBasins){
+            let sb = UI.viewBasin.subBasins[s];
+            if(sb instanceof SubBasin && sb.mapOutline) sb.mapOutline.remove();
+        }
         let wait = ()=>{
             UI.viewBasin = undefined;
             mainMenu.show();

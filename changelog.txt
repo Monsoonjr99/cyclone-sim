@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.4 (b20200212a):
+    * Background color made much darker and land colors tweaked
+    * Land colors are now smoothed with the height map
+        > Can be disabled in the settings menu
+    * Fixed snow rendering incorrectly
+    * Fixed moisture map layer coast outline rendering incorrectly
 v0.2.3 (b20200211a):
     + Added Jakarta and Port Moresby sub-basins and naming to Australian region map mode
 v0.2.2 (b20200209a):

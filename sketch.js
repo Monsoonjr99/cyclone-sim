@@ -58,8 +58,7 @@ function setup(){
     buffers = new Map();
     scaler = 1;
 
-    let fullW = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-    let fullH = fullW*HEIGHT/WIDTH;
+    let {fullW, fullH} = fullDimensions();
     tracks = createBuffer();
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
@@ -149,7 +148,7 @@ function draw(){
             translate(WIDTH/2,HEIGHT/2);
             push();
             noStroke();
-            fill(0,64,128);
+            fill(COLORS.UI.loadingSymbol);
             ellipse(0,0,d);
             if(waitingTCSymbolSHem) scale(1,-1);
             rotate(millis()*-PI/500);
@@ -220,11 +219,11 @@ class Settings{
     }
 
     static order(){
-        return ["showMagGlass","snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["smoothLandColor","showMagGlass","snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [false,2,false,0,false,true];  // add new defaults to the beginning of this array
+        return [true,false,2,false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){

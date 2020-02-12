@@ -1,6 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.2.3";
-const BUILD_NUMBER = "20200211a";
+const VERSION_NUMBER = "0.2.4";
+const BUILD_NUMBER = "20200212a";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -254,7 +254,7 @@ const HELP_TEXT = "Keyboard Controls:\n" +
 const COLORS = {};      // For storing all colors used in the graphics
 
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
-    COLORS.bg = color(0,127,255);
+    COLORS.bg = color(10,55,155);
     COLORS.storm = {};
     COLORS.storm[EXTROP] = color(220,220,220);
     COLORS.storm[TROPWAVE] = color(130,130,240);
@@ -264,13 +264,14 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.land.push([0.8, color(160,160,160)]);
     COLORS.land.push([0.75, color(145,115,90)]);
     COLORS.land.push([0.7, color(160,125,100)]);
-    COLORS.land.push([0.65, color(30,160,30)]);
-    COLORS.land.push([0.6, color(20,175,20)]);
-    COLORS.land.push([0.55, color(0,200,0)]);
-    COLORS.land.push([0.53, color(220,220,110)]);
-    COLORS.land.push([0.5, color(250,250,90)]);
+    COLORS.land.push([0.65, color(35,145,35)]);
+    COLORS.land.push([0.6, color(35,160,35)]);
+    COLORS.land.push([0.55, color(30,175,30)]);
+    COLORS.land.push([0.53, color(205,205,105)]);
+    COLORS.land.push([0.5, color(230,230,105)]);
     COLORS.snow = color(240);
-    COLORS.outBasin = color(30,95,170);
+    COLORS.outBasin = color(45,70,120);
+    COLORS.subBasinOutline = color(255,255,0);
     COLORS.UI = {};
     COLORS.UI.bar = color(200,100);
     COLORS.UI.box = color(200,170);
@@ -281,4 +282,5 @@ function defineColors(){    // Since p5 color() function doesn't work until setu
     COLORS.UI.redText = color(240,0,0);
     COLORS.UI.nonSelectedInput = color(70);
     COLORS.UI.input = color(255);
+    COLORS.UI.loadingSymbol = color(0,40,85);
 }

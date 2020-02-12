@@ -920,6 +920,12 @@ class SubBasin{
             this.designationSystem = desSys;
         }
         if(scale instanceof Scale) this.scale = scale;
+        this.mapOutline = undefined;
+        if(!this.outBasin() && this.id!==DEFAULT_MAIN_SUBBASIN){
+            let {fullW, fullH} = fullDimensions();
+            this.mapOutline = createBuffer(fullW, fullH, true);
+            this.mapOutline.noStroke();
+        }
         if(data instanceof LoadData) this.load(data);
     }
 

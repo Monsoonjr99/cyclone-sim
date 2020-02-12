@@ -49,6 +49,12 @@ function toggleFullscreen(){
     }
 }
 
+function fullDimensions(){
+    let fullW = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
+    let fullH = fullW*HEIGHT/WIDTH;
+    return {fullW, fullH};
+}
+
 function drawBuffer(b){
     image(b,0,0,WIDTH,HEIGHT);
 }
