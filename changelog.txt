@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.5 (b20200214a):
+    + Added India Meteorological Dept. and Southwest Indian Ocean scales
 v0.2.4 (b20200212a):
     * Background color made much darker and land colors tweaked
     * Land colors are now smoothed with the height map

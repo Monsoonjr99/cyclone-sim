@@ -126,8 +126,8 @@ class DesignationSystem{
             if(opts.prefix!==undefined) this.numbering.suffix = '';
             else this.numbering.suffix = DEPRESSION_LETTER;
         }
-        // scale category threshold for numbering a system (defaults to tropical depression)
-        this.numbering.threshold = opts.numThresh===undefined ? 0 : opts.numThresh;
+        // scale category threshold for numbering a system (overrides Scale.numberingThreshold)
+        this.numbering.threshold = opts.numThresh;
         // behavior for primary designations of basin-crossing systems [may need more testing]
         // 0 = always redesignate (use previous designation from this sub-basin if exists)
         // 1 = strictly redesignate (use new designation even if a previous one from this sub-basin exists)
@@ -151,8 +151,8 @@ class DesignationSystem{
         this.naming.annualAnchorYear = opts.anchor===undefined ? 1979 : opts.anchor;
         // counter for continuous name assignment (only applicable to continuous naming)
         this.naming.continuousNameIndex = opts.indexOffset || 0;
-        // scale category threshold for naming a system (defaults to tropical storm)
-        this.naming.threshold = opts.nameThresh===undefined ? 1 : opts.nameThresh;
+        // scale category threshold for naming a system (overrides Scale.namingThreshold)
+        this.naming.threshold = opts.nameThresh;
         // behavior for primary designations of basin-crossing systems (see above)
         this.naming.crossingMode = opts.nameCross===undefined ? DESIG_CROSSMODE_STRICT_REGEN : opts.nameCross;
         if(data instanceof LoadData) this.load(data);

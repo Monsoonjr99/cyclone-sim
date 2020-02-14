@@ -34,6 +34,9 @@ class Scale{
         this.colorSchemeDisplayNames = opts.colorSchemeDisplayNames || [];
         this.flavorValue = 0;
         this.flavorDisplayNames = opts.flavorDisplayNames || [];
+        // numbering/naming thresholds may be overridden by DesignationSystem
+        this.numberingThreshold = opts.numberingThreshold===undefined ? 0 : opts.numberingThreshold;
+        this.namingThreshold = opts.namingThreshold===undefined ? 1 : opts.namingThreshold;
         if(data instanceof LoadData) this.load(data);
     }
 
@@ -174,7 +177,9 @@ class Scale{
             'displayName',
             'measure',
             'colorSchemeValue',
-            'flavorValue'
+            'flavorValue',
+            'numberingThreshold',
+            'namingThreshold'
         ]) newScale[p] = this[p];
         for(let p of [
             'classifications',
@@ -193,7 +198,9 @@ class Scale{
             'colorSchemeValue',
             'colorSchemeDisplayNames',
             'flavorValue',
-            'flavorDisplayNames'
+            'flavorDisplayNames',
+            'numberingThreshold',
+            'namingThreshold'
         ]) d[p] = this[p];
         return d;
     }
@@ -210,6 +217,8 @@ class Scale{
                 'flavorValue',
                 'flavorDisplayNames'
             ]) this[p] = d[p];
+            if(d.numberingThreshold!==undefined) this.numberingThreshold = d.numberingThreshold;
+            if(d.namingThreshold!==undefined) this.namingThreshold = d.namingThreshold;
         }
     }
 
@@ -510,9 +519,171 @@ Scale.typhoonCommittee = new Scale({
     ]
 });
 
+Scale.IMD = new Scale({
+    measure: SCALE_MEASURE_TEN_MIN_KNOTS,   // technically should be 3-minute, but I didn't bother making a conversion for that
+    displayName: 'India Meteorological Dept.',
+    colorSchemeDisplayNames: ['Classic','Wiki'],
+    flavorDisplayNames: ['Cyclone'],
+    namingThreshold: 2,
+    classifications: [
+        {
+            threshold: 17,
+            color: ['rgb(75,75,245)','#80ccff'],
+            subtropicalColor: ['rgb(95,95,235)','#80ccff'],
+            symbol: 'D',
+            arms: 0,
+            stormNom: 'Depression',
+            stat: 'Depressions',
+            cName: 'Depression'
+        },
+        {
+            threshold: 28,
+            color: ['rgb(20,20,230)','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            symbol: 'DD',
+            arms: 0,
+            stormNom: 'Deep Depression',
+            stat: 'Deep Depressions',
+            cName: 'Deep Depression'
+        },
+        {
+            threshold: 34,
+            color: ['rgb(20,230,20)','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            symbol: 'CS',
+            subtropicalSymbol: 'SS',
+            stormNom: 'Cyclonic Storm',
+            stat: 'Cyclonic Storms',
+            cName: 'Cyclonic Storm'
+        },
+        {
+            threshold: 48,
+            color: ['rgb(180,230,20)','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            symbol: 'SCS',
+            subtropicalSymbol: 'SSS',
+            stormNom: 'Severe Cyclonic Storm',
+            stat: 'Severe',
+            cName: 'Severe Cyclonic Storm'
+        },
+        {
+            threshold: 64,
+            color: ['rgb(230,230,20)','#ffffcc'],
+            symbol: 'VSCS',
+            subtropicalSymbol: 'VSSS',
+            stormNom: 'Very Severe Cyclonic Storm',
+            stat: 'Very Severe',
+            cName: 'Very Severe Cyclonic Storm'
+        },
+        {
+            threshold: 90,
+            color: ['rgb(240,20,20)','#ffc140'],
+            symbol: 'ESCS',
+            subtropicalSymbol: 'ESSS',
+            stormNom: 'Extremely Severe Cyclonic Storm',
+            stat: 'Extremely Severe',
+            cName: 'Extremely Severe Cyclonic Storm'
+        },
+        {
+            threshold: 120,
+            color: ['rgb(250,140,250)','#ff6060'],
+            symbol: 'SUCS',
+            subtropicalSymbol: 'SUSS',
+            stormNom: 'Super Cyclonic Storm',
+            stat: 'Super',
+            cName: 'Super Cyclonic Storm'
+        }
+    ]
+});
+
+Scale.southwestIndianOcean = new Scale({
+    measure: SCALE_MEASURE_TEN_MIN_KNOTS,
+    displayName: 'Southwest Indian Ocean',
+    colorSchemeDisplayNames: ['Classic','Wiki'],
+    flavorDisplayNames: ['Cyclone'],
+    namingThreshold: 2,
+    classifications: [
+        {
+            threshold: 0,
+            color: ['rgb(75,75,245)','#80ccff'],
+            subtropicalColor: ['rgb(95,95,235)','#80ccff'],
+            symbol: 'Di',
+            arms: 0,
+            stormNom: 'Tropical Disturbance',
+            subtropicalStormNom: 'Subtropical Disturbance',
+            stat: 'Disturbances',
+            cName: 'Disturbance'
+        },
+        {
+            threshold: 28,
+            color: ['rgb(20,20,230)','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            symbol: 'D',
+            arms: 0,
+            stormNom: 'Tropical Depression',
+            stat: 'Depressions',
+            cName: 'Depression'
+        },
+        {
+            threshold: 34,
+            color: ['rgb(20,230,20)','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            symbol: 'MTS',
+            subtropicalSymbol: 'MSS',
+            stormNom: 'Moderate Tropical Storm',
+            subtropicalStormNom: 'Moderate Subtropical Storm',
+            stat: 'Named Storms',
+            cName: 'Moderate Tropical Storm'
+        },
+        {
+            threshold: 48,
+            color: ['rgb(180,230,20)','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            symbol: 'STS',
+            subtropicalSymbol: 'SSS',
+            stormNom: 'Severe Tropical Storm',
+            subtropicalStormNom: 'Severe Subtropical Storm',
+            stat: 'Severe',
+            cName: 'Severe Tropical Storm'
+        },
+        {
+            threshold: 64,
+            color: ['rgb(230,230,20)','#ffffcc'],
+            symbol: 'TC',
+            subtropicalSymbol: 'SC',
+            stormNom: 'Tropical Cyclone',
+            subtropicalStormNom: 'Subtropical Cyclone',
+            stat: 'Cyclones',
+            cName: 'Tropical Cyclone'
+        },
+        {
+            threshold: 90,
+            color: ['rgb(240,20,20)','#ffc140'],
+            symbol: 'ITC',
+            subtropicalSymbol: 'ISC',
+            stormNom: 'Intense Tropical Cyclone',
+            subtropicalStormNom: 'Intense Subtropical Cyclone',
+            stat: 'Intense',
+            cName: 'Intense Tropical Cyclone'
+        },
+        {
+            threshold: 115,
+            color: ['rgb(250,140,250)','#ff6060'],
+            symbol: 'VITC',
+            subtropicalSymbol: 'VISC',
+            stormNom: 'Very Intense Tropical Cyclone',
+            subtropicalStormNom: 'Very Intense Subtropical Cyclone',
+            stat: 'Very Intense',
+            cName: 'Very Intense Tropical Cyclone'
+        }
+    ]
+});
+
 Scale.presetScales = [
     Scale.saffirSimpson,
     Scale.extendedSaffirSimpson,
     Scale.australian,
-    Scale.typhoonCommittee
+    Scale.typhoonCommittee,
+    Scale.IMD,
+    Scale.southwestIndianOcean
 ];

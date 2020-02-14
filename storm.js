@@ -356,12 +356,16 @@ class Storm{
             if(sb instanceof SubBasin && sb.designationSystem){
                 let ds = sb.designationSystem;
                 let desArray = this.designations.secondary;
+                let numThresh = basin.getScale(subId).numberingThreshold;
+                if(ds.numbering.threshold!==undefined) numThresh = ds.numbering.threshold;
+                let nameThresh = basin.getScale(subId).namingThreshold;
+                if(ds.naming.threshold!==undefined) nameThresh = ds.naming.threshold;
                 if(ds.secondary){
-                    if(ds.numbering.enabled && isTropical && classification>=ds.numbering.threshold && !this.subBasinData(subId,year,'num',true)){
+                    if(ds.numbering.enabled && isTropical && classification>=numThresh && !this.subBasinData(subId,year,'num',true)){
                         let desig = ds.getNewNum();
                         if(desig) desArray.push(desig);
                     }
-                    if(ds.naming.mainLists.length>0 && isTropical && classification>=ds.naming.threshold && !this.subBasinData(subId,year,'name',true)){
+                    if(ds.naming.mainLists.length>0 && isTropical && classification>=nameThresh && !this.subBasinData(subId,year,'name',true)){
                         let desig = ds.getNewName();
                         if(desig) desArray.push(desig);
                     }
@@ -381,10 +385,12 @@ class Storm{
         let subId;
         let ds;
         let classification;
+        let threshold;
         let flag;
         for(let isNaming=0;isNaming<=1;isNaming++){
             if(isNaming){
                 subId = primaryDesSBs.naming;
+                threshold = basin.getScale(subId).namingThreshold;
                 if(!namingDS){
                     if(isTropical && !this.subBasinData(sub,year,'name',true)) designated = true;
                     continue;
@@ -393,6 +399,7 @@ class Storm{
                 flag = 'name';
             }else{
                 subId = primaryDesSBs.numbering;
+                threshold = basin.getScale(subId).numberingThreshold;
                 if(!numberingDS){
                     if(isTropical && !this.subBasinData(sub,year,'num',true)) designated = true;
                     continue;
@@ -401,9 +408,10 @@ class Storm{
                 flag = 'num';
             }
             classification = basin.getScale(subId).get(data);
+            if(ds.threshold!==undefined) threshold = ds.threshold;
             let altPre = primaryDesSBs.altPre;
             let altSuf = primaryDesSBs.altSuf;
-            if(isTropical && classification>=ds.threshold && !this.subBasinData(subId,year,flag,true)){
+            if(isTropical && classification>=threshold && !this.subBasinData(subId,year,flag,true)){
                 let findold = false;
                 let keep = false;
                 switch(ds.crossingMode){
