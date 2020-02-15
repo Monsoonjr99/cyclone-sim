@@ -154,8 +154,16 @@ function draw(){
             rotate(millis()*-PI/500);
             beginShape();
             vertex(d*5/8,-d);
-            bezierVertex(-d*3/2,-d*5/8,d*3/2,d*5/8,-d*5/8,d);
-            bezierVertex(d*5/8,0,-d*5/8,0,d*5/8,-d);
+            bezierVertex(d*5/8,-d,-d*3/8,-d*7/8,-d*1/2,0);
+            vertex(0,0);
+            bezierVertex(-d*1/4,-d*5/8,d*5/8,-d,d*5/8,-d);
+            endShape();
+            rotate(PI);
+            beginShape();
+            vertex(d*5/8,-d);
+            bezierVertex(d*5/8,-d,-d*3/8,-d*7/8,-d*1/2,0);
+            vertex(0,0);
+            bezierVertex(-d*1/4,-d*5/8,d*5/8,-d,d*5/8,-d);
             endShape();
             pop();
             textSize(48);

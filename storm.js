@@ -205,6 +205,24 @@ class Storm{
             let ty = advX.type;
             let name = this.getNameByTick(viewTick);
             this.rotation -= 0.03*pow(1.01,ktsToMph(min(270,st)));
+            let drawArms = ()=>{
+                let a = scaleIconData.arms;
+                if(tropOrSub(ty) && a){
+                    stormIcons.push();
+                    if(basin.SHem) stormIcons.scale(1,-1);
+                    stormIcons.rotate(this.rotation);
+                    for(let i=0;i<a;i++){
+                        if(i>0) stormIcons.rotate(2*PI/a);
+                        stormIcons.beginShape();
+                        stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
+                        stormIcons.bezierVertex(DIAMETER*5/8,-DIAMETER,-DIAMETER*3/8,-DIAMETER*7/8,-DIAMETER*1/2,0);
+                        stormIcons.vertex(0,0);
+                        stormIcons.bezierVertex(-DIAMETER*1/4,-DIAMETER*5/8,DIAMETER*5/8,-DIAMETER,DIAMETER*5/8,-DIAMETER);
+                        stormIcons.endShape();
+                    }
+                    stormIcons.pop();
+                }
+            };
             stormIcons.push();
             stormIcons.translate(pos.x,pos.y);
             stormIcons.textAlign(CENTER,CENTER);
@@ -215,32 +233,12 @@ class Storm{
                     stormIcons.textSize(18);
                     stormIcons.text("L",0,0);
                 }else stormIcons.ellipse(0,0,DIAMETER);
-                if(tropOrSub(ty) && scaleIconData.arms){
-                    stormIcons.push();
-                    if(basin.SHem) stormIcons.scale(1,-1);
-                    stormIcons.rotate(this.rotation);
-                    stormIcons.beginShape();
-                    stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
-                    stormIcons.bezierVertex(-DIAMETER*3/2,-DIAMETER*5/8,DIAMETER*3/2,DIAMETER*5/8,-DIAMETER*5/8,DIAMETER);
-                    stormIcons.bezierVertex(DIAMETER*5/8,0,-DIAMETER*5/8,0,DIAMETER*5/8,-DIAMETER);
-                    stormIcons.endShape();
-                    stormIcons.pop();
-                }
+                drawArms();
             }
             stormIcons.fill(scaleIconData.color);
             stormIcons.noStroke();
             if(ty!==EXTROP) stormIcons.ellipse(0,0,DIAMETER);
-            if(tropOrSub(ty) && scaleIconData.arms){
-                stormIcons.push();
-                if(basin.SHem) stormIcons.scale(1,-1);
-                stormIcons.rotate(this.rotation);
-                stormIcons.beginShape();
-                stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
-                stormIcons.bezierVertex(-DIAMETER*3/2,-DIAMETER*5/8,DIAMETER*3/2,DIAMETER*5/8,-DIAMETER*5/8,DIAMETER);
-                stormIcons.bezierVertex(DIAMETER*5/8,0,-DIAMETER*5/8,0,DIAMETER*5/8,-DIAMETER);
-                stormIcons.endShape();
-                stormIcons.pop();
-            }
+            drawArms();
             if(ty===EXTROP){
                 stormIcons.fill(COLORS.storm.extL);
                 stormIcons.textSize(18);
