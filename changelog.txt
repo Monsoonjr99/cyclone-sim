@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.7 (b20200217a):
+    * Old name list presets converted to designation-system presets
 v0.2.6 (b20200215a):
     * Redone storm icon arms to make them nicer and flush with the icon body
     * Scales can now specify any number of storm icon arms (besides 0 or 2) for a category

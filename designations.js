@@ -107,9 +107,12 @@ class Designation{
 }
 
 class DesignationSystem{
-    constructor(subBasin,data,opts){
-        this.subBasin = subBasin instanceof SubBasin && subBasin;
-        if(!opts) opts = {};
+    constructor(data){
+        let opts;
+        if(data && !(data instanceof LoadData)) opts = data;
+        else opts = {};
+        this.subBasin = undefined;
+        this.displayName = opts.displayName;
         // if designations should be secondary instead of primary
         this.secondary = opts.secondary;
         this.numbering = {};
@@ -156,6 +159,59 @@ class DesignationSystem{
         // behavior for primary designations of basin-crossing systems (see above)
         this.naming.crossingMode = opts.nameCross===undefined ? DESIG_CROSSMODE_STRICT_REGEN : opts.nameCross;
         if(data instanceof LoadData) this.load(data);
+    }
+
+    setSubBasin(sb){
+        if(sb instanceof SubBasin) this.subBasin = sb;
+    }
+
+    addMainLists(...lists){
+        for(let l of lists){
+            if(l instanceof Array){
+                this.naming.mainLists.push(l);
+            }
+        }
+        return this;
+    }
+
+    addAuxiliaryLists(...lists){
+        for(let l of lists){
+            if(l instanceof Array){
+                this.naming.auxiliaryLists.push(l);
+            }
+        }
+        return this;
+    }
+
+    addReplacementLists(...lists){
+        for(let l of lists){
+            if(l instanceof Array){
+                this.naming.replacementLists.push(l);
+            }
+        }
+        return this;
+    }
+
+    setSecondary(v){
+        this.secondary = !!v;
+        return this;
+    }
+
+    setCrossingModes(numCM,nameCM){
+        if(numCM !== undefined) this.numbering.crossingMode = numCM;
+        if(nameCM !== undefined) this.naming.crossingMode = nameCM;
+        return this;
+    }
+
+    setThresholds(numThresh,nameThresh){
+        if(numThresh !== undefined) this.numbering.threshold = numThresh;
+        if(nameThresh !== undefined) this.naming.threshold = nameThresh;
+        return this;
+    }
+
+    setContinuousNameIndex(i){
+        if(i !== undefined) this.naming.continuousNameIndex = i;
+        return this;
     }
 
     getName(tick,year,index){
@@ -243,9 +299,40 @@ class DesignationSystem{
         return undefined;
     }
 
+    clone(){
+        let newDS = new DesignationSystem();
+        newDS.secondary = this.secondary;
+        newDS.displayName = this.displayName;
+        let numg = this.numbering;
+        let namg = this.naming;
+        let Numg = newDS.numbering;
+        let Namg = newDS.naming;
+        for(let p of [
+            'enabled',
+            'prefix',
+            'suffix',
+            'threshold',
+            'crossingMode'
+        ]) Numg[p] = numg[p];
+        for(let p of [
+            'annual',
+            'annualAnchorYear',
+            'continuousNameIndex',
+            'threshold',
+            'crossingMode'
+        ]) Namg[p] = namg[p];
+        for(let p of [
+            'mainLists',
+            'auxiliaryLists',
+            'replacementLists'
+        ]) Namg[p] = JSON.parse(JSON.stringify(namg[p]));
+        return newDS;
+    }
+
     save(){
         let d = {};
         d.secondary = this.secondary;
+        d.displayName = this.displayName;
         let numg = d.numbering = {};
         let namg = d.naming = {};
         let Numg = this.numbering;
@@ -274,6 +361,7 @@ class DesignationSystem{
         if(data instanceof LoadData){
             let d = data.value;
             this.secondary = d.secondary;
+            this.displayName = d.displayName;
             let Numg = this.numbering;
             let Namg = this.naming;
             let numg = d.numbering;
@@ -294,7 +382,7 @@ class DesignationSystem{
                 'continuousNameIndex',
                 'threshold'
             ]) Namg[p] = namg[p];
-            Namg.crossingMode = namg.crossingMode===undefined ? 3 : namg.crossingMode;
+            Namg.crossingMode = namg.crossingMode===undefined ? DESIG_CROSSMODE_STRICT_REGEN : namg.crossingMode;
             for(let i=Namg.auxiliaryLists.length-1;i>=0;i--){
                 let a = Namg.auxiliaryLists[i];
                 if(a.length===1 && a[0]==="Unnamed") Namg.auxiliaryLists.splice(i,1);
@@ -315,10 +403,218 @@ class DesignationSystem{
             let auxlist = list[list.length-1];
             if(auxlist && auxlist[0]!=="Unnamed") aux.push(JSON.parse(JSON.stringify(auxlist)));
         }else main.push(JSON.parse(JSON.stringify(list)));
-        return new DesignationSystem(undefined,undefined,{
+        return new DesignationSystem({
             mainLists: main,
             auxLists: aux,
             annual: annual
         });
     }
 }
+
+DesignationSystem.atlantic = new DesignationSystem({
+    displayName: 'Atlantic',
+    suffix: 'L',
+    annual: true,
+    anchor: 1979,
+    mainLists: [
+        ['Ana','Bill','Claudette','Danny','Elsa','Fred','Grace','Henri','Ida','Julian','Kate','Larry','Mindy','Nicholas','Odette','Peter','Rose','Sam','Teresa','Victor','Wanda'],
+        ['Alex','Bonnie','Colin','Danielle','Earl','Fiona','Gaston','Hermine','Ian','Julia','Karl','Lisa','Martin','Nicole','Owen','Paula','Richard','Shary','Tobias','Virginie','Walter'],
+        ['Arlene','Bret','Cindy','Don','Emily','Franklin','Gert','Harold','Idalia','Jose','Katia','Lee','Margot','Nigel','Ophelia','Philippe','Rina','Sean','Tammy','Vince','Whitney'],
+        ['Alberto','Beryl','Chris','Debby','Ernesto','Francine','Gordon','Helene','Isaac','Joyce','Kirk','Leslie','Milton','Nadine','Oscar','Patty','Rafael','Sara','Tony','Valerie','William'],
+        ['Andrea','Barry','Chantal','Dorian','Erin','Fernand','Gabrielle','Humberto','Imelda','Jerry','Karen','Lorenzo','Melissa','Nestor','Olga','Pablo','Rebekah','Sebastien','Tanya','Van','Wendy'],
+        ['Arthur','Bertha','Cristobal','Dolly','Edouard','Fay','Gonzalo','Hanna','Isaias','Josephine','Kyle','Laura','Marco','Nana','Omar','Paulette','Rene','Sally','Teddy','Vicky','Wilfred']
+    ],
+    auxLists: [
+        ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu','Nu','Xi','Omicron','Pi','Rho','Sigma','Tau','Upsilon','Phi','Chi','Psi','Omega'],
+        ['Alef','Bet','Gimel','Dalet','He','Vav','Zayin','Het','Tet','Yod','Kaf','Lamed','Mem','Nun','Samekh','Ayin','Pe','Tsadi','Qof','Resh','Shin','Tav'] // Hebrew Alphabet not actually official, but added due to popular demand
+    ]
+});
+
+DesignationSystem.easternPacific = new DesignationSystem({
+    displayName: 'Eastern Pacific',
+    suffix: 'E',
+    annual: true,
+    anchor: 1979,
+    mainLists: [
+        ["Andres","Blanca","Carlos","Dolores","Enrique","Felicia","Guillermo","Hilda","Ignacio","Jimena","Kevin","Linda","Marty","Nora","Olaf","Pamela","Rick","Sandra","Terry","Vivian","Waldo","Xina","York","Zelda"],
+        ["Agatha","Blas","Celia","Darby","Estelle","Frank","Georgette","Howard","Ivette","Javier","Kay","Lester","Madeline","Newton","Orlene","Paine","Roslyn","Seymour","Tina","Virgil","Winifred","Xavier","Yolanda","Zeke"],
+        ["Adrian","Beatriz","Calvin","Dora","Eugene","Fernanda","Greg","Hilary","Irwin","Jova","Kenneth","Lidia","Max","Norma","Otis","Pilar","Ramon","Selma","Todd","Veronica","Wiley","Xina","York","Zelda"],
+        ["Aletta","Bud","Carlotta","Daniel","Emilia","Fabio","Gilma","Hector","Ileana","John","Kristy","Lane","Miriam","Norman","Olivia","Paul","Rosa","Sergio","Tara","Vicente","Willa","Xavier","Yolanda","Zeke"],
+        ["Alvin","Barbara","Cosme","Dalila","Erick","Flossie","Gil","Henriette","Ivo","Juliette","Kiko","Lorena","Mario","Narda","Octave","Priscilla","Raymond","Sonia","Tico","Velma","Wallis","Xina","York","Zelda"],
+        ["Amanda","Boris","Cristina","Douglas","Elida","Fausto","Genevieve","Hernan","Iselle","Julio","Karina","Lowell","Marie","Norbert","Odalys","Polo","Rachel","Simon","Trudy","Vance","Winnie","Xavier","Yolanda","Zeke"]
+    ],
+    auxLists: [
+        ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu','Nu','Xi','Omicron','Pi','Rho','Sigma','Tau','Upsilon','Phi','Chi','Psi','Omega'],
+        ['Alef','Bet','Gimel','Dalet','He','Vav','Zayin','Het','Tet','Yod','Kaf','Lamed','Mem','Nun','Samekh','Ayin','Pe','Tsadi','Qof','Resh','Shin','Tav'] // Hebrew Alphabet not actually official, but added due to popular demand
+    ]
+});
+
+DesignationSystem.centralPacific = new DesignationSystem({
+    displayName: 'Central Pacific',
+    suffix: 'C',
+    mainLists: [
+        ["Akoni","Ema","Hone","Iona","Keli","Lala","Moke","Nolo","Olana","Pena","Ulana","Wale"],
+        ["Aka","Ekeka","Hene","Iolana","Keoni","Lino","Mele","Nona","Oliwa","Pama","Upana","Wene"],
+        ["Alika","Ele","Huko","Iopa","Kika","Lana","Maka","Neki","Omeka","Pewa","Unala","Wali"],
+        ["Ana","Ela","Halola","Iune","Kilo","Loke","Malia","Niala","Oho","Pali","Ulika","Walaka"]
+    ]
+});
+
+DesignationSystem.westernPacific = new DesignationSystem({
+    displayName: 'Western Pacific',
+    suffix: 'W',
+    mainLists: [
+        ["Damrey","Haikui","Kirogi","Yun-yeung","Koinu","Bolaven","Sanba","Jelawat","Ewiniar","Maliksi","Gaemi","Prapiroon","Maria","Son-Tinh","Ampil","Wukong","Jongdari","Shanshan","Yagi","Leepi","Bebinca","Rumbia","Soulik","Cimaron","Jebi","Mangkhut","Barijat","Trami"],
+        ["Kong-rey","Yutu","Toraji","Man-yi","Usagi","Pabuk","Wutip","Sepat","Mun","Danas","Nari","Wipha","Francisco","Lekima","Krosa","Bailu","Podul","Lingling","Kajiki","Faxai","Peipah","Tapah","Mitag","Hagibis","Neoguri","Bualoi","Matmo","Halong"],
+        ["Nakri","Fengshen","Kalmaegi","Fung-wong","Kammuri","Phanfone","Vongfong","Nuri","Sinlaku","Hagupit","Jangmi","Mekkhala","Higos","Bavi","Maysak","Haishen","Noul","Dolphin","Kujira","Chan-hom","Linfa","Nangka","Saudel","Molave","Goni","Atsani","Etau","Vamco"],
+        ["Krovanh","Dujuan","Surigae","Choi-wan","Koguma","Champi","In-fa","Cempaka","Nepartak","Lupit","Mirinae","Nida","Omais","Conson","Chanthu","Dianmu","Mindulle","Lionrock","Kompasu","Namtheun","Malou","Nyatoh","Rai","Malakas","Megi","Chaba","Aere","Songda"],
+        ["Trases","Mulan","Meari","Ma-on","Tokage","Hinnamnor","Muifa","Merbok","Nanmadol","Talas","Noru","Kulap","Roke","Sonca","Nesat","Haitang","Nalgae","Banyan","Yamaneko","Pakhar","Sanvu","Mawar","Guchol","Talim","Doksuri","Khanun","Lan","Saola"]
+    ]
+});
+
+DesignationSystem.PAGASA = new DesignationSystem({
+    displayName: 'PAGASA',
+    secondary: true,
+    numEnable: false,
+    annual: true,
+    anchor: 1963,
+    nameThresh: 0,
+    mainLists: [
+        ["Amang","Betty","Chedeng","Dodong","Egay","Falcon","Goring","Hanna","Ineng","Jenny","Kabayan","Liwayway","Marilyn","Nimfa","Onyok","Perla","Quiel","Ramon","Sarah","Tamaraw","Ugong","Viring","Weng","Yoyoy","Zigzag","Abe","Berto","Charo","Dado","Estoy","Felion","Gening","Herman","Irma","Jaime"],
+        ["Ambo","Butchoy","Carina","Dindo","Enteng","Ferdie","Gener","Helen","Igme","Julian","Kristine","Leon","Marce","Nika","Ofel","Pepito","Quinta","Rolly","Siony","Tonyo","Ulysses","Vicky","Warren","Yoyong","Zosimo","Alakdan","Baldo","Clara","Dencio","Estong","Felipe","Gomer","Heling","Ismael","Julio"],
+        ["Auring","Bising","Crising","Dante","Emong","Fabian","Gorio","Huaning","Isang","Jolina","Kiko","Lannie","Maring","Nando","Odette","Paolo","Quedan","Ramil","Salome","Tino","Uwan","Verbena","Wilma","Yasmin","Zoraida","Alamid","Bruno","Conching","Dolor","Ernie","Florante","Gerardo","Hernan","Isko","Jerome"],
+        ["Agaton","Basyang","Caloy","Domeng","Ester","Florita","Gardo","Henry","Inday","Josie","Karding","Luis","Maymay","Neneng","Obet","Paeng","Queenie","Rosal","Samuel","Tomas","Umberto","Venus","Waldo","Yayang","Zeny","Agila","Bagwis","Chito","Diego","Elena","Felino","Gunding","Harriet","Indang","Jessa"]
+    ]
+});
+
+DesignationSystem.australianRegionBoM = new DesignationSystem({
+    displayName: 'Australian Region (BoM)',
+    suffix: 'U',
+    mainLists: [
+        ["Anika","Billy","Charlotte","Dominic","Ellie","Freddy","Gabrielle","Herman","Ilsa","Jasper","Kirrily","Lincoln","Megan","Neville","Olga","Paul","Robyn","Sean","Tasha","Vince","Zelia"],
+        ["Anthony","Bianca","Courtney","Dianne","Errol","Fina","Grant","Hayley","Iggy","Jenna","Koji","Luana","Mitchell","Narelle","Oran","Peta","Riordan","Sandra","Tim","Victoria","Zane"],
+        ["Alessia","Bruce","Catherine","Dylan","Edna","Fletcher","Gillian","Hadi","Ivana","Jack","Kate","Laszlo","Mingzhu","Nathan","Olwyn","Quincey","Raquel","Stan","Tatiana","Uriah","Yvette"],
+        ["Alfred","Blanche","Caleb","Dara","Ernie","Frances","Greg","Hilda","Irving","Joyce","Kelvin","Linda","Marco","Nora","Owen","Penny","Riley","Savannah","Trevor","Veronica","Wallace"],
+        ["Ann","Blake","Claudia","Damien","Esther","Ferdinand","Gretel","Harold","Imogen","Joshua","Kimi","Lucas","Marian","Niran","Odette","Paddy","Ruby","Seth","Tiffany","Vernon"]
+    ]
+});
+
+DesignationSystem.australianRegionJakarta = new DesignationSystem({
+    displayName: 'Australian Region (Jakarta)',
+    numEnable: false,
+    mainLists: [
+        ['Anggrek','Bakung','Cempaka','Dahlia','Flamboyan','Kenanga','Lili','Mangga','Seroja','Teratai']
+    ],
+    replacementLists: [
+        ['Anggur','Belimbing','Duku','Jambu','Lengkeng','Melati','Nangka','Pisang','Rambutan','Sawo']
+    ]
+});
+
+DesignationSystem.australianRegionPortMoresby = new DesignationSystem({
+    displayName: 'Australian Region (Port Moresby)',
+    numEnable: false,
+    mainLists: [
+        ['Alu','Buri','Dodo','Emau','Fere','Hibu','Ila','Kama','Lobu','Maila']
+    ],
+    replacementLists: [
+        ['Nou','Obaha','Paia','Ranu','Sabi','Tau','Ume','Vali','Wau','Auram']
+    ]
+});
+
+DesignationSystem.northIndianOcean = new DesignationSystem({
+    displayName: 'North Indian Ocean',
+    numEnable: false,
+    mainLists: [
+        ['Onil','Agni','Hibaru','Pyarr','Baaz','Fanoos','Mala','Mukda'],
+        ['Ogni','Akash','Gonu','Yemyin','Sidr','Nargis','Rashmi','Khai-Muk'],
+        ['Nisha','Bijli','Aila','Phyan','Ward','Laila','Bandu','Phet'],
+        ['Giri','Jal','Keila','Thane','Murjan','Nilam','Viyaru','Phailin'],
+        ['Helen','Lehar','Madi','Nanauk','Hudhud','Nilofar','Ashobaa','Komen'],
+        ['Chapala','Megh','Roanu','Kyant','Nada','Vardah','Maarutha','Mora'],
+        ['Ockhi','Sagar','Mekunu','Daye','Luban','Titli','Gaja','Phethai'],
+        ['Fani','Vayu','Hikaa','Kyarr','Maha','Bulbul','Pawan','Amphan']
+    ]
+});
+
+DesignationSystem.southWestIndianOcean = new DesignationSystem({
+    displayName: 'Southwest Indian Ocean',
+    suffix: 'R',
+    annual: true,
+    anchor: 2017,
+    mainLists: [
+        ['Ambali','Belna','Calvinia','Diane','Esami','Francisco','Gabekile','Herold','Irondro','Jeruto','Kundai','Lisebo','Michel','Nousra','Olivier','Pokera','Quincy','Rebaone','Salama','Tristan','Ursula','Violet','Wilson','Xila','Yekela','Zania'],
+        ['Ava','Bongoyo','Chalane','Danilo','Eloise','Faraji','Guambe','Habana','Iman','Jobo','Kanga','Ludzi','Melina','Nathan','Onias','Pelagie','Quamar','Rita','Solani','Tarik','Urilia','Vuyane','Wagner','Xusa','Yarona','Zacarias'],
+        ['Ana','Batsirai','Cliff','Damako','Emnati','Fezile','Gombe','Halima','Issa','Jasmine','Karim','Letlama','Maipelo','Njazi','Oscar','Pamela','Quentin','Rajab','Savana','Themba','Uyapo','Viviane','Walter','Xangy','Yemurai','Zanele']
+    ]
+});
+
+DesignationSystem.southPacific = new DesignationSystem({
+    displayName: 'South Pacific',
+    suffix: 'F',
+    mainLists: [
+        ['Ana','Bina','Cody','Dovi','Eva','Fili','Gina','Hale','Irene','Judy','Kevin','Lola','Mal','Nat','Osai','Pita','Rae','Seru','Tam','Urmil','Vaianu','Wati','Xavier','Yani','Zita'],
+        ['Arthur','Becky','Chip','Denia','Elisa','Fotu','Glen','Hettie','Innis','Julie','Ken','Lin','Maciu','Nisha','Orea','Pearl','Rene','Sarah','Troy','Uinita','Vanessa','Wano','Yvonne','Zaka'],
+        ['Alvin','Bune','Cyril','Daphne','Eden','Florin','Garry','Haley','Isa','June','Kofi','Louise','Mike','Niko','Opeti','Perry','Reuben','Solo','Tuni','Ulu','Victor','Wanita','Yates','Zidane'],
+        ['Amos','Bart','Crystal','Dean','Ella','Fehi','Garth','Hola','Iris','Josie','Keni','Liua','Mona','Neil','Oma','Pola','Rita','Sarai','Tino','Uesi','Vicky','Wasi','Yolanda','Zazu']
+    ],
+    replacementLists: [
+        ['Aru','Ben','Chris','Danial','Emosi','Feki','Germaine','Hart','Ili','Josese','Kirio','Lute','Mata','Neta','Olivia','Pana','Rex','Samadiyo','Tasi','Uila','Velma','Wane','Yasa','Zanna']
+    ]
+});
+
+DesignationSystem.southAtlantic = new DesignationSystem({
+    displayName: 'South Atlantic',
+    suffix: 'Q',
+    mainLists: [
+        ['Arani','Bapo','Cari','Deni','E\u00e7a\u00ed','Guar\u00e1','Iba','Jaguar','Kurum\u00ed','Mani','Oquira','Potira','Raoni','Ub\u00e1','Yakecan']
+    ]
+});
+
+DesignationSystem.atlantic1979 = new DesignationSystem({
+    displayName: 'Atlantic (1979-1984)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1979,
+    mainLists: [
+        ['Ana','Bob','Claudette','David','Elena','Frederic','Gloria','Henri','Isabel','Juan','Kate','Larry','Mindy','Nicholas','Odette','Peter','Rose','Sam','Teresa','Victor','Wanda'],
+        ['Allen','Bonnie','Charley','Danielle','Earl','Frances','Georges','Hermine','Ivan','Jeanne','Karl','Lisa','Mitch','Nicole','Otto','Paula','Richard','Shary','Tomas','Virginie','Walter'],
+        ['Arlene','Bret','Cindy','Dennis','Emily','Floyd','Gert','Harvey','Irene','Jose','Katrina','Lenny','Maria','Nate','Ophelia','Philippe','Rita','Stan','Tammy','Vince','Wilma'],
+        ['Alberto','Beryl','Chris','Debby','Ernesto','Florence','Gilbert','Helene','Isaac','Joan','Keith','Leslie','Michael','Nadine','Oscar','Patty','Rafael','Sandy','Tony','Valerie','William'],
+        ['Alicia','Barry','Chantal','Dean','Erin','Felix','Gabrielle','Hugo','Iris','Jerry','Karen','Luis','Marilyn','Noel','Opal','Pablo','Roxanne','Sebastien','Tanya','Van','Wendy'],
+        ['Arthur','Bertha','Cesar','Diana','Edouard','Fran','Gustav','Hortense','Isidore','Josephine','Klaus','Lili','Marco','Nana','Omar','Paloma','Rene','Sally','Teddy','Vicky','Wilfred']
+    ],
+    auxLists: [
+        ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu','Nu','Xi','Omicron','Pi','Rho','Sigma','Tau','Upsilon','Phi','Chi','Psi','Omega'],
+        ['Alef','Bet','Gimel','Dalet','He','Vav','Zayin','Het','Tet','Yod','Kaf','Lamed','Mem','Nun','Samekh','Ayin','Pe','Tsadi','Qof','Resh','Shin','Tav'] // Hebrew Alphabet not actually official, but added due to popular demand
+    ]
+});
+
+DesignationSystem.periodicTable = new DesignationSystem({
+    displayName: 'Periodic Table',
+    suffix: DEPRESSION_LETTER,
+    mainLists: [
+        ["Hydrogen","Helium","Lithium","Beryllium","Boron","Carbon","Nitrogen","Oxygen","Fluorine","Neon","Sodium","Magnesium","Aluminium","Silicon","Phosphorus","Sulfur","Chlorine","Argon","Potassium","Calcium","Scandium","Titanium","Vanadium","Chromium","Manganese","Iron","Cobalt","Nickel","Copper","Zinc","Gallium","Germanium","Arsenic","Selenium","Bromine","Krypton","Rubidium","Strontium","Yttrium","Zirconium","Niobium","Molybdenum","Technetium","Ruthenium","Rhodium","Palladium","Silver","Cadmium","Indium","Tin","Antimony","Tellurium","Iodine","Xenon","Caesium","Barium","Lanthanum","Cerium","Praseodymium","Neodymium","Promethium","Samarium","Europium","Gadolinium","Terbium","Dysprosium","Holmium","Erbium","Thulium","Ytterbium","Lutetium","Hafnium","Tantalum","Tungsten","Rhenium","Osmium","Iridium","Platinum","Gold","Mercury","Thallium","Lead","Bismuth","Polonium","Astatine","Radon","Francium","Radium","Actinium","Thorium","Protactinium","Uranium","Neptunium","Plutonium","Americium","Curium","Berkelium","Californium","Einsteinium","Fermium","Mendelevium","Nobelium","Lawrencium","Rutherfordium","Dubnium","Seaborgium","Bohrium","Hassium","Meitnerium","Darmstadtium","Roentgenium","Copernicium","Nihonium","Flerovium","Moscovium","Livermorium","Tennessine","Oganesson"]
+    ]
+});
+
+DesignationSystem.periodicTableAnnual = DesignationSystem.periodicTable.clone();
+DesignationSystem.periodicTableAnnual.naming.annual = true;
+DesignationSystem.periodicTableAnnual.displayName = 'Periodic Table (Annual)';
+
+DesignationSystem.presetDesignationSystems = [
+    DesignationSystem.atlantic,
+    DesignationSystem.easternPacific,
+    DesignationSystem.centralPacific,
+    DesignationSystem.westernPacific,
+    DesignationSystem.PAGASA,
+    DesignationSystem.northIndianOcean,
+    DesignationSystem.australianRegionBoM,
+    DesignationSystem.southPacific,
+    DesignationSystem.southWestIndianOcean,
+    DesignationSystem.southAtlantic,
+    DesignationSystem.australianRegionJakarta,
+    DesignationSystem.australianRegionPortMoresby,
+    DesignationSystem.atlantic1979,
+    DesignationSystem.periodicTable,
+    DesignationSystem.periodicTableAnnual
+];

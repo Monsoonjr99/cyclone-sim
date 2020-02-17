@@ -8,17 +8,8 @@ class Basin{
         this.subBasins = {};
         this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,
             Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0),
-            DesignationSystem.convertFromOldNameList(NAME_LIST_PRESETS[opts.names || 0])
+            DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false)
         );
-        let suf = ({
-            6: 'L',
-            7: 'E',
-            8: 'W',
-            10: 'U',
-            11: 'F',
-            12: 'R'
-        })[opts.mapType];   // Quick map-type-based suffix thing until name list presets get converted to designation systems
-        if(suf!==undefined) this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = suf;
         this.tick = 0;
         this.lastSaved = 0;
         this.godMode = opts.godMode;
@@ -30,46 +21,38 @@ class Basin{
         if(MAP_TYPES[this.mapType].special==='CPac'){
             this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
             this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                suffix: 'C',
-                numCross: DESIG_CROSSMODE_KEEP,
-                mainLists: [NAME_LIST_PRESETS[2]],
-                nameCross: DESIG_CROSSMODE_KEEP
-            }));
+            this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,
+                DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP,DESIG_CROSSMODE_KEEP)
+            );
         }else if(MAP_TYPES[this.mapType].special==='PAGASA'){
-            this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                secondary: true,
-                numEnable: false,
-                mainLists: [NAME_LIST_PRESETS[4][0],NAME_LIST_PRESETS[4][1],NAME_LIST_PRESETS[4][2],NAME_LIST_PRESETS[4][3]],
-                annual: true,
-                anchor: 1963,
-                nameThresh: 0
-            }));
+            this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,
+                DesignationSystem.PAGASA.clone()
+            );
         }else if(MAP_TYPES[this.mapType].special==='NIO'){
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.prefix = undefined;
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = undefined;
-            this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                prefix: 'ARB',
-                numCross: DESIG_CROSSMODE_KEEP
-            }));
-            this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                prefix: 'BOB',
-                numCross: DESIG_CROSSMODE_KEEP
-            }));
+            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
+            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.prefix = undefined;
+            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = undefined;
+            this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,
+                new DesignationSystem({
+                    prefix: 'ARB',
+                    numCross: DESIG_CROSSMODE_KEEP
+                })
+            );
+            this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,
+                new DesignationSystem({
+                    prefix: 'BOB',
+                    numCross: DESIG_CROSSMODE_KEEP
+                })
+            );
         }else if(MAP_TYPES[this.mapType].special==='AUS'){
             this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
             this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                numEnable: false,
-                mainLists: [NAME_LIST_PRESETS[11]],
-                nameCross: DESIG_CROSSMODE_KEEP
-            }));
-            this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,new DesignationSystem(undefined,undefined,{
-                numEnable: false,
-                mainLists: [NAME_LIST_PRESETS[12]],
-                nameCross: DESIG_CROSSMODE_KEEP
-            }));
+            this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
+                DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+            );
+            this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
+                DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+            );
         }
         this.seed = opts.seed || moment().valueOf();
         this.env = new Environment(this);
@@ -915,10 +898,7 @@ class SubBasin{
         if(dName) this.displayName = dName;
         this.designationSystem = undefined;
         this.scale = undefined;
-        if(desSys instanceof DesignationSystem){
-            desSys.subBasin = this;
-            this.designationSystem = desSys;
-        }
+        this.setDesignationSystem(desSys);
         if(scale instanceof Scale) this.scale = scale;
         this.mapOutline = undefined;
         if(!this.outBasin() && this.id!==DEFAULT_MAIN_SUBBASIN){
@@ -927,6 +907,13 @@ class SubBasin{
             this.mapOutline.noStroke();
         }
         if(data instanceof LoadData) this.load(data);
+    }
+
+    setDesignationSystem(ds){
+        if(ds instanceof DesignationSystem){
+            ds.setSubBasin(this);
+            this.designationSystem = ds;
+        }
     }
 
     outBasin(origin){
@@ -982,7 +969,7 @@ class SubBasin{
                 'parent',
                 'displayName'
             ]) this[p] = d[p];
-            if(d.desSys) this.designationSystem = new DesignationSystem(this,data.sub(d.desSys));
+            if(d.desSys) this.setDesignationSystem(new DesignationSystem(data.sub(d.desSys)));
             if(d.scale) this.scale = new Scale(data.sub(d.scale));
         }
     }

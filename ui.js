@@ -456,8 +456,9 @@ UI.init = function(){
 
     let basinCreationMenuButtonSpacing = 36;
     let basinCreationMenuButtonHeights = 28;
+    let basinCreationMenuButtonWidths = 400;
 
-    let hemsel = basinCreationMenu.append(false,WIDTH/2-150,HEIGHT/8,300,basinCreationMenuButtonHeights,function(s){   // hemisphere selector
+    let hemsel = basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,HEIGHT/8,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){   // hemisphere selector
         let hem = "Random";
         if(newBasinSettings.hem===1) hem = "Northern";
         if(newBasinSettings.hem===2) hem = "Southern";
@@ -476,7 +477,7 @@ UI.init = function(){
         text("Starting year: ",0,basinCreationMenuButtonHeights/2);
     });
 
-    yearsel.append(false,110,0,190,basinCreationMenuButtonHeights,function(s){
+    yearsel.append(false,110,0,basinCreationMenuButtonWidths-110,basinCreationMenuButtonHeights,function(s){
         let yName;
         if(newBasinSettings.year===undefined) yName = "Current year";
         else{
@@ -501,7 +502,7 @@ UI.init = function(){
         if(yearselbox.showing) yearselbox.clicked();
     });
 
-    yearselbox = yearsel.append(false,110,0,190,basinCreationMenuButtonHeights,[18,16,function(){
+    yearselbox = yearsel.append(false,110,0,basinCreationMenuButtonWidths-110,basinCreationMenuButtonHeights,[18,16,function(){
         if(yearselbox.showing){
             let v = yearselbox.value;
             let m = v.match(/^\s*(\d+)(\s+B\.?C\.?(?:E\.?)?)?(?:\s*-\s*(\d+))?(?:\s+(?:(B\.?C\.?(?:E\.?)?)|A\.?D\.?|C\.?E\.?))?\s*$/i);
@@ -524,7 +525,7 @@ UI.init = function(){
         }
     }],undefined,false);
 
-    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){    // Simulation mode selector
+    let gmodesel = yearsel.append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // Simulation mode selector
         let mode = newBasinSettings.actMode || 0;
         mode = SIMULATION_MODES[mode];
         s.button('Simulation Mode: '+mode,true);
@@ -533,7 +534,7 @@ UI.init = function(){
         if(newBasinSettings.actMode===undefined) newBasinSettings.actMode = 0;
         newBasinSettings.actMode++;
         newBasinSettings.actMode %= SIMULATION_MODES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){    // Scale selector
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // Scale selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale].displayName;
         s.button('Scale: '+scale,true);
@@ -544,7 +545,7 @@ UI.init = function(){
         newBasinSettings.scale %= Scale.presetScales.length;
         newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleColorScheme = 0;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
         let flavor = newBasinSettings.scaleFlavor || 0;
@@ -558,7 +559,7 @@ UI.init = function(){
         if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleFlavor++;
         newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
         let scheme = newBasinSettings.scaleColorScheme || 0;
@@ -572,16 +573,16 @@ UI.init = function(){
         if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
         newBasinSettings.scaleColorScheme++;
         newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Name list selector
-        let list = newBasinSettings.names || 0;
-        list = ["Atl","EPac","CPac","WPac","PAGASA","Aus","Atl 1979-1984","NIO","SWIO","SPac","SAtl","Jakarta","Port Moresby","Periodic Table","Periodic Table (Annual)"][list];
-        s.button('Name List: '+list,true);
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Designations selector
+        let ds = newBasinSettings.designations || 0;
+        ds = DesignationSystem.presetDesignationSystems[ds].displayName;
+        s.button('Designations: '+ds,true);
     },function(){
         yearselbox.enterFunc();
-        if(newBasinSettings.names===undefined) newBasinSettings.names = 0;
-        newBasinSettings.names++;
-        newBasinSettings.names %= NAME_LIST_PRESETS.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // Map type Selector
+        if(newBasinSettings.designations===undefined) newBasinSettings.designations = 0;
+        newBasinSettings.designations++;
+        newBasinSettings.designations %= DesignationSystem.presetDesignationSystems.length;
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Map type Selector
         let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
@@ -589,7 +590,7 @@ UI.init = function(){
         if(newBasinSettings.mapType===undefined) newBasinSettings.mapType = 0;
         newBasinSettings.mapType++;
         newBasinSettings.mapType %= MAP_TYPES.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){     // God mode Selector
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // God mode Selector
         let gMode = newBasinSettings.godMode ? "Enabled" : "Disabled";
         s.button('God Mode: '+gMode,true);
     },function(){
@@ -600,11 +601,11 @@ UI.init = function(){
     let seedsel = gmodesel.append(false,0,basinCreationMenuButtonSpacing,0,basinCreationMenuButtonHeights,function(s){
         textAlign(LEFT,CENTER);
         text('Seed:',0,basinCreationMenuButtonHeights/2);
-    }).append(false,50,0,250,basinCreationMenuButtonHeights,[18,16],function(){
+    }).append(false,50,0,basinCreationMenuButtonWidths-50,basinCreationMenuButtonHeights,[18,16],function(){
         yearselbox.enterFunc();
     });
 
-    basinCreationMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,basinCreationMenuButtonHeights,function(s){    // "Start" button
+    basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,7*HEIGHT/8-20,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
@@ -621,7 +622,7 @@ UI.init = function(){
         for(let o of [
             'seed',
             'actMode',
-            'names',
+            'designations',
             'mapType',
             'godMode',
             'scale',
@@ -634,7 +635,7 @@ UI.init = function(){
             basin.mount();
         });
         basinCreationMenu.hide();
-    }).append(false,0,basinCreationMenuButtonSpacing,300,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
+    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
     },function(){
         yearselbox.value = '';
