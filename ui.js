@@ -583,7 +583,7 @@ UI.init = function(){
         newBasinSettings.designations++;
         newBasinSettings.designations %= DesignationSystem.presetDesignationSystems.length;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Map type Selector
-        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean'][newBasinSettings.mapType || 0];
+        let maptype = ["Two Continents","East Continent","West Continent","Island Ocean","Central Continent","Central Inland Sea","Atlantic",'Eastern Pacific','Western Pacific','Northern Indian Ocean','Australian Region','South Pacific','South-West Indian Ocean','South Atlantic','Mediterranean'][newBasinSettings.mapType || 0];
         s.button('Map Type: '+maptype,true);
     },function(){
         yearselbox.enterFunc();

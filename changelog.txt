@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.8 (b20200219a):
+    + Added South Atlantic and Mediterranean map types
 v0.2.7 (b20200217a):
     * Old name list presets converted to designation-system presets
 v0.2.6 (b20200215a):

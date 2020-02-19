@@ -1,6 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.2.7";
-const BUILD_NUMBER = "20200217a";
+const VERSION_NUMBER = "0.2.8";
+const BUILD_NUMBER = "20200219a";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -110,6 +110,14 @@ const MAP_TYPES = [     // Land generation controls for different map types
     {   // "South-West Indian Ocean" map type
         form: 'pixelmap',
         path: 'resources/SWIO.png'
+    },
+    {   // "South Atlantic" map type
+        form: 'pixelmap',
+        path: 'resources/SouthAtlantic.png'
+    },
+    {   // "Mediterranean" map type
+        form: 'pixelmap',
+        path: 'resources/Medi.png'
     }
 ];
 const EXTROP = 0;
