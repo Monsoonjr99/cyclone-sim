@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.9 (b20200229a):
+    * Fixed bug where only loaded seasons, but not new seasons, unload when no longer needed
 v0.2.8 (b20200219a):
     + Added South Atlantic and Mediterranean map types
 v0.2.7 (b20200217a):

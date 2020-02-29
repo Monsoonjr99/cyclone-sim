@@ -65,6 +65,7 @@ class Basin{
                 this.env.init();
                 land = new Land(this);
                 this.seasons[this.getSeason(-1)] = new Season(this);
+                this.expireSeasonTimer(this.getSeason(-1));
                 this.env.record();
             };
             if(MAP_TYPES[this.mapType].form==='pixelmap'){
@@ -104,6 +105,7 @@ class Basin{
             let e = new Season(this);
             for(let s of this.activeSystems) e.addSystem(new StormRef(this,s.fetchStorm()));
             this.seasons[curSeason] = e;
+            this.expireSeasonTimer(curSeason);
         }
         if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
         this.env.wobble();    // random change in environment for future forecast realism
