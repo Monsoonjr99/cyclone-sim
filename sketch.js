@@ -1,8 +1,9 @@
 var paused,
     land,
+    // landWorker,
     newBasinSettings,
     waitingFor,
-    waitingDesc,
+    waitingDescs,
     waitingTCSymbolSHem,
     simSettings,
     textInput,
@@ -41,7 +42,9 @@ function setup(){
     paused = false;
     newBasinSettings = {};
     waitingFor = 0;
-    waitingDesc = '';
+    waitingDescs = {};
+    waitingDescs.lowestAvailable = 0;
+    waitingDescs.maxIndex = -1;
     waitingTCSymbolSHem = false; // yes seriously, a global var for this
     simSettings = new Settings();
 
@@ -54,6 +57,8 @@ function setup(){
         if(UI.focusedInput) UI.focusedInput.value = textInput.value;
         UI.focusedInput = undefined;
     };
+
+    // landWorker = new CSWorker();
 
     buffers = new Map();
     scaler = 1;
@@ -168,7 +173,15 @@ function draw(){
             pop();
             textSize(48);
             textAlign(CENTER,CENTER);
-            text(waitingDesc,0,0);
+            let desc = '';
+            for(let i=0;i<=waitingDescs.maxIndex;i++){
+                if(waitingDescs[i]){
+                    if(desc !== '')
+                        desc += '\n';
+                    desc += waitingDescs[i];
+                }
+            }
+            text(desc,0,0);
             pop();
         }
         oldMouseX = mouseX;

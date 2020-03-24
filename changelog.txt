@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.10 (b20200324a):
+    + Added web worker test
+    * Loading ring can now display descriptions for more than one task
 v0.2.9 (b20200229a):
     * Fixed bug where only loaded seasons, but not new seasons, unload when no longer needed
 v0.2.8 (b20200219a):

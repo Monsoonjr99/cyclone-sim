@@ -483,27 +483,35 @@ class Land{
         let mapTypeControls = MAP_TYPES[this.basin.mapType];
         let W;
         let H;
+        let pixels;
+        let density;
+        let mapDef;
         if(mapTypeControls.form==='pixelmap'){
-            W = this.basin.mapImg.width;
-            H = this.basin.mapImg.height;
-            this.mapDefinition = W/WIDTH;
+            let img = this.basin.mapImg;
+            W = img.width;
+            H = img.height;
+            mapDef = this.mapDefinition = W/WIDTH;
+            density = img._pixelDensity;
+            pixels = img.pixels;
         }else{
             W = WIDTH*MAP_DEFINITION;
             H = HEIGHT*MAP_DEFINITION;
-            this.mapDefinition = MAP_DEFINITION;
+            mapDef = this.mapDefinition = MAP_DEFINITION;
         }
+        // let workerInput = {mapTypeControls, W, H, pixels, density, mapDef};
+        // landWorker.run(WORKER_TASK_CALCULATE_LAND,workerInput).then(output=>{});
+
         for(let i=0;i<W;i++){
             this.map[i] = [];
             for(let j=0;j<H;j++){
                 let p = this.map[i][j] = {};
-                let x = i/this.mapDefinition;
-                let y = j/this.mapDefinition;
+                let x = i/mapDef;
+                let y = j/mapDef;
                 if(mapTypeControls.form==='pixelmap'){
-                    let img = this.basin.mapImg;
-                    let index = 4 * (j*W+i);
-                    let v = img.pixels[index];
+                    let index = 4 * (j*W*sq(density)+i*density);
+                    let v = pixels[index];
                     p.val = map(v,0,255,0,1);
-                    p.subBasin = img.pixels[index+1];
+                    p.subBasin = pixels[index+1];
                 }else{
                     let n = this.noise.get(x,y);
                     let landBiasFactors = mapTypeControls.landBiasFactors;
