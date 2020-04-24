@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.11 (b20200424a):
+    + Added new lists to North Indian Ocean designations preset
 v0.2.10 (b20200324a):
     + Added web worker test
     * Loading ring can now display descriptions for more than one task

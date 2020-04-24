@@ -532,7 +532,20 @@ DesignationSystem.northIndianOcean = new DesignationSystem({
         ['Helen','Lehar','Madi','Nanauk','Hudhud','Nilofar','Ashobaa','Komen'],
         ['Chapala','Megh','Roanu','Kyant','Nada','Vardah','Maarutha','Mora'],
         ['Ockhi','Sagar','Mekunu','Daye','Luban','Titli','Gaja','Phethai'],
-        ['Fani','Vayu','Hikaa','Kyarr','Maha','Bulbul','Pawan','Amphan']
+        ['Fani','Vayu','Hikaa','Kyarr','Maha','Bulbul','Pawan','Amphan'],
+        ['Nisarga','Gati','Nivar','Burevi','Tauktae','Yaas','Gulab','Shaheen','Jawad','Asani','Sitrang','Mandous','Mocha'],
+        ['Biparjoy','Tej','Hamoon','Midhili','Michaung','Remal','Asna','Dana','Fengal','Shakhti','Montha','Senyar','Ditwah'],
+        ['Arnab','Murasu','Akvan','Kaani','Ngamann','Sail','Sahab','Lulu','Ghazeer','Gigum','Thianyot','Afoor','Diksam'],
+        ['Upakul','Aag','Sepand','Odi','Kyarthit','Naseem','Afshan','Mouj','Asif','Gagana','Bulan','Nahhaam','Sira'],
+        ['Barshon','Vyom','Booran','Kenau','Sapakyee','Muzn','Manahil','Suhail','Sidrah','Verambha','Phutala','Quffal','Bakhur'],
+        ['Rajani','Jhar','Anahita','Endheri','Wetwun','Sadeem','Shujana','Sadaf','Hareed','Garjana','Aiyara','Daaman','Ghwyzi'],
+        ['Nishith','Probaho','Azar','Riyau','Mwaihout','Dima','Parwaz','Reem','Faid','Neeba','Saming','Deem','Hawf'],
+        ['Urmi','Neer','Pooyan','Guruva','Kywe','Manjour','Zannata','Rayhan','Kaseer','Ninnada','Kraison','Gargoor','Balhaf'],
+        ['Meghala','Prabhanjan','Arsham','Kurangi','Pinku','Rukam','Sarsar','Anbar','Nakheel','Viduli','Matcha','Khubb','Brom'],
+        ['Samiron','Ghurni','Hengame','Kuredhi','Yinkaung','Watad','Badban','Oud','Haboob','Ogha','Mahingsa','Degl','Shuqra'],
+        ['Pratikul','Ambud','Savas','Horangu','Linyone','Al-jarz','Sarrab','Bahar','Bareq','Salitha','Phraewa','Athmad','Fartak'],
+        ['Sarobor','Jaladhi','Tahamtan','Thundi','Kyeekan','Rabab','Gulnar','Seef','Alreem','Rivi','Asuri','Boom','Darsah'],
+        ['Mahanisha','Vega','Toofan','Faana','Bautphat','Raad','Waseq','Fanar','Wabil','Rudu','Thara','Saffar','Samhah']
     ]
 });
 
