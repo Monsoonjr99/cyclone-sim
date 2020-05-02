@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.2.12 (b20200502a):
+    * Peaks for pressure and wind speed now kept track of separately
+        > Fixes issue with storms sometimes given the wrong classification name in the info panel
 v0.2.11 (b20200424a):
     + Added new lists to North Indian Ocean designations preset
 v0.2.10 (b20200324a):

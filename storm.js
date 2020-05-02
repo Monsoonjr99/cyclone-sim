@@ -24,6 +24,7 @@ class Storm{
 
         this.record = [];
         this.peak = undefined;
+        this.windPeak = undefined;
         this.ACE = 0;
         this.deaths = 0;
         this.damage = 0;
@@ -152,7 +153,7 @@ class Storm{
 
     getFullNameByTick(t){
         let basin = this.basin;
-        let data = t==="peak" ? this.peak : this.getStormDataByTick(t);
+        let data = t==="peak" ? this.windPeak : this.getStormDataByTick(t);
         let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
         let clsnNom = data ? basin.getScale(land.getSubBasin(data.pos.x,data.pos.y)).getStormNom(data) : null;
@@ -319,11 +320,13 @@ class Storm{
             this.TC = true;
             this.formationTime = basin.tick;
             this.peak = undefined;
+            this.windPeak = undefined;
         }
         if(!this.inBasinTC && inBasinTropical){
             this.inBasinTC = true;
             this.enterTime = basin.tick;
             this.peak = undefined;
+            this.windPeak = undefined;
             this.ACE = 0;
             this.damage = 0;
             this.deaths = 0;
@@ -493,8 +496,15 @@ class Storm{
         if(prevInBasinTropical && !inBasinTropical) this.exitTime = basin.tick;
         if(!prevInBasinTropical && inBasinTropical) this.exitTime = undefined;
         if((!this.inBasinTC && (!this.TC || isTropical)) || inBasinTropical){
-            if(!this.peak) this.peak = data;
-            else if(p<this.peak.pressure) this.peak = data;
+            if(!this.peak)
+                this.peak = data;
+            else if(p < this.peak.pressure)
+                this.peak = data;
+            
+            if(!this.windPeak)
+                this.windPeak = data;
+            else if(w > this.windPeak.windSpeed)
+                this.windPeak = data;
         }
         cSeason.modified = true;
         basin.fetchSeason(this.originSeason(),false,true).modified = true;
@@ -634,15 +644,24 @@ class Storm{
                 if(trop && !this.TC){
                     this.TC = true;
                     this.peak = undefined;
+                    this.windPeak = undefined;
                 }
                 if(inBasinTrop && !this.inBasinTC){
                     this.inBasinTC = true;
                     this.peak = undefined;
+                    this.windPeak = undefined;
                     this.ACE = 0;
                 }
                 if((!this.inBasinTC && (!this.TC || trop)) || inBasinTrop){
-                    if(!this.peak) this.peak = d;
-                    else if(d.pressure<this.peak.pressure) this.peak = d;
+                    if(!this.peak)
+                        this.peak = d;
+                    else if(d.pressure < this.peak.pressure)
+                        this.peak = d;
+
+                    if(!this.windPeak)
+                        this.windPeak = d;
+                    else if(d.windSpeed > this.windPeak.windSpeed)
+                        this.windPeak = d;
                 }
                 if(d.windSpeed>=ACE_WIND_THRESHOLD && (inBasinTrop || (trop && !this.inBasinTC))){
                     this.ACE *= ACE_DIVISOR;
