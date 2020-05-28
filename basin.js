@@ -115,7 +115,7 @@ class Basin{
             }
             this.activeSystems[i].update();
         }
-        SPAWN_RULES[this.actMode](this);    // spawn new storm systems
+        SPAWN_RULES[this.actMode].doSpawn(this);    // spawn new storm systems
         let stormKilled = false;
         for(let i=this.activeSystems.length-1;i>=0;i--){    // remove dead storm systems from activeSystems array
             if(!this.activeSystems[i].fetchStorm().current){
@@ -171,8 +171,45 @@ class Basin{
         return this.SHem ? HEIGHT-y : y;
     }
 
-    spawn(...opts){
-        this.activeSystems.push(new ActiveSystem(this,...opts));
+    spawn(data){
+        this.activeSystems.push(new ActiveSystem(this,data));
+    }
+
+    spawnArchetype(a,x,y){
+        let data = {};
+        let arch = [];
+        let i = -1;
+        let a1 = a;
+        while(a1){
+            i++;
+            if(SPAWN_RULES[this.actMode].archetypes && SPAWN_RULES[this.actMode].archetypes[a1])
+                arch[i] = SPAWN_RULES[this.actMode].archetypes[a1];
+            else if(SPAWN_RULES.defaults.archetypes[a1])
+                arch[i] = SPAWN_RULES.defaults.archetypes[a1];
+            else{
+                i--;
+                break;
+            }
+            a1 = arch[i].inherit;
+            if(a1 === a)
+                break;
+        }
+        while(i >= 0){
+            for(let k in arch[i]){
+                if(k !== 'inherit'){
+                    if(arch[i][k] instanceof Array)
+                        data[k] = random(arch[i][k][0],arch[i][k][1]);
+                    else
+                        data[k] = arch[i][k];
+                }
+            }
+            i--;
+        }
+        if(x !== undefined)
+            data.x = x;
+        if(y !== undefined)
+            data.y = y;
+        this.spawn(data);
     }
 
     addSubBasin(id,...args){
@@ -395,6 +432,19 @@ class Basin{
                     let oldHurricaneStrengthTerm;
                     if(data.format>=FORMAT_WITH_INDEXEDDB){
                         let obj = data.value;
+                        let flags = obj.flags;
+                        this.SHem = flags & 1;
+                        flags >>= 1;
+                        this.godMode = flags & 1;
+                        flags >>= 1;
+                        oldhyper = flags & 1;
+                        this.actMode = obj.actMode;
+                        if(this.actMode === undefined){
+                            if(oldhyper)
+                                this.actMode = SIM_MODE_HYPER;
+                            else
+                                this.actMode = SIM_MODE_NORMAL;
+                        }
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
@@ -405,18 +455,11 @@ class Basin{
                                 if(typeof s === "object") this.addSubBasin(i,data.sub(s));
                             }
                         }
-                        let flags = obj.flags;
-                        this.SHem = flags & 1;
-                        flags >>= 1;
-                        this.godMode = flags & 1;
-                        flags >>= 1;
-                        oldhyper = flags & 1;
                         for(let p of [
                             'mapType',
                             'tick',
                             'seed',
-                            'startYear',
-                            'actMode'
+                            'startYear'
                         ]) this[p] = obj[p];
                         if(obj.nameList) oldNameList = obj.nameList;
                         if(obj.sequentialNameIndex!==undefined) oldSeqNameIndex = obj.sequentialNameIndex;
@@ -442,6 +485,10 @@ class Basin{
                             this.godMode = flags & 1;
                             flags >>= 1;
                             oldhyper = flags & 1;
+                            if(oldhyper)
+                                this.actMode = SIM_MODE_HYPER;
+                            else
+                                this.actMode = SIM_MODE_NORMAL;
                             if(this.startYear===undefined) this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
                             if(names){
                                 names = names.split(";");
@@ -463,10 +510,6 @@ class Basin{
                             }
                             if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
-                    }
-                    if(this.actMode===undefined){
-                        if(oldhyper) this.actMode = SIM_MODE_HYPER;
-                        else this.actMode = SIM_MODE_NORMAL;
                     }
                     this.env.init(envData);
                     if(oldNameList){

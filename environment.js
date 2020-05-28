@@ -151,7 +151,12 @@ class EnvField{
         this.isVectorField = attribs.vector;
         this.noVectorFlip = attribs.noVectorFlip;   // do not reflect the output vector over the y-axis in the southern hemisphere if this is true
         this.noWobble = attribs.noWobble;
-        this.hueMap = attribs.hueMap || [0,1,0,300];
+        if(attribs.hueMap)
+            this.hueMap = attribs.hueMap;
+        else if(!this.isVectorField)
+            this.hueMap = [0,1,0,300];
+        else
+            this.hueMap = null;
         this.magMap = attribs.magMap || [0,1,0,10];
         this.invisible = attribs.invisible;
         this.oceanic = attribs.oceanic;
@@ -248,7 +253,6 @@ class EnvField{
                     let v = this.get(x,y,viewTick);
                     if(this.isVectorField){
                         envLayer.push();
-                        envLayer.stroke(0);
                         envLayer.scale(scaler);
                         envLayer.translate(x,y);
                         if(v!==null){
@@ -256,11 +260,21 @@ class EnvField{
                             let mg = v.mag();
                             let mp = this.magMap;
                             let l = map(mg,mp[0],mp[1],mp[2],mp[3]);
+                            let h = this.hueMap;
+                            let c;
+                            if(h instanceof Function)
+                                c = h(mg);
+                            else if(h instanceof Array)
+                                c = color(map(mg,h[0],h[1],h[2],h[3]),100,100);
+                            else
+                                c = 'black';
+                            envLayer.stroke(c);
                             envLayer.line(0,0,l,0);
                             envLayer.noStroke();
-                            envLayer.fill(0);
+                            envLayer.fill(c);
                             envLayer.triangle(l+5,0,l,3,l,-3);
                         }else{
+                            envLayer.stroke(0);
                             envLayer.line(-3,-3,3,3);
                             envLayer.line(-3,3,3,-3);
                         }
@@ -373,6 +387,10 @@ class Environment{  // Environmental fields that determine storm strength and st
     }
 
     get(field,x,y,z,noHem){
+        if(!this.fields[field]){
+            console.error('Field "' + field + '" does not exist in simulation mode ' + this.basin.actMode);
+            return 0;
+        }
         return this.fields[field].get(x,y,z,noHem);
     }
 

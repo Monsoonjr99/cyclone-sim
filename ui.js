@@ -336,43 +336,45 @@ UI.init = function(){
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
             if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
-                let g = {x: getMouseX(), y: getMouseY()};
-                if(key === "l" || key === "L"){
-                    g.sType = "l";
-                }else if(key === "d"){
-                    g.sType = "d";
-                }else if(key === "D"){
-                    g.sType = "sd";
-                }else if(key === "s"){
-                    g.sType = "s";
-                }else if(key === "S"){
-                    g.sType = "ss";
-                }else if(key === "1"){
-                    g.sType = "1";
-                }else if(key === "2"){
-                    g.sType = "2";
-                }else if(key === "3"){
-                    g.sType = "3";
-                }else if(key === "4"){
-                    g.sType = "4";
-                }else if(key === "5"){
-                    g.sType = "5";
-                }else if(key === "6"){
-                    g.sType = "6";
-                }else if(key === "7"){
-                    g.sType = "7";
-                }else if(key === "8"){
-                    g.sType = "8";
-                }else if(key === "9"){
-                    g.sType = "9";
-                }else if(key === "0"){
-                    g.sType = "10";
-                }else if(key === "y" || key === "Y"){
-                    g.sType = "y";
-                }else if(key === "x" || key === "X"){
-                    g.sType = "x";
-                }else return;
-                basin.spawn(false,g);
+                if(['l','x','d','D','s','S','1','2','3','4','5','6','7','8','9','0','y'].includes(key))
+                    basin.spawnArchetype(key,getMouseX(),getMouseY());
+                // let g = {x: getMouseX(), y: getMouseY()};
+                // if(key === "l" || key === "L"){
+                //     g.sType = "l";
+                // }else if(key === "d"){
+                //     g.sType = "d";
+                // }else if(key === "D"){
+                //     g.sType = "sd";
+                // }else if(key === "s"){
+                //     g.sType = "s";
+                // }else if(key === "S"){
+                //     g.sType = "ss";
+                // }else if(key === "1"){
+                //     g.sType = "1";
+                // }else if(key === "2"){
+                //     g.sType = "2";
+                // }else if(key === "3"){
+                //     g.sType = "3";
+                // }else if(key === "4"){
+                //     g.sType = "4";
+                // }else if(key === "5"){
+                //     g.sType = "5";
+                // }else if(key === "6"){
+                //     g.sType = "6";
+                // }else if(key === "7"){
+                //     g.sType = "7";
+                // }else if(key === "8"){
+                //     g.sType = "8";
+                // }else if(key === "9"){
+                //     g.sType = "9";
+                // }else if(key === "0"){
+                //     g.sType = "10";
+                // }else if(key === "y" || key === "Y"){
+                //     g.sType = "y";
+                // }else if(key === "x" || key === "X"){
+                //     g.sType = "x";
+                // }else return;
+                // basin.spawn(false,g);
             }else if(basin.viewingPresent()){
                 let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
