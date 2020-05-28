@@ -1,3 +1,10 @@
+/*** 
+ * ui.js
+ *
+ * This file defines the UI class and associated functions
+ */
+
+
 class UI{
     constructor(parent,x,y,w,h,renderer,onclick,showing){
         if(parent instanceof UI){

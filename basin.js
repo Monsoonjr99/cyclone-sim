@@ -1,3 +1,19 @@
+/***
+ * basin.js
+ *
+ * This file defines the Basin type and associate types
+ *
+ * class Basin
+ * class Season
+ * class SeasonStats
+ * class SubBasin
+ * function setupDatabase
+ * class LoadData
+ * function decodeB36StringArrayList(str)
+ * function decodePoint(n, o)
+ * function decodePointArrays(s, o)
+ */
+
 class Basin{
     constructor(load,opts){
         if(!opts) opts = {};
