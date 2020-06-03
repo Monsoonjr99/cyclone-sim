@@ -14,6 +14,8 @@
  * function decodePointArrays(s, o)
  */
 
+// As near as I can figure, this class is only ever created as a singleton by the UI. it is entirely possible
+// this class can be removed and re-architected into free-floating data and fuctions
 class Basin{
     // TODO: consider changing the "opts" argument to a list of parameters, depending on its required length. If the list of
     // required parameters exceeds whatever limit will be "too many", disregard this note

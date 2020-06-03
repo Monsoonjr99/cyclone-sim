@@ -1,3 +1,10 @@
+/***
+ * misc.js
+ *
+ * A dumping-ground file for random functions. 
+ * TODO: likely every function in this file should be moved to some other, more logical place
+ */
+
 function refreshTracks(force){
     if(simSettings.trackMode===2 && !force) return;
     tracks.clear();

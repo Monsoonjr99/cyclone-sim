@@ -1,3 +1,15 @@
+/*** 
+ * constants.js
+ *
+ * This file should contain the constants defined for the entire simulator.
+ *
+ * Currently, this file also has other functionality, to be discovered later. 
+ * Many constants in this file should be replaced with enums, if its numeric
+ * value does not actually impart any meaning, beyond its difference as part of
+ * an enum
+ */
+
+
 const TITLE = "Cyclone Simulator";
 const VERSION_NUMBER = "0.2.12";
 const BUILD_NUMBER = "20200502a";
@@ -120,16 +132,21 @@ const MAP_TYPES = [     // Land generation controls for different map types
         path: 'resources/Medi.png'
     }
 ];
+
+// TODO: replace with enum
 const EXTROP = 0;
 const SUBTROP = 1;
 const TROP = 2;
 const TROPWAVE = 3;
 const STORM_TYPES = 4;
+
+// TODO: replace these with \x unicode numbers, or actual character codes
 const KEY_LEFT_BRACKET = 219;
 const KEY_RIGHT_BRACKET = 221;
 const KEY_F11 = 122;
 const KEY_REPEAT_COOLDOWN = 15;
 const KEY_REPEATER = 5;
+
 const MAX_SNOW_LAYERS = 50;
 const SNOW_SEASON_OFFSET = 5/6;
 const ENV_LAYER_TILE_SIZE = 20;
@@ -142,11 +159,15 @@ const LOADED_SEASON_REQUIRED_ERROR = "loaded-season-required";
 const LOAD_MENU_BUTTONS_PER_PAGE = 6;
 const DEFAULT_MAIN_SUBBASIN = 0;
 const DEFAULT_OUTBASIN_SUBBASIN = 255;
+
+// TODO: replace with enum
 const DESIG_CROSSMODE_ALWAYS = 0;
 const DESIG_CROSSMODE_STRICT_ALWAYS = 1;
 const DESIG_CROSSMODE_REGEN = 2;
 const DESIG_CROSSMODE_STRICT_REGEN = 3;
 const DESIG_CROSSMODE_KEEP = 4;
+
+// TODO: replace with enum
 const SCALE_MEASURE_ONE_MIN_KNOTS = 0;
 const SCALE_MEASURE_TEN_MIN_KNOTS = 1;
 const SCALE_MEASURE_MILLIBARS = 2;
@@ -161,6 +182,8 @@ const SCALE_MEASURE_TEN_MIN_KMH = 7;
 const AUTOSAVE_SAVE_NAME = "Autosave";
 const DB_KEY_SETTINGS = "settings";
 const LOADED_SEASON_EXPIRATION = 150000;    // minimum duration in miliseconds after a season was last accessed before it unloads (2.5 minutes)
+
+// TODO: replace with enum
 const FORMAT_WITH_SAVED_SEASONS = 1;
 const FORMAT_WITH_INDEXEDDB = 2;
 const FORMAT_WITH_IMPROVED_ENV = 3;
@@ -183,6 +206,8 @@ const SAVING_RADIX = 36;
 const ENVDATA_SAVE_MULT = 10000;
 // const ACTIVESYSTEM_SAVE_FLOAT = -2;
 
+// TODO: remove \t characters, they're bad for formatting as they can look inconsistent
+// on different screens. This also would be a problem w.r.t. responsive design
 const HELP_TEXT = "Keyboard Controls:\n" +
     "\t\tSPACE - Pause/resume simulation\n" +
     "\t\tA - Step simulation one hour while paused\n" +
@@ -206,6 +231,7 @@ const HELP_TEXT = "Keyboard Controls:\n" +
 
 const COLORS = {};      // For storing all colors used in the graphics
 
+// TODO: if this function is setting up the COLORS object, it can be called immediately here and not in setup()
 function defineColors(){    // Since p5 color() function doesn't work until setup(), this is called in setup()
     COLORS.bg = color(10,55,155);
     COLORS.storm = {};
