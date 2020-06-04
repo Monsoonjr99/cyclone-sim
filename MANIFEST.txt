@@ -1,0 +1,72 @@
+
+index.html: 
+  the page to load that contains the scripts to run. Defines the load order (hardcoded)
+  this loads p5.js, which looks for a script called sketch.js to be loaded, which
+  should contain the functions `setup()` and `draw()`. setup is called once, draw called
+  once per frame.
+
+sketch.js: 
+  function setup()
+  function draw()
+  class Settings
+
+basin.js:
+  class Basin
+  class Season
+  class SeasonStats
+  class SubBasin
+  function setupDatabase
+  class LoadData
+  function decodeB36StringArrayList(str)
+  function decodePoint(n, o)
+  function decodePointArrays(s, o)
+
+designations.js:
+  class Designation
+  class DesignationSystem
+
+environment.js:
+  class NoiseChannel
+  class EnvNoiseChannel extends NoiseChannel
+  class EnvField
+  class Environment
+  class Land
+  function seasonalSine(t, off)
+
+misc.js:
+  function refreshTracks(force)
+  function createBuffer(w, h, alwaysFull, noScale)
+  function rescaleCanvases(s)
+  function toggleFullscreen()
+  function fullDimensions()
+  function drawBuffer(b)
+  function getMouseX()
+  function getMouseY()
+  function coordinateInCanvas(x, y, isPixelCoordinate)
+  function cbrt(n)
+  function zeroPad(n, d)
+  function hashCode(str)
+  function loadImg(path)
+  function waitForAsyncProcess(func, desc, ...args)
+  function makeAsyncProcess(func, ...args)
+  function upgradeLegacySaves()
+  document.onfunnscreenchange = function()
+
+scale.js:
+  class Scale
+
+sim-mode-defs.js:
+  // a bunch of `SIM_*` constants
+  `SPAWN_RULES[]`
+  `ENV_DEFS[]`
+
+storm.js: 
+  class Storm
+  class StormRef
+  class StormData
+  class ActiveSystem extends StormData
+  function tropOrSub(ty)
+
+constants.js:
+  // a bunch of constants
+  function defineColors()

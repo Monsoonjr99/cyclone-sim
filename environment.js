@@ -1,3 +1,16 @@
+/***
+ * environment.js
+ *
+ * This file defines the Environment class and associated types
+ *
+ * class NoiseChannel
+ * class EnvNoiseChannel extends NoiseChannel
+ * class EnvField
+ * class Environment
+ * class Land
+ * function seasonalSine(t, off)
+ */
+
 class NoiseChannel{
     constructor(octaves,falloff,zoom,zZoom,xOff,yOff,zOff){
         this.octaves = octaves || 4;

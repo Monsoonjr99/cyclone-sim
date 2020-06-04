@@ -1,6 +1,27 @@
+/***
+ * basin.js
+ *
+ * This file defines the Basin type and associate types
+ *
+ * class Basin
+ * class Season
+ * class SeasonStats
+ * class SubBasin
+ * function setupDatabase
+ * class LoadData
+ * function decodeB36StringArrayList(str)
+ * function decodePoint(n, o)
+ * function decodePointArrays(s, o)
+ */
+
+// As near as I can figure, this class is only ever created as a singleton by the UI. it is entirely possible
+// this class can be removed and re-architected into free-floating data and fuctions
 class Basin{
+    // TODO: consider changing the "opts" argument to a list of parameters, depending on its required length. If the list of
+    // required parameters exceeds whatever limit will be "too many", disregard this note
     constructor(load,opts){
         if(!opts) opts = {};
+
         this.seasons = {};
         this.seasonsBusyLoading = {};
         this.seasonExpirationTimers = {};
@@ -14,7 +35,12 @@ class Basin{
         this.lastSaved = 0;
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
-        this.actMode = opts.actMode || 0;
+        this.actMode = opts.actMode || 0; 
+                // TODO: consider replacing the "|| 0" syntax with another way of representing a default
+                // value. Also indicate that this value, actMode, is an index into the ENV_DEFS[] global array.
+                // If that array changes to be indexed with an enum, for readability and type safety, this 
+                // syntax must change.
+                // see: https://javascript.info/logical-operators
         if(opts.year!==undefined) this.startYear = opts.year;
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         this.mapType = opts.mapType || 0;
@@ -84,7 +110,8 @@ class Basin{
         }
     }
 
-    mount(){    // mounts the basin to the viewer
+    // mounts the basin to the viewer
+    mount(){    
         viewTick = this.tick;
         UI.viewBasin = this;
         selectedStorm = undefined;

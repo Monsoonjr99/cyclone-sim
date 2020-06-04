@@ -1,3 +1,21 @@
+/***
+ * sketch.js
+ *
+ * This file is the entry-point for p5.js, which requiers a file with this name.
+ * This file has a `setup()` function and `draw()` function, which are required
+ * by p5.js and are used by that library. setup() is called once, at appliation
+ * startup, and draw() is called once per frame.
+ *
+ * This file also contains the Settings class
+ */
+
+// TODO: do not have global non-const delcared like this, in a giant list
+//   at the top of your main file. this is bad for a number of reasons, but 
+//   primarily it increases complexity, as these values are all shared among all files
+//   and are mutable in all scopes. Variables should be defined at their narrowest possible
+//   scope, and should, when possible, be declared const. Additionally, as Javascript is a 
+//   (mostly) typeless language, some indication of the type of the value should be given as 
+//   part of its name. Either this, or the project should move to Typescript.
 var paused,
     land,
     // landWorker,

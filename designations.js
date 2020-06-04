@@ -1,3 +1,13 @@
+/***
+ * designations.js
+ *
+ * This file defines the Designation class and its supporting class, DesignationSystem.
+ * This also includes setting up the rest of the DesignationSystem with its values
+ *
+ *
+ *
+ */
+
 class Designation{
     constructor(value,tick,sub){
         this.num = undefined;

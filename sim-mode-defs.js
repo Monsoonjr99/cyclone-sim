@@ -1,5 +1,18 @@
+/***
+ * sim-mode-defs.js
+ *
+ * This file defines the different simulation modes. This revolves around the 
+ * ENV_DEFS[] array, which is indexed by the different SIM_* constants. This array
+ * contains instances of objects that describe the different attributes of a simulation mode.
+ * There is additionally a default simulaton mode, which contains information that is shared
+ * by all the different modes described here.
+ */
+
 // ---- Simulation Modes ---- //
 
+// TODO: replace this with a single const object to use as an enum, index into ENV_DEFS[]
+// TODO: possibly rework usages of ENV_DEFS[] to not be a global. at least, if it is a global, export it
+//   as a const in some manner. something to look into
 const SIMULATION_MODES = ['Normal','Hyper','Wild','Megablobs','Experimental']; // Labels for sim mode selector UI
 const SIM_MODE_NORMAL = 0;
 const SIM_MODE_HYPER = 1;
@@ -10,7 +23,6 @@ const SIM_MODE_EXPERIMENTAL = 4;
 // ---- Spawn Rules ---- //
 
 const SPAWN_RULES = {};
-
 SPAWN_RULES[SIM_MODE_NORMAL] = function(b){
     if(random()<0.015*sq((seasonalSine(b.tick)+1)/2)) b.spawn(false);           // tropical waves
     if(random()<0.01-0.002*seasonalSine(b.tick)) b.spawn(true);                 // extratropical cyclones
@@ -30,6 +42,11 @@ SPAWN_RULES[SIM_MODE_MEGABLOBS] = function(b){
 SPAWN_RULES[SIM_MODE_EXPERIMENTAL] = SPAWN_RULES[SIM_MODE_HYPER];
 
 // ---- Definitions of Environmental Fields ---- //
+
+// TODO: replace this with some kind of construction function, and make calls to that function.
+//  as it stands, it may be possible to forget values required, if adding another entry into ENV_DEFS.
+//  Additinoally, consider making an entry into ENV_DEFS its own type (that is, its own class. as it 
+//  does not have any mutable local state, a class may not rqeuire a constructor
 
 const ENV_DEFS = {};
 

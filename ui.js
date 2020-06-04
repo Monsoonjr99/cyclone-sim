@@ -1,3 +1,10 @@
+/*** 
+ * ui.js
+ *
+ * This file defines the UI class and associated functions. Every single button is tied in here with an
+ * event-driven callback system
+ */
+
 class UI{
     constructor(parent,x,y,w,h,renderer,onclick,showing){
         if(parent instanceof UI){
