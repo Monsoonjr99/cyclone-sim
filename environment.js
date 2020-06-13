@@ -11,6 +11,7 @@
  * function seasonalSine(t, off)
  */
 
+ // Represents a "channel" of value noise within the noise space defined by x, y, and z offsets, as well as zoom scalers and octave modifiers
 class NoiseChannel{
     constructor(octaves,falloff,zoom,zZoom,xOff,yOff,zOff){
         this.octaves = octaves || 4;
@@ -34,6 +35,7 @@ class NoiseChannel{
     }
 }
 
+// an environment noise channel with "wobble" settings and info about the field it is part of
 class EnvNoiseChannel extends NoiseChannel{
     constructor(basin,field,index,loadData,octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
         let r = NC_OFFSET_RANDOM_FACTOR;
@@ -150,6 +152,7 @@ class EnvNoiseChannel extends NoiseChannel{
     }
 }
 
+// defines an environmental field with a name, version, map function, and maybe noise channels
 class EnvField{
     constructor(basin,name,loadData,attribs){
         this.basin = basin instanceof Basin && basin;
@@ -362,7 +365,8 @@ class EnvField{
     }
 }
 
-class Environment{  // Environmental fields that determine storm strength and steering
+// Container for environmental fields that determine storm strength and steering
+class Environment{
     constructor(basin){
         this.basin = basin instanceof Basin && basin;
         this.fields = {};
@@ -455,6 +459,7 @@ class Environment{  // Environmental fields that determine storm strength and st
     }
 }
 
+// Contains the land and sub-basin map of a basin along with rendering methods
 class Land{
     constructor(basin){
         this.basin = basin instanceof Basin && basin;
@@ -701,6 +706,7 @@ class Land{
     }
 }
 
+// takes a tick and optional year offset as input and returns a value from -1 to 1 on a sine wave with a period of one year
 function seasonalSine(t,off){
     off = off===undefined ? 5/12 : off;
     return sin((TAU*(t-YEAR_LENGTH*off))/YEAR_LENGTH);
