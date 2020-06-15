@@ -162,6 +162,16 @@ class EnvField{
         else
             this.hueMap = null;
         this.magMap = attribs.magMap || [0,1,0,10];
+        if(attribs.displayFormat instanceof Function)
+            this.displayFormat = attribs.displayFormat;
+        else if(this.isVectorField)
+            this.displayFormat = v=>{
+                let m = v.mag();
+                let h = v.heading();
+                return "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
+            };
+        else
+            this.displayFormat = v=>''+round(v*1000)/1000;
         this.invisible = attribs.invisible;
         this.oceanic = attribs.oceanic;
         this.modifiers = attribs.modifiers;
@@ -404,6 +414,14 @@ class Environment{  // Environmental fields that determine storm strength and st
             return 0;
         }
         return this.fields[field].displayName;
+    }
+
+    formatFieldValue(field,val){
+        if(!this.fields[field]){
+            console.error('Field "' + field + '" does not exist in simulation mode ' + this.basin.actMode);
+            return 0;
+        }
+        return this.fields[field].displayFormat(val);
     }
 
     displayLayer(){

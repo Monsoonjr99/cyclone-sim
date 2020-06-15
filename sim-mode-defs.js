@@ -311,7 +311,6 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL] = {}; // "Experimental" simulation mode
 // -- jetstream -- //
 
 ENV_DEFS.defaults.jetstream = {
-    displayName: 'Jet stream',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0,x-z*3,0,z);
@@ -394,6 +393,12 @@ ENV_DEFS.defaults.LLSteering = {
         u.vec.add(west+trades*cos(tAngle),trades*sin(tAngle));
         return u.vec;
     },
+    displayFormat: v=>{
+        let speed = round(v.mag()*100)/100;
+        let direction = v.heading();
+        // speed is still in "u/hr" (coordinate units per hour) for now
+        return speed + ' u/hr ' + compassHeading(direction);
+    },
     vector: true,
     magMap: [0,3,0,16],
     noiseChannels: [
@@ -471,6 +476,12 @@ ENV_DEFS.defaults.ULSteering = {
 
         return u.vec;
     },
+    displayFormat: v=>{
+        let speed = round(v.mag()*100)/100;
+        let direction = v.heading();
+        // speed is still in "u/hr" (coordinate units per hour) for now
+        return speed + ' u/hr ' + compassHeading(direction);
+    },
     vector: true,
     magMap: [0,8,0,25],
     modifiers: {
@@ -539,6 +550,12 @@ ENV_DEFS.defaults.shear = {
         u.vec.sub(ll);
         return u.vec;
     },
+    displayFormat: v=>{
+        let speed = round(v.mag()*100)/100;
+        let direction = v.heading();
+        // speed is still in "u/hr" (coordinate units per hour) for now
+        return speed + ' u/hr ' + compassHeading(direction);
+    },
     vector: true,
     noVectorFlip: true,
     magMap: [0,8,0,25],
@@ -581,6 +598,14 @@ ENV_DEFS.defaults.SSTAnomaly = {
         v = v*i;
         if(u.modifiers.bigBlobBase!==undefined && v>u.modifiers.bigBlobExponentThreshold) v += pow(u.modifiers.bigBlobBase,v-u.modifiers.bigBlobExponentThreshold)-1;
         return v;
+    },
+    displayFormat: v=>{
+        let str = '';
+        if(v >= 0)
+            str += '+';
+        str += round(v*10)/10;
+        str += '\u2103'; // degrees celsius sign
+        return str;
     },
     hueMap: (v)=>{
         colorMode(HSB);
@@ -637,6 +662,12 @@ ENV_DEFS.defaults.SST = {
         let pstt = u.modifiers.peakSeasonTropicsTemp;
         let t = lerp(map(s,-1,1,ospt,pspt),map(s,-1,1,ostt,pstt),h);
         return t+anom;
+    },
+    displayFormat: v=>{
+        let str = '';
+        str += round(v*10)/10;
+        str += '\u2103'; // degrees celsius sign
+        return str;
     },
     hueMap: (v)=>{
         colorMode(HSB);
@@ -715,6 +746,9 @@ ENV_DEFS.defaults.moisture = {
         m += map(v,0,1,-0.3,0.3);
         m = constrain(m,0,1);
         return m;
+    },
+    displayFormat: v=>{
+        return round(v*1000)/10 + '%';
     },
     hueMap: v=>{
         colorMode(HSB);
