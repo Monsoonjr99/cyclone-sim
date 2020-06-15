@@ -141,6 +141,10 @@ class EnvField{
     constructor(basin,name,loadData,attribs){
         this.basin = basin instanceof Basin && basin;
         this.name = name;
+        if(attribs.displayName)
+            this.displayName = attribs.displayName;
+        else
+            this.displayName = name;
         this.noise = [];
         this.accurateAfter = -1;
         this.version = attribs.version;
@@ -392,6 +396,14 @@ class Environment{  // Environmental fields that determine storm strength and st
             return 0;
         }
         return this.fields[field].get(x,y,z,noHem);
+    }
+
+    getDisplayName(field){
+        if(!this.fields[field]){
+            console.error('Field "' + field + '" does not exist in simulation mode ' + this.basin.actMode);
+            return 0;
+        }
+        return this.fields[field].displayName;
     }
 
     displayLayer(){

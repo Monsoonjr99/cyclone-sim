@@ -311,6 +311,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL] = {}; // "Experimental" simulation mode
 // -- jetstream -- //
 
 ENV_DEFS.defaults.jetstream = {
+    displayName: 'Jet stream',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0,x-z*3,0,z);
@@ -367,6 +368,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].jetstream = {};
 // -- LLSteering -- //
 
 ENV_DEFS.defaults.LLSteering = {
+    displayName: 'Low-level steering',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         u.vec.set(1);    // reset vector
@@ -428,6 +430,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].LLSteering = {};
 // -- ULSteering -- //
 
 ENV_DEFS.defaults.ULSteering = {
+    displayName: 'Upper-level steering',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         u.vec.set(1);                                                                           // reset vector
@@ -527,6 +530,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].ULSteering = {};
 // -- shear -- //
 
 ENV_DEFS.defaults.shear = {
+    displayName: 'Wind shear',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         let ll = u.field('LLSteering');
@@ -561,6 +565,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].shear = {};
 // -- SSTAnomaly -- //
 
 ENV_DEFS.defaults.SSTAnomaly = {
+    displayName: 'Sea surface temp. anomaly',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
@@ -615,6 +620,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].SSTAnomaly = {};
 // -- SST -- //
 
 ENV_DEFS.defaults.SST = {
+    displayName: 'Sea surface temperature',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         if(y<0) return 0;
@@ -695,6 +701,7 @@ ENV_DEFS[SIM_MODE_EXPERIMENTAL].SST = {
 // -- moisture -- //
 
 ENV_DEFS.defaults.moisture = {
+    displayName: 'Relative humidity',
     version: 0,
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);

@@ -1055,7 +1055,7 @@ UI.init = function(){
         let red = false;
         if(basin.env.displaying!==-1){
             let f = basin.env.fieldList[basin.env.displaying];
-            txtStr += f + " -- ";
+            txtStr += basin.env.getDisplayName(f) + " -- ";
             let x;
             let y;
             let S = selectedStorm && selectedStorm.aliveAt(viewTick);
