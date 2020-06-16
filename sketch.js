@@ -31,8 +31,6 @@ var paused,
 function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
     document.title = TITLE;
-    versionLink.onmouseover = ()=>setVersion(TITLE + ' v',VERSION_NUMBER + ' (b' + BUILD_NUMBER + ')');
-    versionLink.onmouseleave = ()=>setVersion(TITLE + ' v',VERSION_NUMBER);
 
     setupDatabase();
 
