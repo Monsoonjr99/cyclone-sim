@@ -859,101 +859,134 @@ class StormData{
 }
 
 class ActiveSystem extends StormData{
-    constructor(basin,ext,spawn){
+    constructor(basin,data){
         if(!(basin instanceof Basin)) return;
-        if(ext instanceof LoadData){
-            super(basin);
-            this.organization = undefined;
-            this.lowerWarmCore = undefined;
-            this.upperWarmCore = undefined;
-            this.depth = undefined;
-        }else{
-            let sType = spawn ? spawn.sType : undefined;
-            if(sType==="x") ext = true;
-            let subt = false;
-            if(sType==="sd"){
-                sType = "d";
-                subt = true;
-            }
-            if(sType==="ss"){
-                sType = "s";
-                subt = true;
-            }
-            let x, y, tooClose;
-            if(spawn){
-                x = spawn.x;
-                y = spawn.y;
-            }else{
-                do{
-                    tooClose = false;
-                    x = random()<0.2 && !ext ?
-                            WIDTH-1:
-                            random(0,WIDTH-1);
-                    y = basin.hemY(ext ? basin.env.get("jetstream",x,0,basin.tick)+random(-75,75) : random(HEIGHT*0.7,HEIGHT*0.9));
-                    for(let i=0;i<basin.activeSystems.length;i++){
-                        let p = basin.activeSystems[i].pos;
-                        if(sqrt(sq(x-p.x)+sq(y-p.y))<50) tooClose = true;
-                    }
-                }while(tooClose);
-            }
-            let p = spawn ?
-                sType==="x" ? 1005 :
-                sType==="l" ? 1015 :
-                sType==="d" ? 1005 :
-                sType==="s" ? 995 :
-                sType==="1" ? 985 :
-                sType==="2" ? 975 :
-                sType==="3" ? 960 :
-                sType==="4" ? 945 :
-                sType==="5" ? 925 :
-                sType==='6' ? 890 :
-                sType==='7' ? 840 :
-                sType==='8' ? 800 :
-                sType==='9' ? 765 :
-                sType==='10' ? 730 :
-                sType==='y' ? 690 : 1000 :
-            random(1000,1020);
-            let w = spawn ?
-                sType==="x" ? 15 :
-                sType==="l" ? 15 :
-                sType==="d" ? 25 :
-                sType==="s" ? 45 :
-                sType==="1" ? 70 :
-                sType==="2" ? 90 :
-                sType==="3" ? 105 :
-                sType==="4" ? 125 :
-                sType==="5" ? 145 :
-                sType==='6' ? 170 :
-                sType==='7' ? 210 : 
-                sType==='8' ? 270 :
-                sType==='9' ? 330 :
-                sType==='10' ? 400 :
-                sType==='y' ? 440 : 35 :
-            random(15,35);
-            let ty = ext ? EXTROP : spawn ?
-                sType==="l" ? TROPWAVE :
-                subt ? SUBTROP : TROP :
-            TROPWAVE;
-            super(basin,x,y,p,w,ty);
-            this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
-            this.lowerWarmCore = ext ? 0 : subt ? 0.6 : 1;
-            this.upperWarmCore = ext ? 0 : subt ? 0.5 : 1;
-            this.depth = ext ? 1 : 0;
-        }
+        // if(data instanceof LoadData){
+        //     super(basin);
+        //     this.organization = undefined;
+        //     this.lowerWarmCore = undefined;
+        //     this.upperWarmCore = undefined;
+        //     this.depth = undefined;
+        // }else{
+        //     let sType = spawn ? spawn.sType : undefined;
+        //     if(sType==="x") ext = true;
+        //     let subt = false;
+        //     if(sType==="sd"){
+        //         sType = "d";
+        //         subt = true;
+        //     }
+        //     if(sType==="ss"){
+        //         sType = "s";
+        //         subt = true;
+        //     }
+        //     let x, y, tooClose;
+        //     if(spawn){
+        //         x = spawn.x;
+        //         y = spawn.y;
+        //     }else{
+        //         do{
+        //             tooClose = false;
+        //             x = random()<0.2 && !ext ?
+        //                     WIDTH-1:
+        //                     random(0,WIDTH-1);
+        //             y = basin.hemY(ext ? basin.env.get("jetstream",x,0,basin.tick)+random(-75,75) : random(HEIGHT*0.7,HEIGHT*0.9));
+        //             for(let i=0;i<basin.activeSystems.length;i++){
+        //                 let p = basin.activeSystems[i].pos;
+        //                 if(sqrt(sq(x-p.x)+sq(y-p.y))<50) tooClose = true;
+        //             }
+        //         }while(tooClose);
+        //     }
+        //     let p = spawn ?
+        //         sType==="x" ? 1005 :
+        //         sType==="l" ? 1015 :
+        //         sType==="d" ? 1005 :
+        //         sType==="s" ? 995 :
+        //         sType==="1" ? 985 :
+        //         sType==="2" ? 975 :
+        //         sType==="3" ? 960 :
+        //         sType==="4" ? 945 :
+        //         sType==="5" ? 925 :
+        //         sType==='6' ? 890 :
+        //         sType==='7' ? 840 :
+        //         sType==='8' ? 800 :
+        //         sType==='9' ? 765 :
+        //         sType==='10' ? 730 :
+        //         sType==='y' ? 690 : 1000 :
+        //     random(1000,1020);
+        //     let w = spawn ?
+        //         sType==="x" ? 15 :
+        //         sType==="l" ? 15 :
+        //         sType==="d" ? 25 :
+        //         sType==="s" ? 45 :
+        //         sType==="1" ? 70 :
+        //         sType==="2" ? 90 :
+        //         sType==="3" ? 105 :
+        //         sType==="4" ? 125 :
+        //         sType==="5" ? 145 :
+        //         sType==='6' ? 170 :
+        //         sType==='7' ? 210 : 
+        //         sType==='8' ? 270 :
+        //         sType==='9' ? 330 :
+        //         sType==='10' ? 400 :
+        //         sType==='y' ? 440 : 35 :
+        //     random(15,35);
+        //     let ty = ext ? EXTROP : spawn ?
+        //         sType==="l" ? TROPWAVE :
+        //         subt ? SUBTROP : TROP :
+        //     TROPWAVE;
+        //     super(basin,x,y,p,w,ty);
+        //     this.organization = ext ? 0 : spawn ? sType==="l" ? 0.2 : 1 : random(0,0.3);
+        //     this.lowerWarmCore = ext ? 0 : subt ? 0.6 : 1;
+        //     this.upperWarmCore = ext ? 0 : subt ? 0.5 : 1;
+        //     this.depth = ext ? 1 : 0;
+        // }
+        super(basin);
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
         this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
         this.interaction.fujiStatic = createVector(0); // A vector for 'static' use in the 'interact' method for Fujiwhara interaction
         this.interaction.shear = 0;
-        this.interaction.kill = false;
+        this.kill = false;
         this.trackForecast = {}; // Simple track forecast for now
         this.trackForecast.stVec = createVector(0);
         this.trackForecast.pVec = createVector(0);
         this.trackForecast.points = [];
-        if(ext instanceof LoadData){
+        if(data instanceof LoadData){
             this.storm = undefined;
-            this.load(ext);
+            this.load(data);
         }else{
+            let d = data || {};
+            if(d.x instanceof Function || d.y instanceof Function){
+                let x, y, tooClose;
+                let count = 0;
+                do{
+                    tooClose = false;
+                    if(d.x instanceof Function)
+                        x = d.x(basin);
+                    else
+                        x = d.x || 0;
+                    if(d.y instanceof Function)
+                        y = d.y(basin,x);
+                    else
+                        y = d.y || 0;
+                    for(let i=0;i<basin.activeSystems.length;i++){
+                        let p = basin.activeSystems[i].pos;
+                        if(sqrt(sq(x-p.x)+sq(y-p.y))<50) tooClose = true;
+                    }
+                    count++;
+                }while(tooClose && count < 1000);
+                this.pos.x = x;
+                this.pos.y = y;
+            }else{
+                this.pos.x = d.x || 0;
+                this.pos.y = d.y || 0;
+            }
+            this.pressure = d.pressure===undefined ? 1000 : d.pressure;
+            this.windSpeed = d.windSpeed===undefined ? 30 : d.windSpeed;
+            this.type = d.type===undefined ? EXTROP : d.type;
+            let activeAttribs = ACTIVE_ATTRIBS[basin.actMode] || ACTIVE_ATTRIBS.defaults;
+            for(let v of activeAttribs)
+                this[v] = d[v] || 0;
             this.storm = new Storm(basin,this);
             if(basin.tick%ADVISORY_TICKS===0) this.advisory();
         }
@@ -961,83 +994,103 @@ class ActiveSystem extends StormData{
 
     update(){
         let basin = this.basin;
-        let prevland = land.get(this.pos.x,this.pos.y);
-        this.getSteering();
+
+        let u = {};
+        u.f = (field)=>basin.env.get(field,this.pos.x,this.pos.y,basin.tick);
+        u.land = ()=>land.get(this.pos.x,this.pos.y);
+
+        // this.getSteering();
+        if(STORM_ALGORITHM[basin.actMode].steering)
+            STORM_ALGORITHM[basin.actMode].steering(this,this.steering,u);
+        else
+            STORM_ALGORITHM.defaults.steering(this,this.steering,u);
+        this.steering.add(this.interaction.fuji);
+        let prevland = u.land();
         this.pos.add(this.steering);
+
+        if(STORM_ALGORITHM[basin.actMode].core)
+            STORM_ALGORITHM[basin.actMode].core(this,u);
+        else
+            STORM_ALGORITHM.defaults.core(this,u);
+
+        if(STORM_ALGORITHM[basin.actMode].typeDetermination)
+            STORM_ALGORITHM[basin.actMode].typeDetermination(this,u);
+        else
+            STORM_ALGORITHM.defaults.typeDetermination(this,u);
         
         let x = this.pos.x;
         let y = this.pos.y;
         let z = basin.tick;
 
-        let SST = basin.env.get("SST",x,y,z);
-        let jet = basin.env.get("jetstream",x,y,z);
-        jet = basin.hemY(y)-jet;
+        // let SST = basin.env.get("SST",x,y,z);
+        // let jet = basin.env.get("jetstream",x,y,z);
+        // jet = basin.hemY(y)-jet;
         let lnd = land.get(x,y);
-        let moisture = basin.env.get("moisture",x,y,z);
-        let shear = basin.env.get("shear",x,y,z).mag()+this.interaction.shear;
+        // let moisture = basin.env.get("moisture",x,y,z);
+        // let shear = basin.env.get("shear",x,y,z).mag()+this.interaction.shear;
         
-        let targetWarmCore = (lnd ?
-            this.lowerWarmCore :
-            max(pow(map(SST,10,25,0,1,true),3),this.lowerWarmCore)
-        )*map(jet,0,75,sq(1-this.depth),1,true);
-        this.lowerWarmCore = lerp(this.lowerWarmCore,targetWarmCore,this.lowerWarmCore>targetWarmCore ? map(jet,0,75,0.4,0.06,true) : 0.04);
-        this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.05 : 0.4);
-        this.lowerWarmCore = constrain(this.lowerWarmCore,0,1);
-        this.upperWarmCore = constrain(this.upperWarmCore,0,1);
-        let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
-        let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
+        // let targetWarmCore = (lnd ?
+        //     this.lowerWarmCore :
+        //     max(pow(map(SST,10,25,0,1,true),3),this.lowerWarmCore)
+        // )*map(jet,0,75,sq(1-this.depth),1,true);
+        // this.lowerWarmCore = lerp(this.lowerWarmCore,targetWarmCore,this.lowerWarmCore>targetWarmCore ? map(jet,0,75,0.4,0.06,true) : 0.04);
+        // this.upperWarmCore = lerp(this.upperWarmCore,this.lowerWarmCore,this.lowerWarmCore>this.upperWarmCore ? 0.05 : 0.4);
+        // this.lowerWarmCore = constrain(this.lowerWarmCore,0,1);
+        // this.upperWarmCore = constrain(this.upperWarmCore,0,1);
+        // let tropicalness = constrain(map(this.lowerWarmCore,0.5,1,0,1),0,this.upperWarmCore);
+        // let nontropicalness = constrain(map(this.lowerWarmCore,0.75,0,0,1),0,1);
 
-        this.organization *= 100;
-        if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
-        if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
-        // if(lnd) this.organization -= pow(10,map(lnd,0.5,1,-3,1));
-        // if(lnd && this.organization<70 && moisture>0.3) this.organization += pow(5,map(moisture,0.3,0.5,-1,1,true))*tropicalness;
-        this.organization -= pow(2,4-((HEIGHT-basin.hemY(y))/(HEIGHT*0.01)));
-        this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
-        this.organization -= map(moisture,0,0.65,3,0,true)*shear;
-        this.organization += sq(map(moisture,0.6,1,0,1,true))*4;
-        this.organization -= pow(1.3,20-SST)*tropicalness;
-        this.organization = constrain(this.organization,0,100);
-        this.organization /= 100;
+        // this.organization *= 100;
+        // if(!lnd) this.organization += sq(map(SST,20,29,0,1,true))*3*tropicalness;
+        // if(!lnd && this.organization<40) this.organization += lerp(0,3,nontropicalness);
+        // // if(lnd) this.organization -= pow(10,map(lnd,0.5,1,-3,1));
+        // // if(lnd && this.organization<70 && moisture>0.3) this.organization += pow(5,map(moisture,0.3,0.5,-1,1,true))*tropicalness;
+        // this.organization -= pow(2,4-((HEIGHT-basin.hemY(y))/(HEIGHT*0.01)));
+        // this.organization -= (pow(map(this.depth,0,1,1.17,1.31),shear)-1)*map(this.depth,0,1,4.7,1.2);
+        // this.organization -= map(moisture,0,0.65,3,0,true)*shear;
+        // this.organization += sq(map(moisture,0.6,1,0,1,true))*4;
+        // this.organization -= pow(1.3,20-SST)*tropicalness;
+        // this.organization = constrain(this.organization,0,100);
+        // this.organization /= 100;
 
-        let targetPressure = 1010-25*log((lnd||SST<25)?1:map(SST,25,30,1,2))/log(1.17);
-        targetPressure = lerp(1010,targetPressure,pow(this.organization,3));
-        this.pressure = lerp(this.pressure,targetPressure,(this.pressure>targetPressure?0.05:0.08)*tropicalness);
-        this.pressure -= random(-3,3.5)*nontropicalness;
-        if(this.organization<0.3) this.pressure += random(-2,2.5)*tropicalness;
-        this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
-        this.pressure += 0.5*this.interaction.shear/(1+map(this.lowerWarmCore,0,1,4,0));
-        this.pressure += map(jet,0,75,5*pow(1-this.depth,4),0,true);
+        // let targetPressure = 1010-25*log((lnd||SST<25)?1:map(SST,25,30,1,2))/log(1.17);
+        // targetPressure = lerp(1010,targetPressure,pow(this.organization,3));
+        // this.pressure = lerp(this.pressure,targetPressure,(this.pressure>targetPressure?0.05:0.08)*tropicalness);
+        // this.pressure -= random(-3,3.5)*nontropicalness;
+        // if(this.organization<0.3) this.pressure += random(-2,2.5)*tropicalness;
+        // this.pressure += random(constrain(970-this.pressure,0,40))*nontropicalness;
+        // this.pressure += 0.5*this.interaction.shear/(1+map(this.lowerWarmCore,0,1,4,0));
+        // this.pressure += map(jet,0,75,5*pow(1-this.depth,4),0,true);
 
-        let targetWind = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
-        this.windSpeed = lerp(this.windSpeed,targetWind,0.15);
+        // let targetWind = map(this.pressure,1030,900,1,160)*map(this.lowerWarmCore,1,0,1,0.6);
+        // this.windSpeed = lerp(this.windSpeed,targetWind,0.15);
 
-        let targetDepth = map(
-            this.upperWarmCore,
-            0,1,
-            1,map(
-                this.organization,
-                0,1,
-                this.depth*pow(0.95,shear),max(map(this.pressure,1010,950,0,0.7,true),this.depth)
-            )
-        );
-        this.depth = lerp(this.depth,targetDepth,0.05);
+        // let targetDepth = map(
+        //     this.upperWarmCore,
+        //     0,1,
+        //     1,map(
+        //         this.organization,
+        //         0,1,
+        //         this.depth*pow(0.95,shear),max(map(this.pressure,1010,950,0,0.7,true),this.depth)
+        //     )
+        // );
+        // this.depth = lerp(this.depth,targetDepth,0.05);
 
-        switch(this.type){
-            case TROP:
-                this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
-                break;
-            case SUBTROP:
-                this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
-                break;
-            case TROPWAVE:
-                this.type = this.lowerWarmCore<0.55 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
-                break;
-            default:
-                this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
-        }
+        // switch(this.type){
+        //     case TROP:
+        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+        //         break;
+        //     case SUBTROP:
+        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : ((this.organization<0.4 && this.windSpeed<50) || this.windSpeed<20) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        //         break;
+        //     case TROPWAVE:
+        //         this.type = this.lowerWarmCore<0.55 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.56 ? EXTROP : TROPWAVE : this.upperWarmCore<0.56 ? SUBTROP : TROP;
+        //         break;
+        //     default:
+        //         this.type = this.lowerWarmCore<0.6 ? EXTROP : (this.organization<0.45 || this.windSpeed<25) ? this.upperWarmCore<0.57 ? EXTROP : TROPWAVE : this.upperWarmCore<0.57 ? SUBTROP : TROP;
+        // }
 
-        if(this.pressure>1030 || (this.pos.x >= WIDTH || this.pos.x < 0 || this.pos.y >= HEIGHT || this.pos.y < 0) || this.interaction.kill){
+        if(this.kill || this.pos.x >= WIDTH || this.pos.x < 0 || this.pos.y >= HEIGHT || this.pos.y < 0){
             this.fetchStorm().deathTime = basin.tick;
             if(this.fetchStorm().TC && this.fetchStorm().dissipationTime===undefined) this.fetchStorm().dissipationTime = basin.tick;
             if(this.fetchStorm().inBasinTC && this.fetchStorm().exitTime===undefined) this.fetchStorm().exitTime = basin.tick;
@@ -1095,16 +1148,16 @@ class ActiveSystem extends StormData{
         this.fetchStorm().renderTrack(true);
     }
 
-    getSteering(){
-        let basin = this.basin;
-        let l = basin.env.get("LLSteering",this.pos.x,this.pos.y,basin.tick);
-        let u = basin.env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
-        let d = sqrt(this.depth);
-        let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
-        let y = lerp(l.y,u.y,d);
-        this.steering.set(x,y);
-        this.steering.add(this.interaction.fuji); // Fujiwhara
-    }
+    // getSteering(){
+    //     let basin = this.basin;
+    //     let l = basin.env.get("LLSteering",this.pos.x,this.pos.y,basin.tick);
+    //     let u = basin.env.get("ULSteering",this.pos.x,this.pos.y,basin.tick);
+    //     let d = sqrt(this.depth);
+    //     let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
+    //     let y = lerp(l.y,u.y,d);
+    //     this.steering.set(x,y);
+    //     this.steering.add(this.interaction.fuji); // Fujiwhara
+    // }
 
     interact(that,first){   // Quick and sloppy fujiwhara implementation
         let basin = this.basin;
@@ -1118,7 +1171,7 @@ class ActiveSystem extends StormData{
             v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
             this.interaction.fuji.add(v);
             this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
-            if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.interaction.kill = true;
+            if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.kill = true;
         }
         if(first) that.interact(this);
     }
@@ -1169,37 +1222,48 @@ class ActiveSystem extends StormData{
 
     save(){
         let obj = super.save();
-        for(let p of [
-            'organization',
-            'lowerWarmCore',
-            'upperWarmCore',
-            'depth'
-        ]) obj[p] = this[p];
+        let activeAttribs = ACTIVE_ATTRIBS[this.basin.actMode] || ACTIVE_ATTRIBS.defaults;
+        for(let p of activeAttribs)
+            obj[p] = this[p];
+        obj.algorithmVersion = STORM_ALGORITHM[this.basin.actMode].version;
         obj.ref = new StormRef(this.basin,this.fetchStorm()).save();
         return obj;
     }
 
     load(data){
         if(data instanceof LoadData){
+            let activeAttribs = ACTIVE_ATTRIBS[this.basin.actMode] || ACTIVE_ATTRIBS.defaults;
+            let algorithmVersion = 0;
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
                 super.load(data);
-                for(let p of [
-                    'organization',
-                    'lowerWarmCore',
-                    'upperWarmCore',
-                    'depth'
-                ]) this[p] = obj[p];
+                algorithmVersion = obj.algorithmVersion || 0;
+                if(algorithmVersion < STORM_ALGORITHM[this.basin.actMode].version && STORM_ALGORITHM[this.basin.actMode].upgrade)
+                    STORM_ALGORITHM[this.basin.actMode].upgrade(this,obj,algorithmVersion); // upgrade active attributes in case of an algorithm version change
+                else{
+                    for(let p of activeAttribs)
+                        this[p] = obj[p] || 0;
+                }
                 this.storm = new StormRef(this.basin,data.sub(obj.ref));
             }else{
                 let str = data.value;
                 let parts = str.split(".");
                 super.load(data.sub(parts[0]));
                 let activeData = decodeB36StringArray(parts[1]);
-                this.depth = activeData.pop();
-                this.upperWarmCore = activeData.pop();
-                this.lowerWarmCore = activeData.pop();
-                this.organization = activeData.pop();
+                if(algorithmVersion < STORM_ALGORITHM[this.basin.actMode].version && STORM_ALGORITHM[this.basin.actMode].upgrade){
+                    let obj = {};
+                    obj.depth = activeData.pop();
+                    obj.upperWarmCore = activeData.pop();
+                    obj.lowerWarmCore = activeData.pop();
+                    obj.organization = activeData.pop();
+                    // upgrade active attributes in case of an algorithm version change
+                    STORM_ALGORITHM[this.basin.actMode].upgrade(this,obj,algorithmVersion);
+                }else{
+                    this.depth = activeData.pop();
+                    this.upperWarmCore = activeData.pop();
+                    this.lowerWarmCore = activeData.pop();
+                    this.organization = activeData.pop();
+                }
                 this.storm = new StormRef(this.basin,data.sub(parts[2]));
             }
         }
