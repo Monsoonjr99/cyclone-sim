@@ -343,43 +343,45 @@ UI.init = function(){
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
             if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
-                let g = {x: getMouseX(), y: getMouseY()};
-                if(key === "l" || key === "L"){
-                    g.sType = "l";
-                }else if(key === "d"){
-                    g.sType = "d";
-                }else if(key === "D"){
-                    g.sType = "sd";
-                }else if(key === "s"){
-                    g.sType = "s";
-                }else if(key === "S"){
-                    g.sType = "ss";
-                }else if(key === "1"){
-                    g.sType = "1";
-                }else if(key === "2"){
-                    g.sType = "2";
-                }else if(key === "3"){
-                    g.sType = "3";
-                }else if(key === "4"){
-                    g.sType = "4";
-                }else if(key === "5"){
-                    g.sType = "5";
-                }else if(key === "6"){
-                    g.sType = "6";
-                }else if(key === "7"){
-                    g.sType = "7";
-                }else if(key === "8"){
-                    g.sType = "8";
-                }else if(key === "9"){
-                    g.sType = "9";
-                }else if(key === "0"){
-                    g.sType = "10";
-                }else if(key === "y" || key === "Y"){
-                    g.sType = "y";
-                }else if(key === "x" || key === "X"){
-                    g.sType = "x";
-                }else return;
-                basin.spawn(false,g);
+                if(['l','x','d','D','s','S','1','2','3','4','5','6','7','8','9','0','y'].includes(key))
+                    basin.spawnArchetype(key,getMouseX(),getMouseY());
+                // let g = {x: getMouseX(), y: getMouseY()};
+                // if(key === "l" || key === "L"){
+                //     g.sType = "l";
+                // }else if(key === "d"){
+                //     g.sType = "d";
+                // }else if(key === "D"){
+                //     g.sType = "sd";
+                // }else if(key === "s"){
+                //     g.sType = "s";
+                // }else if(key === "S"){
+                //     g.sType = "ss";
+                // }else if(key === "1"){
+                //     g.sType = "1";
+                // }else if(key === "2"){
+                //     g.sType = "2";
+                // }else if(key === "3"){
+                //     g.sType = "3";
+                // }else if(key === "4"){
+                //     g.sType = "4";
+                // }else if(key === "5"){
+                //     g.sType = "5";
+                // }else if(key === "6"){
+                //     g.sType = "6";
+                // }else if(key === "7"){
+                //     g.sType = "7";
+                // }else if(key === "8"){
+                //     g.sType = "8";
+                // }else if(key === "9"){
+                //     g.sType = "9";
+                // }else if(key === "0"){
+                //     g.sType = "10";
+                // }else if(key === "y" || key === "Y"){
+                //     g.sType = "y";
+                // }else if(key === "x" || key === "X"){
+                //     g.sType = "x";
+                // }else return;
+                // basin.spawn(false,g);
             }else if(basin.viewingPresent()){
                 let mVector = createVector(getMouseX(),getMouseY());
                 for(let i=basin.activeSystems.length-1;i>=0;i--){
@@ -1060,7 +1062,7 @@ UI.init = function(){
         let red = false;
         if(basin.env.displaying!==-1){
             let f = basin.env.fieldList[basin.env.displaying];
-            txtStr += f + " -- ";
+            txtStr += basin.env.getDisplayName(f) + " -- ";
             let x;
             let y;
             let S = selectedStorm && selectedStorm.aliveAt(viewTick);
@@ -1079,13 +1081,10 @@ UI.init = function(){
                 if(v===null){
                     txtStr += "Unavailable";
                     red = true;
-                }else if(basin.env.fields[f].isVectorField){
-                    let m = v.mag();
-                    let h = v.heading();
-                    txtStr += "(a: " + (round(h*1000)/1000) + ", m: " + (round(m*1000)/1000) + ")";
-                }else txtStr += round(v*1000)/1000;
+                }else
+                    txtStr += basin.env.formatFieldValue(f,v);
             }
-            txtStr += " @ " + (S ? "selected storm" : "mouse pointer / finger");
+            txtStr += " @ " + (S ? "selected storm" : "pointer");
             if(viewTick<=basin.env.fields[f].accurateAfter){
                 txtStr += ' [MAY BE INACCURATE]';
                 red = true;
@@ -1722,6 +1721,55 @@ function mbToInHg(mb,rnd){
     let val = mb*0.02953;
     if(rnd) val = round(val/rnd)*rnd;
     return val;
+}
+
+// converts a radians-from-east angle into a degrees-from-north heading with compass direction for display formatting
+function compassHeading(rad){
+    // force rad into range of zero to two-pi
+    if(rad < 0)
+        rad = 2*PI - (-rad % (2*PI));
+    else
+        rad = rad % (2*PI);
+    // convert heading from radians-from-east to degrees-from-north
+    let heading = map(rad,0,2*PI,90,450) % 360;
+    let compass;
+    // calculate compass direction
+    if(heading < 11.25)
+        compass = 'N';
+    else if(heading < 33.75)
+        compass = 'NNE';
+    else if(heading < 56.25)
+        compass = 'NE';
+    else if(heading < 78.75)
+        compass = 'ENE';
+    else if(heading < 101.25)
+        compass = 'E';
+    else if(heading < 123.75)
+        compass = 'ESE';
+    else if(heading < 146.25)
+        compass = 'SE';
+    else if(heading < 168.75)
+        compass = 'SSE';
+    else if(heading < 191.25)
+        compass = 'S';
+    else if(heading < 213.75)
+        compass = 'SSW';
+    else if(heading < 236.25)
+        compass = 'SW';
+    else if(heading < 258.75)
+        compass = 'WSW';
+    else if(heading < 281.25)
+        compass = 'W';
+    else if(heading < 303.75)
+        compass = 'WNW';
+    else if(heading < 326.25)
+        compass = 'NW';
+    else if(heading < 348.75)
+        compass = 'NNW';
+    else
+        compass = 'N';
+    heading = round(heading);
+    return heading + '\u00B0 '/* degree sign */ + compass;
 }
 
 function damageDisplayNumber(d){

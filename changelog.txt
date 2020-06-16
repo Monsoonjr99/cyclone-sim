@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3 (2020-06-16):
+    * Environmental field map layers now have real display names and better unit formatting in the bottom bar
+        > "u/hr" is a crumby velocity unit based in coordinate units for now
+    * Shear map layer now features colored arrows
+    * Under-the-hood changes to storm algorithm and spawn rules so they're more flexibly-defined for different simulation modes
+    * Experimental Mode now experimenting with a weird new storm algorithm
 v0.2.12 (b20200502a):
     * Peaks for pressure and wind speed now kept track of separately
         > Fixes issue with storms sometimes given the wrong classification name in the info panel
