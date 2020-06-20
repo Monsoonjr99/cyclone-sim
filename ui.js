@@ -279,6 +279,7 @@ UI.init = function(){
     },false);
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    let desigSystemEditor = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
@@ -870,6 +871,94 @@ UI.init = function(){
         }
     };
 
+    // designation system editor
+
+    desigSystemEditor.sub = DEFAULT_MAIN_SUBBASIN;
+    let desig_editor_prefix_box;
+    let desig_editor_suffix_box;
+    let refresh_desig_editor = ()=>{
+        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
+        if(sb && sb.designationSystem && sb.designationSystem.numbering.enabled){
+            desig_editor_prefix_box.value = sb.designationSystem.numbering.prefix;
+            desig_editor_suffix_box.value = sb.designationSystem.numbering.suffix;
+        }
+        else{
+            desig_editor_prefix_box.value = '';
+            desig_editor_suffix_box.value = '';
+        }
+    };
+
+    // title text
+    desigSystemEditor.append(false,WIDTH/2,HEIGHT/16,0,0,s=>{
+        fill(COLORS.UI.text);
+        noStroke();
+        textAlign(CENTER,CENTER);
+        textSize(36);
+        text("Designations Editor",0,0);
+    });
+
+    // sub-basin selector
+    let desig_editor_sb_selector = desigSystemEditor.append(false,WIDTH/2-150,HEIGHT/8,300,0,s=>{
+        let txt = 'Editing sub-basin: ';
+        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
+        if(sb instanceof SubBasin)
+            txt += sb.getDisplayName();
+        textAlign(LEFT,CENTER);
+        textSize(20);
+        text(txt,0,15);
+    });
+    
+    desig_editor_sb_selector.append(false,-40,0,30,10,s=>{ // next sub-basin button
+        s.button('',true);
+        triangle(15,2,23,8,7,8);
+    },()=>{
+        do{
+            desigSystemEditor.sub++;
+            if(desigSystemEditor.sub > 255)
+                desigSystemEditor.sub = 0;
+        }while(!(UI.viewBasin.subBasins[desigSystemEditor.sub] instanceof SubBasin));
+        refresh_desig_editor();
+    }).append(false,0,20,30,10,s=>{ // prev sub-basin button
+        s.button('',true);
+        triangle(15,8,23,2,7,2);
+    },()=>{
+        do{
+            desigSystemEditor.sub--;
+            if(desigSystemEditor.sub < 0)
+                desigSystemEditor.sub = 255;
+        }while(!(UI.viewBasin.subBasins[desigSystemEditor.sub] instanceof SubBasin));
+        refresh_desig_editor();
+    });
+
+    let desig_editor_prefix_section = desig_editor_sb_selector.append(false,0,40,0,0,s=>{
+        text('Prefix:',0,15);
+    });
+
+    desig_editor_prefix_box = desig_editor_prefix_section.append(false,100,0,200,30,[18,6,()=>{
+        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
+        if(sb instanceof SubBasin && sb.designationSystem && sb.designationSystem.numbering.enabled)
+            sb.designationSystem.numbering.prefix = desig_editor_prefix_box.value;
+    }]);
+
+    let desig_editor_suffix_section = desig_editor_prefix_section.append(false,0,40,0,0,s=>{
+        text('Suffix:',0,15);
+    });
+
+    desig_editor_suffix_box = desig_editor_suffix_section.append(false,100,0,200,30,[18,6,()=>{
+        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
+        if(sb instanceof SubBasin && sb.designationSystem && sb.designationSystem.numbering.enabled)
+            sb.designationSystem.numbering.suffix = desig_editor_suffix_box.value;
+    }]);
+
+    desigSystemEditor.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Done" button
+        s.button("Done",true,20);
+    },function(){
+        desigSystemEditor.sub = DEFAULT_MAIN_SUBBASIN;
+        desigSystemEditor.hide();
+        if(UI.viewBasin instanceof Basin) primaryWrapper.show();
+        else mainMenu.show();
+    });
+
     // primary "in sim" scene
 
     let topBar = primaryWrapper.append(false,0,0,WIDTH,30,function(s){   // Top bar
@@ -1453,6 +1542,13 @@ UI.init = function(){
     },function(){
         primaryWrapper.hide();
         settingsMenu.show();
+        paused = true;
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
+        s.button("Edit Designations",false,15);
+    },function(){
+        refresh_desig_editor();
+        primaryWrapper.hide();
+        desigSystemEditor.show();
         paused = true;
     }).append(false,0,30,sideMenu.width-10,25,function(s){  // Basin seed button
         s.button('Basin Seed',false,15);
