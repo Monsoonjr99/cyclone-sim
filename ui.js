@@ -873,19 +873,41 @@ UI.init = function(){
 
     // designation system editor
 
+    const desig_editor_section_spacing = 36;
+    const desig_editor_section_heights = 28;
+    const desig_editor_section_width = 400;
+    const desig_editor_name_sections = 6;
+
     desigSystemEditor.sub = DEFAULT_MAIN_SUBBASIN;
+    desigSystemEditor.desig_system = undefined;
+    desigSystemEditor.name_list_num = 0;
+    desigSystemEditor.name_list_page = 0;
+    desigSystemEditor.aux_list = false;
     let desig_editor_prefix_box;
     let desig_editor_suffix_box;
-    let refresh_desig_editor = ()=>{
+    let desig_editor_num_affix_section;
+    const desig_editor_refresh_num_section = ()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            desig_editor_prefix_box.value = ds.numbering.prefix;
+            desig_editor_suffix_box.value = ds.numbering.suffix;
+        }
+        if(ds && ds.numbering.enabled)
+            desig_editor_num_affix_section.show();
+        else
+            desig_editor_num_affix_section.hide();
+    };
+    const desig_editor_refresh_name_section = ()=>{
+        desigSystemEditor.name_list_page = 0;
+    };
+    const refresh_desig_editor = ()=>{
         let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
-        if(sb && sb.designationSystem && sb.designationSystem.numbering.enabled){
-            desig_editor_prefix_box.value = sb.designationSystem.numbering.prefix;
-            desig_editor_suffix_box.value = sb.designationSystem.numbering.suffix;
-        }
-        else{
-            desig_editor_prefix_box.value = '';
-            desig_editor_suffix_box.value = '';
-        }
+        if(sb && sb.designationSystem)
+            desigSystemEditor.desig_system = sb.designationSystem;
+        desigSystemEditor.name_list_num = 0;
+        desigSystemEditor.aux_list = false;
+        desig_editor_refresh_num_section();
+        desig_editor_refresh_name_section();
     };
 
     // title text
@@ -898,17 +920,17 @@ UI.init = function(){
     });
 
     // sub-basin selector
-    let desig_editor_sb_selector = desigSystemEditor.append(false,WIDTH/2-150,HEIGHT/8,300,0,s=>{
+    let desig_editor_sb_selector = desigSystemEditor.append(false,WIDTH/2-desig_editor_section_width/2,HEIGHT/8,desig_editor_section_width,0,s=>{
         let txt = 'Editing sub-basin: ';
         let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
         if(sb instanceof SubBasin)
             txt += sb.getDisplayName();
-        textAlign(LEFT,CENTER);
-        textSize(20);
-        text(txt,0,15);
+        textAlign(CENTER,CENTER);
+        textSize(18);
+        text(txt,desig_editor_section_width/2,desig_editor_section_heights/2);
     });
     
-    desig_editor_sb_selector.append(false,-40,0,30,10,s=>{ // next sub-basin button
+    desig_editor_sb_selector.append(false,0,0,30,10,s=>{ // next sub-basin button
         s.button('',true);
         triangle(15,2,23,8,7,8);
     },()=>{
@@ -918,7 +940,7 @@ UI.init = function(){
                 desigSystemEditor.sub = 0;
         }while(!(UI.viewBasin.subBasins[desigSystemEditor.sub] instanceof SubBasin));
         refresh_desig_editor();
-    }).append(false,0,20,30,10,s=>{ // prev sub-basin button
+    }).append(false,0,18,30,10,s=>{ // prev sub-basin button
         s.button('',true);
         triangle(15,8,23,2,7,2);
     },()=>{
@@ -930,30 +952,182 @@ UI.init = function(){
         refresh_desig_editor();
     });
 
-    let desig_editor_prefix_section = desig_editor_sb_selector.append(false,0,40,0,0,s=>{
-        text('Prefix:',0,15);
+    // numbering enabled/disabled button
+    let desig_editor_num_button = desig_editor_sb_selector.append(false,0,desig_editor_section_spacing,desig_editor_section_width,desig_editor_section_heights,s=>{
+        let txt = 'Numbering: ';
+        let grey = false;
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            if(ds.numbering.enabled)
+                txt += 'Enabled';
+            else
+                txt += 'Disabled';
+        }
+        else{
+            txt += 'N/A';
+            grey = true;
+        }
+        s.button(txt,true,18,grey);
+    },()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            ds.numbering.enabled = !ds.numbering.enabled;
+            desig_editor_refresh_num_section();
+        }
     });
 
-    desig_editor_prefix_box = desig_editor_prefix_section.append(false,100,0,200,30,[18,6,()=>{
-        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
-        if(sb instanceof SubBasin && sb.designationSystem && sb.designationSystem.numbering.enabled)
-            sb.designationSystem.numbering.prefix = desig_editor_prefix_box.value;
+    desig_editor_num_affix_section = desig_editor_num_button.append(false,0,desig_editor_section_spacing,0,0);
+
+    // numbering prefix box
+    desig_editor_prefix_box = desig_editor_num_affix_section.append(false,0,0,0,0,s=>{
+        textAlign(LEFT,CENTER);
+        text('Prefix:',0,desig_editor_section_heights/2);
+    }).append(false,70,0,desig_editor_section_width/2-75,desig_editor_section_heights,[18,6,()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem && ds.numbering.enabled)
+            ds.numbering.prefix = desig_editor_prefix_box.value;
     }]);
 
-    let desig_editor_suffix_section = desig_editor_prefix_section.append(false,0,40,0,0,s=>{
-        text('Suffix:',0,15);
+    // numbering suffix box
+    desig_editor_suffix_box = desig_editor_num_affix_section.append(false,desig_editor_section_width/2+5,0,0,0,s=>{
+        textAlign(LEFT,CENTER);
+        text('Suffix:',0,desig_editor_section_heights/2);
+    }).append(false,70,0,desig_editor_section_width/2-75,desig_editor_section_heights,[18,6,()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem && ds.numbering.enabled)
+            ds.numbering.suffix = desig_editor_suffix_box.value;
+    }]);
+
+    // name list selector
+    let desig_editor_list_selector = desig_editor_num_button.append(false,0,desig_editor_section_spacing*2,desig_editor_section_width,0,s=>{
+        let txt = `Editing name list:${desigSystemEditor.aux_list ? ' Aux.' : ''} List ${desigSystemEditor.name_list_num + 1}`;
+        text(txt,desig_editor_section_width/2,desig_editor_section_heights/2);
     });
 
-    desig_editor_suffix_box = desig_editor_suffix_section.append(false,100,0,200,30,[18,6,()=>{
-        let sb = UI.viewBasin.subBasins[desigSystemEditor.sub];
-        if(sb instanceof SubBasin && sb.designationSystem && sb.designationSystem.numbering.enabled)
-            sb.designationSystem.numbering.suffix = desig_editor_suffix_box.value;
-    }]);
+    desig_editor_list_selector.append(false,0,0,30,10,s=>{ // next name list button
+        s.button('',true);
+        triangle(15,2,23,8,7,8);
+    },()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            desigSystemEditor.name_list_num++;
+            if(!desigSystemEditor.aux_list && desigSystemEditor.name_list_num >= ds.naming.mainLists.length){
+                desigSystemEditor.aux_list = true;
+                desigSystemEditor.name_list_num = 0;
+            }else if(desigSystemEditor.aux_list && desigSystemEditor.name_list_num >= ds.naming.auxiliaryLists.length){
+                desigSystemEditor.aux_list = false;
+                desigSystemEditor.name_list_num = 0;
+            }
+            desig_editor_refresh_name_section();
+        }
+    }).append(false,0,18,30,10,s=>{ // prev name list button
+        s.button('',true);
+        triangle(15,8,23,2,7,2);
+    },()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            desigSystemEditor.name_list_num--;
+            if(desigSystemEditor.name_list_num < 0){
+                if(desigSystemEditor.aux_list){
+                    desigSystemEditor.aux_list = false;
+                    desigSystemEditor.name_list_num = ds.naming.mainLists.length - 1;
+                }else{
+                    desigSystemEditor.aux_list = true;
+                    desigSystemEditor.name_list_num = ds.naming.auxiliaryLists.length - 1;
+                }
+            }
+            desig_editor_refresh_name_section();
+        }
+    });
 
-    desigSystemEditor.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Done" button
+    let desig_editor_list_nav = desig_editor_list_selector.append(false,0,desig_editor_section_spacing,0,0);
+
+    desig_editor_list_nav.append(false,desig_editor_section_width/2-40,0,30,desig_editor_section_heights,s=>{
+        let grey = true;
+        if(desigSystemEditor.name_list_page > 0)
+            grey = false;
+        s.button('',true,18,grey);
+        triangle(4,14,26,4,26,24);
+    },()=>{
+        if(desigSystemEditor.name_list_page > 0)
+            desigSystemEditor.name_list_page--;
+    }).append(false,50,0,30,desig_editor_section_heights,s=>{
+        let grey = true;
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            let list;
+            if(desigSystemEditor.aux_list)
+                list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
+            else
+                list = ds.naming.mainLists[desigSystemEditor.name_list_num];
+            if((desigSystemEditor.name_list_page + 1) * desig_editor_name_sections < list.length)
+                grey = false;
+        }
+        s.button('',true,18,grey);
+        triangle(26,14,4,4,4,24);
+    },()=>{
+        let ds = desigSystemEditor.desig_system;
+        if(ds instanceof DesignationSystem){
+            let list;
+            if(desigSystemEditor.aux_list)
+                list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
+            else
+                list = ds.naming.mainLists[desigSystemEditor.name_list_num];
+            if((desigSystemEditor.name_list_page + 1) * desig_editor_name_sections < list.length)
+                desigSystemEditor.name_list_page++;
+        }
+    });
+
+    const add_name_edit_section = (prev,i)=>{
+        let section = prev.append(false,0,desig_editor_section_spacing,desig_editor_section_width-120,desig_editor_section_heights,s=>{
+            let txt = '--';
+            let grey = true;
+            let ds = desigSystemEditor.desig_system;
+            if(ds instanceof DesignationSystem){
+                let index = desigSystemEditor.name_list_page * desig_editor_name_sections + i;
+                let list;
+                if(desigSystemEditor.aux_list)
+                    list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
+                else
+                    list = ds.naming.mainLists[desigSystemEditor.name_list_num];
+                if(list && list[index]){
+                    txt = list[index];
+                    grey = false;
+                }
+            }
+            s.button(txt,true,18,grey);
+        },()=>{
+            let txt;
+            let ds = desigSystemEditor.desig_system;
+            if(ds instanceof DesignationSystem){
+                let index = desigSystemEditor.name_list_page * desig_editor_name_sections + i;
+                let list;
+                if(desigSystemEditor.aux_list)
+                    list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
+                else
+                    list = ds.naming.mainLists[desigSystemEditor.name_list_num];
+                if(list && list[index]){
+                    txt = list[index];
+                    alert(txt);
+                }
+            }
+        });
+        return section;
+    };
+
+    for(let i = 0, prev = desig_editor_list_nav; i < desig_editor_name_sections; i++){
+        prev = add_name_edit_section(prev,i);
+    }
+
+    desigSystemEditor.append(false,WIDTH/2-desig_editor_section_width/2,7*HEIGHT/8+10,desig_editor_section_width,desig_editor_section_heights,function(s){ // "Done" button
         s.button("Done",true,20);
     },function(){
+        desig_editor_prefix_box.enterFunc();
+        desig_editor_suffix_box.enterFunc();
         desigSystemEditor.sub = DEFAULT_MAIN_SUBBASIN;
+        desigSystemEditor.aux_list = false;
+        desigSystemEditor.name_list_num = 0;
+        desigSystemEditor.name_list_page = 0;
         desigSystemEditor.hide();
         if(UI.viewBasin instanceof Basin) primaryWrapper.show();
         else mainMenu.show();
