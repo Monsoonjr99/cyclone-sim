@@ -1079,37 +1079,63 @@ UI.init = function(){
     });
 
     const add_name_edit_section = (prev,i)=>{
-        let section = prev.append(false,0,desig_editor_section_spacing,desig_editor_section_width-120,desig_editor_section_heights,s=>{
-            let txt = '--';
-            let grey = true;
+        const my_width = desig_editor_section_width - 80;
+        const index = ()=>desigSystemEditor.name_list_page * desig_editor_name_sections + i;
+        const get_list = ()=>{
             let ds = desigSystemEditor.desig_system;
             if(ds instanceof DesignationSystem){
-                let index = desigSystemEditor.name_list_page * desig_editor_name_sections + i;
                 let list;
                 if(desigSystemEditor.aux_list)
                     list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
                 else
                     list = ds.naming.mainLists[desigSystemEditor.name_list_num];
-                if(list && list[index]){
-                    txt = list[index];
-                    grey = false;
-                }
+                return list;
+            }
+        };
+        const name_at = (i)=>{
+            let txt;
+            let list = get_list();
+            if(list && list[i])
+                txt = list[i];
+            return txt;
+        };
+
+        let section = prev.append(false,0,desig_editor_section_spacing,my_width,desig_editor_section_heights,s=>{
+            let txt = '--';
+            let grey = true;
+            let name = name_at(index());
+            if(name){
+                txt = name;
+                grey = false;
             }
             s.button(txt,true,18,grey);
         },()=>{
-            let txt;
-            let ds = desigSystemEditor.desig_system;
-            if(ds instanceof DesignationSystem){
-                let index = desigSystemEditor.name_list_page * desig_editor_name_sections + i;
-                let list;
-                if(desigSystemEditor.aux_list)
-                    list = ds.naming.auxiliaryLists[desigSystemEditor.name_list_num];
-                else
-                    list = ds.naming.mainLists[desigSystemEditor.name_list_num];
-                if(list && list[index]){
-                    txt = list[index];
-                    alert(txt);
-                }
+            let name = name_at(index());
+            if(name)
+                console.log(name);
+        });
+
+        section.append(false,my_width+10,0,30,12,s=>{
+            s.button('+',true,15);
+            triangle(25,3,28,10,22,10);
+        },()=>{
+            console.log('add name above ' + index());
+        }).append(false,0,desig_editor_section_heights-12,30,12,s=>{
+            s.button('+',true,15);
+            triangle(25,9,28,2,22,2);
+        },()=>{
+            console.log('add name below ' + index());
+        });
+
+        section.append(false,my_width+50,0,30,desig_editor_section_heights,s=>{
+            let grey = !name_at(index());
+            s.button('X',true,21,grey);
+        },()=>{
+            if(name_at(index())){
+                let list = get_list();
+                list.splice(index(),1);
+                if(list.length <= desigSystemEditor.name_list_page * desig_editor_name_sections && list.length > 0)
+                    desigSystemEditor.name_list_page--;
             }
         });
         return section;
