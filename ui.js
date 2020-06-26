@@ -279,6 +279,7 @@ UI.init = function(){
     },false);
     loadMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     settingsMenu = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
+    let desigSystemEditor = new UI(null,0,0,WIDTH,HEIGHT,undefined,undefined,false);
     primaryWrapper = new UI(null,0,0,WIDTH,HEIGHT,function(s){
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
@@ -870,6 +871,354 @@ UI.init = function(){
         }
     };
 
+    // designation system editor
+
+    let refresh_desig_editor;
+
+    const define_desig_editor = ()=>{
+        const section_spacing = 36;
+        const section_heights = 28;
+        const section_width = 400;
+        const name_sections = 6;
+
+        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+        let desig_system;
+        let name_list_num = 0;
+        let name_list_page = 0;
+        let aux_list = false;
+        let prefix_box;
+        let suffix_box;
+        let num_affix_section;
+        let name_editor;
+        let name_edit_box;
+        let name_edit_index = 0;
+        let adding_name = false;
+
+        const refresh_num_section = ()=>{
+            if(desig_system instanceof DesignationSystem){
+                prefix_box.value = desig_system.numbering.prefix;
+                suffix_box.value = desig_system.numbering.suffix;
+            }
+            if(desig_system && desig_system.numbering.enabled)
+                num_affix_section.show();
+            else
+                num_affix_section.hide();
+        };
+        const refresh_name_section = ()=>{
+            name_list_page = 0;
+        };
+        refresh_desig_editor = ()=>{
+            let sb = UI.viewBasin.subBasins[editing_sub_basin];
+            if(sb && sb.designationSystem)
+                desig_system = sb.designationSystem;
+            name_list_num = 0;
+            aux_list = false;
+            refresh_num_section();
+            refresh_name_section();
+        };
+
+        const get_list = ()=>{
+            if(desig_system instanceof DesignationSystem){
+                let list;
+                if(aux_list)
+                    list = desig_system.naming.auxiliaryLists[name_list_num];
+                else
+                    list = desig_system.naming.mainLists[name_list_num];
+                return list;
+            }
+        };
+        const name_at = (i)=>{
+            let txt;
+            let list = get_list();
+            if(list && list[i])
+                txt = list[i];
+            return txt;
+        };
+        const invoke_name_editor = (i,is_new_name)=>{
+            let list = get_list();
+            if(list){
+                name_edit_index = i;
+                if(is_new_name)
+                    name_edit_box.value = '';
+                else
+                    name_edit_box.value = list[i];
+                adding_name = is_new_name;
+                name_editor.show();
+                name_edit_box.clicked();
+            }
+        };
+
+        // title text
+        desigSystemEditor.append(false,WIDTH/2,HEIGHT/16,0,0,s=>{
+            fill(COLORS.UI.text);
+            noStroke();
+            textAlign(CENTER,CENTER);
+            textSize(36);
+            text("Designations Editor",0,0);
+        });
+
+        // sub-basin selector
+        let sb_selector = desigSystemEditor.append(false,WIDTH/2-section_width/2,HEIGHT/8,section_width,0,s=>{
+            let txt = 'Editing sub-basin: ';
+            let sb = UI.viewBasin.subBasins[editing_sub_basin];
+            if(sb instanceof SubBasin)
+                txt += sb.getDisplayName();
+            textAlign(CENTER,CENTER);
+            textSize(18);
+            text(txt,section_width/2,section_heights/2);
+        });
+        
+        sb_selector.append(false,0,0,30,10,s=>{ // next sub-basin button
+            s.button('',true);
+            triangle(15,2,23,8,7,8);
+        },()=>{
+            do{
+                editing_sub_basin++;
+                if(editing_sub_basin > 255)
+                    editing_sub_basin = 0;
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            refresh_desig_editor();
+        }).append(false,0,18,30,10,s=>{ // prev sub-basin button
+            s.button('',true);
+            triangle(15,8,23,2,7,2);
+        },()=>{
+            do{
+                editing_sub_basin--;
+                if(editing_sub_basin < 0)
+                    editing_sub_basin = 255;
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            refresh_desig_editor();
+        });
+
+        // numbering enabled/disabled button
+        let num_button = sb_selector.append(false,0,section_spacing,section_width,section_heights,s=>{
+            let txt = 'Numbering: ';
+            let grey = false;
+            if(desig_system instanceof DesignationSystem){
+                if(desig_system.numbering.enabled)
+                    txt += 'Enabled';
+                else
+                    txt += 'Disabled';
+            }
+            else{
+                txt += 'N/A';
+                grey = true;
+            }
+            s.button(txt,true,18,grey);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                desig_system.numbering.enabled = !desig_system.numbering.enabled;
+                refresh_num_section();
+            }
+        });
+
+        num_affix_section = num_button.append(false,0,section_spacing,0,0);
+
+        // numbering prefix box
+        prefix_box = num_affix_section.append(false,0,0,0,0,s=>{
+            textAlign(LEFT,CENTER);
+            text('Prefix:',0,section_heights/2);
+        }).append(false,70,0,section_width/2-75,section_heights,[18,6,()=>{
+            if(desig_system instanceof DesignationSystem && desig_system.numbering.enabled)
+                desig_system.numbering.prefix = prefix_box.value;
+        }]);
+
+        // numbering suffix box
+        suffix_box = num_affix_section.append(false,section_width/2+5,0,0,0,s=>{
+            textAlign(LEFT,CENTER);
+            text('Suffix:',0,section_heights/2);
+        }).append(false,70,0,section_width/2-75,section_heights,[18,6,()=>{
+            if(desig_system instanceof DesignationSystem && desig_system.numbering.enabled)
+                desig_system.numbering.suffix = suffix_box.value;
+        }]);
+
+        // name list selector
+        let list_selector = num_button.append(false,0,section_spacing*2,section_width,0,s=>{
+            let txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
+            text(txt,section_width/2,section_heights/2);
+        });
+
+        list_selector.append(false,0,0,30,10,s=>{ // next name list button
+            s.button('',true);
+            triangle(15,2,23,8,7,8);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                name_list_num++;
+                if(!aux_list && name_list_num >= desig_system.naming.mainLists.length){
+                    if(desig_system.naming.auxiliaryLists.length > 0)
+                        aux_list = true;
+                    name_list_num = 0;
+                }else if(aux_list && name_list_num >= desig_system.naming.auxiliaryLists.length){
+                    if(desig_system.naming.mainLists.length > 0)
+                        aux_list = false;
+                    name_list_num = 0;
+                }
+                refresh_name_section();
+            }
+        }).append(false,0,18,30,10,s=>{ // prev name list button
+            s.button('',true);
+            triangle(15,8,23,2,7,2);
+        },()=>{
+            if(desig_system instanceof DesignationSystem){
+                name_list_num--;
+                if(name_list_num < 0){
+                    if(aux_list){
+                        if(desig_system.naming.mainLists.length > 0){
+                            aux_list = false;
+                            name_list_num = desig_system.naming.mainLists.length - 1;
+                        }else
+                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
+                    }else{
+                        if(desig_system.naming.auxiliaryLists.length > 0){
+                            aux_list = true;
+                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
+                        }else
+                            name_list_num = desig_system.naming.mainLists.length - 1;
+                    }
+                }
+                refresh_name_section();
+            }
+        });
+
+        const add_name_edit_section = (prev,i)=>{
+            const my_width = section_width - 80;
+            const index = ()=>name_list_page * name_sections + i;
+
+            let section = prev.append(false,0,section_spacing,my_width,section_heights,s=>{
+                let txt = '--';
+                let grey = true;
+                let name = name_at(index());
+                if(name){
+                    txt = name;
+                    grey = false;
+                }
+                s.button(txt,true,18,grey);
+            },()=>{
+                let name = name_at(index());
+                if(name)
+                    invoke_name_editor(index(),false);
+            });
+
+            section.append(false,my_width+10,0,30,12,s=>{
+                let grey = true;
+                let list = get_list();
+                if(list && index() <= list.length)
+                    grey = false;
+                s.button('+',true,15,grey);
+                triangle(25,3,28,10,22,10);
+            },()=>{
+                let list = get_list();
+                if(list && index() <= list.length)
+                    invoke_name_editor(index(), true);
+            }).append(false,0,section_heights-12,30,12,s=>{
+                let grey = true;
+                let list = get_list();
+                if(list && (index() + 1) <= list.length)
+                    grey = false;
+                s.button('+',true,15,grey);
+                triangle(25,9,28,2,22,2);
+            },()=>{
+                let list = get_list();
+                if(list && (index() + 1) <= list.length)
+                    invoke_name_editor(index() + 1, true);
+            });
+
+            section.append(false,my_width+50,0,30,section_heights,s=>{
+                let grey = !name_at(index());
+                s.button('X',true,21,grey);
+            },()=>{
+                if(name_at(index())){
+                    let list = get_list();
+                    list.splice(index(),1);
+                    if(list.length <= name_list_page * name_sections && list.length > 0)
+                        name_list_page--;
+                }
+            });
+            return section;
+        };
+
+        for(let i = 0, prev = list_selector; i < name_sections; i++){
+            prev = add_name_edit_section(prev,i);
+        }
+
+        let list_nav = list_selector.append(false,0,section_spacing * (name_sections + 1),0,0);
+
+        list_nav.append(false,section_width/2-40,0,30,section_heights,s=>{
+            let grey = true;
+            if(name_list_page > 0)
+                grey = false;
+            s.button('',true,18,grey);
+            triangle(4,14,26,4,26,24);
+        },()=>{
+            if(name_list_page > 0)
+                name_list_page--;
+        }).append(false,50,0,30,section_heights,s=>{
+            let grey = true;
+            let list = get_list();
+            if(list && (name_list_page + 1) * name_sections < list.length)
+                grey = false;
+            s.button('',true,18,grey);
+            triangle(26,14,4,4,4,24);
+        },()=>{
+            let list = get_list();
+            if(list && (name_list_page + 1) * name_sections < list.length)
+                name_list_page++;
+        });
+
+        desigSystemEditor.append(false,WIDTH/2-section_width/2,7*HEIGHT/8+10,section_width,section_heights,function(s){ // "Done" button
+            s.button("Done",true,20);
+        },function(){
+            prefix_box.enterFunc();
+            suffix_box.enterFunc();
+            editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            aux_list = false;
+            name_list_num = 0;
+            name_list_page = 0;
+            desigSystemEditor.hide();
+            if(UI.viewBasin instanceof Basin)
+                primaryWrapper.show();
+            else
+                mainMenu.show();
+        });
+
+        name_editor = desigSystemEditor.append(false,0,0,WIDTH,HEIGHT,s=>{
+            fill(COLORS.UI.box);
+            noStroke();
+            s.fullRect();
+        },true,false);
+
+        name_editor.append(false,WIDTH/2,HEIGHT/4,0,0,s=>{
+            fill(COLORS.UI.text);
+            noStroke();
+            textAlign(CENTER,CENTER);
+            textSize(24);
+            text("Add/Edit Name",0,0);
+        });
+
+        name_edit_box = name_editor.append(false, WIDTH/2-section_width/2, HEIGHT/3, section_width, section_heights, [20, 15, ()=>{
+            let list = get_list();
+            if(list && name_edit_box.value){
+                if(adding_name)
+                    list.splice(name_edit_index,0,name_edit_box.value);
+                else
+                    list[name_edit_index] = name_edit_box.value;
+            }
+            name_editor.hide();
+        }]);
+
+        name_edit_box.append(false, 0, section_spacing, section_width, section_heights, s=>{
+            s.button('Done',true,20);
+        },()=>{
+            name_edit_box.enterFunc();
+        }).append(false, 0, section_spacing, section_width, section_heights, s=>{
+            s.button('Cancel',true,20);
+        },()=>{
+            name_editor.hide();
+        });
+    };
+
+    define_desig_editor();
+
     // primary "in sim" scene
 
     let topBar = primaryWrapper.append(false,0,0,WIDTH,30,function(s){   // Top bar
@@ -1453,6 +1802,13 @@ UI.init = function(){
     },function(){
         primaryWrapper.hide();
         settingsMenu.show();
+        paused = true;
+    }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
+        s.button("Edit Designations",false,15);
+    },function(){
+        refresh_desig_editor();
+        primaryWrapper.hide();
+        desigSystemEditor.show();
         paused = true;
     }).append(false,0,30,sideMenu.width-10,25,function(s){  // Basin seed button
         s.button('Basin Seed',false,15);
