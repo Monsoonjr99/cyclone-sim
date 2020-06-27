@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.1 (2020-06-26):
+    + Added designations editor
+        > Accessible from side menu
+        > Can enable/disable numbering
+        > Can change numbering prefix/suffix
+        > Can add, remove, and edit names for all lists
 v0.3 (2020-06-16):
     * Environmental field map layers now have real display names and better unit formatting in the bottom bar
         > "u/hr" is a crumby velocity unit based in coordinate units for now
