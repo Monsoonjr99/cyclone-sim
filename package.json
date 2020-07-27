@@ -1,0 +1,34 @@
+{
+  "name": "cyclone-sim",
+  "version": "1.0.0-alpha",
+  "description": "A browser-based tropical cyclone simulation game.",
+  "private": true,
+  "scripts": {
+    "test": "start http-server && start http://localhost:8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Monsoonjr99/cyclone-sim.git"
+  },
+  "keywords": [
+    "cyclone",
+    "simulation",
+    "canvas",
+    "web",
+    "game"
+  ],
+  "author": "Ryan Lane (Monsoonjr99)",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Monsoonjr99/cyclone-sim/issues"
+  },
+  "homepage": "https://github.com/Monsoonjr99/cyclone-sim#readme",
+  "devDependencies": {
+    "http-server": "^0.12.3",
+    "typescript": "^3.9.7"
+  },
+  "dependencies": {
+    "@types/jquery": "^3.5.0",
+    "jquery": "^3.5.1"
+  }
+}
