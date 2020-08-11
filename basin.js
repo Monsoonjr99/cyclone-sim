@@ -68,8 +68,13 @@ class Basin{
                 this.expireSeasonTimer(this.getSeason(-1));
                 this.env.record();
             };
-            if(MAP_TYPES[this.mapType].form==='pixelmap'){
-                this.initialized = loadImg(MAP_TYPES[this.mapType].path).then(img=>{
+            if(MAP_TYPES[this.mapType].form==='pixelmap' || MAP_TYPES[this.mapType].form==='earth'){
+                let path;
+                if(MAP_TYPES[this.mapType].form==='earth')
+                    path = EARTH_MAP_PATH;
+                else
+                    path = MAP_TYPES[this.mapType].path;
+                this.initialized = loadImg(path).then(img=>{
                     img.loadPixels();
                     this.mapImg = img;
                     f();
@@ -535,6 +540,12 @@ class Basin{
             }).then(b=>{
                 if(MAP_TYPES[b.mapType].form==='pixelmap'){
                     return loadImg(MAP_TYPES[b.mapType].path).then(img=>{
+                        img.loadPixels();
+                        b.mapImg = img;
+                        return b;
+                    });
+                }else if(MAP_TYPES[b.mapType].form==='earth'){
+                    return loadImg(EARTH_MAP_PATH).then(img=>{
                         img.loadPixels();
                         b.mapImg = img;
                         return b;
