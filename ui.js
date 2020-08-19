@@ -1445,7 +1445,32 @@ UI.init = function(){
         UI.viewBasin.env.displayNext();
     });
 
-    bottomBar.append(false,WIDTH-29,3,24,24,function(s){  // Help button
+    bottomBar.append(false,WIDTH-29,3,24,24,function(s){    // Fullscreen button
+        s.button('',false);
+        stroke(0);
+        if(document.fullscreenElement===canvas){
+            line(9,4,9,9);
+            line(4,9,9,9);
+            line(15,4,15,9);
+            line(20,9,15,9);
+            line(9,20,9,15);
+            line(4,15,9,15);
+            line(15,20,15,15);
+            line(20,15,15,15);
+        }else{
+            line(4,4,4,9);
+            line(4,4,9,4);
+            line(20,4,20,9);
+            line(20,4,15,4);
+            line(4,20,4,15);
+            line(4,20,9,20);
+            line(20,20,20,15);
+            line(20,20,15,20);
+        }
+    },function(){
+        toggleFullscreen();
+    }).append(false,-29,0,24,24,function(s){  // Help button
+        noStroke();
         s.button("?",false,22);
     },function(){
         helpBox.toggleShow();
@@ -1996,9 +2021,9 @@ function changeViewTick(t){
     });
 }
 
-function deviceTurned(){
-    toggleFullscreen();
-}
+// function deviceTurned(){
+//     toggleFullscreen();
+// }
 
 function wrapText(str,w){
     let newStr = "";
