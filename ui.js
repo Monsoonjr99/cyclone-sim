@@ -1334,13 +1334,15 @@ UI.init = function(){
         dateNavYearInput.enterFunc();
     });
 
-    topBar.append(false,WIDTH-29,3,24,24,function(s){    // Toggle button for storm info panel
+    let panel_timeline_container = primaryWrapper.append(false,0,topBar.height,0,0,undefined,undefined,false);
+
+    topBar.append(false,WIDTH-29,3,24,24,function(s){    // Toggle button for storm info panel and timeline
         s.button('');
-        if(stormInfoPanel.showing) triangle(6,15,18,15,12,9);
+        if(panel_timeline_container.showing) triangle(6,15,18,15,12,9);
         else triangle(6,9,18,9,12,15);
     },function(){
-        if(!stormInfoPanel.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
-        stormInfoPanel.toggleShow();
+        if(!panel_timeline_container.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
+        panel_timeline_container.toggleShow();
     }).append(false,-29,0,24,24,function(s){  // Pause/resume button
         s.button('');
         if(paused) triangle(3,3,21,12,3,21);
@@ -1476,7 +1478,9 @@ UI.init = function(){
         helpBox.toggleShow();
     });
 
-    stormInfoPanel = primaryWrapper.append(false,3*WIDTH/4,topBar.height,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
+    let timeline;
+
+    stormInfoPanel = panel_timeline_container.append(false,3*WIDTH/4,0,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
         let S = this.target;
         fill(COLORS.UI.box);
         noStroke();
@@ -1485,11 +1489,12 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         const txtW = 7*this.width/8;
+        const nameW = this.width - 60;
         if(S instanceof Storm){
             let n = S.getFullNameByTick("peak");
-            n = wrapText(n,txtW);
+            n = wrapText(n,nameW);
             let nameHeight = countTextLines(n)*textLeading();
-            text(n,this.width/2,35);
+            text(n,this.width/2,8);
             textSize(15);
             let txt = "";
             txt += 'Dates active: ';
@@ -1515,12 +1520,12 @@ UI.init = function(){
             txt += "\nDeaths: " + S.deaths;
             txt += "\nLandfalls: " + S.landfalls;
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,35+nameHeight);
+            text(txt,this.width/2,8+nameHeight);
         }else{
             let n = seasonName(S);
-            n = wrapText(n,txtW);
+            n = wrapText(n,nameW);
             let nh = countTextLines(n)*textLeading();
-            text(n,this.width/2,35);
+            text(n,this.width/2,8);
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             let txt;
@@ -1536,11 +1541,17 @@ UI.init = function(){
                 txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,35+nh);
+            text(txt,this.width/2,8+nh);
         }
-    },true,false);
+    },true);
 
-    stormInfoPanel.append(false,3,3,24,24,function(s){   // info panel previous season button
+    let timeline_container = panel_timeline_container.append(false,0,0,0,0);
+
+    panel_timeline_container.append(false,3*WIDTH/4+3,3,24,24,function(s){   // info panel/timeline previous season button
+        if(timeline.active())
+            this.setBox(WIDTH*0.9-51,10,24,24);
+        else
+            this.setBox(3*WIDTH/4+3,3,24,24);
         let S = stormInfoPanel.target;
         s.button('',false,18,(S instanceof Storm) || S<=UI.viewBasin.getSeason(0));
         triangle(19,5,19,19,5,12);
@@ -1549,7 +1560,11 @@ UI.init = function(){
         if(!(s instanceof Storm) && s>UI.viewBasin.getSeason(0)) stormInfoPanel.target--;
     });
     
-    stormInfoPanel.append(false,stormInfoPanel.width-27,3,24,24,function(s){ // info panel next season button
+    panel_timeline_container.append(false,3*WIDTH/4+stormInfoPanel.width-27,3,24,24,function(s){ // info panel next season button
+        if(timeline.active())
+            this.setBox(WIDTH*0.9-24,10,24,24);
+        else
+            this.setBox(3*WIDTH/4+stormInfoPanel.width-27,3,24,24);
         let S = stormInfoPanel.target;
         s.button('',false,18,(S instanceof Storm) || S>=UI.viewBasin.getSeason(-1));
         triangle(5,5,5,19,19,12);
@@ -1558,7 +1573,7 @@ UI.init = function(){
         if(!(s instanceof Storm) && s<UI.viewBasin.getSeason(-1)) stormInfoPanel.target++;
     });
     
-    stormInfoPanel.append(false,30,3,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
+    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
         s.button("Jump to",false,15,!paused || stormInfoPanel.target===undefined);
     },function(){
         if(paused && stormInfoPanel.target!==undefined){
@@ -1574,209 +1589,227 @@ UI.init = function(){
             }
             changeViewTick(t);
         }
-    });
-
-    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(s){ // show season summary timeline button
-        s.button("Show Timeline",false,15);
+    }).append(false,0,-27,stormInfoPanel.width-60,24,function(s){ // show season summary timeline button
+        s.button("View Timeline",false,15);
     },function(){
-        timelineBox.toggleShow();
+        timeline.view();
     });
 
-    let buildtimeline = function(){
-        let tb = timelineBox;
-        tb.parts = [];
-        let plotWidth = tb.width*0.9;
-        let target = stormInfoPanel.target;
-        if(target!==undefined && !(target instanceof Storm)){
-            let gen = s=>{
-                let TCs = [];
-                let beginSeasonTick;
-                let endSeasonTick;
-                for(let sys of s.forSystems()){
-                    if(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target))){
-                        TCs.push(sys);
-                        let dissTime = sys.exitTime || UI.viewBasin.tick;
-                        if(beginSeasonTick===undefined || sys.enterTime<beginSeasonTick) beginSeasonTick = sys.enterTime;
-                        if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
-                    }
-                }
-                for(let n=0;n<TCs.length-1;n++){
-                    let t0 = TCs[n];
-                    let t1 = TCs[n+1];
-                    if(t0.enterTime>t1.enterTime){
-                        TCs[n] = t1;
-                        TCs[n+1] = t0;
-                        if(n>0) n -= 2;
-                    }
-                }
-                let sMoment = UI.viewBasin.tickMoment(beginSeasonTick);
-                tb.sMonth = sMoment.month();
-                sMoment.startOf('month');
-                let beginPlotTick = UI.viewBasin.tickFromMoment(sMoment);
-                let eMoment = UI.viewBasin.tickMoment(endSeasonTick);
-                eMoment.endOf('month');
-                let endPlotTick = UI.viewBasin.tickFromMoment(eMoment);
-                tb.months = eMoment.diff(sMoment,'months') + 1;
-                for(let t of TCs){
-                    let part = {};
-                    part.storm = t;
-                    part.segments = [];
-                    part.label = t.getNameByTick(-2);
-                    let aSegment;
-                    for(let q=0;q<t.record.length;q++){
-                        let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
-                        let d = t.record[q];
-                        if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                            let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
-                            if(!aSegment){
-                                aSegment = {};
-                                part.segments.push(aSegment);
-                                aSegment.startTick = rt;
-                                aSegment.maxCat = clsn;
-                                aSegment.fullyTrop = (d.type===TROP);
-                            }
-                            if(clsn > aSegment.maxCat) aSegment.maxCat = clsn;
-                            aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
-                            aSegment.endTick = rt;
-                        }else if(aSegment) aSegment = undefined;
-                    }
-                    for(let q=0;q<part.segments.length;q++){
-                        let seg = part.segments[q];
-                        seg.startX = map(seg.startTick,beginPlotTick,endPlotTick,0,plotWidth);
-                        seg.endX = map(seg.endTick,beginPlotTick,endPlotTick,0,plotWidth);
-                    }
-                    let rowFits;
-                    part.row = -1;
-                    textSize(12);
-                    let thisLabelZone = textWidth(part.label) + 6;
-                    do{
-                        part.row++;
-                        rowFits = true;
-                        for(let q=0;q<tb.parts.length;q++){
-                            let p = tb.parts[q];
-                            let otherLabelZone = textWidth(p.label) + 6;
-                            let thisS = part.segments[0].startX;
-                            let thisE = part.segments[part.segments.length-1].endX + thisLabelZone;
-                            let otherS = p.segments[0].startX;
-                            let otherE = p.segments[p.segments.length-1].endX + otherLabelZone;
-                            if(p.row===part.row){
-                                if(thisS>=otherS && thisS<=otherE ||
-                                    thisE>=otherS && thisE<=otherE ||
-                                    otherS>=thisS && otherS<=thisE ||
-                                    otherE>=thisS && otherE<=thisE) rowFits = false;
-                            }
+    timeline = (function(){
+        const BOX_WIDTH = WIDTH;
+        const BOX_HEIGHT = (HEIGHT-topBar.height-bottomBar.height)*2/3;
+        let months = 12;
+        let sMonth = 0;
+        let parts = [];
+        let builtAt;
+        let builtFor;
+        let active = false;
+
+        function build(){
+            parts = [];
+            let plotWidth = BOX_WIDTH*0.9;
+            let target = stormInfoPanel.target;
+            if(target!==undefined && !(target instanceof Storm)){
+                let gen = s=>{
+                    let TCs = [];
+                    let beginSeasonTick;
+                    let endSeasonTick;
+                    for(let sys of s.forSystems()){
+                        if(sys.inBasinTC && (UI.viewBasin.getSeason(sys.enterTime)===target || UI.viewBasin.getSeason(sys.enterTime)<target && (sys.exitTime===undefined || UI.viewBasin.getSeason(sys.exitTime-1)>=target))){
+                            TCs.push(sys);
+                            let dissTime = sys.exitTime || UI.viewBasin.tick;
+                            if(beginSeasonTick===undefined || sys.enterTime<beginSeasonTick) beginSeasonTick = sys.enterTime;
+                            if(endSeasonTick===undefined || dissTime>endSeasonTick) endSeasonTick = dissTime;
                         }
-                    }while(!rowFits);
-                    tb.parts.push(part);
+                    }
+                    for(let n=0;n<TCs.length-1;n++){
+                        let t0 = TCs[n];
+                        let t1 = TCs[n+1];
+                        if(t0.enterTime>t1.enterTime){
+                            TCs[n] = t1;
+                            TCs[n+1] = t0;
+                            if(n>0) n -= 2;
+                        }
+                    }
+                    let sMoment = UI.viewBasin.tickMoment(beginSeasonTick);
+                    sMonth = sMoment.month();
+                    sMoment.startOf('month');
+                    let beginPlotTick = UI.viewBasin.tickFromMoment(sMoment);
+                    let eMoment = UI.viewBasin.tickMoment(endSeasonTick);
+                    eMoment.endOf('month');
+                    let endPlotTick = UI.viewBasin.tickFromMoment(eMoment);
+                    months = eMoment.diff(sMoment,'months') + 1;
+                    for(let t of TCs){
+                        let part = {};
+                        part.storm = t;
+                        part.segments = [];
+                        part.label = t.getNameByTick(-2);
+                        let aSegment;
+                        for(let q=0;q<t.record.length;q++){
+                            let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
+                            let d = t.record[q];
+                            if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
+                                let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
+                                if(!aSegment){
+                                    aSegment = {};
+                                    part.segments.push(aSegment);
+                                    aSegment.startTick = rt;
+                                    aSegment.maxCat = clsn;
+                                    aSegment.fullyTrop = (d.type===TROP);
+                                }
+                                if(clsn > aSegment.maxCat) aSegment.maxCat = clsn;
+                                aSegment.fullyTrop = aSegment.fullyTrop || (d.type===TROP);
+                                aSegment.endTick = rt;
+                            }else if(aSegment) aSegment = undefined;
+                        }
+                        for(let q=0;q<part.segments.length;q++){
+                            let seg = part.segments[q];
+                            seg.startX = map(seg.startTick,beginPlotTick,endPlotTick,0,plotWidth);
+                            seg.endX = map(seg.endTick,beginPlotTick,endPlotTick,0,plotWidth);
+                        }
+                        let rowFits;
+                        part.row = -1;
+                        textSize(12);
+                        let thisLabelZone = textWidth(part.label) + 6;
+                        do{
+                            part.row++;
+                            rowFits = true;
+                            for(let q=0;q<parts.length;q++){
+                                let p = parts[q];
+                                let otherLabelZone = textWidth(p.label) + 6;
+                                let thisS = part.segments[0].startX;
+                                let thisE = part.segments[part.segments.length-1].endX + thisLabelZone;
+                                let otherS = p.segments[0].startX;
+                                let otherE = p.segments[p.segments.length-1].endX + otherLabelZone;
+                                if(p.row===part.row){
+                                    if(thisS>=otherS && thisS<=otherE ||
+                                        thisE>=otherS && thisE<=otherE ||
+                                        otherS>=thisS && otherS<=thisE ||
+                                        otherE>=thisS && otherE<=thisE) rowFits = false;
+                                }
+                            }
+                        }while(!rowFits);
+                        parts.push(part);
+                    }
+                };
+                if(UI.viewBasin.fetchSeason(target)) gen(UI.viewBasin.fetchSeason(target));
+                else{
+                    months = 12;
+                    sMonth = 0;
+                    UI.viewBasin.fetchSeason(target,false,false,s=>{
+                        gen(s);
+                    });
                 }
-            };
-            if(UI.viewBasin.fetchSeason(target)) gen(UI.viewBasin.fetchSeason(target));
-            else{
-                tb.months = 12;
-                tb.sMonth = 0;
-                UI.viewBasin.fetchSeason(target,false,false,s=>{
-                    gen(s);
-                });
+            }else{
+                months = 12;
+                sMonth = 0;
             }
-        }else{
-            tb.months = 12;
-            tb.sMonth = 0;
+            builtFor = target;
+            builtAt = UI.viewBasin.tick;
         }
-        tb.builtFor = target;
-        tb.builtAt = UI.viewBasin.tick;
-    };
 
-    timelineBox = primaryWrapper.append(false,WIDTH/16,HEIGHT/4,7*WIDTH/8,HEIGHT/2,function(s){
-        let target = stormInfoPanel.target;
-        if(target!==this.builtFor || (UI.viewBasin.tick!==this.builtAt && (UI.viewBasin.getSeason(this.builtAt)===target || UI.viewBasin.getSeason(this.builtAt)===(target+1)))) buildtimeline();
-        fill(COLORS.UI.box);
-        noStroke();
-        s.fullRect();
-        stroke(COLORS.UI.text);
-        let w = this.width;
-        let h = this.height;
-        let lBound = w*0.05;
-        let rBound = w*0.95;
-        let tBound = h*0.2;
-        let bBound = h*0.85;
-        line(lBound,bBound,rBound,bBound);
-        line(lBound,bBound,lBound,tBound);
-        fill(COLORS.UI.text);
-        textAlign(CENTER,TOP);
-        textSize(13);
-        let M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-        for(let i=0;i<this.months;i++){
-            stroke(COLORS.UI.text);
-            let x0 = map(i+1,0,this.months,lBound,rBound);
-            let x1 = map(i+0.5,0,this.months,lBound,rBound);
-            line(x0,bBound,x0,tBound);
+        let timelineBox = timeline_container.append(false,0,0,BOX_WIDTH,BOX_HEIGHT,function(s){
+            let target = stormInfoPanel.target;
+            if(target!==builtFor || (UI.viewBasin.tick!==builtAt && (UI.viewBasin.getSeason(builtAt)===target || UI.viewBasin.getSeason(builtAt)===(target+1)))) build();
+            fill(COLORS.UI.box);
             noStroke();
-            text(M[(i+this.sMonth)%12],x1,bBound+h*0.02);
-        }
-        noStroke();
-        textSize(18);
-        let t;
-        if(target===undefined) t = "none";
-        else if(target instanceof Storm) t = "WIP";
-        else t = seasonName(target);
-        text("Timeline of " + t,w*0.5,h*0.05);
-        for(let i=0;i<this.parts.length;i++){
-            let p = this.parts[i];
-            let y = tBound+p.row*15;
-            let mx = getMouseX()-this.getX();
-            let my = getMouseY()-this.getY();
-            textSize(12);
-            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
-            else noStroke();
-            for(let j=0;j<p.segments.length;j++){
-                let S = p.segments[j];
-                fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
-                rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
-            }
-            let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
+            s.fullRect();
+            stroke(COLORS.UI.text);
+            let lBound = BOX_WIDTH*0.05;
+            let rBound = BOX_WIDTH*0.95;
+            let tBound = BOX_HEIGHT*0.15;
+            let bBound = BOX_HEIGHT*0.9;
+            line(lBound,bBound,rBound,bBound);
+            line(lBound,bBound,lBound,tBound);
             fill(COLORS.UI.text);
-            textAlign(LEFT,CENTER);
-            text(p.label,labelLeftBound+3,y+5);
-        }
-    },function(){
-        let w = this.width;
-        let h = this.height;
-        let lBound = w*0.05;
-        let tBound = h*0.2;
-        let newTarget;
-        for(let i=this.parts.length-1;i>=0;i--){
-            let p = this.parts[i];
-            let y = tBound+p.row*15;
-            let mx = getMouseX()-this.getX();
-            let my = getMouseY()-this.getY();
-            textSize(12);
-            if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10){
-                newTarget = p.storm;
-                break;
+            textAlign(CENTER,TOP);
+            textSize(13);
+            let M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+            for(let i=0;i<months;i++){
+                stroke(COLORS.UI.text);
+                let x0 = map(i+1,0,months,lBound,rBound);
+                let x1 = map(i+0.5,0,months,lBound,rBound);
+                line(x0,bBound,x0,tBound);
+                noStroke();
+                text(M[(i+sMonth)%12],x1,bBound+BOX_HEIGHT*0.02);
             }
-        }
-        if(newTarget) stormInfoPanel.target = newTarget;
-    },false);
+            noStroke();
+            textSize(18);
+            let t;
+            if(target===undefined) t = "No timeline selected";
+            else if(target instanceof Storm) t = 'Intensity graph of ' + target.getFullNameByTick('peak') + ' (WIP)';
+            else t = 'Timeline of ' + seasonName(target);
+            text(t,BOX_WIDTH*0.5,BOX_HEIGHT*0.05);
+            for(let i=0;i<parts.length;i++){
+                let p = parts[i];
+                let y = tBound+p.row*15;
+                let mx = getMouseX()-this.getX();
+                let my = getMouseY()-this.getY();
+                textSize(12);
+                if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
+                else noStroke();
+                for(let j=0;j<p.segments.length;j++){
+                    let S = p.segments[j];
+                    fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
+                    rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
+                }
+                let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
+                fill(COLORS.UI.text);
+                textAlign(LEFT,CENTER);
+                text(p.label,labelLeftBound+3,y+5);
+            }
+        },function(){
+            let lBound = BOX_WIDTH*0.05;
+            let tBound = BOX_HEIGHT*0.15;
+            let newTarget;
+            for(let i=parts.length-1;i>=0;i--){
+                let p = parts[i];
+                let y = tBound+p.row*15;
+                let mx = getMouseX()-this.getX();
+                let my = getMouseY()-this.getY();
+                textSize(12);
+                if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10){
+                    newTarget = p.storm;
+                    break;
+                }
+            }
+            if(newTarget) stormInfoPanel.target = newTarget;
+        },false);
 
-    timelineBox.months = 12;
-    timelineBox.sMonth = 0;
-    timelineBox.parts = [];
-    timelineBox.builtAt = undefined;
-    timelineBox.builtFor = undefined;
+        timelineBox.append(false,timelineBox.width-65,10,55,24,function(s){
+            s.button("Back",false,18);
+        },function(){
+            timelineBox.hide();
+            stormInfoPanel.show();
+            active = false;
+        });
 
-    timelineBox.append(false,timelineBox.width-30,10,20,20,function(s){
-        s.button("X",false,22);
-    },function(){
-        timelineBox.hide();
-    });
+        const public = {};
 
+        public.active = function(){
+            return active;
+        };
+
+        public.view = function(){
+            stormInfoPanel.hide();
+            timelineBox.show();
+            active = true;
+        };
+
+        public.reset = function(){
+            active = false;
+            builtAt = -1;
+        };
+
+        return public;
+    })();
+    
     let returntomainmenu = function(p){
         sideMenu.hide();
-        stormInfoPanel.hide();
-        timelineBox.hide();
+        panel_timeline_container.hide();
+        timeline.reset();
         primaryWrapper.hide();
         land.clear();
-        timelineBox.builtAt = -1;
         for(let t in UI.viewBasin.seasonExpirationTimers) clearTimeout(UI.viewBasin.seasonExpirationTimers[t]);
         for(let s in UI.viewBasin.subBasins){
             let sb = UI.viewBasin.subBasins[s];
