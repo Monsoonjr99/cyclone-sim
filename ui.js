@@ -1244,6 +1244,8 @@ UI.init = function(){
         dateNavigator.toggleShow();
     });
 
+    let panel_timeline_container = primaryWrapper.append(false,0,topBar.height,0,0,undefined,undefined,false);
+
     dateNavigator = primaryWrapper.append(false,0,30,140,80,function(s){     // Analysis navigator panel
         fill(COLORS.UI.box);
         noStroke();
@@ -1334,8 +1336,6 @@ UI.init = function(){
         dateNavYearInput.enterFunc();
     });
 
-    let panel_timeline_container = primaryWrapper.append(false,0,topBar.height,0,0,undefined,undefined,false);
-
     topBar.append(false,WIDTH-29,3,24,24,function(s){    // Toggle button for storm info panel and timeline
         s.button('');
         if(panel_timeline_container.showing) triangle(6,15,18,15,12,9);
@@ -1381,7 +1381,7 @@ UI.init = function(){
         if(!selectedStorm) paused = !paused;
         else{
             stormInfoPanel.target = selectedStorm;
-            stormInfoPanel.show();
+            panel_timeline_container.show();
         }
     });
 
@@ -1479,8 +1479,12 @@ UI.init = function(){
     });
 
     let timeline;
+    let season_button;
 
-    stormInfoPanel = panel_timeline_container.append(false,3*WIDTH/4,0,WIDTH/4,HEIGHT-topBar.height-bottomBar.height,function(s){
+    const INFO_PANEL_LEFT_BOUND = 3*WIDTH/4;
+    let info_panel_name_height = 0;
+
+    stormInfoPanel = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND, 0, WIDTH-INFO_PANEL_LEFT_BOUND, HEIGHT-topBar.height-bottomBar.height, function(s){
         let S = this.target;
         fill(COLORS.UI.box);
         noStroke();
@@ -1491,9 +1495,10 @@ UI.init = function(){
         const txtW = 7*this.width/8;
         const nameW = this.width - 60;
         if(S instanceof Storm){
+            season_button.show();
             let n = S.getFullNameByTick("peak");
             n = wrapText(n,nameW);
-            let nameHeight = countTextLines(n)*textLeading();
+            info_panel_name_height = countTextLines(n)*textLeading();
             text(n,this.width/2,8);
             textSize(15);
             let txt = "";
@@ -1520,11 +1525,11 @@ UI.init = function(){
             txt += "\nDeaths: " + S.deaths;
             txt += "\nLandfalls: " + S.landfalls;
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,8+nameHeight);
+            text(txt,this.width/2,8+info_panel_name_height+27);
         }else{
             let n = seasonName(S);
             n = wrapText(n,nameW);
-            let nh = countTextLines(n)*textLeading();
+            info_panel_name_height = countTextLines(n)*textLeading();
             text(n,this.width/2,8);
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
@@ -1541,17 +1546,17 @@ UI.init = function(){
                 txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,8+nh);
+            text(txt,this.width/2,8+info_panel_name_height);
         }
     },true);
 
     let timeline_container = panel_timeline_container.append(false,0,0,0,0);
 
-    panel_timeline_container.append(false,3*WIDTH/4+3,3,24,24,function(s){   // info panel/timeline previous season button
+    panel_timeline_container.append(false,INFO_PANEL_LEFT_BOUND+3,3,24,24,function(s){   // info panel/timeline previous season button
         if(timeline.active())
-            this.setBox(WIDTH*0.9-51,10,24,24);
+            this.setBox(WIDTH*0.05,5,24,24);
         else
-            this.setBox(3*WIDTH/4+3,3,24,24);
+            this.setBox(INFO_PANEL_LEFT_BOUND+3,3,24,24);
         let S = stormInfoPanel.target;
         s.button('',false,18,(S instanceof Storm) || S<=UI.viewBasin.getSeason(0));
         triangle(19,5,19,19,5,12);
@@ -1560,11 +1565,11 @@ UI.init = function(){
         if(!(s instanceof Storm) && s>UI.viewBasin.getSeason(0)) stormInfoPanel.target--;
     });
     
-    panel_timeline_container.append(false,3*WIDTH/4+stormInfoPanel.width-27,3,24,24,function(s){ // info panel next season button
+    panel_timeline_container.append(false,WIDTH-27,3,24,24,function(s){ // info panel next season button
         if(timeline.active())
-            this.setBox(WIDTH*0.9-24,10,24,24);
+            this.setBox(WIDTH*0.95-24,5,24,24);
         else
-            this.setBox(3*WIDTH/4+stormInfoPanel.width-27,3,24,24);
+            this.setBox(WIDTH-27,3,24,24);
         let S = stormInfoPanel.target;
         s.button('',false,18,(S instanceof Storm) || S>=UI.viewBasin.getSeason(-1));
         triangle(5,5,5,19,19,12);
@@ -1572,8 +1577,28 @@ UI.init = function(){
         let s = stormInfoPanel.target;
         if(!(s instanceof Storm) && s<UI.viewBasin.getSeason(-1)) stormInfoPanel.target++;
     });
+
+    season_button = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24, function(s){ // Season button
+        if(timeline.active())
+            this.setBox(5*WIDTH/12, 32, WIDTH/6, 24);
+        else
+            this.setBox(INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24);
+        let t = stormInfoPanel.target;
+        if(t instanceof Storm)
+            s.button(seasonName(t.originSeason()),false,15);
+        else
+            this.hide();
+    },function(){
+        let t = stormInfoPanel.target;
+        if(t instanceof Storm)
+            stormInfoPanel.target = t.originSeason();
+    });
     
-    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
+    panel_timeline_container.append(false,INFO_PANEL_LEFT_BOUND+30,stormInfoPanel.height-54,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
+        if(timeline.active())
+            this.setBox(WIDTH*0.95 - WIDTH/6, 32, WIDTH/6, 24);
+        else
+            this.setBox(INFO_PANEL_LEFT_BOUND+30,stormInfoPanel.height-54,stormInfoPanel.width-60,24);
         s.button("Jump to",false,15,!paused || stormInfoPanel.target===undefined);
     },function(){
         if(paused && stormInfoPanel.target!==undefined){
@@ -1589,7 +1614,9 @@ UI.init = function(){
             }
             changeViewTick(t);
         }
-    }).append(false,0,-27,stormInfoPanel.width-60,24,function(s){ // show season summary timeline button
+    });
+    
+    stormInfoPanel.append(false,30,stormInfoPanel.height-27,stormInfoPanel.width-60,24,function(s){ // show season summary timeline button
         s.button("View Timeline",false,15);
     },function(){
         timeline.view();
@@ -1708,6 +1735,12 @@ UI.init = function(){
             builtAt = UI.viewBasin.tick;
         }
 
+        const lBound = BOX_WIDTH*0.05;
+        const rBound = BOX_WIDTH*0.95;
+        const tBound = BOX_HEIGHT*0.2;
+        const bBound = BOX_HEIGHT*0.9;
+        const maxRowFit = Math.floor((bBound-tBound)/15);
+
         let timelineBox = timeline_container.append(false,0,0,BOX_WIDTH,BOX_HEIGHT,function(s){
             let target = stormInfoPanel.target;
             if(target!==builtFor || (UI.viewBasin.tick!==builtAt && (UI.viewBasin.getSeason(builtAt)===target || UI.viewBasin.getSeason(builtAt)===(target+1)))) build();
@@ -1715,10 +1748,6 @@ UI.init = function(){
             noStroke();
             s.fullRect();
             stroke(COLORS.UI.text);
-            let lBound = BOX_WIDTH*0.05;
-            let rBound = BOX_WIDTH*0.95;
-            let tBound = BOX_HEIGHT*0.15;
-            let bBound = BOX_HEIGHT*0.9;
             line(lBound,bBound,rBound,bBound);
             line(lBound,bBound,lBound,tBound);
             fill(COLORS.UI.text);
@@ -1737,12 +1766,15 @@ UI.init = function(){
             textSize(18);
             let t;
             if(target===undefined) t = "No timeline selected";
-            else if(target instanceof Storm) t = 'Intensity graph of ' + target.getFullNameByTick('peak') + ' (WIP)';
+            else if(target instanceof Storm){
+                t = 'Intensity graph of ' + target.getFullNameByTick('peak') + ' (WIP)';
+                season_button.show();
+            }
             else t = 'Timeline of ' + seasonName(target);
-            text(t,BOX_WIDTH*0.5,BOX_HEIGHT*0.05);
+            text(t,BOX_WIDTH*0.5,BOX_HEIGHT*0.03);
             for(let i=0;i<parts.length;i++){
                 let p = parts[i];
-                let y = tBound+p.row*15;
+                let y = tBound+(p.row % maxRowFit)*15;
                 let mx = getMouseX()-this.getX();
                 let my = getMouseY()-this.getY();
                 textSize(12);
@@ -1759,12 +1791,10 @@ UI.init = function(){
                 text(p.label,labelLeftBound+3,y+5);
             }
         },function(){
-            let lBound = BOX_WIDTH*0.05;
-            let tBound = BOX_HEIGHT*0.15;
             let newTarget;
             for(let i=parts.length-1;i>=0;i--){
                 let p = parts[i];
-                let y = tBound+p.row*15;
+                let y = tBound+(p.row % maxRowFit)*15;
                 let mx = getMouseX()-this.getX();
                 let my = getMouseY()-this.getY();
                 textSize(12);
@@ -1776,8 +1806,9 @@ UI.init = function(){
             if(newTarget) stormInfoPanel.target = newTarget;
         },false);
 
-        timelineBox.append(false,timelineBox.width-65,10,55,24,function(s){
-            s.button("Back",false,18);
+        timelineBox.append(false,timelineBox.width-27,0,27,timelineBox.height,function(s){
+            s.button('',false,18);
+            triangle(11,timelineBox.height/2-6,11,timelineBox.height/2+6,16,timelineBox.height/2);
         },function(){
             timelineBox.hide();
             stormInfoPanel.show();
