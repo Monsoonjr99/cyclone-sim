@@ -36,6 +36,13 @@ class Storm{
         return this.basin.getSeason(this.birthTime);
     }
 
+    statisticalSeason(){
+        if(this.inBasinTC)
+            return this.basin.getSeason(this.enterTime);
+        else
+            return this.originSeason();
+    }
+
     aliveAt(t){
         return t >= this.birthTime && (!!this.current || t < this.deathTime);
     }

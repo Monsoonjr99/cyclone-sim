@@ -1552,30 +1552,75 @@ UI.init = function(){
 
     let timeline_container = panel_timeline_container.append(false,0,0,0,0);
 
-    panel_timeline_container.append(false,INFO_PANEL_LEFT_BOUND+3,3,24,24,function(s){   // info panel/timeline previous season button
+    function find_next_storm(storm,prev){
+        if(storm instanceof Storm){
+            let season = storm.basin.fetchSeason(storm.statisticalSeason());
+            if(season instanceof Season){
+                let recent;
+                let found_me;
+                for(let s of season.forSystems()){
+                    if(s instanceof Storm){
+                        if(s === storm){
+                            if(prev)
+                                return recent;
+                            else
+                                found_me = true;
+                        }else if(s.inBasinTC){
+                            if(prev)
+                                recent = s;
+                            else if(found_me)
+                                return s;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    panel_timeline_container.append(false,INFO_PANEL_LEFT_BOUND+3,3,24,24,function(s){   // info panel/timeline previous storm/season button
         if(timeline.active())
             this.setBox(WIDTH*0.05,5,24,24);
         else
             this.setBox(INFO_PANEL_LEFT_BOUND+3,3,24,24);
         let S = stormInfoPanel.target;
-        s.button('',false,18,(S instanceof Storm) || S<=UI.viewBasin.getSeason(0));
+        let grey;
+        if(S instanceof Storm)
+            grey = !find_next_storm(S,true);
+        else
+            grey = S<=UI.viewBasin.getSeason(0);
+        s.button('',false,18,grey);
         triangle(19,5,19,19,5,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s>UI.viewBasin.getSeason(0)) stormInfoPanel.target--;
+        if(s instanceof Storm){
+            let n = find_next_storm(s,true);
+            if(n)
+                stormInfoPanel.target = n;
+        }else if(s>UI.viewBasin.getSeason(0))
+            stormInfoPanel.target--;
     });
     
-    panel_timeline_container.append(false,WIDTH-27,3,24,24,function(s){ // info panel next season button
+    panel_timeline_container.append(false,WIDTH-27,3,24,24,function(s){ // info panel/timeline next storm/season button
         if(timeline.active())
             this.setBox(WIDTH*0.95-24,5,24,24);
         else
             this.setBox(WIDTH-27,3,24,24);
         let S = stormInfoPanel.target;
-        s.button('',false,18,(S instanceof Storm) || S>=UI.viewBasin.getSeason(-1));
+        let grey;
+        if(S instanceof Storm)
+            grey = !find_next_storm(S);
+        else
+            grey = S>=UI.viewBasin.getSeason(-1);
+        s.button('',false,18,grey);
         triangle(5,5,5,19,19,12);
     },function(){
         let s = stormInfoPanel.target;
-        if(!(s instanceof Storm) && s<UI.viewBasin.getSeason(-1)) stormInfoPanel.target++;
+        if(s instanceof Storm){
+            let n = find_next_storm(s);
+            if(n)
+                stormInfoPanel.target = n;
+        }else if(s<UI.viewBasin.getSeason(-1))
+            stormInfoPanel.target++;
     });
 
     season_button = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24, function(s){ // Season button
@@ -1585,13 +1630,13 @@ UI.init = function(){
             this.setBox(INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24);
         let t = stormInfoPanel.target;
         if(t instanceof Storm)
-            s.button(seasonName(t.originSeason()),false,15);
+            s.button(seasonName(t.statisticalSeason()),false,15);
         else
             this.hide();
     },function(){
         let t = stormInfoPanel.target;
         if(t instanceof Storm)
-            stormInfoPanel.target = t.originSeason();
+            stormInfoPanel.target = t.statisticalSeason();
     });
     
     panel_timeline_container.append(false,INFO_PANEL_LEFT_BOUND+30,stormInfoPanel.height-54,stormInfoPanel.width-60,24,function(s){ // info panel "Jump to" button
@@ -1738,7 +1783,7 @@ UI.init = function(){
         const lBound = BOX_WIDTH*0.05;
         const rBound = BOX_WIDTH*0.95;
         const tBound = BOX_HEIGHT*0.2;
-        const bBound = BOX_HEIGHT*0.9;
+        const bBound = BOX_HEIGHT*0.93;
         const maxRowFit = Math.floor((bBound-tBound)/15);
 
         let timelineBox = timeline_container.append(false,0,0,BOX_WIDTH,BOX_HEIGHT,function(s){
