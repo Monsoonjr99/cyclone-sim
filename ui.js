@@ -1493,13 +1493,13 @@ UI.init = function(){
         textAlign(CENTER,TOP);
         textSize(18);
         const txtW = 7*this.width/8;
-        const nameW = this.width - 60;
+        const nameW = txtW;
         if(S instanceof Storm){
             season_button.show();
             let n = S.getFullNameByTick("peak");
             n = wrapText(n,nameW);
             info_panel_name_height = countTextLines(n)*textLeading();
-            text(n,this.width/2,8);
+            text(n,this.width/2,35);
             textSize(15);
             let txt = "";
             txt += 'Dates active: ';
@@ -1525,12 +1525,12 @@ UI.init = function(){
             txt += "\nDeaths: " + S.deaths;
             txt += "\nLandfalls: " + S.landfalls;
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,8+info_panel_name_height+27);
+            text(txt,this.width/2,35+info_panel_name_height);
         }else{
             let n = seasonName(S);
             n = wrapText(n,nameW);
             info_panel_name_height = countTextLines(n)*textLeading();
-            text(n,this.width/2,8);
+            text(n,this.width/2,35);
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             let txt;
@@ -1546,7 +1546,7 @@ UI.init = function(){
                 txt += "\nLandfalls: " + stats.landfalls;
             }else txt = "Season Data Unavailable";
             txt = wrapText(txt,txtW);
-            text(txt,this.width/2,8+info_panel_name_height);
+            text(txt,this.width/2,35+info_panel_name_height);
         }
     },true);
 
@@ -1623,11 +1623,11 @@ UI.init = function(){
             stormInfoPanel.target++;
     });
 
-    season_button = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24, function(s){ // Season button
+    season_button = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND+30, 3, stormInfoPanel.width-60, 24, function(s){ // Season button
         if(timeline.active())
             this.setBox(5*WIDTH/12, 32, WIDTH/6, 24);
         else
-            this.setBox(INFO_PANEL_LEFT_BOUND+30, 8+info_panel_name_height, stormInfoPanel.width-60, 24);
+            this.setBox(INFO_PANEL_LEFT_BOUND+30, 3, stormInfoPanel.width-60, 24);
         let t = stormInfoPanel.target;
         if(t instanceof Storm)
             s.button(seasonName(t.statisticalSeason()),false,15);
