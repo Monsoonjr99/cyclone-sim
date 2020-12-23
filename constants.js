@@ -1,5 +1,6 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.3.4";
+
+const VERSION_NUMBER = "0.4";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -79,46 +80,74 @@ const MAP_TYPES = [     // Land generation controls for different map types
         ]
     },
     {   // "Atlantic" map type
-        form: 'pixelmap',
-        path: 'resources/Atlantic.png'
+        form: 'earth',
+        west: -102.67,
+        east: 3,
+        north: 59.45,
+        south: 0
     },
     {   // "Eastern Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/EasternPacific.png',
+        form: 'earth',
+        west: -180,
+        east: -74.33,
+        north: 59.45,
+        south: 0,
         special: 'CPac'
     },
     {   // "Western Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/WesternPacific.png',
+        form: 'earth',
+        west: 94.42,
+        east: -159.91,
+        north: 59.45,
+        south: 0,
         special: 'PAGASA'
     },
     {   // "Northern Indian Ocean" map type
-        form: 'pixelmap',
-        path: 'resources/NIO.png',
+        form: 'earth',
+        west: 25.95,
+        east: 131.62,
+        north: 59.45,
+        south: 0,
         special: 'NIO'
     },
     {   // "Australian Region" map type
-        form: 'pixelmap',
-        path: 'resources/Aus.png',
+        form: 'earth',
+        west: 82.03,
+        east: -172.29,
+        north: 0,
+        south: -59.45,
         special: 'AUS'
     },
     {   // "South Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/SouthPacific.png'
+        form: 'earth',
+        west: 147.2,
+        east: -107.13,
+        north: 0,
+        south: -59.45
     },
     {   // "South-West Indian Ocean" map type
-        form: 'pixelmap',
-        path: 'resources/SWIO.png'
+        form: 'earth',
+        west: 17.25,
+        east: 122.93,
+        north: 0,
+        south: -59.45
     },
     {   // "South Atlantic" map type
-        form: 'pixelmap',
-        path: 'resources/SouthAtlantic.png'
+        form: 'earth',
+        west: -81.48,
+        east: 24.19,
+        north: 0,
+        south: -59.45
     },
     {   // "Mediterranean" map type
-        form: 'pixelmap',
-        path: 'resources/Medi.png'
+        form: 'earth',
+        west: -10.32,
+        east: 42.52,
+        north: 55.38,
+        south: 25.65
     }
 ];
+const EARTH_MAP_PATH = 'resources/earth.png';
 const EXTROP = 0;
 const SUBTROP = 1;
 const TROP = 2;

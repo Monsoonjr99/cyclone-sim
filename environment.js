@@ -493,6 +493,14 @@ class Environment{  // Environmental fields that determine storm strength and st
 class Land{
     constructor(basin){
         this.basin = basin instanceof Basin && basin;
+        let mapTypeDef = MAP_TYPES[this.basin.mapType];
+        this.earth = mapTypeDef.form === 'earth';
+        if(this.earth){
+            this.westBound = mapTypeDef.west;
+            this.eastBound = mapTypeDef.east;
+            this.northBound = mapTypeDef.north;
+            this.southBound = mapTypeDef.south;
+        }
         this.noise = new NoiseChannel(9,0.5,100);
         this.map = [];
         this.oceanTile = [];
@@ -504,22 +512,59 @@ class Land{
     }
 
     get(x,y){
-        let d = this.mapDefinition;
-        x = floor(x*d);
-        y = floor(y*d);
-        if(this.map[x] && this.map[x][y]){
-            let v = this.map[x][y].val;
-            return v > 0.5 ? v : 0;
-        }else return 0;
+        if(this.earth){
+            let img = this.basin.mapImg;
+            let long;
+            let lat;
+            if(this.westBound < this.eastBound)
+                long = map(x,0,WIDTH,this.westBound,this.eastBound);
+            else
+                long = map(x,0,WIDTH,this.westBound,this.eastBound+360);
+            long = (long + 180) % 360 - 180;
+            lat = map(y,0,HEIGHT,this.northBound,this.southBound);
+            let x1 = floor(map(long,-180,180,0,img.width));
+            let y1 = floor(map(lat,90,-90,0,img.height-1));
+            let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
+            let hVal = img.pixels[index];
+            let lVal = img.pixels[index+1];
+            if(!lVal)
+                return 0;
+            else
+                return map(sqrt(map(hVal,12,150,0,1,true)),0,1,0.501,1);
+        }else{
+            let d = this.mapDefinition;
+            x = floor(x*d);
+            y = floor(y*d);
+            if(this.map[x] && this.map[x][y]){
+                let v = this.map[x][y].val;
+                return v > 0.5 ? v : 0;
+            }else return 0;
+        }
     }
 
     getSubBasin(x,y){
-        let d = this.mapDefinition;
-        x = floor(x*d);
-        y = floor(y*d);
-        if(this.map[x] && this.map[x][y]){
-            return this.map[x][y].subBasin;
-        }else return 0;
+        if(this.earth){
+            let img = this.basin.mapImg;
+            let long;
+            let lat;
+            if(this.westBound < this.eastBound)
+                long = map(x,0,WIDTH,this.westBound,this.eastBound);
+            else
+                long = map(x,0,WIDTH,this.westBound,this.eastBound+360);
+            long = (long + 180) % 360 - 180;
+            lat = map(y,0,HEIGHT,this.northBound,this.southBound);
+            let x1 = floor(map(long,-180,180,0,img.width));
+            let y1 = floor(map(lat,90,-90,0,img.height-1));
+            let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
+            return img.pixels[index+2];
+        }else{
+            let d = this.mapDefinition;
+            x = floor(x*d);
+            y = floor(y*d);
+            if(this.map[x] && this.map[x][y]){
+                return this.map[x][y].subBasin;
+            }else return 0;
+        }
     }
 
     inBasin(x,y){
@@ -528,6 +573,9 @@ class Land{
     }
 
     calculate(){
+        if(this.earth)
+            return;
+        
         let mapTypeControls = MAP_TYPES[this.basin.mapType];
         let W;
         let H;
@@ -715,6 +763,9 @@ class Land{
     }
 
     tileContainsOcean(x,y){
+        if(this.earth)
+            return true;
+        
         x = floor(x/ENV_LAYER_TILE_SIZE);
         y = floor(y/ENV_LAYER_TILE_SIZE);
         return this.oceanTile[x][y];
