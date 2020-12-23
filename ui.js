@@ -1481,8 +1481,7 @@ UI.init = function(){
     let timeline;
     let season_button;
 
-    const INFO_PANEL_LEFT_BOUND = 3*WIDTH/4;
-    let info_panel_name_height = 0;
+    const INFO_PANEL_LEFT_BOUND = 11*WIDTH/16;
 
     stormInfoPanel = panel_timeline_container.append(false, INFO_PANEL_LEFT_BOUND, 0, WIDTH-INFO_PANEL_LEFT_BOUND, HEIGHT-topBar.height-bottomBar.height, function(s){
         let S = this.target;
@@ -1492,61 +1491,83 @@ UI.init = function(){
         fill(COLORS.UI.text);
         textAlign(CENTER,TOP);
         textSize(18);
-        const txtW = 7*this.width/8;
-        const nameW = txtW;
+        const txt_width = 7*this.width/8;
+        const left_col_width = 7*txt_width/16;
+        const right_col_width = 9*txt_width/16;
+        let name;
+        let txt_y = 35;
+        let info_row = (left, right)=>{
+            left = wrapText('' + left, left_col_width);
+            right = wrapText('' + right, right_col_width);
+            textAlign(LEFT, TOP);
+            text(left, this.width/16, txt_y);
+            textAlign(RIGHT, TOP);
+            text(right, 15*this.width/16, txt_y);
+            txt_y += max(countTextLines(left) * textLeading(), countTextLines(right) * textLeading()) + 3;
+        };
         if(S instanceof Storm){
             season_button.show();
-            let n = S.getFullNameByTick("peak");
-            n = wrapText(n,nameW);
-            info_panel_name_height = countTextLines(n)*textLeading();
-            text(n,this.width/2,35);
+            name = S.getFullNameByTick("peak");
+            name = wrapText(name, txt_width);
+            text(name, this.width/2, txt_y);
+            txt_y += countTextLines(name)*textLeading();
             textSize(15);
-            let txt = "";
-            txt += 'Dates active: ';
+            let right_txt = '';
             if(S.inBasinTC){
                 let enterTime = formatDate(UI.viewBasin.tickMoment(S.enterTime));
                 let exitTime = formatDate(UI.viewBasin.tickMoment(S.exitTime));
-                txt += enterTime;
-                if(S.enterTime>S.formationTime) txt += ' (entered basin)';
-                txt += ' - ';
+                right_txt += enterTime;
+                if(S.enterTime > S.formationTime)
+                    right_txt += ' (entered basin)';
+                right_txt += ' -\n';
                 if(S.exitTime){
-                    txt += exitTime;
-                    if(!S.dissipationTime || S.exitTime<S.dissipationTime) txt += ' (left basin)';
-                }else txt += 'currently active';
+                    right_txt += exitTime;
+                    if(!S.dissipationTime || S.exitTime < S.dissipationTime)
+                        right_txt += ' (left basin)';
+                }else
+                    right_txt += 'currently active';
             }else if(S.TC){
                 let formTime = formatDate(UI.viewBasin.tickMoment(S.formationTime));
                 let dissTime = formatDate(UI.viewBasin.tickMoment(S.dissipationTime));
-                txt += formTime + " - " + (S.dissipationTime ? dissTime : "currently active");
-            }else txt += "N/A";
-            txt += "\nPeak pressure: " + (S.peak ? S.peak.pressure : "N/A");
-            txt += "\nPeak wind speed: " + (S.windPeak ? S.windPeak.windSpeed + " kts" : "N/A");
-            txt += "\nACE: " + S.ACE;
-            txt += "\nDamage: " + damageDisplayNumber(S.damage);
-            txt += "\nDeaths: " + S.deaths;
-            txt += "\nLandfalls: " + S.landfalls;
-            txt = wrapText(txt,txtW);
-            text(txt,this.width/2,35+info_panel_name_height);
+                right_txt += formTime + ' -\n';
+                if(S.dissipationTime)
+                    right_txt += dissTime;
+                else
+                    right_txt += 'currently active';
+            }else
+                right_txt += "N/A";
+            info_row('Dates active', right_txt);
+            if(S.peak)
+                info_row('Peak pressure', S.peak.pressure + ' hPa');
+            else
+                info_row('Peak pressure', 'N/A');
+            if(S.windPeak)
+                info_row('Peak wind speed', S.windPeak.windSpeed + ' kts');
+            else
+                info_row('Peak wind speed', 'N/A');
+            info_row('ACE', S.ACE);
+            info_row('Damage', damageDisplayNumber(S.damage));
+            info_row('Deaths', S.deaths);
+            info_row('Landfalls', S.landfalls);
         }else{
-            let n = seasonName(S);
-            n = wrapText(n,nameW);
-            info_panel_name_height = countTextLines(n)*textLeading();
-            text(n,this.width/2,35);
+            name = seasonName(S);
+            name = wrapText(name, txt_width);
+            text(name, this.width/2, txt_y);
+            txt_y += countTextLines(name)*textLeading();
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
-            let txt;
             if(se instanceof Season){
                 let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
-                let c = stats.classificationCounters;
+                let counters = stats.classificationCounters;
                 let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
-                txt = '';
-                for(let {statName, cNumber} of scale.statDisplay()) txt += statName + ': ' + c[cNumber] + '\n';
-                txt += "Total ACE: " + stats.ACE;
-                txt += "\nDamage: " + damageDisplayNumber(stats.damage);
-                txt += "\nDeaths: " + stats.deaths;
-                txt += "\nLandfalls: " + stats.landfalls;
-            }else txt = "Season Data Unavailable";
-            txt = wrapText(txt,txtW);
-            text(txt,this.width/2,35+info_panel_name_height);
+                for(let {statName, cNumber} of scale.statDisplay())
+                    info_row(statName, counters[cNumber]);
+                info_row('Total ACE', stats.ACE);
+                info_row('Damage', damageDisplayNumber(stats.damage));
+                info_row('Deaths', stats.deaths);
+                info_row('Landfalls', stats.landfalls);
+            }else
+                text('Season Data Unavailable', this.width/2, txt_y);
         }
     },true);
 
