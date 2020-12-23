@@ -1,5 +1,12 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.4 (2020-12-23):
+    + Added season button to side panel and timeline when displaying storm info, allowing for easier navigation
+    * Improved the timeline by making it wider and working more neatly with the side panel
+    * The previous/next buttons in the side panel and timeline now work for storms within a season
+    * Side panel info now displayed in a tabular format
+    * Updated South Pacific names to reflect recent replacements
+    - Removed Hebrew alphabet as second Atlantic/Eastern Pacific auxiliary list as it is fake news and the designations editor now exists
 v0.3.3 (2020-08-19):
     + Added fullscreen button to bottom UI bar
     * Fullscreen no longer activated by device turns on mobile devices
