@@ -1,4 +1,5 @@
 const TITLE = "Cyclone Simulator";
+
 const VERSION_NUMBER = "0.4";
 
 const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
