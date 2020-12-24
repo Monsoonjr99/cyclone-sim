@@ -1813,48 +1813,119 @@ UI.init = function(){
             fill(COLORS.UI.box);
             noStroke();
             s.fullRect();
-            stroke(COLORS.UI.text);
-            line(lBound,bBound,rBound,bBound);
-            line(lBound,bBound,lBound,tBound);
             fill(COLORS.UI.text);
             textAlign(CENTER,TOP);
-            textSize(13);
-            let M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-            for(let i=0;i<months;i++){
-                stroke(COLORS.UI.text);
-                let x0 = map(i+1,0,months,lBound,rBound);
-                let x1 = map(i+0.5,0,months,lBound,rBound);
-                line(x0,bBound,x0,tBound);
-                noStroke();
-                text(M[(i+sMonth)%12],x1,bBound+BOX_HEIGHT*0.02);
-            }
-            noStroke();
             textSize(18);
-            let t;
-            if(target===undefined) t = "No timeline selected";
+            if(target === undefined)
+                text('No timeline selected', BOX_WIDTH * 0.5, BOX_HEIGHT * 0.03);
             else if(target instanceof Storm){
-                t = 'Intensity graph of ' + target.getFullNameByTick('peak') + ' (WIP)';
+                text('Intensity graph of ' + target.getFullNameByTick('peak'), BOX_WIDTH * 0.5, BOX_HEIGHT * 0.03);
                 season_button.show();
-            }
-            else t = 'Timeline of ' + seasonName(target);
-            text(t,BOX_WIDTH*0.5,BOX_HEIGHT*0.03);
-            for(let i=0;i<parts.length;i++){
-                let p = parts[i];
-                let y = tBound+(p.row % maxRowFit)*15;
-                let mx = getMouseX()-this.getX();
-                let my = getMouseY()-this.getY();
-                textSize(12);
-                if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
-                else noStroke();
-                for(let j=0;j<p.segments.length;j++){
-                    let S = p.segments[j];
-                    fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
-                    rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
+                let begin_tick = target.enterTime;
+                let end_tick = target.exitTime || UI.viewBasin.tick;
+                let max_wind;
+                for(let t = begin_tick; t <= end_tick; t += ADVISORY_TICKS){
+                    if(target.getStormDataByTick(t)){
+                        let w = target.getStormDataByTick(t).windSpeed;
+                        if(max_wind === undefined || w > max_wind)
+                            max_wind = w;
+                    }
                 }
-                let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
+                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                if(scale.measure === SCALE_MEASURE_ONE_MIN_KNOTS || scale.measure === SCALE_MEASURE_TEN_MIN_KNOTS){
+                    let color = scale.getColor(0);
+                    let y0 = bBound;
+                    for(let i = 1; i < scale.classifications.length; i++){
+                        let threshold = scale.classifications[i].threshold;
+                        let y1 = map(threshold, 0, max_wind, bBound, tBound, true);
+                        fill(red(color), green(color), blue(color), 90);
+                        rect(lBound, y1, rBound - lBound, y0 - y1);
+                        color = scale.getColor(i);
+                        y0 = y1;
+                        if(threshold > max_wind)
+                            break;
+                        if(i === scale.classifications.length - 1 && threshold < max_wind){
+                            fill(red(color), green(color), blue(color), 90);
+                            rect(lBound, tBound, rBound - lBound, y0 - tBound);
+                        }
+                    }
+                }
+                stroke(COLORS.UI.text);
+                line(lBound,bBound,rBound,bBound);
+                line(rBound,bBound,rBound,tBound);
+                textSize(13);
                 fill(COLORS.UI.text);
-                textAlign(LEFT,CENTER);
-                text(p.label,labelLeftBound+3,y+5);
+                for(let m = UI.viewBasin.tickMoment(begin_tick).startOf('day'); UI.viewBasin.tickFromMoment(m) <= end_tick; m.add(1, 'd')){
+                    stroke(COLORS.UI.text);
+                    let x = map(UI.viewBasin.tickFromMoment(m), begin_tick, end_tick, lBound, rBound, true);
+                    line(x, bBound, x, tBound);
+                    noStroke();
+                    text(m.date(), x, bBound + BOX_HEIGHT * 0.02);
+                }
+                textAlign(RIGHT, CENTER);
+                let y_axis_inc = ceil((max_wind / 10) / 5) * 5;
+                for(let i = 0; i <= max_wind; i += y_axis_inc){
+                    stroke(COLORS.UI.text);
+                    let y = map(i, 0, max_wind, bBound, tBound);
+                    line(lBound - BOX_WIDTH * 0.008, y, lBound, y);
+                    noStroke();
+                    text(i, lBound - BOX_WIDTH * 0.01, y);
+                }
+                for(let t0 = begin_tick, t1 = t0 + ADVISORY_TICKS; t1 <= end_tick; t0 = t1, t1 += ADVISORY_TICKS){
+                    let w0 = target.getStormDataByTick(t0).windSpeed;
+                    let w1;
+                    if(target.getStormDataByTick(t1))
+                        w1 = target.getStormDataByTick(t1).windSpeed;
+                    else
+                        w1 = w0;
+                    let x0 = map(t0, begin_tick, end_tick, lBound, rBound);
+                    let y0 = map(w0, 0, max_wind, bBound, tBound);
+                    let x1 = map(t1, begin_tick, end_tick, lBound, rBound);
+                    let y1 = map(w1, 0, max_wind, bBound, tBound);
+                    if(tropOrSub(target.getStormDataByTick(t0).type))
+                        stroke(COLORS.UI.text);
+                    else
+                        stroke('#CCC');
+                    strokeWeight(5);
+                    point(x0, y0);
+                    strokeWeight(2);
+                    line(x0, y0, x1, y1);
+                }
+                strokeWeight(1);
+            }else{
+                text('Timeline of ' + seasonName(target), BOX_WIDTH * 0.5, BOX_HEIGHT * 0.03);
+                stroke(COLORS.UI.text);
+                line(lBound,bBound,rBound,bBound);
+                line(lBound,bBound,lBound,tBound);
+                textSize(13);
+                let M = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+                for(let i=0;i<months;i++){
+                    stroke(COLORS.UI.text);
+                    let x0 = map(i+1,0,months,lBound,rBound);
+                    let x1 = map(i+0.5,0,months,lBound,rBound);
+                    line(x0,bBound,x0,tBound);
+                    noStroke();
+                    text(M[(i+sMonth)%12],x1,bBound+BOX_HEIGHT*0.02);
+                }
+                noStroke();
+                for(let i=0;i<parts.length;i++){
+                    let p = parts[i];
+                    let y = tBound+(p.row % maxRowFit)*15;
+                    let mx = getMouseX()-this.getX();
+                    let my = getMouseY()-this.getY();
+                    textSize(12);
+                    if(mx>=lBound+p.segments[0].startX && mx<lBound+p.segments[p.segments.length-1].endX+textWidth(p.label)+6 && my>=y && my<y+10) stroke(255);
+                    else noStroke();
+                    for(let j=0;j<p.segments.length;j++){
+                        let S = p.segments[j];
+                        fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
+                        rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
+                    }
+                    let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
+                    fill(COLORS.UI.text);
+                    textAlign(LEFT,CENTER);
+                    text(p.label,labelLeftBound+3,y+5);
+                }
             }
         },function(){
             let newTarget;
