@@ -349,7 +349,7 @@ class Storm{
         for(let subId of basin.forSubBasinChain(sub)){
             let sb = basin.subBasins[subId];
             let classification = basin.getScale(subId).get(data);
-            // update classification counters for sub-basin
+            // update classification counters and most intense storm for sub-basin
             if(basin.subInBasin(subId)){
                 let stats = cSeason.stats(subId);
                 let cCounters = stats.classificationCounters;
@@ -357,6 +357,7 @@ class Storm{
                     for(let i=0;i<=classification;i++){
                         if(!this.subBasinData(subId,year,i,true)) cCounters[i]++;
                     }
+                    stats.update_most_intense(cSeason, this, data);
                 }
                 stats.addACE(newACE);
             }
