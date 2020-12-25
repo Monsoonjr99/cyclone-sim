@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.5 (2020-12-25):
+    + Added storm intensity graph to timeline
+    + Added season stat for most intense storm
 v0.3.4 (2020-12-23):
     + Added season button to side panel and timeline when displaying storm info, allowing for easier navigation
     * Improved the timeline by making it wider and working more neatly with the side panel
