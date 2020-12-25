@@ -1566,6 +1566,11 @@ UI.init = function(){
                 info_row('Damage', damageDisplayNumber(stats.damage));
                 info_row('Deaths', stats.deaths);
                 info_row('Landfalls', stats.landfalls);
+                if(stats.most_intense){
+                    let most_intense = stats.most_intense.fetch();
+                    info_row('Most Intense', most_intense.getNameByTick(-1) + '\n' + most_intense.peak.pressure + ' hPa\n' + most_intense.windPeak.windSpeed + ' kts');
+                }else
+                    info_row('Most Intense', 'N/A');
             }else
                 text('Season Data Unavailable', this.width/2, txt_y);
         }
