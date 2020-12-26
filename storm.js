@@ -56,6 +56,10 @@ class Storm{
         return this.record[floor(t/ADVISORY_TICKS)-ceil(this.birthTime/ADVISORY_TICKS)];
     }
 
+    get_tick_from_record_index(i){
+        return (ceil(this.birthTime / ADVISORY_TICKS) + i) * ADVISORY_TICKS;
+    }
+
     getNameByTick(t){
         let D = this.designations;
         let str = '';
