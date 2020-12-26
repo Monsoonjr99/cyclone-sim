@@ -649,6 +649,14 @@ class Season{
         return n;
     }
 
+    get_season_year(){
+        // bad hacky way at getting the season year
+        for(let y in this.basin.seasons){
+            if(this.basin.seasons[y] === this)
+                return +y;
+        }
+    }
+
     save(forceStormRefs){
         let basin = this.basin;
         let val = {};
@@ -895,16 +903,18 @@ class SeasonStats{
         if(this.most_intense === undefined){
             let lowest_pressure;
             let record_holder;
+            let year = season.get_season_year();
             for(let s of season.forSystems()){
                 if(s.inBasinTC){
                     for(let i = 0; i < s.record.length; i++){
                         let d = s.record[i];
                         let in_subbasin = false;
+                        let in_year = this.basin.getSeason(s.get_tick_from_record_index(i)) === year;
                         for(let sbid of this.basin.forSubBasinChain(land.getSubBasin(d.pos.x, d.pos.y))){
                             if(sbid === +this.subBasinId)
                                 in_subbasin = true;
                         }
-                        if(in_subbasin && tropOrSub(d.type) && (lowest_pressure === undefined || d.pressure < lowest_pressure)){
+                        if(in_subbasin && in_year && tropOrSub(d.type) && (lowest_pressure === undefined || d.pressure < lowest_pressure)){
                             lowest_pressure = d.pressure;
                             record_holder = s;
                         }
@@ -935,7 +945,8 @@ class SeasonStats{
             ]) d[p] = this[p];
             d.cCounters = {};
             for(let i in this.classificationCounters) d.cCounters[i] = this.classificationCounters[i];
-            d.most_intense = this.most_intense.save();
+            if(this.most_intense)
+                d.most_intense = this.most_intense.save();
         }
         d.dCounters = {};
         d.dCounters.number = this.designationCounters.number;
