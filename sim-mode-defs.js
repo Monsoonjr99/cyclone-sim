@@ -377,15 +377,15 @@ ENV_DEFS.defaults.LLSteering = {
         // Cosine curve from 0 at poleward side of map to 1 at equatorward side
         let h = map(cos(map(y,0,HEIGHT,0,PI)),-1,1,1,0);
         // westerlies
-        let west = constrain(pow(1-h+map(u.noise(0),0,1,-0.3,0.3)+map(j,0,HEIGHT,-0.4,0.4),2)*4,0,4);
+        let west = constrain(pow(1-h+map(u.noise(0), 0, 1, -u.modifiers.westerlyNoiseRange, u.modifiers.westerlyNoiseRange)+map(j, 0, HEIGHT, -u.modifiers.westerlyJetstreamEffectRange, u.modifiers.westerlyJetstreamEffectRange),2)*4,0, u.modifiers.westerlyMax);
         // ridging and trades
-        let ridging = constrain(u.noise(1)+map(j,0,HEIGHT,0.3,-0.3),0,1);
-        let trades = constrain(pow(h+map(ridging,0,1,-0.3,0.3),2)*3,0,3);
-        let tAngle = map(h,0.9,1,511*PI/512,17*PI/16); // trades angle
+        let ridging = constrain(u.noise(1)+map(j, 0, HEIGHT, u.modifiers.ridgingJetstreamEffectRange, -u.modifiers.ridgingJetstreamEffectRange),0,1);
+        let trades = constrain(pow(h+map(ridging, 0, 1, -u.modifiers.tradesRidgingEffectRange, u.modifiers.tradesRidgingEffectRange),2)*3,0, u.modifiers.tradesMax);
+        let tAngle = map(h, 0.9, 1, u.modifiers.tradesAngle, u.modifiers.tradesAngleEquator); // trades angle
         // noise angle
         let a = map(u.noise(3),0,1,0,4*TAU);
         // noise magnitude
-        let m = pow(1.5,map(u.noise(2),0,1,-8,4));
+        let m = pow(u.modifiers.noiseBase, map(u.noise(2), 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax));
 
         // apply to vector
         u.vec.rotate(a);
@@ -406,7 +406,20 @@ ENV_DEFS.defaults.LLSteering = {
         '',
         '',
         [4,0.5,170,300,1,3]
-    ]
+    ],
+    modifiers: {
+        westerlyNoiseRange: 0.3,
+        westerlyJetstreamEffectRange: 0.4,
+        westerlyMax: 4,
+        ridgingJetstreamEffectRange: 0.3,
+        tradesRidgingEffectRange: 0.3,
+        tradesMax: 3,
+        tradesAngleEquator: 17*Math.PI/16,
+        tradesAngle: 511*Math.PI/512,
+        noiseBase: 1.5,
+        noiseExponentMin: -8,
+        noiseExponentMax: 4
+    }
 };
 ENV_DEFS[SIM_MODE_NORMAL].LLSteering = {};
 ENV_DEFS[SIM_MODE_HYPER].LLSteering = {};
@@ -420,13 +433,17 @@ ENV_DEFS[SIM_MODE_WILD].LLSteering = {
         // noise angle
         let a = map(u.noise(3),0,1,0,4*TAU);
         // noise magnitude
-        let m = pow(1.5,map(u.noise(2),0,1,-3,4));
+        let m = pow(u.modifiers.noiseBase, map(u.noise(2), 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax));
 
         // apply to vector
         u.vec.rotate(a);
         u.vec.mult(m);
         u.vec.add(wind*cos(windAngle),wind*sin(windAngle));
         return u.vec;
+    },
+    modifiers: {
+        noiseExponentMin: -3,
+        noiseExponentMax: 4
     }
 };
 ENV_DEFS[SIM_MODE_MEGABLOBS].LLSteering = {};
@@ -440,7 +457,7 @@ ENV_DEFS.defaults.ULSteering = {
     mapFunc: (u,x,y,z)=>{
         u.vec.set(1);                                                                           // reset vector
 
-        const dx = 10;                                                                          // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
+        const dx = u.modifiers.jetstreamDeltaX;                                                 // delta-x for jetstream differential (used for calculating wind direction in and near jetstream)
 
         let m = u.noise(1);
 
@@ -448,21 +465,21 @@ ENV_DEFS.defaults.ULSteering = {
         let j0 = u.field('jetstream');                                                          // y-position of jetstream
         let j1 = u.field('jetstream',x+dx);                                                     // y-position of jetstream dx to the east for differential
         let j = abs(y-j0);                                                                      // distance of point north/south of jetstream
-        let jet = pow(2,3-j/40);                                                                // power of jetstream at point
-        let jOP = pow(0.7,jet);                                                                 // factor for how strong other variables should be if 'overpowered' by jetstream
-        let jAngle = atan((j1-j0)/dx)+map(y-j0,-50,50,PI/4,-PI/4,true);                         // angle of jetstream at point
-        let trof = y>j0 ? pow(1.7,map(jAngle,-PI/2,PI/2,3,-5))*pow(0.7,j/20)*jOP : 0;           // pole-eastward push from jetstream dips
-        let tAngle = -PI/16;                                                                    // angle of push from jetstream dips
+        let jet = pow(2, 3 - j / u.modifiers.jetstreamHalfDecay);                               // power of jetstream at point
+        let jOP = pow(u.modifiers.jetstreamOverpowerBase, jet);                                 // factor for how strong other variables should be if 'overpowered' by jetstream
+        let jAngle = atan((j1 - j0) / dx) + map(y-j0, -50, 50, u.modifiers.jetstreamInwardAngle, -u.modifiers.jetstreamInwardAngle, true); // angle of jetstream at point
+        let trof = y>j0 ? pow(u.modifiers.troughBase, map(jAngle, -PI/2, PI/2, u.modifiers.troughExponentMax, u.modifiers.troughExponentMin)) * pow(0.7,j/20)*jOP : 0; // pole-eastward push from jetstream dips
+        let tAngle = u.modifiers.troughAngle;                                                   // angle of push from jetstream dips
         let ridging = 0.45-j0/HEIGHT-map(sqrt(map(s,-1,1,0,1)),0,1,0.15,0);                     // how much 'ridge' or 'trough' there is from jetstream
         // power of winds equatorward of jetstream
-        let hadley = (map(ridging,-0.3,0.2,u.modifiers.hadleyUpperBound,1.5,true)+map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
+        let hadley = (map(ridging, -0.3, 0.2, u.modifiers.hadleyUpperBound, u.modifiers.hadleyLowerBound, true) + map(m,0,1,-1.5,1.5))*jOP*(y>j0?1:0);
         // angle of winds equatorward of jetstream
-        let hAngle = map(ridging,-0.3,0.2,-PI/16,-15*PI/16,true);
+        let hAngle = map(ridging,-0.3,0.2, u.modifiers.hadleyAngleMin, u.modifiers.hadleyAngleMax,true);
         let ferrel = 2*jOP*(y<j0?1:0);                                                          // power of winds poleward of jetstream
         let fAngle = 5*PI/8;                                                                    // angle of winds poleward of jetstream
 
         let a = map(u.noise(0),0,1,0,4*TAU);                                                    // noise angle
-        m = pow(1.5,map(m,0,1,-8,4))*jOP;                                                       // noise magnitude
+        m = pow(u.modifiers.noiseBase, map(m, 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax))*jOP; // noise magnitude
 
         // apply noise
         u.vec.rotate(a);
@@ -485,7 +502,21 @@ ENV_DEFS.defaults.ULSteering = {
     vector: true,
     magMap: [0,8,0,25],
     modifiers: {
-        hadleyUpperBound: 5
+        jetstreamDeltaX: 10,
+        jetstreamHalfDecay: 40,
+        jetstreamOverpowerBase: 0.7,
+        jetstreamInwardAngle: Math.PI/4,
+        troughBase: 1.7,
+        troughExponentMin: -5,
+        troughExponentMax: 3,
+        troughAngle: -Math.PI/16,
+        hadleyUpperBound: 5,
+        hadleyLowerBound: 1.5,
+        hadleyAngleMin: -Math.PI/16,
+        hadleyAngleMax: -15*Math.PI/16,
+        noiseBase: 1.5,
+        noiseExponentMin: -8,
+        noiseExponentMax: 4
     },
     noiseChannels: [
         [4,0.5,180,300,1,2],
@@ -521,7 +552,7 @@ ENV_DEFS[SIM_MODE_WILD].ULSteering = {
         let fAngle = 5*PI/8;                                                            // angle of winds poleward of jetstream
 
         let a = map(u.noise(0),0,1,0,4*TAU);                                            // noise angle
-        m = pow(1.5,map(m,0,1,-3,4))*jOP;                                               // noise magnitude
+        m = pow(u.modifiers.noiseBase, map(m, 0, 1, u.modifiers.noiseExponentMin, u.modifiers.noiseExponentMax))*jOP; // noise magnitude
 
         // apply noise
         u.vec.rotate(a);
@@ -533,6 +564,10 @@ ENV_DEFS[SIM_MODE_WILD].ULSteering = {
         u.vec.add(ferrel*cos(fAngle),ferrel*sin(fAngle));                               // apply winds poleward of jetstream
 
         return u.vec;
+    },
+    modifiers: {
+        noiseExponentMin: -3,
+        noiseExponentMax: 4
     }
 };
 ENV_DEFS[SIM_MODE_MEGABLOBS].ULSteering = {};
