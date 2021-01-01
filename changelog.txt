@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.8 (2021-01-01):
+    * Converted some hardcoded values of the steering fields to modifiers for better flexibility
 v0.3.7 (2020-12-31):
     * Updates to Australian and Southwest Indian Ocean name lists
     - Removed fake news (Hebrew Alphabet) from 1979-1984 Atlantic name lists
