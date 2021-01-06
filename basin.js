@@ -18,42 +18,44 @@ class Basin{
         if(opts.year!==undefined) this.startYear = opts.year;
         else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
         this.mapType = opts.mapType || 0;
-        if(MAP_TYPES[this.mapType].special==='CPac'){
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,
-                DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP,DESIG_CROSSMODE_KEEP)
-            );
-        }else if(MAP_TYPES[this.mapType].special==='PAGASA'){
-            this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,
-                DesignationSystem.PAGASA.clone()
-            );
-        }else if(MAP_TYPES[this.mapType].special==='NIO'){
-            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
-            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.prefix = undefined;
-            // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = undefined;
-            this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,
-                new DesignationSystem({
-                    prefix: 'ARB',
-                    numCross: DESIG_CROSSMODE_KEEP
-                })
-            );
-            this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,
-                new DesignationSystem({
-                    prefix: 'BOB',
-                    numCross: DESIG_CROSSMODE_KEEP
-                })
-            );
-        }else if(MAP_TYPES[this.mapType].special==='AUS'){
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
-            this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
-                DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
-            );
-            this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
-                DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
-            );
-        }
+        if(MAP_TYPES[this.mapType].form === 'earth')
+            this.defineEarthSubBasins();
+        // if(MAP_TYPES[this.mapType].special==='CPac'){
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.addSubBasin(128,undefined,'Central Pacific',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP,DESIG_CROSSMODE_KEEP)
+        //     );
+        // }else if(MAP_TYPES[this.mapType].special==='PAGASA'){
+        //     this.addSubBasin(128,undefined,'PAGASA AoR',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         DesignationSystem.PAGASA.clone()
+        //     );
+        // }else if(MAP_TYPES[this.mapType].special==='NIO'){
+        //     // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.enabled = false;
+        //     // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.prefix = undefined;
+        //     // this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.suffix = undefined;
+        //     this.addSubBasin(128,undefined,'Arabian Sea',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         new DesignationSystem({
+        //             prefix: 'ARB',
+        //             numCross: DESIG_CROSSMODE_KEEP
+        //         })
+        //     );
+        //     this.addSubBasin(129,undefined,'Bay of Bengal',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         new DesignationSystem({
+        //             prefix: 'BOB',
+        //             numCross: DESIG_CROSSMODE_KEEP
+        //         })
+        //     );
+        // }else if(MAP_TYPES[this.mapType].special==='AUS'){
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
+        //     this.addSubBasin(128,undefined,'Jakarta TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+        //     );
+        //     this.addSubBasin(129,undefined,'Port Moresby TCWC',DEFAULT_MAIN_SUBBASIN,undefined,
+        //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
+        //     );
+        // }
         this.seed = opts.seed || moment().valueOf();
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
@@ -342,6 +344,108 @@ class Basin{
         this.seasonExpirationTimers[n] = setTimeout(f,LOADED_SEASON_EXPIRATION);
     }
 
+    // hard-coded definition of earth map sub-basins (could use a data-driven approach but this codebase is now beyond forsaken so why bother)
+    defineEarthSubBasins(){
+        const ids = {
+            world: 0,
+            nhem: 1,
+            atl: 2,
+            atlland: 3,
+            epac: 4,
+            epacland: 5,
+            cpac: 6,
+            wpac: 7,
+            pagasa: 8,
+            bob: 9,
+            arb: 10,
+            nioland: 11,
+            medi: 12,
+            shem: 128,
+            aus: 129,
+            jakarta: 130,
+            pm: 131,
+            swio: 132,
+            spac: 133,
+            satl: 134,
+            nio: 192
+        };
+        this.addSubBasin(ids.world, undefined, 'World');
+        this.addSubBasin(ids.nhem, undefined, 'Northern Hemisphere', ids.world);
+        this.addSubBasin(ids.shem, undefined, 'Southern Hemisphere', ids.world);
+        this.addSubBasin(ids.atl, undefined, 'Atlantic', ids.nhem,
+            Scale.saffirSimpson.clone(),
+            DesignationSystem.atlantic.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.atlland, undefined, 'Atl Land (technical)', ids.atl);
+        this.addSubBasin(ids.epac, undefined, 'Eastern Pacific', ids.nhem,
+            Scale.saffirSimpson.clone(),
+            DesignationSystem.easternPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.epacland, undefined, 'EPac Land (technical)', ids.epac);
+        this.addSubBasin(ids.cpac, undefined, 'Central Pacific', ids.epac,
+            undefined,
+            DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.wpac, undefined, 'Western Pacific', ids.nhem,
+            Scale.typhoonCommittee.clone(),
+            DesignationSystem.westernPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.pagasa, undefined, 'PAGASA AoR', ids.wpac,
+            undefined,
+            DesignationSystem.PAGASA.clone()
+            );
+        this.addSubBasin(ids.nio, undefined, 'North Indian Ocean', ids.nhem,
+            Scale.IMD.clone(),
+            DesignationSystem.northIndianOcean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.bob, undefined, 'Bay of Bengal', ids.nio,
+            undefined,
+            new DesignationSystem({
+                prefix: 'BOB ',
+                numCross: DESIG_CROSSMODE_KEEP
+            })
+            );
+        this.addSubBasin(ids.arb, undefined, 'Arabian Sea', ids.nio,
+            undefined,
+            new DesignationSystem({
+                prefix: 'ARB ',
+                numCross: DESIG_CROSSMODE_KEEP
+            })
+            );
+        this.addSubBasin(ids.nioland, undefined, 'LAND (NIO)', ids.nio,
+            undefined,
+            new DesignationSystem({
+                prefix: 'LAND ',
+                numCross: DESIG_CROSSMODE_KEEP
+            })
+            );
+        this.addSubBasin(ids.medi, undefined, 'Mediterranean Sea', ids.nhem);
+        this.addSubBasin(ids.aus, undefined, 'Australian Region', ids.shem,
+            Scale.australian.clone(),
+            DesignationSystem.australianRegionBoM.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.jakarta, undefined, 'TCWC Jakarta AoR', ids.aus,
+            undefined,
+            DesignationSystem.australianRegionJakarta.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.pm, undefined, 'TCWC Port Moresby AoR', ids.aus,
+            undefined,
+            DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.swio, undefined, 'South-West Indian Ocean', ids.shem,
+            Scale.southwestIndianOcean.clone(),
+            DesignationSystem.southWestIndianOcean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.spac, undefined, 'South Pacific', ids.shem,
+            Scale.australian.clone(),
+            DesignationSystem.southPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+        this.addSubBasin(ids.satl, undefined, 'South Atlantic', ids.shem,
+            undefined,
+            DesignationSystem.southAtlantic.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
+    }
+
     save(){
         let reqSeasons = [];
         for(let k in this.seasons){
@@ -515,6 +619,12 @@ class Basin{
                             }
                             if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
+                    }
+                    if(MAP_TYPES[this.mapType].form === 'earth' && data.format < FORMAT_WITH_EARTH_SUBBASINS){
+                        let loadedSubBasins = this.subBasins;
+                        this.subBasins = {};
+                        this.defineEarthSubBasins();
+                        // WIP
                     }
                     this.env.init(envData);
                     if(oldNameList){

@@ -1,6 +1,6 @@
 Northern Hemisphere:
 
-1   No Man's Land (Northern Hemisphere)
+1   Northern Hemisphere
 2   Atlantic
 3   Atlantic (Land)
 4   Eastern Pacific
@@ -15,7 +15,7 @@ Northern Hemisphere:
 
 Southern Hemisphere:
 
-128 No Man's Land (Southern Hemisphere)
+128 Southern Hemisphere
 129 Australian Region
 130 TCWC Jakarta (Australian Region)
 131 TCWC Port Moresby (Australian Region)
@@ -27,14 +27,12 @@ Collective sub-basins (not directly on map):
 
 0   Global Main Basin
 192 North Indian Ocean
-193 Northern Hemisphere
-194 Southern Hemisphere
 
 Hierarchy:
 
-0 <- 193, 194
-193 <- 1, 2, 4, 7, 12, 192
-194 <- 128, 129, 132, 133, 134
+0 <- 1, 128
+1 <- 2, 4, 7, 12, 192
+128 <- 129, 132, 133, 134
 192 <- 9, 10, 11
 2 <- 3
 4 <- 5, 6
