@@ -538,14 +538,13 @@ class Basin{
                 }
                 return this;
             }).then(b=>{
-                if(MAP_TYPES[b.mapType].form==='pixelmap'){
-                    return loadImg(MAP_TYPES[b.mapType].path).then(img=>{
-                        img.loadPixels();
-                        b.mapImg = img;
-                        return b;
-                    });
-                }else if(MAP_TYPES[b.mapType].form==='earth'){
-                    return loadImg(EARTH_MAP_PATH).then(img=>{
+                if(MAP_TYPES[b.mapType].form === 'pixelmap' || MAP_TYPES[b.mapType].form === 'earth'){
+                    let path;
+                    if(MAP_TYPES[b.mapType].form === 'earth')
+                        path = EARTH_MAP_PATH;
+                    else
+                        path = MAP_TYPES[b.mapType].path;
+                    return loadImg(path).then(img=>{
                         img.loadPixels();
                         b.mapImg = img;
                         return b;

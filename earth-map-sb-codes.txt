@@ -1,4 +1,4 @@
-0   Global Main Basin
+Northern Hemisphere:
 
 1   No Man's Land (Northern Hemisphere)
 2   Atlantic
@@ -13,10 +13,30 @@
 11  LAND Depressions (North Indian Ocean)
 12  Mediterranean
 
+Southern Hemisphere:
+
 128 No Man's Land (Southern Hemisphere)
-129 BoM (Australian Region)
+129 Australian Region
 130 TCWC Jakarta (Australian Region)
 131 TCWC Port Moresby (Australian Region)
 132 South-West Indian Ocean
 133 South Pacific
 134 South Atlantic
+
+Collective sub-basins (not directly on map):
+
+0   Global Main Basin
+192 North Indian Ocean
+193 Northern Hemisphere
+194 Southern Hemisphere
+
+Hierarchy:
+
+0 <- 193, 194
+193 <- 1, 2, 4, 7, 12, 192
+194 <- 128, 129, 132, 133, 134
+192 <- 9, 10, 11
+2 <- 3
+4 <- 5, 6
+7 <- 8
+129 <- 130, 131
