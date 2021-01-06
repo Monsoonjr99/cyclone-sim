@@ -1,7 +1,7 @@
 const TITLE = "Cyclone Simulator";
 const VERSION_NUMBER = "0.4";
 
-const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
+const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -83,7 +83,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
         west: -102.67,
         east: 3,
         north: 59.45,
-        south: 0
+        south: 0,
+        mainSubBasin: 2
     },
     {   // "Eastern Pacific" map type
         form: 'earth',
@@ -91,7 +92,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -74.33,
         north: 59.45,
         south: 0,
-        special: 'CPac'
+        mainSubBasin: 4/* ,
+        special: 'CPac' */
     },
     {   // "Western Pacific" map type
         form: 'earth',
@@ -99,7 +101,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -159.91,
         north: 59.45,
         south: 0,
-        special: 'PAGASA'
+        mainSubBasin: 7/* ,
+        special: 'PAGASA' */
     },
     {   // "Northern Indian Ocean" map type
         form: 'earth',
@@ -107,7 +110,8 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 131.62,
         north: 59.45,
         south: 0,
-        special: 'NIO'
+        mainSubBasin: 192/* ,
+        special: 'NIO' */
     },
     {   // "Australian Region" map type
         form: 'earth',
@@ -115,35 +119,40 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -172.29,
         north: 0,
         south: -59.45,
-        special: 'AUS'
+        mainSubBasin: 129/* ,
+        special: 'AUS' */
     },
     {   // "South Pacific" map type
         form: 'earth',
         west: 147.2,
         east: -107.13,
         north: 0,
-        south: -59.45
+        south: -59.45,
+        mainSubBasin: 133
     },
     {   // "South-West Indian Ocean" map type
         form: 'earth',
         west: 17.25,
         east: 122.93,
         north: 0,
-        south: -59.45
+        south: -59.45,
+        mainSubBasin: 132
     },
     {   // "South Atlantic" map type
         form: 'earth',
         west: -81.48,
         east: 24.19,
         north: 0,
-        south: -59.45
+        south: -59.45,
+        mainSubBasin: 134
     },
     {   // "Mediterranean" map type
         form: 'earth',
         west: -10.32,
         east: 42.52,
         north: 55.38,
-        south: 25.65
+        south: 25.65,
+        mainSubBasin: 12
     }
 ];
 const EARTH_MAP_PATH = 'resources/earth.png';
@@ -194,6 +203,7 @@ const FORMAT_WITH_IMPROVED_ENV = 3;
 const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
 const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
 const FORMAT_WITH_SCALES = 6;
+const FORMAT_WITH_EARTH_SUBBASINS = 7;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
