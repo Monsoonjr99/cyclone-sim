@@ -6,20 +6,30 @@ class Basin{
         this.seasonExpirationTimers = {};
         this.activeSystems = [];
         this.subBasins = {};
-        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,
-            Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0),
-            DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false)
-        );
         this.tick = 0;
         this.lastSaved = 0;
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
-        if(opts.year!==undefined) this.startYear = opts.year;
-        else this.startYear = this.SHem ? SHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR;
+        if(opts.year !== undefined)
+            this.startYear = opts.year;
+        else if(this.SHem)
+            this.startYear = SHEM_DEFAULT_YEAR;
+        else
+            this.startYear = NHEM_DEFAULT_YEAR;
         this.mapType = opts.mapType || 0;
-        if(MAP_TYPES[this.mapType].form === 'earth')
+        if(MAP_TYPES[this.mapType].form === 'earth'){
+            this.mainSubBasin = MAP_TYPES[this.mapType].mainSubBasin;
             this.defineEarthSubBasins();
+            this.subBasins[this.mainSubBasin].scale = Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0);
+            this.subBasins[this.mainSubBasin].setDesignationSystem(DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false));
+        }else{
+            this.mainSubBasin = DEFAULT_MAIN_SUBBASIN;
+            this.addSubBasin(this.mainSubBasin,undefined,undefined,undefined,
+                Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0),
+                DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false)
+            );
+        }
         // if(MAP_TYPES[this.mapType].special==='CPac'){
         //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.naming.crossingMode = DESIG_CROSSMODE_KEEP;
         //     this.subBasins[DEFAULT_MAIN_SUBBASIN].designationSystem.numbering.crossingMode = DESIG_CROSSMODE_KEEP;
@@ -277,7 +287,7 @@ class Basin{
             }
         }
         if(scale) return scale;
-        let mainSB = this.subBasins[DEFAULT_MAIN_SUBBASIN];
+        let mainSB = this.subBasins[this.mainSubBasin];
         if(mainSB instanceof SubBasin && mainSB.scale) return mainSB.scale;
         return Scale.saffirSimpson;
     }
@@ -620,21 +630,30 @@ class Basin{
                             if(format<FORMAT_WITH_SAVED_SEASONS) this.lastSaved = this.tick = 0; // resets tick to 0 in basins test-saved in versions prior to full saving including seasons added
                         }
                     }
-                    if(MAP_TYPES[this.mapType].form === 'earth' && data.format < FORMAT_WITH_EARTH_SUBBASINS){
-                        let loadedSubBasins = this.subBasins;
-                        this.subBasins = {};
-                        this.defineEarthSubBasins();
-                        // WIP
+                    if(MAP_TYPES[this.mapType].form === 'earth'){
+                        this.mainSubBasin = MAP_TYPES[this.mapType].mainSubBasin;
+                        if(data.format < FORMAT_WITH_EARTH_SUBBASINS){
+                            let loadedSubBasins = this.subBasins;
+                            this.subBasins = {};
+                            this.defineEarthSubBasins();
+                            // WIP
+                        }
                     }
                     this.env.init(envData);
                     if(oldNameList){
                         let desSys = DesignationSystem.convertFromOldNameList(oldNameList);
-                        if(!desSys.naming.annual) desSys.naming.continuousNameIndex = oldSeqNameIndex;
-                        this.addSubBasin(DEFAULT_MAIN_SUBBASIN,undefined,undefined,undefined,undefined,desSys);
+                        if(!desSys.naming.annual)
+                            desSys.naming.continuousNameIndex = oldSeqNameIndex;
+                        if(!this.subBasins[this.mainSubBasin])
+                            this.addSubBasin(this.mainSubBasin);
+                        let sb = this.subBasins[this.mainSubBasin];
+                        if(sb instanceof SubBasin)
+                            sb.setDesignationSystem(desSys);
                     }
                     if(data.format<FORMAT_WITH_SCALES){
-                        if(!this.subBasins[DEFAULT_MAIN_SUBBASIN]) this.addSubBasin(DEFAULT_MAIN_SUBBASIN);
-                        let sb = this.subBasins[DEFAULT_MAIN_SUBBASIN];
+                        if(!this.subBasins[this.mainSubBasin])
+                            this.addSubBasin(this.mainSubBasin);
+                        let sb = this.subBasins[this.mainSubBasin];
                         if(sb instanceof SubBasin){
                             if(oldHypoCats) sb.scale = Scale.extendedSaffirSimpson.clone();
                             else sb.scale = Scale.saffirSimpson.clone();
@@ -943,7 +962,7 @@ class Season{
                 }
             }
             if(data.format<FORMAT_WITH_SUBBASIN_SEASON_STATS){
-                let s = this.stats(DEFAULT_MAIN_SUBBASIN);
+                let s = this.stats(this.basin.mainSubBasin);
                 for(let p of [
                     'ACE',
                     'deaths',
@@ -956,7 +975,7 @@ class Season{
                 cCounters[2] = oldStats.hurricanes || 0;
                 cCounters[4] = oldStats.majors || 0;
                 cCounters[7] = oldStats.c5s || 0;
-                if(basin.getScale(DEFAULT_MAIN_SUBBASIN).classifications.length>8){
+                if(basin.getScale(this.basin.mainSubBasin).classifications.length>8){
                     cCounters[10] = oldStats.c8s || 0;
                     cCounters[13] = oldStats.hypercanes || 0;
                 }
@@ -1134,8 +1153,8 @@ class SubBasin{
     }
 
     outBasin(origin){
-        if(this.id===DEFAULT_MAIN_SUBBASIN) return false;
-        if(this.parent===DEFAULT_MAIN_SUBBASIN) return false;
+        if(this.id===this.basin.mainSubBasin) return false;
+        if(this.parent===this.basin.mainSubBasin) return false;
         if(this.parent===undefined) return true;
         if(this.parent===origin) return true;
         let p = this.basin.subBasins[this.parent];

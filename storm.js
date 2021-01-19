@@ -650,8 +650,8 @@ class Storm{
                     for(let subId of basin.forSubBasinChain(sub)){
                         for(let j=0;j<=clsn;j++) this.subBasinData(subId,yr,j,true);
                     }
-                    this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'num',true);
-                    if(clsn>=1) this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'name',true);
+                    this.subBasinData(this.basin.mainSubBasin,yr,'num',true);
+                    if(clsn>=1) this.subBasinData(this.basin.mainSubBasin,yr,'name',true);
                 }
                 if(trop && !this.TC){
                     this.TC = true;
@@ -703,7 +703,7 @@ class Storm{
                     this.designations.secondary.push(new Designation(loadData.sub(S[i])));
                 }
             }else{
-                let sb = basin.subBasins[DEFAULT_MAIN_SUBBASIN];
+                let sb = basin.subBasins[this.basin.mainSubBasin];
                 if(sb instanceof SubBasin && sb.designationSystem){     // converts pre-v20191004a designations; needs testing
                     if(nameNum!==undefined){
                         let desig = sb.designationSystem.getName(namedTime,basin.getSeason(namedTime),nameNum);
