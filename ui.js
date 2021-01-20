@@ -881,7 +881,7 @@ UI.init = function(){
         const section_width = 400;
         const name_sections = 6;
 
-        let editing_sub_basin = UI.viewBasin.mainSubBasin;
+        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
         let desig_system;
         let name_list_num = 0;
         let name_list_page = 0;

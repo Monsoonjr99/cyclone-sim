@@ -22,12 +22,12 @@ class Basin{
             this.mainSubBasin = MAP_TYPES[this.mapType].mainSubBasin;
             this.defineEarthSubBasins();
             this.subBasins[this.mainSubBasin].scale = Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0);
-            this.subBasins[this.mainSubBasin].setDesignationSystem(DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false));
+            this.subBasins[this.mainSubBasin].setDesignationSystem(DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false).setCrossingModes(undefined, DESIG_CROSSMODE_KEEP));
         }else{
             this.mainSubBasin = DEFAULT_MAIN_SUBBASIN;
             this.addSubBasin(this.mainSubBasin,undefined,undefined,undefined,
                 Scale.presetScales[opts.scale || 0].clone().flavor(opts.scaleFlavor || 0).colorScheme(opts.scaleColorScheme || 0),
-                DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false)
+                DesignationSystem.presetDesignationSystems[opts.designations || 0].clone().setSecondary(false).setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
             );
         }
         // if(MAP_TYPES[this.mapType].special==='CPac'){
@@ -641,7 +641,7 @@ class Basin{
                     }
                     this.env.init(envData);
                     if(oldNameList){
-                        let desSys = DesignationSystem.convertFromOldNameList(oldNameList);
+                        let desSys = DesignationSystem.convertFromOldNameList(oldNameList).setCrossingModes(undefined, DESIG_CROSSMODE_KEEP);
                         if(!desSys.naming.annual)
                             desSys.naming.continuousNameIndex = oldSeqNameIndex;
                         if(!this.subBasins[this.mainSubBasin])
