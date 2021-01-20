@@ -614,7 +614,13 @@ class Basin{
                             let loadedSubBasins = this.subBasins;
                             this.subBasins = {};
                             this.defineEarthSubBasins();
-                            // WIP
+                            for(let [oldId, newId] of updateEarthSubBasinIds(this.mapType)){
+                                if(loadedSubBasins[oldId]){
+                                    let sb = this.subBasins[newId];
+                                    sb.setDesignationSystem(loadedSubBasins[oldId].designationSystem);
+                                    sb.scale = loadedSubBasins[oldId].scale;
+                                }
+                            }
                         }
                     }
                     this.env.init(envData);
@@ -842,8 +848,15 @@ class Season{
                     ]) oldStats[p] = obj[p];
                 }
                 if(obj.stats){
-                    for(let sub in obj.stats)
-                        this.subBasinStats[sub] = new SeasonStats(basin,sub,data.sub(obj.stats[sub]));
+                    if(data.format >= FORMAT_WITH_EARTH_SUBBASINS || MAP_TYPES[basin.mapType].form !== 'earth'){
+                        for(let sub in obj.stats)
+                            this.subBasinStats[sub] = new SeasonStats(basin, sub, data.sub(obj.stats[sub]));
+                    }else{
+                        for(let [oldSub, newSub] of updateEarthSubBasinIds(basin.mapType)){
+                            if(obj.stats[oldSub])
+                                this.subBasinStats[newSub] = new SeasonStats(basin, newSub, data.sub(obj.stats[oldSub]));
+                        }
+                    }
                 }
                 if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){
                     for(let f of basin.env.fieldList){
