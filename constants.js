@@ -155,6 +155,29 @@ const MAP_TYPES = [     // Land generation controls for different map types
         mainSubBasin: 12
     }
 ];
+const EARTH_SB_IDS = {
+    world: 0,
+    nhem: 1,
+    atl: 2,
+    atlland: 3,
+    epac: 4,
+    epacland: 5,
+    cpac: 6,
+    wpac: 7,
+    pagasa: 8,
+    bob: 9,
+    arb: 10,
+    nioland: 11,
+    medi: 12,
+    shem: 128,
+    aus: 129,
+    jakarta: 130,
+    pm: 131,
+    swio: 132,
+    spac: 133,
+    satl: 134,
+    nio: 192
+};
 const EARTH_MAP_PATH = 'resources/earth.png';
 const EXTROP = 0;
 const SUBTROP = 1;

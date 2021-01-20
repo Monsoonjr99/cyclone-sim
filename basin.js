@@ -356,29 +356,7 @@ class Basin{
 
     // hard-coded definition of earth map sub-basins (could use a data-driven approach but this codebase is now beyond forsaken so why bother)
     defineEarthSubBasins(){
-        const ids = {
-            world: 0,
-            nhem: 1,
-            atl: 2,
-            atlland: 3,
-            epac: 4,
-            epacland: 5,
-            cpac: 6,
-            wpac: 7,
-            pagasa: 8,
-            bob: 9,
-            arb: 10,
-            nioland: 11,
-            medi: 12,
-            shem: 128,
-            aus: 129,
-            jakarta: 130,
-            pm: 131,
-            swio: 132,
-            spac: 133,
-            satl: 134,
-            nio: 192
-        };
+        const ids = EARTH_SB_IDS;
         this.addSubBasin(ids.world, undefined, 'World');
         this.addSubBasin(ids.nhem, undefined, 'Northern Hemisphere', ids.world);
         this.addSubBasin(ids.shem, undefined, 'Southern Hemisphere', ids.world);
@@ -1292,4 +1270,25 @@ function decodePointArray(s,o){
         arr[i] = decodePoint(arr[i],o);
     }
     return arr;
+}
+
+// earth sub-basin id converter (for pre-v0.4 saves)
+
+function* updateEarthSubBasinIds(mapType){
+    if(MAP_TYPES[mapType].form === 'earth'){
+        const ids = EARTH_SB_IDS;
+        yield [0, MAP_TYPES[mapType].mainSubBasin]; // main (sub-)basin
+        // hardcoded conversion of special sub-basin ids by map type
+        if(mapType === 7) // Eastern Pacific
+            yield [128, ids.cpac];
+        else if(mapType === 8) // Western Pacific
+            yield [128, ids.pagasa];
+        else if(mapType === 9){ // North Indian Ocean
+            yield [128, ids.arb];
+            yield [129, ids.bob];
+        }else if(mapType === 10){ // Australian Region
+            yield [128, ids.jakarta];
+            yield [129, ids.pm];
+        }
+    }
 }
