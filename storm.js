@@ -433,18 +433,18 @@ class Storm{
                         break;
                     case DESIG_CROSSMODE_REGEN:
                     case DESIG_CROSSMODE_STRICT_REGEN:
-                        let a = data;
-                        for(let i=this.record.length-1;i>=0;i--){
-                            if(tropOrSub(this.record[i].type)) a = this.record[i];
-                            else break;
-                        }
-                        let lastFormedSB = land.getSubBasin(a.pos.x,a.pos.y);
-                        lastFormedSB = basin.relevantPrimaryDesignationSubBasins(lastFormedSB);
-                        if(isNaming) lastFormedSB = lastFormedSB.naming;
-                        else lastFormedSB = lastFormedSB.numbering;
-                        if(lastFormedSB!==subId) keep = true;
-                        else if(ds.crossingMode===DESIG_CROSSMODE_REGEN) findold = true;
-                        break;
+                        // let a = data;
+                        // for(let i=this.record.length-1;i>=0;i--){
+                        //     if(tropOrSub(this.record[i].type)) a = this.record[i];
+                        //     else break;
+                        // }
+                        // let lastFormedSB = land.getSubBasin(a.pos.x,a.pos.y);
+                        // lastFormedSB = basin.relevantPrimaryDesignationSubBasins(lastFormedSB);
+                        // if(isNaming) lastFormedSB = lastFormedSB.naming;
+                        // else lastFormedSB = lastFormedSB.numbering;
+                        // if(lastFormedSB!==subId) keep = true;
+                        // else if(ds.crossingMode===DESIG_CROSSMODE_REGEN) findold = true;
+                        // break;
                     case DESIG_CROSSMODE_KEEP:
                         keep = true;
                         break;
