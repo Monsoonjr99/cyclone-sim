@@ -17,6 +17,29 @@ const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DE
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
 const MAP_DEFINITION = 2;   // normal scaler for the land map
+const EARTH_SB_IDS = {
+    world: 0,
+    nhem: 1,
+    atl: 2,
+    atlland: 3,
+    epac: 4,
+    epacland: 5,
+    cpac: 6,
+    wpac: 7,
+    pagasa: 8,
+    bob: 9,
+    arb: 10,
+    nioland: 11,
+    medi: 12,
+    shem: 128,
+    aus: 129,
+    jakarta: 130,
+    pm: 131,
+    swio: 132,
+    spac: 133,
+    satl: 134,
+    nio: 192
+};
 const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Two Continents" map type
         form: "linear",
@@ -84,7 +107,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 3,
         north: 59.45,
         south: 0,
-        mainSubBasin: 2
+        mainSubBasin: EARTH_SB_IDS.atl
     },
     {   // "Eastern Pacific" map type
         form: 'earth',
@@ -92,7 +115,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -74.33,
         north: 59.45,
         south: 0,
-        mainSubBasin: 4/* ,
+        mainSubBasin: EARTH_SB_IDS.epac/* ,
         special: 'CPac' */
     },
     {   // "Western Pacific" map type
@@ -101,7 +124,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -159.91,
         north: 59.45,
         south: 0,
-        mainSubBasin: 7/* ,
+        mainSubBasin: EARTH_SB_IDS.wpac/* ,
         special: 'PAGASA' */
     },
     {   // "Northern Indian Ocean" map type
@@ -110,7 +133,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 131.62,
         north: 59.45,
         south: 0,
-        mainSubBasin: 192/* ,
+        mainSubBasin: EARTH_SB_IDS.nio/* ,
         special: 'NIO' */
     },
     {   // "Australian Region" map type
@@ -119,7 +142,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -172.29,
         north: 0,
         south: -59.45,
-        mainSubBasin: 129/* ,
+        mainSubBasin: EARTH_SB_IDS.aus/* ,
         special: 'AUS' */
     },
     {   // "South Pacific" map type
@@ -128,7 +151,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: -107.13,
         north: 0,
         south: -59.45,
-        mainSubBasin: 133
+        mainSubBasin: EARTH_SB_IDS.spac
     },
     {   // "South-West Indian Ocean" map type
         form: 'earth',
@@ -136,7 +159,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 122.93,
         north: 0,
         south: -59.45,
-        mainSubBasin: 132
+        mainSubBasin: EARTH_SB_IDS.swio
     },
     {   // "South Atlantic" map type
         form: 'earth',
@@ -144,7 +167,7 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 24.19,
         north: 0,
         south: -59.45,
-        mainSubBasin: 134
+        mainSubBasin: EARTH_SB_IDS.satl
     },
     {   // "Mediterranean" map type
         form: 'earth',
@@ -152,32 +175,9 @@ const MAP_TYPES = [     // Land generation controls for different map types
         east: 42.52,
         north: 55.38,
         south: 25.65,
-        mainSubBasin: 12
+        mainSubBasin: EARTH_SB_IDS.medi
     }
 ];
-const EARTH_SB_IDS = {
-    world: 0,
-    nhem: 1,
-    atl: 2,
-    atlland: 3,
-    epac: 4,
-    epacland: 5,
-    cpac: 6,
-    wpac: 7,
-    pagasa: 8,
-    bob: 9,
-    arb: 10,
-    nioland: 11,
-    medi: 12,
-    shem: 128,
-    aus: 129,
-    jakarta: 130,
-    pm: 131,
-    swio: 132,
-    spac: 133,
-    satl: 134,
-    nio: 192
-};
 const EARTH_MAP_PATH = 'resources/earth.png';
 const EXTROP = 0;
 const SUBTROP = 1;
