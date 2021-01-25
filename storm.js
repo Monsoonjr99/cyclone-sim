@@ -787,9 +787,14 @@ class StormData{
         }
     }
 
+    coord(){
+        return Coordinate.convertFromXY(this.basin.mapType, this.pos);
+    }
+
     save(){
         let obj = {};
-        obj.pos = {x: this.pos.x, y: this.pos.y};
+        let {longitude, latitude} = this.coord();
+        obj.pos = {longitude, latitude};
         for(let p of ['pressure','windSpeed','type']) obj[p] = this[p];
         return obj;
     }
@@ -798,7 +803,10 @@ class StormData{
         if(data instanceof LoadData){
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
-                this.pos = createVector(obj.pos.x,obj.pos.y);
+                if(data.format >= FORMAT_WITH_LONG_LAT)
+                    this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
+                else
+                    this.pos = createVector(obj.pos.x,obj.pos.y);
                 for(let p of ['pressure','windSpeed','type']) this[p] = obj[p];
             }else{
                 let str = data.value;
@@ -818,22 +826,23 @@ class StormData{
     }
 
     static saveArr(arr){
-        let x = [];
-        let y = [];
+        let longitude = [];
+        let latitude = [];
         let pressure = [];
         let windSpeed = [];
         let type = [];
         for(let d of arr){
             if(d instanceof StormData){
-                x.push(d.pos.x);
-                y.push(d.pos.y);
+                let coord = d.coord();
+                longitude.push(coord.longitude);
+                latitude.push(coord.latitude);
                 pressure.push(constrain(d.pressure,0,pow(2,16)-1));
                 windSpeed.push(constrain(d.windSpeed,0,pow(2,16)-1));
                 type.push(d.type);
             }
         }
         let obj = {};
-        obj.pos = {x: new Float32Array(x), y: new Float32Array(y)};
+        obj.pos = {longitude: new Float32Array(longitude), latitude: new Float32Array(latitude)};
         obj.pressure = new Uint16Array(pressure);
         obj.windSpeed = new Uint16Array(windSpeed);
         obj.type = new Uint8ClampedArray(type);
@@ -845,8 +854,21 @@ class StormData{
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
                 let arr = [];
-                let x = [...obj.pos.x];
-                let y = [...obj.pos.y];
+                let x, y;
+                if(data.format >= FORMAT_WITH_LONG_LAT){
+                    let longitude = [...obj.pos.longitude];
+                    let latitude = [...obj.pos.latitude];
+                    x = [];
+                    y = [];
+                    for(let i = 0; i < longitude.length; i++){
+                        let vec = Coordinate.convertToXY(basin.mapType, longitude[i], latitude[i]);
+                        x.push(vec.x);
+                        y.push(vec.y);
+                    }
+                }else{
+                    x = [...obj.pos.x];
+                    y = [...obj.pos.y];
+                }
                 let pressure = [...obj.pressure];
                 let windSpeed = [...obj.windSpeed];
                 let type = [...obj.type];

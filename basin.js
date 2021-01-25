@@ -542,6 +542,7 @@ class Basin{
                             else
                                 this.actMode = SIM_MODE_NORMAL;
                         }
+                        this.mapType = obj.mapType;
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
@@ -553,7 +554,6 @@ class Basin{
                             }
                         }
                         for(let p of [
-                            'mapType',
                             'tick',
                             'seed',
                             'startYear'

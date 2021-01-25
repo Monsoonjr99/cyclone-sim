@@ -227,6 +227,7 @@ const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
 const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
 const FORMAT_WITH_SCALES = 6;
 const FORMAT_WITH_EARTH_SUBBASINS = 7;
+const FORMAT_WITH_LONG_LAT = 7;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 
