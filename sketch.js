@@ -238,7 +238,7 @@ class Settings{
     }
 
     static order(){
-        return ["smoothLandColor","showMagGlass","snowLayers","useShader","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["smoothLandColor","showMagGlass","snowLayers","useShadows","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
