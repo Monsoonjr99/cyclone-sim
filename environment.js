@@ -662,7 +662,7 @@ class Land{
         if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
-        if(simSettings.useShader && !this.shaderDrawn){
+        if(simSettings.useShadows && !this.shaderDrawn){
             yield* this.drawShader();
         }
         this.drawn = true;

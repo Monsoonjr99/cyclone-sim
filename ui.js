@@ -315,7 +315,7 @@ UI.init = function(){
                 if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
                 else renderToDo = land.drawSnow();
             }
-            if(simSettings.useShader){
+            if(simSettings.useShadows){
                 if(land.shaderDrawn) drawBuffer(landShader);
                 else renderToDo = land.drawShader();
             }
@@ -803,11 +803,11 @@ UI.init = function(){
     },function(){
         simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
         if(land) land.clearSnow();
-    }).append(false,0,37,300,30,function(s){     // shader
-        let b = simSettings.useShader ? "Enabled" : "Disabled";
-        s.button("Land Shader: "+b,true);
+    }).append(false,0,37,300,30,function(s){     // shadows (NOT a shader O~O)
+        let b = simSettings.useShadows ? "Enabled" : "Disabled";
+        s.button("Land Shadows: "+b,true);
     },function(){
-        simSettings.setUseShader("toggle");
+        simSettings.setUseShadows("toggle");
     }).append(false,0,37,300,30,function(s){     // magnifying glass
         let b = simSettings.showMagGlass ? "Enabled" : "Disabled";
         s.button("Magnifying Glass: "+b,true);
