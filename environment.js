@@ -662,7 +662,7 @@ class Land{
         if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
-        if(simSettings.useShader && !this.shaderDrawn){
+        if(simSettings.useShadows && !this.shaderDrawn){
             yield* this.drawShader();
         }
         this.drawn = true;
@@ -690,7 +690,7 @@ class Land{
     }
 
     *drawShader(){
-        yield "Rendering shader...";
+        yield "Rendering shadows...";
         let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
         let H = W*HEIGHT/WIDTH;
         let scl = W/WIDTH;
