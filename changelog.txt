@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.9 (2021-03-05):
+    * Update to Western Pacific name list
+    * Rename "Land Shader" to "Land Shadows" (it is the exact opposite of a "shader" so that name was fake news)
 v0.3.8 (2021-01-01):
     * Converted some hardcoded values of the steering fields to modifiers for better flexibility
 v0.3.7 (2020-12-31):
