@@ -690,7 +690,7 @@ class Land{
     }
 
     *drawShader(){
-        yield "Rendering shader...";
+        yield "Rendering shadows...";
         let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
         let H = W*HEIGHT/WIDTH;
         let scl = W/WIDTH;
