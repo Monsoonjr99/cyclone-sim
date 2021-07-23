@@ -1031,7 +1031,7 @@ class ActiveSystem extends StormData{
 
         let u = {};
         u.f = (field)=>basin.env.get(field,this.pos.x,this.pos.y,basin.tick);
-        u.land = ()=>land.get(this.pos.x,this.pos.y);
+        u.land = ()=>land.get(this.coord());
 
         // this.getSteering();
         if(STORM_ALGORITHM[basin.actMode].steering)
@@ -1059,7 +1059,7 @@ class ActiveSystem extends StormData{
         // let SST = basin.env.get("SST",x,y,z);
         // let jet = basin.env.get("jetstream",x,y,z);
         // jet = basin.hemY(y)-jet;
-        let lnd = land.get(x,y);
+        let lnd = land.get(this.coord());
         // let moisture = basin.env.get("moisture",x,y,z);
         // let shear = basin.env.get("shear",x,y,z).mag()+this.interaction.shear;
         

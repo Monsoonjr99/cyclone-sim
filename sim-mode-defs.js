@@ -772,7 +772,7 @@ ENV_DEFS.defaults.moisture = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
         let s = seasonalSine(z);
-        let l = land.get(x,u.basin.hemY(y));
+        let l = land.get(Coordinate.convertFromXY(u.basin.mapType, x, u.basin.hemY(y)));
         let pm = u.modifiers.polarMoisture;
         let tm = u.modifiers.tropicalMoisture;
         let mm = u.modifiers.mountainMoisture;
@@ -814,7 +814,7 @@ ENV_DEFS[SIM_MODE_WILD].moisture = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
         let s = u.yearfrac(z);
-        let l = land.get(x,u.basin.hemY(y));
+        let l = land.get(Coordinate.convertFromXY(u.basin.mapType, x, u.basin.hemY(y)));
         let om = u.piecewise(s,[
             [0.5,0.35],[2,0.55],[4,0.6],[5.75,0.58],[6,0.1],[7,0.2],[7.25,0.6],[8.5,0.72],[10,0.55],[11.5,0.35]
         ]);

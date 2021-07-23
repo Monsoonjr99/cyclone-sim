@@ -318,7 +318,7 @@ class EnvField{
         magnifyingGlass.noFill();
         let vCenter = this.get(centerX,centerY,viewTick);
         if(this.isVectorField){
-            if(coordinateInCanvas(centerX,centerY) && (!this.oceanic || (land.tileContainsOcean(centerX,centerY) && !land.get(centerX,centerY)))){
+            if(coordinateInCanvas(centerX,centerY) && (!this.oceanic || (land.tileContainsOcean(centerX,centerY) && !land.get(Coordinate.convertFromXY(this.basin.mapType,centerX,centerY))))){
                 let v = vCenter;
                 magnifyingGlass.push();
                 magnifyingGlass.stroke(0);
@@ -349,7 +349,7 @@ class EnvField{
                         if(sqrt(sq(i1)+sq(j1))<magnifyingGlass.width/4){
                             let x = centerX+i1/scaler;
                             let y = centerY+j1/scaler;
-                            if(coordinateInCanvas(x,y) && (!this.oceanic || (land.tileContainsOcean(x,y) && !land.get(x,y)))){
+                            if(coordinateInCanvas(x,y) && (!this.oceanic || (land.tileContainsOcean(x,y) && !land.get(Coordinate.convertFromXY(this.basin.mapType,x,y))))){
                                 let v = this.get(x,y,viewTick);
                                 if(v!==null){
                                     let h = this.hueMap;
@@ -511,17 +511,12 @@ class Land{
         this.calculate();
     }
 
-    get(x,y){
+    get(long, lat){
+        if(long instanceof Coordinate)
+            ({longitude: long, latitude: lat} = long);
         if(this.earth){
             let img = this.basin.mapImg;
-            let long;
-            let lat;
-            if(this.westBound < this.eastBound)
-                long = map(x,0,WIDTH,this.westBound,this.eastBound);
-            else
-                long = map(x,0,WIDTH,this.westBound,this.eastBound+360);
             long = (long + 180) % 360 - 180;
-            lat = map(y,0,HEIGHT,this.northBound,this.southBound);
             let x1 = floor(map(long,-180,180,0,img.width));
             let y1 = floor(map(lat,90,-90,0,img.height-1));
             let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
@@ -533,6 +528,7 @@ class Land{
                 return map(sqrt(map(hVal,12,150,0,1,true)),0,1,0.501,1);
         }else{
             let d = this.mapDefinition;
+            let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
             x = floor(x*d);
             y = floor(y*d);
             if(this.map[x] && this.map[x][y]){
@@ -643,7 +639,7 @@ class Land{
         yield "Rendering land...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         let sget = (x,y)=>this.getSubBasin(x/scl,y/scl);
         let bget = (x,y)=>this.inBasin(x/scl,y/scl);
         let outOfSub = (s0,s1)=>{
@@ -721,7 +717,7 @@ class Land{
         let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
         let H = W*HEIGHT/WIDTH;
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         let snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
@@ -742,7 +738,7 @@ class Land{
         let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
         let H = W*HEIGHT/WIDTH;
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let v = lget(i,j);

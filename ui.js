@@ -1418,7 +1418,7 @@ UI.init = function(){
                 x = getMouseX();
                 y = getMouseY();
             }
-            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(Coordinate.convertFromXY(basin.mapType, x, y)))){
                 txtStr += "N/A";
             }else{
                 let v = basin.env.get(f,x,y,viewTick);
