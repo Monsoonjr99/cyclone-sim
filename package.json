@@ -4,7 +4,8 @@
   "description": "A browser-based tropical cyclone simulation game.",
   "private": true,
   "scripts": {
-    "test": "start http-server && start http://localhost:8080"
+    "start": "start parcel serve src/index.html && start http://localhost:1234",
+    "build": "parcel build src/index.html"
   },
   "repository": {
     "type": "git",
@@ -24,11 +25,8 @@
   },
   "homepage": "https://github.com/Monsoonjr99/cyclone-sim#readme",
   "devDependencies": {
-    "http-server": "^0.12.3",
-    "typescript": "^3.9.7"
+    "@parcel/transformer-image": "^2.0.0-nightly.2400",
+    "parcel": "^2.0.0-nightly.776"
   },
-  "dependencies": {
-    "@types/jquery": "^3.5.0",
-    "jquery": "^3.5.1"
-  }
+  "dependencies": {}
 }

@@ -1,4 +1,6 @@
 window.onload = function(){
-    let message = 'Hello World!';
-    $('body').text(message);
+    let message : string = 'Hello World!';
+    let para = document.createElement('p');
+    para.innerText = message;
+    document.body.appendChild(para);
 };
