@@ -29,22 +29,42 @@
     * No "edge" of the world that storms cannot cross
     * The user can pan east-west around the world without hitting an edge
 * Old real-world saves from v0.x may be converted to work in the new whole-world map (see [Backwards Compatibility](#backwards-compatibility))
+* Possibility for procedurally-generated and user-created (see [User Customization](#user-customization)) maps.
 
 #### Storm Simulation Algorithm
 
-***WIP***
+* A module to handle active storm systems and how they are steered, strengthening/weakening, and multi-system (Fujiwhara) interactions.
+* Algorithm may be defined separately from the source code in a JSON file (see [User Customization](#user-customization)).
+* Different [simulation modes](#simulation-modes) may have their own storm simulation algorithms.
 
 #### Spawn Algorithm
 
-***WIP***
+* A module or function to handle the spawning of future systems (e.g. disturbances and non-tropical lows).
+* May be defined separately from source code in a JSON file.
+* Should behave in a way that makes [forecast models](#forecast-models) feel realistic.
+* Different [simulation modes](#simulation-modes) may have their own spawn algorithms.
+
+#### Environmental Factors
+
+* A module handles environmental factors which are used by [storm simulation algorithms](#storm-simulation-algorithm) to dictate how storms behave and by [spawn algorithms](#spawn-algorithm) to determine likelihood of a system spawn.
+* Some environmental factors may be a "field" that depends on map location, while others may be simply a numerical value.
+    * "Fields" may have an associated Map Mode for graphical representation (see [UI and Graphics](#ui-and-graphics)).
+* Environmental factors may inherit from other environmental factors (e.g. an "ENSO" numerical value may dictate the values of the "SSTA" field for the equatorial Pacific Ocean).
+* May be defined separately from source code.
+* Different [simulation modes](#simulation-modes) may have their own environmental factors.
 
 #### Simulation Modes
 
-***WIP***
+* Cyclone Simulator should support different modes of simulation, including more realistic (i.e. Normal Mode) and more wacky/fun simulations of storm systems and the environments driving them.
+* Each simulation mode has an associated [storm simulation algorithm](#storm-simulation-algorithm), [spawn algorithm(s)](#spawn-algorithm), and [environmental factors](#environmental-factors).
+* Simulation modes may be defined separately from source code in a JSON file that references the JSON files for associated algorithms & factors.
+* Cyclone Simulator should have both default simulation modes and allow users to create their own (see [User Customization](#user-customization)).
 
 #### Forecast Models
 
-***WIP***
+* Simulated "numerical weather prediction models" which allow the user to peer into possible futures of active and future storms.
+* More accurate in the near term; less accurate farther out in time
+* May have "biases" which may influence how the [storm simulation](#storm-simulation-algorithm) and [spawn](#spawn-algorithm) algorithms work for modeled storms.
 
 #### UI and Graphics
 
@@ -72,4 +92,5 @@
 
 #### User Customization
 
-***WIP***
+* Give users a way to upload JSON and image files for custom [simulation modes](#simulation-modes) and [maps](#the-whole-world).
+* These "mods" may be stored in IndexedDB much like [saves](#saving/loading).
