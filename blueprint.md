@@ -68,7 +68,10 @@
 
 #### UI and Graphics
 
-***WIP***
+* UI should use regular DOM elements separate from the canvas as not to require unnecessary boilerplate.
+* Keep a fancy map image of Earth handy so no need to render from a heightmap.
+    * Procedurally-generated maps may still need rendering.
+* For anything that does require intensive rendering (e.g. Map Layers), use WebGL.
 
 #### Saving/Loading
 
