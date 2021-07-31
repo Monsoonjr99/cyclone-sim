@@ -1,13 +1,61 @@
 body{
-	background: #BBB;
+	/* background: #BBB;
 	background: -o-linear-gradient(#BBB,#F3F3F3);
 	background: -webkit-linear-gradient(#BBB,#F3F3F3);
 	background: -moz-linear-gradient(#BBB,#F3F3F3);
-	background: linear-gradient(#BBB,#F3F3F3);
-	font-family: Calibri, Arial;
+	background: linear-gradient(#BBB,#F3F3F3); */
+	margin: 0px;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
-a{
+.primary-canvas{
+	z-index: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+
+.ui-container{
+	width: 100%;
+	height: 100%;
+	z-index: 1;
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	background-color: transparent;
+}
+
+.panel{
+	background-color: #CCC;
+	width: 30%;
+	height: 100%;
+	border-right: 1px solid black;
+}
+
+button{
+	background-color: #AAA;
+	border: none;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+	position: relative;
+	left: 5%;
+	margin-top: 1em;
+	width: 90%;
+	padding-top: 1em;
+	padding-bottom: 1em;
+	
+}
+
+button:hover{
+	background-color: #B4B4B4;
+}
+
+button:active{
+	background-color: #AAA;
+}
+
+/* a{
 	display: inline-block;
 	text-decoration: none;
 	color: blue;
@@ -46,4 +94,4 @@ a:hover:after{
 ul{
 	list-style: none;
 	text-align: center;
-}
+} */
