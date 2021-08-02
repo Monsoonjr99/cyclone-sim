@@ -1,11 +1,16 @@
-window.onload = function(){
-    console.log('Hello World!');
-    console.log('Currently testing UI CSS');
-    let canvas : HTMLCanvasElement = document.querySelector('.primary-canvas');
-    canvas.width = Math.floor(innerWidth * devicePixelRatio);
-    canvas.height = Math.floor(innerHeight * devicePixelRatio);
-    let ctx : CanvasRenderingContext2D = canvas.getContext('2d');
+import * as canvas from "./canvas";
+
+console.log('Hello World!');
+console.log('Currently testing canvas');
+
+canvas.setDraw((ctx, time)=>{
     ctx.fillStyle = '#F00';
-    ctx.font = '28px Verdana';
-    ctx.fillText('Test text 3', 600, 250);
-};
+    ctx.font = '48px Verdana';
+    ctx.translate(canvas.width/2, canvas.height/2);
+    ctx.rotate(-2 * Math.PI * time / 4000);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('Test text', 0, 0);
+});
+
+canvas.startAnimation();
