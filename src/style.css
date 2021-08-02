@@ -25,6 +25,11 @@ body{
 	left: 0px;
 	top: 0px;
 	background-color: transparent;
+	pointer-events: none;
+}
+
+.ui-container *{
+	pointer-events: auto;
 }
 
 .panel{
