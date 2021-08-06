@@ -227,7 +227,7 @@ class Storm{
                         if(i>0) stormIcons.rotate(2*PI/a);
                         stormIcons.beginShape();
                         stormIcons.vertex(DIAMETER*5/8,-DIAMETER);
-                        stormIcons.bezierVertex(DIAMETER*5/8,-DIAMETER,-DIAMETER*3/8,-DIAMETER*7/8,-DIAMETER*1/2,0);
+                        stormIcons.bezierVertex(DIAMETER*5/8,-DIAMETER,-DIAMETER*1/2,-DIAMETER*7/8,-DIAMETER*1/2,0);
                         stormIcons.vertex(0,0);
                         stormIcons.bezierVertex(-DIAMETER*1/4,-DIAMETER*5/8,DIAMETER*5/8,-DIAMETER,DIAMETER*5/8,-DIAMETER);
                         stormIcons.endShape();
