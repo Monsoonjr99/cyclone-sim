@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.11 (2021-08-06):
+    * Fix to storm icons to make arms truly flush with the body
 v0.3.10 (2021-03-17):
     * Update to Atlantic and Eastern Pacific name lists
         > Dorian and Laura replaced with Dexter and Leah
