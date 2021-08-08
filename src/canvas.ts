@@ -67,13 +67,20 @@ let scrollHandler : (amt : number)=>void;
 // Ratio for converting e.movementX/e.movementY from screen coordinates to canvas coordinates
 const screenToCanvas = pixelRatio / window.devicePixelRatio;
 
+// Initial mousedown coordinate for determining when to begin a drag
+let dragStartScreenX : number;
+let dragStartScreenY : number;
+
 canvas.addEventListener('mousedown', e=>{
-    if(e.button === 0)
+    if(e.button === 0){
         mouseIsDown = true;
+        dragStartScreenX = e.screenX;
+        dragStartScreenY = e.screenY;
+    }
 });
 
 canvas.addEventListener('mousemove', e=>{
-    if(mouseIsDown){
+    if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 10)){
         mouseBeingDragged = true;
         if(dragHandler)
             dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, false);

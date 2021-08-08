@@ -1,3 +1,5 @@
+// Functions for drawing storm icons, tracks, etc. on the canvas
+
 // -- Storm Icons -- //
 
 export function drawStormIcon(ctx : CanvasRenderingContext2D, x : number, y : number, size : number, shem : boolean, rotation : number, arms : number, color : string){
@@ -22,4 +24,35 @@ export function drawStormIcon(ctx : CanvasRenderingContext2D, x : number, y : nu
     ctx.arc(0, 0, 1/2, 0, 2 * Math.PI);
     ctx.fill();
     ctx.restore();
+}
+
+interface StormIconAnchor{
+    alpha : number;     // offset angle
+    omega : number;     // angular velocity in radians/second
+}
+
+let stormIconAnchors : WeakMap<object, StormIconAnchor> = new WeakMap();
+
+// creates "anchors" for storm icons to allow smoothly changing their rotation speed
+// returns the angle of rotation given their rotation rate and time
+export function anchorStormIconRotation(key : object, omega : number, time : number){
+    let anchor : StormIconAnchor;
+    // attempt to fetch anchor for the given key; create new anchor if none exists
+    if(stormIconAnchors.has(key))
+        anchor = stormIconAnchors.get(key);
+    else{
+        anchor = {
+            alpha: -omega * time / 1000, // results in an angle of 0 at the initialization time
+            omega
+        };
+        stormIconAnchors.set(key, anchor);
+    }
+    // calculate the rotation angle from the offset (alpha), the rotation rate (omega), and time
+    let theta = anchor.alpha + anchor.omega * time / 1000;
+    // if the rotation rate has changed since the last call to anchorStormIconRotation(), calculate new alpha and update anchor values
+    if(omega !== anchor.omega){
+        anchor.alpha = theta - omega * time / 1000;
+        anchor.omega = omega;
+    }
+    return theta;
 }
