@@ -80,7 +80,7 @@ canvas.addEventListener('mousedown', e=>{
 });
 
 canvas.addEventListener('mousemove', e=>{
-    if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 10)){
+    if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 15)){
         mouseBeingDragged = true;
         if(dragHandler)
             dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, false);

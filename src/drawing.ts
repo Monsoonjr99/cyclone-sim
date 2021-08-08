@@ -2,27 +2,42 @@
 
 // -- Storm Icons -- //
 
-export function drawStormIcon(ctx : CanvasRenderingContext2D, x : number, y : number, size : number, shem : boolean, rotation : number, arms : number, color : string){
+export function drawStormIcon(ctx : CanvasRenderingContext2D, x : number, y : number, size : number, shem : boolean, rotation : number, arms : number, fill : string, stroke? : string){
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(size, size);
     if(shem)
         ctx.scale(1, -1);
     ctx.rotate(-rotation);
-    ctx.fillStyle = color;
-    for(let i = 0; i < arms; i++){
-        if(i > 0)
-            ctx.rotate(2 * Math.PI / arms);
+    ctx.fillStyle = fill;
+    if(stroke)
+        ctx.strokeStyle = stroke;
+    ctx.lineWidth = 0.1;
+    ctx.lineCap = 'round';
+    function drawIcon(doFill : boolean, doStroke : boolean){
         ctx.beginPath();
-        ctx.moveTo(5/8, -1);                                // tip of arm
-        ctx.bezierCurveTo(5/8, -1, -1/2, -7/8, -1/2, 0);    // outer curve of arm
-        ctx.lineTo(0, 0);                                   // to center of icon
-        ctx.bezierCurveTo(-1/4, -5/8, 5/8, -1, 5/8, -1);    // inner curve of arm
-        ctx.fill();
+        ctx.arc(0, 0, 1/2, 0, 2 * Math.PI);
+        if(doStroke)
+            ctx.stroke();
+        if(doFill)
+            ctx.fill();
+        for(let i = 0; i < arms; i++){
+            if(i > 0)
+                ctx.rotate(2 * Math.PI / arms);
+            ctx.beginPath();
+            ctx.moveTo(5/8, -1);                                // tip of arm
+            ctx.bezierCurveTo(5/8, -1, -1/2, -7/8, -1/2, 0);    // outer curve of arm
+            ctx.lineTo(0, 0);                                   // to center of icon
+            ctx.bezierCurveTo(-1/4, -5/8, 5/8, -1, 5/8, -1);    // inner curve of arm
+            if(doStroke)
+                ctx.stroke();
+            if(doFill)
+                ctx.fill();
+        }
     }
-    ctx.beginPath();
-    ctx.arc(0, 0, 1/2, 0, 2 * Math.PI);
-    ctx.fill();
+    if(stroke)
+        drawIcon(false, true);
+    drawIcon(true, false);
     ctx.restore();
 }
 
