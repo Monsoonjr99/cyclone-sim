@@ -62,7 +62,7 @@ let mouseBeingDragged = false;
 
 let clickHandler : (x : number, y : number)=>void;
 let dragHandler : (dx : number, dy : number, dragEnd : boolean)=>void;
-let scrollHandler : (amt : number)=>void;
+let scrollHandler : (amt : number, x : number, y : number)=>void;
 
 // Ratio for converting e.movementX/e.movementY from screen coordinates to canvas coordinates
 const screenToCanvas = pixelRatio / window.devicePixelRatio;
@@ -100,7 +100,7 @@ canvas.addEventListener('mouseup', e=>{
 
 canvas.addEventListener('wheel', e=>{
     if(scrollHandler)
-        scrollHandler(e.deltaY / 125);
+        scrollHandler(e.deltaY / 125, e.clientX * pixelRatio, e.clientY * pixelRatio);
 });
 
 export function handleClick(handler : (x : number, y : number)=>void){
@@ -111,6 +111,6 @@ export function handleDrag(handler : (/* beginX : number, beginY : number, xOffs
     dragHandler = handler;
 }
 
-export function handleScroll(handler : (amt : number)=>void){
+export function handleScroll(handler : (amt : number, x : number, y : number)=>void){
     scrollHandler = handler;
 }

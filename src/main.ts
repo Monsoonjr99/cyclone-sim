@@ -52,8 +52,8 @@ canvas.handleDrag((dx, dy, end)=>{
     viewer.panXY(dx, dy);
 });
 
-canvas.handleScroll(amt=>{
-    viewer.changeZoom(-amt);
+canvas.handleScroll((amt, x, y)=>{
+    viewer.changeZoom(-amt, x, y);
 });
 
 canvas.startAnimation();

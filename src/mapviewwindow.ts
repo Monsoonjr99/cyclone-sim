@@ -25,9 +25,13 @@ let center : PLCoord = {
 };
 let zoomLvl = 0;
 
-// calculate actual zoom ratio for a zoom level
+// zoom-related constants
+const MAX_ZOOM_LEVEL = 12;
+const ZOOM_SCALER_BASE = 0.7;
+
+// calculate actual zoom scaler for a zoom level
 export function zoomAmt(){
-    return Math.pow(0.7, zoomLvl);
+    return Math.pow(ZOOM_SCALER_BASE, zoomLvl);
 }
 
 // properly mathematical mod for calculations
@@ -94,14 +98,23 @@ export function mapToCanvasCoordinates(phi : number, lambda : number) : XYCoord[
 }
 
 // controls
-export function changeZoom(v : number){
-    zoomLvl = Math.max(zoomLvl + v, 0);
+export function changeZoom(v : number, anchorX? : number, anchorY? : number){
+    let box0 = viewBox();
+    zoomLvl += v;
+    if(zoomLvl < 0)
+        zoomLvl = 0;
+    else if(zoomLvl > MAX_ZOOM_LEVEL)
+        zoomLvl = MAX_ZOOM_LEVEL;
+    else if(anchorX !== undefined && anchorY !== undefined){
+        let box1 = viewBox();
+        let dwidth = box1.width - box0.width; // change in lambda width
+        let dheight = box1.height - box0.height; // change in phi height
+        center.phi += dheight * (anchorY - canvasHeight / 2) / canvasHeight;
+        center.lambda -= dwidth * (anchorX - canvasWidth / 2) / canvasWidth;
+        center.lambda = normalizeLambda(center.lambda);
+    }
     clipPhi();
 }
-
-// export function anchoredZoom(x : number, y : number, v : number){
-
-// }
 
 export function panPL(dphi : number, dlambda : number){
     center.phi += dphi;
