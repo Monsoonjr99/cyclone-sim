@@ -4,7 +4,7 @@
   "description": "A browser-based tropical cyclone simulation game.",
   "private": true,
   "scripts": {
-    "start": "start parcel serve src/index.html && start http://localhost:1234",
+    "start": "parcel serve src/index.html",
     "build": "parcel build src/index.html"
   },
   "repository": {
