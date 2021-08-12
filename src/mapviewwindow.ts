@@ -83,14 +83,20 @@ export function canvasToMapCoordinate(x : number, y : number) : PLCoord{
     };
 }
 
-export function mapToCanvasCoordinates(phi : number, lambda : number) : XYCoord[]{
+export function mapToCanvasCoordinates(phi : number, lambda : number, clip = 1) : XYCoord[]{
     let coords : XYCoord[] = [];
     let box = viewBox();
     let y = canvasHeight * (box.north - phi) / box.height;
+    // "clip" defines how far beyond the left/right edges of the canvas to return x values for, in terms of the canvas width
+    // a clip of 1 returns x values only in the range [0, canvasWidth)
+    // while 2 returns x values in the range [-canvasWidth/2, 3*canvasWidth/2)
+    let clipWest = normalizeLambda(box.west - box.width * (clip - 1) / 2);
+    let clipLeft = -canvasWidth * (clip - 1) / 2;
+    let clipRight = canvasWidth * (clip + 1) / 2;
     // loop through all x coordinates that match lambda
     for(
-        let x = canvasWidth * mod(lambda - box.west, 2 * LAMBDA_MAX) / box.width;
-        x < canvasWidth;
+        let x = clipLeft + canvasWidth * mod(lambda - clipWest, 2 * LAMBDA_MAX) / box.width;
+        x < clipRight;
         x += 2 * LAMBDA_MAX / box.width * canvasWidth
         )
         coords.push({x, y});
