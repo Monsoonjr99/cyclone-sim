@@ -2,17 +2,17 @@ import * as canvas from "./canvas";
 import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
-import mapTestURL from 'url:../resources/earth.png';
+import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 
 // This is currently preliminary testing code
 
 console.log('Hello World!');
 console.log('Currently testing map viewer');
 
-let mapTest : HTMLImageElement;
+let mapImage : HTMLImageElement;
 
 (async ()=>{
-    mapTest = await loadImg(mapTestURL);
+    mapImage = await loadImg(mapImageURL);
 })();
 
 let test = [];
@@ -23,8 +23,8 @@ let redIcon = {phi: 0, lambda: 0, shem: Math.random() < 0.5, sel: false};
 canvas.setDraw((ctx, time)=>{
     ctx.fillStyle = '#0A379B';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if(mapTest){
-        viewer.drawMap(ctx, mapTest);
+    if(mapImage){
+        viewer.drawMap(ctx, mapImage);
         let redIconCoords = viewer.mapToCanvasCoordinates(redIcon.phi, redIcon.lambda, 1.5);
         for(let c of redIconCoords)
             drawStormIcon(ctx, c.x, c.y, 20 / viewer.zoomAmt(), redIcon.shem, anchorStormIconRotation(redIcon, omegaTest, time), 2, '#F00', redIcon.sel ? '#FFF' : undefined);
