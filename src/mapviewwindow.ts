@@ -2,6 +2,7 @@
 // supplies conversions between latitude/longitude coordinates (PL for Phi-Lambda) and canvas coordinates (XY)
 
 import {width as canvasWidth, height as canvasHeight} from "./canvas";
+import { mod } from "./util";
 
 // definition constants of latitude/longitude scale bounds
 const PHI_MAX = 90;
@@ -26,17 +27,12 @@ let center : PLCoord = {
 let zoomLvl = 0;
 
 // zoom-related constants
-const MAX_ZOOM_LEVEL = 12;
+const MAX_ZOOM_LEVEL = 8;
 const ZOOM_SCALER_BASE = 0.7;
 
 // calculate actual zoom scaler for a zoom level
 export function zoomAmt(){
     return Math.pow(ZOOM_SCALER_BASE, zoomLvl);
-}
-
-// properly mathematical mod for calculations
-function mod(a : number, b : number){
-    return (a % b + b) % b;
 }
 
 // normalize lambda for values outside of [-180, 180)
@@ -133,4 +129,35 @@ export function panXY(dx : number, dy : number){
     let dlambda = box.width * -dx / canvasWidth;
     let dphi = box.height * dy / canvasHeight;
     panPL(dphi, dlambda);
+}
+
+// map rendering
+export function drawMap(ctx : CanvasRenderingContext2D, mapImg : HTMLImageElement){
+    const box = viewBox();
+    const imgX = (lambda : number)=>(lambda + LAMBDA_MAX) / (2 * LAMBDA_MAX) * mapImg.width;
+    const imgY = (phi : number)=>(PHI_MAX - phi) / (2 * PHI_MAX) * mapImg.height;
+    const srcY = imgY(box.north);
+    const srcH = box.height / (2 * PHI_MAX) * mapImg.height;
+    for(let x = -canvasWidth * (box.west + LAMBDA_MAX) / box.width; x < canvasWidth; x += 2 * LAMBDA_MAX / box.width * canvasWidth){
+        let dstX : number;
+        let srcX : number;
+        let dstW : number;
+        let srcW : number;
+        if(x < 0){
+            dstX = 0;
+            srcX = imgX(box.west);
+        }else{
+            dstX = x;
+            srcX = 0;
+        }
+        const xRight = x + 2 * LAMBDA_MAX / box.width * canvasWidth;
+        if(xRight >= canvasWidth){
+            dstW = canvasWidth - dstX;
+            srcW = imgX(box.east) - srcX;
+        }else{
+            dstW = xRight - dstX;
+            srcW = mapImg.width - srcX;
+        }
+        ctx.drawImage(mapImg, srcX, srcY, srcW, srcH, dstX, 0, dstW, canvasHeight);
+    }
 }
