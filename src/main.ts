@@ -10,28 +10,38 @@ console.log('Hello World!');
 console.log('Currently testing map viewer');
 
 let mapImage : HTMLImageElement;
+let ready = false;
 
 (async ()=>{
     mapImage = await loadImg(mapImageURL);
+    ready = true;
 })();
 
-let test = [];
+interface TestIcon{
+    phi : number;
+    lambda : number;
+    sh : boolean;
+    omega : number;
+}
 
-let omegaTest = Math.PI * 2 / 3;
-let redIcon = {phi: 0, lambda: 0, shem: Math.random() < 0.5, sel: false};
+let test : TestIcon[] = [];
+let selectedIcon : TestIcon;
+
+function iconSize(){
+    const BASE_ICON_SIZE = 40;
+    const MIN_ICON_SIZE = 15;
+    return Math.max(MIN_ICON_SIZE / viewer.zoomAmt(), BASE_ICON_SIZE);
+}
 
 canvas.setDraw((ctx, time)=>{
     ctx.fillStyle = '#0A379B';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if(mapImage){
+    if(ready){
         viewer.drawMap(ctx, mapImage);
-        let redIconCoords = viewer.mapToCanvasCoordinates(redIcon.phi, redIcon.lambda, 1.5);
-        for(let c of redIconCoords)
-            drawStormIcon(ctx, c.x, c.y, 20 / viewer.zoomAmt(), redIcon.shem, anchorStormIconRotation(redIcon, omegaTest, time), 2, '#F00', redIcon.sel ? '#FFF' : undefined);
         for(let i = 0; i < test.length; i++){
             let coords = viewer.mapToCanvasCoordinates(test[i].phi, test[i].lambda, 1.5);
             for(let c of coords)
-                drawStormIcon(ctx, c.x, c.y, 10 / viewer.zoomAmt(), test[i].sh, anchorStormIconRotation(test[i], omegaTest * 1.2, time), 2, '#FFF');
+                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), 2, '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
         }
     }else{
         drawStormIcon(ctx, canvas.width/2, canvas.height/2, 300, false, 2 * Math.PI * time / 2500, 2, '#00F');
@@ -39,34 +49,51 @@ canvas.setDraw((ctx, time)=>{
 });
 
 canvas.handleClick((x, y)=>{
-    let redIconCoords = viewer.mapToCanvasCoordinates(redIcon.phi, redIcon.lambda);
-    let redIconClicked = false;
-    for(let c of redIconCoords){
-        if(Math.hypot(x - c.x, y - c.y) < 10 / viewer.zoomAmt())
-            redIconClicked = true;
-    }
-    if(redIconClicked){
-        if(omegaTest >= 4 * Math.PI)
-            omegaTest = Math.PI * 2 / 3;
-        else
-            omegaTest += Math.PI / 3;
-        redIcon.sel = !redIcon.sel;
-    }else{
-        let PL = viewer.canvasToMapCoordinate(x, y);
-        test.push({
-            phi: PL.phi,
-            lambda: PL.lambda,
-            sh: PL.phi < 0
-        });
+    if(ready){
+        let iconClicked = false;
+        for(let icon of test){
+            let XY = viewer.mapToCanvasCoordinates(icon.phi, icon.lambda);
+            for(let c of XY){
+                if(Math.hypot(x - c.x, y - c.y) < iconSize()){
+                    if(selectedIcon === icon)
+                        selectedIcon = undefined;
+                    else
+                        selectedIcon = icon;
+                    iconClicked = true;
+                    if(icon.omega >= 4 * Math.PI)
+                        icon.omega = Math.PI * 2 / 3;
+                    else
+                        icon.omega += Math.PI / 3;
+                    break;
+                }
+            }
+            if(iconClicked)
+                break;
+        }
+        if(!iconClicked){
+            if(selectedIcon)
+                selectedIcon = undefined;
+            else{
+                let PL = viewer.canvasToMapCoordinate(x, y);
+                test.push({
+                    phi: PL.phi,
+                    lambda: PL.lambda,
+                    sh: PL.phi < 0,
+                    omega: Math.PI * 2 / 3
+                });
+            }
+        }
     }
 });
 
 canvas.handleDrag((dx, dy, end)=>{
-    viewer.panXY(dx, dy);
+    if(ready)
+        viewer.panXY(dx, dy);
 });
 
 canvas.handleScroll((amt, x, y)=>{
-    viewer.changeZoom(-amt, x, y);
+    if(ready)
+        viewer.changeZoom(-amt, x, y);
 });
 
 canvas.startAnimation();
