@@ -4,6 +4,10 @@ import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
 import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 
+import {foo} from './simtime';
+
+console.log(foo);
+
 // This is currently preliminary testing code
 
 console.log('Hello World!');

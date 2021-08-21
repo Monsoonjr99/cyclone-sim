@@ -26,7 +26,10 @@
   "homepage": "https://github.com/Monsoonjr99/cyclone-sim#readme",
   "devDependencies": {
     "@parcel/transformer-image": "^2.0.0-nightly.2400",
+    "@types/luxon": "^2.0.0",
     "parcel": "^2.0.0-nightly.776"
   },
-  "dependencies": {}
+  "dependencies": {
+    "luxon": "^2.0.2"
+  }
 }
