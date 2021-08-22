@@ -33,3 +33,10 @@ export function tickToFormattedDate(t: number, startYear: number): string{
         str += ' B.C.E.';
     return str;
 }
+
+// tick manipulation
+export function addToTick(t: number, startYear: number, hours: number, days = 0, months = 0, years = 0): number{
+    let startDT = DateTime.utc(startYear, 1, 1);
+    let resultTickDT = startDT.plus({hours: t}).plus({years}).plus({months}).plus({days}).plus({hours});
+    return resultTickDT.diff(startDT, 'hours').hours;
+}

@@ -3,12 +3,12 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
 import mapImageURL from 'url:../resources/nasabluemarble.jpg';
-import { tickToFormattedDate } from "./simtime";
+import { addToTick, tickToFormattedDate } from "./simtime";
 
 // This is currently preliminary testing code
 
 console.log('Hello World!');
-console.log('Currently testing map viewer');
+console.log('Currently testing time');
 
 let mapImage : HTMLImageElement;
 let ready = false;
@@ -85,7 +85,10 @@ canvas.handleClick((x, y)=>{
             }
         }
 
-        console.log(tickToFormattedDate(Math.floor(performance.now() / 10), 2021));
+        const TEST_START_YEAR = 2021;
+        let testTick = Math.floor(performance.now() / 10);
+        let testTick2 = addToTick(testTick, TEST_START_YEAR, 6, 1, 1, 1);
+        console.log(testTick, tickToFormattedDate(testTick, TEST_START_YEAR), testTick2, tickToFormattedDate(testTick2, TEST_START_YEAR));
     }
 });
 
