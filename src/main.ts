@@ -3,7 +3,7 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
 import mapImageURL from 'url:../resources/nasabluemarble.jpg';
-import { addToTick, tickToFormattedDate } from "./simtime";
+import { advanceLiveTick, liveTick, tickToFormattedDate } from "./simtime";
 
 // This is currently preliminary testing code
 
@@ -27,12 +27,17 @@ interface TestIcon{
 
 let test : TestIcon[] = [];
 let selectedIcon : TestIcon;
+let spawnIcon: TestIcon;
 
 function iconSize(){
     const BASE_ICON_SIZE = 40;
     const MIN_ICON_SIZE = 15;
     return Math.max(MIN_ICON_SIZE / viewer.zoomAmt(), BASE_ICON_SIZE);
 }
+
+let running = false;
+let clock: HTMLDivElement = document.querySelector('.clock');
+const TEST_START_YEAR = 2021;
 
 canvas.setDraw((ctx, time)=>{
     ctx.fillStyle = '#0A379B';
@@ -44,6 +49,15 @@ canvas.setDraw((ctx, time)=>{
             for(let c of coords)
                 drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), 2, '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
         }
+        if(spawnIcon){
+            let mousePos = canvas.getMousePos();
+            let phi = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y).phi;
+            drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), phi < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
+        }
+
+        if(running)
+            advanceLiveTick();
+        clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
         drawStormIcon(ctx, canvas.width/2, canvas.height/2, 300, false, 2 * Math.PI * time / 2500, 2, '#00F');
     }
@@ -51,44 +65,37 @@ canvas.setDraw((ctx, time)=>{
 
 canvas.handleClick((x, y)=>{
     if(ready){
-        let iconClicked = false;
-        for(let icon of test){
-            let XY = viewer.mapToCanvasCoordinates(icon.phi, icon.lambda);
-            for(let c of XY){
-                if(Math.hypot(x - c.x, y - c.y) < iconSize()){
-                    if(selectedIcon === icon)
-                        selectedIcon = undefined;
-                    else
-                        selectedIcon = icon;
-                    iconClicked = true;
-                    if(icon.omega >= 4 * Math.PI)
-                        icon.omega = Math.PI * 2 / 3;
-                    else
-                        icon.omega += Math.PI / 3;
-                    break;
+        if(spawnIcon){
+            let PL = viewer.canvasToMapCoordinate(x, y);
+            spawnIcon.phi = PL.phi;
+            spawnIcon.lambda = PL.lambda;
+            spawnIcon.sh = PL.phi < 0;
+            test.push(spawnIcon);
+            spawnIcon = undefined;
+        }else{
+            let iconClicked = false;
+            for(let icon of test){
+                let XY = viewer.mapToCanvasCoordinates(icon.phi, icon.lambda);
+                for(let c of XY){
+                    if(Math.hypot(x - c.x, y - c.y) < iconSize() / 2){
+                        if(selectedIcon === icon)
+                            selectedIcon = undefined;
+                        else
+                            selectedIcon = icon;
+                        iconClicked = true;
+                        if(icon.omega >= 4 * Math.PI)
+                            icon.omega = Math.PI * 2 / 3;
+                        else
+                            icon.omega += Math.PI / 3;
+                        break;
+                    }
                 }
+                if(iconClicked)
+                    break;
             }
-            if(iconClicked)
-                break;
-        }
-        if(!iconClicked){
-            if(selectedIcon)
+            if(!iconClicked && selectedIcon)
                 selectedIcon = undefined;
-            else{
-                let PL = viewer.canvasToMapCoordinate(x, y);
-                test.push({
-                    phi: PL.phi,
-                    lambda: PL.lambda,
-                    sh: PL.phi < 0,
-                    omega: Math.PI * 2 / 3
-                });
-            }
         }
-
-        const TEST_START_YEAR = 2021;
-        let testTick = Math.floor(performance.now() / 10);
-        let testTick2 = addToTick(testTick, TEST_START_YEAR, 6, 1, 1, 1);
-        console.log(testTick, tickToFormattedDate(testTick, TEST_START_YEAR), testTick2, tickToFormattedDate(testTick2, TEST_START_YEAR));
     }
 });
 
@@ -119,3 +126,29 @@ panelCollapseButton.addEventListener('mouseup', e=>{
         panelCollapseButton.innerText = '>';
     }
 });
+
+const spawnModeButton: HTMLButtonElement = document.querySelector('#spawn-button');
+
+spawnModeButton.addEventListener('mouseup', e=>{
+    if(spawnIcon)
+        spawnIcon = undefined;
+    else
+        spawnIcon = {
+            phi: 0,
+            lambda: 0,
+            sh: false,
+            omega: Math.PI * 2 / 3
+        };
+});
+
+const runPauseButton: HTMLButtonElement = document.querySelector('#run-pause-button');
+
+runPauseButton.addEventListener('mouseup', e=>{
+    if(running){
+        running = false;
+        runPauseButton.innerText = 'Run';
+    }else{
+        running = true;
+        runPauseButton.innerText = 'Pause';
+    }
+})

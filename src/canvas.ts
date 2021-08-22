@@ -71,6 +71,10 @@ const screenToCanvas = pixelRatio / window.devicePixelRatio;
 let dragStartScreenX : number;
 let dragStartScreenY : number;
 
+// Canvas (clientXY * pixelRatio) mouse position for getMousePos()
+let mouseCanvasX = 0;
+let mouseCanvasY = 0;
+
 canvas.addEventListener('mousedown', e=>{
     if(e.button === 0){
         mouseIsDown = true;
@@ -80,6 +84,8 @@ canvas.addEventListener('mousedown', e=>{
 });
 
 canvas.addEventListener('mousemove', e=>{
+    mouseCanvasX = e.clientX * pixelRatio;
+    mouseCanvasY = e.clientY * pixelRatio;
     if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 15)){
         mouseBeingDragged = true;
         if(dragHandler)
@@ -121,4 +127,12 @@ export function handleDrag(handler : (/* beginX : number, beginY : number, xOffs
 
 export function handleScroll(handler : (amt : number, x : number, y : number)=>void){
     scrollHandler = handler;
+}
+
+// general mouse position function for use outside of handlers (i.e. drawing relative to current mouse position)
+export function getMousePos(){
+    return {
+        x: mouseCanvasX,
+        y: mouseCanvasY
+    };
 }

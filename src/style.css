@@ -79,6 +79,22 @@ button.panel-collapse{
 	left: 0%;
 }
 
+.clock{
+	position: absolute;
+	top: 0%;
+	left: 25%;
+	height: 5%;
+	pointer-events: none;
+	color: white;
+	margin-top: 5px;
+	margin-left: 1em;
+	font-size: 18px;
+}
+
+.panel-collapsed + .clock{
+	left: 0%;
+}
+
 /* a{
 	display: inline-block;
 	text-decoration: none;
