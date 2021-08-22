@@ -103,3 +103,19 @@ canvas.handleScroll((amt, x, y)=>{
 });
 
 canvas.startAnimation();
+
+// UI stuff
+
+const panelCollapseButton: HTMLButtonElement = document.querySelector('.panel-collapse');
+
+panelCollapseButton.addEventListener('mouseup', e=>{
+    const PANEL_COLLAPSED = 'panel-collapsed';
+    let panel: HTMLDivElement = document.querySelector('.panel');
+    if(panel.classList.contains(PANEL_COLLAPSED)){
+        panel.classList.remove(PANEL_COLLAPSED);
+        panelCollapseButton.innerText = '<';
+    }else{
+        panel.classList.add(PANEL_COLLAPSED);
+        panelCollapseButton.innerText = '>';
+    }
+});

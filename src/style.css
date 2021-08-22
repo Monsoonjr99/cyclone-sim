@@ -1,9 +1,4 @@
 body{
-	/* background: #BBB;
-	background: -o-linear-gradient(#BBB,#F3F3F3);
-	background: -webkit-linear-gradient(#BBB,#F3F3F3);
-	background: -moz-linear-gradient(#BBB,#F3F3F3);
-	background: linear-gradient(#BBB,#F3F3F3); */
 	margin: 0px;
 	font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
@@ -33,10 +28,12 @@ body{
 }
 
 .panel{
-	background-color: #CCC;
-	width: 30%;
+	background-color: rgba(204, 204, 204, 0.7);
+	width: 25%;
 	height: 100%;
 	border-right: 1px solid black;
+	user-select: none;
+	-webkit-user-select: none;
 }
 
 button{
@@ -58,6 +55,28 @@ button:hover{
 
 button:active{
 	background-color: #AAA;
+}
+
+button.panel-collapse{
+	position: absolute;
+	left: 25%;
+	top: 45%;
+	width: 30px;
+	height: 10%;
+	margin-top: 0em;
+}
+
+.panel.panel-collapsed{
+	width: 0%;
+}
+
+.panel.panel-collapsed *{
+	display: none;
+}
+
+.panel-collapsed button.panel-collapse{
+	display: block;
+	left: 0%;
 }
 
 /* a{

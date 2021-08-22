@@ -98,6 +98,14 @@ canvas.addEventListener('mouseup', e=>{
     }
 });
 
+canvas.addEventListener('mouseleave', e=>{
+    if(mouseBeingDragged && dragHandler){
+        dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, true);
+        mouseIsDown = false;
+        mouseBeingDragged = false;
+    }
+});
+
 canvas.addEventListener('wheel', e=>{
     if(scrollHandler)
         scrollHandler(e.deltaY / 125, e.clientX * pixelRatio, e.clientY * pixelRatio);
