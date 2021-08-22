@@ -3,10 +3,7 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
 import mapImageURL from 'url:../resources/nasabluemarble.jpg';
-
-import {foo} from './simtime';
-
-console.log(foo);
+import { tickToFormattedDate } from "./simtime";
 
 // This is currently preliminary testing code
 
@@ -87,6 +84,8 @@ canvas.handleClick((x, y)=>{
                 });
             }
         }
+
+        console.log(tickToFormattedDate(Math.floor(performance.now() / 10), 2021));
     }
 });
 
