@@ -2,8 +2,9 @@ import * as canvas from "./canvas";
 import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadImg } from "./util";
+import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
+
 import mapImageURL from 'url:../resources/nasabluemarble.jpg';
-import { advanceLiveTick, liveTick, tickToFormattedDate } from "./simtime";
 
 // This is currently preliminary testing code
 
@@ -36,8 +37,10 @@ function iconSize(){
 }
 
 let running = false;
+let lastUpdate = 0;
 let clock: HTMLDivElement = document.querySelector('.clock');
 const TEST_START_YEAR = 2021;
+const TICK_FRAME_DELAY = 10; // real time milliseconds per simulated tick (has no bearing on rendering framerate)
 
 canvas.setDraw((ctx, time)=>{
     ctx.fillStyle = '#0A379B';
@@ -55,8 +58,11 @@ canvas.setDraw((ctx, time)=>{
             drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), phi < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
         }
 
-        if(running)
-            advanceLiveTick();
+        if(running){
+            let elapsedTicksSinceLastUpdate = Math.floor((time - lastUpdate) / TICK_FRAME_DELAY);
+            setLiveTick(liveTick + elapsedTicksSinceLastUpdate);
+            lastUpdate += elapsedTicksSinceLastUpdate * TICK_FRAME_DELAY;
+        }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
         drawStormIcon(ctx, canvas.width/2, canvas.height/2, 300, false, 2 * Math.PI * time / 2500, 2, '#00F');
@@ -148,6 +154,7 @@ runPauseButton.addEventListener('mouseup', e=>{
         running = false;
         runPauseButton.innerText = 'Run';
     }else{
+        lastUpdate = performance.now();
         running = true;
         runPauseButton.innerText = 'Pause';
     }
