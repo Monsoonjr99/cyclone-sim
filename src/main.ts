@@ -78,6 +78,7 @@ canvas.handleClick((x, y)=>{
             spawnIcon.sh = PL.phi < 0;
             test.push(spawnIcon);
             spawnIcon = undefined;
+            spawnModeButton.innerText = 'Spawn';
         }else{
             let iconClicked = false;
             for(let icon of test){
@@ -136,15 +137,18 @@ panelCollapseButton.addEventListener('mouseup', e=>{
 const spawnModeButton: HTMLButtonElement = document.querySelector('#spawn-button');
 
 spawnModeButton.addEventListener('mouseup', e=>{
-    if(spawnIcon)
+    if(spawnIcon){
         spawnIcon = undefined;
-    else
+        spawnModeButton.innerText = 'Spawn';
+    }else{
         spawnIcon = {
             phi: 0,
             lambda: 0,
             sh: false,
             omega: Math.PI * 2 / 3
         };
+        spawnModeButton.innerText = 'Cancel Spawn';
+    }
 });
 
 const runPauseButton: HTMLButtonElement = document.querySelector('#run-pause-button');

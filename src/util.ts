@@ -42,3 +42,23 @@ export function zeroPad(val: number | string, digits: number): string{
     }else
         return 'NaN';
 }
+
+// like Object.assign() but also clones nested objects
+export function deepClone<Type extends object>(target: any, source: Type): Type{
+    for(let i in source){
+        if(source.hasOwnProperty(i)){
+            let srcItem = source[i];
+            if(typeof srcItem === "object"){
+                let objClone = deepClone<any>({}, srcItem);
+                if(srcItem instanceof Array){
+                    target[i] = [];
+                    for(let j = 0; j < srcItem.length; j++)
+                        target[i][j] = objClone[j];
+                }else
+                    target[i] = objClone;
+            }else
+                target[i] = srcItem;
+        }
+    }
+    return target;
+}
