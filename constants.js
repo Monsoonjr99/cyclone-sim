@@ -118,6 +118,10 @@ const MAP_TYPES = [     // Land generation controls for different map types
         form: 'pixelmap',
         path: 'resources/Medi.png'
     }
+    {   // "NPAC" map type
+        form: 'pixelmap',
+        path: 'resources/NPAC.png'
+    }
 ];
 const EXTROP = 0;
 const SUBTROP = 1;
