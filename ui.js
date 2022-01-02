@@ -885,6 +885,7 @@ UI.init = function(){
         let desig_system;
         let name_list_num = 0;
         let name_list_page = 0;
+        let list_lists_mode = true;
         let aux_list = false;
         let prefix_box;
         let suffix_box;
@@ -912,20 +913,27 @@ UI.init = function(){
             if(sb && sb.designationSystem)
                 desig_system = sb.designationSystem;
             name_list_num = 0;
+            list_lists_mode = true;
             aux_list = false;
             refresh_num_section();
             refresh_name_section();
         };
 
-        const get_list = ()=>{
+        const list_array = ()=>{
             if(desig_system instanceof DesignationSystem){
-                let list;
                 if(aux_list)
-                    list = desig_system.naming.auxiliaryLists[name_list_num];
+                    return desig_system.naming.auxiliaryLists;
                 else
-                    list = desig_system.naming.mainLists[name_list_num];
-                return list;
+                    return desig_system.naming.mainLists;
             }
+        };
+        const get_list_from_index = (i)=>{
+            let list_arr = list_array();
+            if(list_arr)
+                return list_arr[i];
+        };
+        const get_list = ()=>{
+            return get_list_from_index(name_list_num);
         };
         const name_at = (i)=>{
             let txt;
@@ -1033,49 +1041,19 @@ UI.init = function(){
         }]);
 
         // name list selector
-        let list_selector = num_button.append(false,0,section_spacing*2,section_width,0,s=>{
-            let txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
-            text(txt,section_width/2,section_heights/2);
-        });
-
-        list_selector.append(false,0,0,30,10,s=>{ // next name list button
-            s.button('',true);
-            triangle(15,2,23,8,7,8);
+        let list_selector = num_button.append(false,0,section_spacing*2,section_width,section_heights,s=>{
+            let txt;
+            if(list_lists_mode)
+                txt = aux_list ? `Auxiliary Name Lists` : `Main Name Lists`;
+            else
+                txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
+            s.button(txt,true,18);
         },()=>{
             if(desig_system instanceof DesignationSystem){
-                name_list_num++;
-                if(!aux_list && name_list_num >= desig_system.naming.mainLists.length){
-                    if(desig_system.naming.auxiliaryLists.length > 0)
-                        aux_list = true;
-                    name_list_num = 0;
-                }else if(aux_list && name_list_num >= desig_system.naming.auxiliaryLists.length){
-                    if(desig_system.naming.mainLists.length > 0)
-                        aux_list = false;
-                    name_list_num = 0;
-                }
-                refresh_name_section();
-            }
-        }).append(false,0,18,30,10,s=>{ // prev name list button
-            s.button('',true);
-            triangle(15,8,23,2,7,2);
-        },()=>{
-            if(desig_system instanceof DesignationSystem){
-                name_list_num--;
-                if(name_list_num < 0){
-                    if(aux_list){
-                        if(desig_system.naming.mainLists.length > 0){
-                            aux_list = false;
-                            name_list_num = desig_system.naming.mainLists.length - 1;
-                        }else
-                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
-                    }else{
-                        if(desig_system.naming.auxiliaryLists.length > 0){
-                            aux_list = true;
-                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
-                        }else
-                            name_list_num = desig_system.naming.mainLists.length - 1;
-                    }
-                }
+                if(list_lists_mode)
+                    aux_list = !aux_list;
+                else
+                    list_lists_mode = true;
                 refresh_name_section();
             }
         });
@@ -1087,49 +1065,109 @@ UI.init = function(){
             let section = prev.append(false,0,section_spacing,my_width,section_heights,s=>{
                 let txt = '--';
                 let grey = true;
-                let name = name_at(index());
-                if(name){
-                    txt = name;
-                    grey = false;
+                if(list_lists_mode){
+                    let list = get_list_from_index(index());
+                    if(list){
+                        txt = `${aux_list ? ' Aux.' : ''} List ${index() + 1}`;
+                        grey = false;
+                    }
+                }else{
+                    let name = name_at(index());
+                    if(name){
+                        txt = name;
+                        grey = false;
+                    }
                 }
                 s.button(txt,true,18,grey);
             },()=>{
-                let name = name_at(index());
-                if(name)
-                    invoke_name_editor(index(),false);
+                if(list_lists_mode){
+                    let list = get_list_from_index(index());
+                    if(list){
+                        name_list_num = index();
+                        list_lists_mode = false;
+                        refresh_name_section();
+                    }
+                }else{
+                    let name = name_at(index());
+                    if(name)
+                        invoke_name_editor(index(),false);
+                }
             });
 
             section.append(false,my_width+10,0,30,12,s=>{
                 let grey = true;
-                let list = get_list();
-                if(list && index() <= list.length)
-                    grey = false;
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && index() <= list_arr.length)
+                        grey = false;
+                }else{
+                    let list = get_list();
+                    if(list && index() <= list.length)
+                        grey = false;
+                }
                 s.button('+',true,15,grey);
                 triangle(25,3,28,10,22,10);
             },()=>{
-                let list = get_list();
-                if(list && index() <= list.length)
-                    invoke_name_editor(index(), true);
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && index() <= list_arr.length){
+                        list_arr.splice(index(), 0, []);
+                        name_list_num = index();
+                        list_lists_mode = false;
+                    }
+                }else{
+                    let list = get_list();
+                    if(list && index() <= list.length)
+                        invoke_name_editor(index(), true);
+                }
             }).append(false,0,section_heights-12,30,12,s=>{
                 let grey = true;
-                let list = get_list();
-                if(list && (index() + 1) <= list.length)
-                    grey = false;
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && (index() + 1) <= list_arr.length)
+                        grey = false;
+                }else{
+                    let list = get_list();
+                    if(list && (index() + 1) <= list.length)
+                        grey = false;
+                }
                 s.button('+',true,15,grey);
                 triangle(25,9,28,2,22,2);
             },()=>{
-                let list = get_list();
-                if(list && (index() + 1) <= list.length)
-                    invoke_name_editor(index() + 1, true);
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && (index() + 1) <= list_arr.length){
+                        list_arr.splice(index() + 1, 0, []);
+                        name_list_num = index() + 1;
+                        list_lists_mode = false;
+                    }
+                }else{
+                    let list = get_list();
+                    if(list && (index() + 1) <= list.length)
+                        invoke_name_editor(index() + 1, true);
+                }
             });
 
             section.append(false,my_width+50,0,30,section_heights,s=>{
-                let grey = !name_at(index());
+                let grey;
+                if(list_lists_mode)
+                    grey = !get_list_from_index(index());
+                else
+                    grey = !name_at(index());
                 s.button('X',true,21,grey);
             },()=>{
-                if(name_at(index())){
+                if(list_lists_mode){
+                    if(get_list_from_index(index())){
+                        let list_arr = list_array();
+                        areYouSure.dialog(()=>{
+                            list_arr.splice(index(), 1);
+                            if(list_arr.length <= name_list_page * name_sections && list_arr.length > 0)
+                                name_list_page--;
+                        }, `Delete ${aux_list ? 'Aux. ' : ''} List ${index() + 1}?`);
+                    }
+                }else if(name_at(index())){
                     let list = get_list();
-                    list.splice(index(),1);
+                    list.splice(index(), 1);
                     if(list.length <= name_list_page * name_sections && list.length > 0)
                         name_list_page--;
                 }
@@ -1154,13 +1192,13 @@ UI.init = function(){
                 name_list_page--;
         }).append(false,50,0,30,section_heights,s=>{
             let grey = true;
-            let list = get_list();
+            let list = list_lists_mode ? list_array() : get_list();
             if(list && (name_list_page + 1) * name_sections < list.length)
                 grey = false;
             s.button('',true,18,grey);
             triangle(26,14,4,4,4,24);
         },()=>{
-            let list = get_list();
+            let list = list_lists_mode ? list_array() : get_list();
             if(list && (name_list_page + 1) * name_sections < list.length)
                 name_list_page++;
         });
@@ -1171,6 +1209,7 @@ UI.init = function(){
             prefix_box.enterFunc();
             suffix_box.enterFunc();
             editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            list_lists_mode = true;
             aux_list = false;
             name_list_num = 0;
             name_list_page = 0;
