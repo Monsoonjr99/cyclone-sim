@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.13 (2022-01-02):
+    * Designations editor improvements
+        > Main and auxiliary name lists listed for easier navigation
+        > Can now add and remove name lists
 v0.3.12 (2021-12-31):
     * Updates to several name lists
 v0.3.11 (2021-08-06):
