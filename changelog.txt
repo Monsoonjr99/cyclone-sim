@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.14 (2022-04-28):
+    * Replaced retired names for Atlantic, Western Pacific, and PAGASA name lists
 v0.3.13 (2022-01-02):
     * Designations editor improvements
         > Main and auxiliary name lists listed for easier navigation
