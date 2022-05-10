@@ -230,13 +230,13 @@ class Scale{
 
 Scale.saffirSimpson = new Scale({
     displayName: 'Saffir-Simpson',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    colorSchemeDisplayNames: ['Classic','Wiki','Wiki (Old)'],
     flavorDisplayNames: ['Hurricane','Typhoon','Cyclone'],
     classifications: [
         {
             threshold: 0,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: ['rgb(20,20,230)','#5ebaff','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff','#5ebaff'],
             symbol: 'D',
             arms: 0,
             stormNom: 'Tropical Depression',
@@ -246,8 +246,8 @@ Scale.saffirSimpson = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: ['rgb(20,230,20)','#00faf4','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4','#00faf4'],
             symbol: 'S',
             stormNom: 'Tropical Storm',
             subtropicalStormNom: 'Subtropical Storm',
@@ -256,7 +256,7 @@ Scale.saffirSimpson = new Scale({
         },
         {
             threshold: 64,
-            color: ['rgb(230,230,20)','#ffffcc'],
+            color: ['rgb(230,230,20)','#fff795','#ffffcc'],
             symbol: '1',
             stormNom: ['Hurricane','Typhoon','Cyclone'],
             stat: ['Hurricanes','Typhoons','Cyclones'],
@@ -264,13 +264,13 @@ Scale.saffirSimpson = new Scale({
         },
         {
             threshold: 83,
-            color: ['rgb(240,170,20)','#ffe775'],
+            color: ['rgb(240,170,20)','#ffd821','#ffe775'],
             symbol: '2',
             cName: 'Category 2'
         },
         {
             threshold: 96,
-            color: ['rgb(240,20,20)','#ffc140'],
+            color: ['rgb(240,20,20)','#ff8f20','#ffc140'],
             symbol: '3',
             stormNom: ['Major Hurricane','Typhoon','Cyclone'],
             stat: ['Major Hurricanes','Category 3+','Category 3+'],
@@ -278,13 +278,13 @@ Scale.saffirSimpson = new Scale({
         },
         {
             threshold: 113,
-            color: ['rgb(250,40,250)','#ff8f20'],
+            color: ['rgb(250,40,250)','#ff6060','#ff8f20'],
             symbol: '4',
             cName: 'Category 4'
         },
         {
             threshold: 130,
-            color: ['rgb(250,40,250)','#ff8f20'],
+            color: ['rgb(250,40,250)','#ff6060','#ff8f20'],
             symbol: '4',
             stormNom: ['Major Hurricane','Super Typhoon','Cyclone'],
             stat: [undefined,'Super Typhoons'],
@@ -292,7 +292,7 @@ Scale.saffirSimpson = new Scale({
         },
         {
             threshold: 137,
-            color: ['rgb(250,140,250)','#ff6060'],
+            color: ['rgb(250,140,250)','#c464d9','#ff6060'],
             symbol: '5',
             stat: 'Category 5s',
             cName: 'Category 5'
@@ -302,7 +302,7 @@ Scale.saffirSimpson = new Scale({
 
 Scale.extendedSaffirSimpson = new Scale({
     displayName: 'Extended Saffir-Simpson',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    colorSchemeDisplayNames: ['Classic','Wiki (HHW)'],
     flavorDisplayNames: ['Hurricane','Typhoon','Cyclone'],
     classifications: [
         {
@@ -414,13 +414,13 @@ Scale.extendedSaffirSimpson = new Scale({
 Scale.australian = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
     displayName: 'Australian',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    colorSchemeDisplayNames: ['Classic','Wiki','Wiki (Old)'],
     flavorDisplayNames: ['Cyclone'],
     classifications: [
         {
             threshold: 0,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: ['rgb(20,20,230)','#5ebaff','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff','#5ebaff'],
             symbol: 'D',
             arms: 0,
             stormNom: 'Tropical Depression',
@@ -430,8 +430,8 @@ Scale.australian = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: ['rgb(20,230,20)','#00faf4','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4','#00faf4'],
             symbol: '1',
             stormNom: 'Tropical Cyclone',
             subtropicalStormNom: 'Subtropical Cyclone',
@@ -440,29 +440,29 @@ Scale.australian = new Scale({
         },
         {
             threshold: 48,
-            color: ['rgb(180,230,20)','#ccffff'],
-            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            color: ['rgb(180,230,20)','#B4FDA8','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#B4FDA8','#ccffff'],
             symbol: '2',
             stat: 'Category 2+',
             cName: 'Category 2'
         },
         {
             threshold: 64,
-            color: ['rgb(230,230,20)','#ffffcc'],
+            color: ['rgb(230,230,20)','#FFD821','#ffffcc'],
             symbol: '3',
             stat: 'Category 3+',
             cName: 'Category 3'
         },
         {
             threshold: 86,
-            color: ['rgb(240,20,20)','#ffc140'],
+            color: ['rgb(240,20,20)','#FF6060','#ffc140'],
             symbol: '4',
             stat: 'Category 4+',
             cName: 'Category 4'
         },
         {
             threshold: 108,
-            color: ['rgb(250,140,250)','#ff6060'],
+            color: ['rgb(250,140,250)','#C464D9','#ff6060'],
             symbol: '5',
             stat: 'Category 5s',
             cName: 'Category 5'
@@ -470,16 +470,16 @@ Scale.australian = new Scale({
     ]
 });
 
-Scale.typhoonCommittee = new Scale({
+Scale.JMA = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
-    displayName: 'WMO Typhoon Committee',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    displayName: 'Japan Meteorological Agency',
+    colorSchemeDisplayNames: ['Classic','Wiki','Wiki (Old)'],
     flavorDisplayNames: ['Typhoon'],
     classifications: [
         {
             threshold: 0,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: ['rgb(20,20,230)','#5ebaff','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff','#5ebaff'],
             symbol: 'D',
             arms: 0,
             stormNom: 'Tropical Depression',
@@ -489,8 +489,8 @@ Scale.typhoonCommittee = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: ['rgb(20,230,20)','#00faf4','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4','#00faf4'],
             symbol: 'S',
             stormNom: 'Tropical Storm',
             subtropicalStormNom: 'Subtropical Storm',
@@ -499,8 +499,8 @@ Scale.typhoonCommittee = new Scale({
         },
         {
             threshold: 48,
-            color: ['rgb(180,230,20)','#ccffff'],
-            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            color: ['rgb(180,230,20)','#b4fda8','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#b4fda8','#ccffff'],
             symbol: 'STS',
             subtropicalSymbol: 'SSS',
             stormNom: 'Severe Tropical Storm',
@@ -510,11 +510,25 @@ Scale.typhoonCommittee = new Scale({
         },
         {
             threshold: 64,
-            color: ['rgb(240,130,20)','#fdaf9a'],
+            color: ['rgb(240,130,20)','#FFD821','#fdaf9a'],
             symbol: 'TY',
             stormNom: 'Typhoon',
             stat: 'Typhoons',
-            cName: 'Typhoon'
+            cName: 'Strong Typhoon'
+        },
+        {
+            threshold: 85,
+            color: ['rgb(240,20,20)','#FF6060','#fdaf9a'],
+            symbol: 'VSTY',
+            stat: 'Very Strong Typhoons',
+            cName: 'Very Strong Typhoon'
+        },
+        {
+            threshold: 105,
+            color: ['rgb(250,140,250)','#C464D9','#fdaf9a'],
+            symbol: 'VTY',
+            stat: 'Violent Typhoons',
+            cName: 'Violent Typhoon'
         }
     ]
 });
@@ -522,14 +536,14 @@ Scale.typhoonCommittee = new Scale({
 Scale.IMD = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,   // technically should be 3-minute, but I didn't bother making a conversion for that
     displayName: 'India Meteorological Dept.',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    colorSchemeDisplayNames: ['Classic','Wiki','Wiki (Old)'],
     flavorDisplayNames: ['Cyclone'],
     namingThreshold: 2,
     classifications: [
         {
             threshold: 17,
-            color: ['rgb(75,75,245)','#80ccff'],
-            subtropicalColor: ['rgb(95,95,235)','#80ccff'],
+            color: ['rgb(75,75,245)','#72a9cd','#80ccff'],
+            subtropicalColor: ['rgb(95,95,235)','#72a9cd','#80ccff'],
             symbol: 'D',
             arms: 0,
             stormNom: 'Depression',
@@ -538,8 +552,8 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 28,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: ['rgb(20,20,230)','#5ebaff','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff','#5ebaff'],
             symbol: 'DD',
             arms: 0,
             stormNom: 'Deep Depression',
@@ -548,8 +562,8 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: ['rgb(20,230,20)','#00faf4','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4','#00faf4'],
             symbol: 'CS',
             subtropicalSymbol: 'SS',
             stormNom: 'Cyclonic Storm',
@@ -558,8 +572,8 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 48,
-            color: ['rgb(180,230,20)','#ccffff'],
-            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            color: ['rgb(180,230,20)','#b4fda8','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#b4fda8','#ccffff'],
             symbol: 'SCS',
             subtropicalSymbol: 'SSS',
             stormNom: 'Severe Cyclonic Storm',
@@ -568,7 +582,7 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 64,
-            color: ['rgb(230,230,20)','#ffffcc'],
+            color: ['rgb(230,230,20)','#ffd821','#ffffcc'],
             symbol: 'VSCS',
             subtropicalSymbol: 'VSSS',
             stormNom: 'Very Severe Cyclonic Storm',
@@ -577,7 +591,7 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 90,
-            color: ['rgb(240,20,20)','#ffc140'],
+            color: ['rgb(240,20,20)','#ff6060','#ffc140'],
             symbol: 'ESCS',
             subtropicalSymbol: 'ESSS',
             stormNom: 'Extremely Severe Cyclonic Storm',
@@ -586,7 +600,7 @@ Scale.IMD = new Scale({
         },
         {
             threshold: 120,
-            color: ['rgb(250,140,250)','#ff6060'],
+            color: ['rgb(250,140,250)','#c464d9','#ff6060'],
             symbol: 'SUCS',
             subtropicalSymbol: 'SUSS',
             stormNom: 'Super Cyclonic Storm',
@@ -599,14 +613,14 @@ Scale.IMD = new Scale({
 Scale.southwestIndianOcean = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
     displayName: 'Southwest Indian Ocean',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
+    colorSchemeDisplayNames: ['Classic','Wiki','Wiki (Old)'],
     flavorDisplayNames: ['Cyclone'],
     namingThreshold: 2,
     classifications: [
         {
             threshold: 0,
-            color: ['rgb(75,75,245)','#80ccff'],
-            subtropicalColor: ['rgb(95,95,235)','#80ccff'],
+            color: ['rgb(75,75,245)','#72a9cd','#80ccff'],
+            subtropicalColor: ['rgb(95,95,235)','#72a9cd','#80ccff'],
             symbol: 'Di',
             arms: 0,
             stormNom: 'Tropical Disturbance',
@@ -616,8 +630,8 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 28,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: ['rgb(20,20,230)','#5ebaff','#5ebaff'],
+            subtropicalColor: ['rgb(60,60,220)','#5ebaff','#5ebaff'],
             symbol: 'D',
             arms: 0,
             stormNom: 'Tropical Depression',
@@ -626,8 +640,8 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: ['rgb(20,230,20)','#00faf4','#00faf4'],
+            subtropicalColor: ['rgb(60,220,60)','#00faf4','#00faf4'],
             symbol: 'MTS',
             subtropicalSymbol: 'MSS',
             stormNom: 'Moderate Tropical Storm',
@@ -637,8 +651,8 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 48,
-            color: ['rgb(180,230,20)','#ccffff'],
-            subtropicalColor: ['rgb(180,220,85)','#ccffff'],
+            color: ['rgb(180,230,20)','#b4fda8','#ccffff'],
+            subtropicalColor: ['rgb(180,220,85)','#b4fda8','#ccffff'],
             symbol: 'STS',
             subtropicalSymbol: 'SSS',
             stormNom: 'Severe Tropical Storm',
@@ -648,7 +662,7 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 64,
-            color: ['rgb(230,230,20)','#ffffcc'],
+            color: ['rgb(230,230,20)','#FFD821','#ffffcc'],
             symbol: 'TC',
             subtropicalSymbol: 'SC',
             stormNom: 'Tropical Cyclone',
@@ -658,7 +672,7 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 90,
-            color: ['rgb(240,20,20)','#ffc140'],
+            color: ['rgb(240,20,20)','#FF6060','#ffc140'],
             symbol: 'ITC',
             subtropicalSymbol: 'ISC',
             stormNom: 'Intense Tropical Cyclone',
@@ -668,7 +682,7 @@ Scale.southwestIndianOcean = new Scale({
         },
         {
             threshold: 115,
-            color: ['rgb(250,140,250)','#ff6060'],
+            color: ['rgb(250,140,250)','#C464D9','#ff6060'],
             symbol: 'VITC',
             subtropicalSymbol: 'VISC',
             stormNom: 'Very Intense Tropical Cyclone',
@@ -683,7 +697,7 @@ Scale.presetScales = [
     Scale.saffirSimpson,
     Scale.extendedSaffirSimpson,
     Scale.australian,
-    Scale.typhoonCommittee,
+    Scale.JMA,
     Scale.IMD,
     Scale.southwestIndianOcean
 ];
