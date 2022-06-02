@@ -375,7 +375,7 @@ class Basin{
             DesignationSystem.centralPacific.clone().setCrossingModes(DESIG_CROSSMODE_KEEP, DESIG_CROSSMODE_KEEP)
             );
         this.addSubBasin(ids.wpac, undefined, 'Western Pacific', ids.nhem,
-            Scale.typhoonCommittee.clone(),
+            Scale.JMA.clone(),
             DesignationSystem.westernPacific.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
             );
         this.addSubBasin(ids.pagasa, undefined, 'PAGASA AoR', ids.wpac,
