@@ -1040,7 +1040,7 @@ class SeasonStats{
                         let d = s.record[i];
                         let in_subbasin = false;
                         let in_year = this.basin.getSeason(s.get_tick_from_record_index(i)) === year;
-                        for(let sbid of this.basin.forSubBasinChain(land.getSubBasin(d.pos.x, d.pos.y))){
+                        for(let sbid of this.basin.forSubBasinChain(land.getSubBasin(d.coord()))){
                             if(sbid === +this.subBasinId)
                                 in_subbasin = true;
                         }

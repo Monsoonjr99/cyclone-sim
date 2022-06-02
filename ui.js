@@ -1785,7 +1785,7 @@ UI.init = function(){
                         for(let q=0;q<t.record.length;q++){
                             let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                             let d = t.record[q];
-                            if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
+                            if(tropOrSub(d.type)&&land.inBasin(d.coord())){
                                 let clsn = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).get(d);
                                 if(!aSegment){
                                     aSegment = {};

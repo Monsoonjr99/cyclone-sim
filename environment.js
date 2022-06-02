@@ -538,23 +538,19 @@ class Land{
         }
     }
 
-    getSubBasin(x,y){
+    getSubBasin(long, lat){
+        if(long instanceof Coordinate)
+            ({longitude: long, latitude: lat} = long);
         if(this.earth){
             let img = this.basin.mapImg;
-            let long;
-            let lat;
-            if(this.westBound < this.eastBound)
-                long = map(x,0,WIDTH,this.westBound,this.eastBound);
-            else
-                long = map(x,0,WIDTH,this.westBound,this.eastBound+360);
             long = (long + 180) % 360 - 180;
-            lat = map(y,0,HEIGHT,this.northBound,this.southBound);
             let x1 = floor(map(long,-180,180,0,img.width));
             let y1 = floor(map(lat,90,-90,0,img.height-1));
             let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
             return img.pixels[index+2];
         }else{
             let d = this.mapDefinition;
+            let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
             x = floor(x*d);
             y = floor(y*d);
             if(this.map[x] && this.map[x][y]){
@@ -563,8 +559,8 @@ class Land{
         }
     }
 
-    inBasin(x,y){
-        let r = this.getSubBasin(x,y);
+    inBasin(long, lat){
+        let r = this.getSubBasin(long, lat);
         return this.basin.subInBasin(r);
     }
 
@@ -640,8 +636,8 @@ class Land{
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        let sget = (x,y)=>this.getSubBasin(x/scl,y/scl);
-        let bget = (x,y)=>this.inBasin(x/scl,y/scl);
+        let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        let bget = (x,y)=>this.inBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         let outOfSub = (s0,s1)=>{
             for(let sub of this.basin.forSubBasinChain(s1)){
                 if(sub===s0) return false;

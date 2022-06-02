@@ -167,7 +167,7 @@ class Storm{
         let data = t==="peak" ? this.windPeak : this.getStormDataByTick(t);
         let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
-        let clsnNom = data ? basin.getScale(land.getSubBasin(data.pos.x,data.pos.y)).getStormNom(data) : null;
+        let clsnNom = data ? basin.getScale(land.getSubBasin(data.coord())).getStormNom(data) : null;
         let hasbeenTC;
         if(t==='peak') hasbeenTC = this.TC;
         else if(t>=this.formationTime) hasbeenTC = true;
@@ -211,7 +211,7 @@ class Storm{
             let pr = advC.pressure;
             let st = advC.windSpeed;
             let pos = advC.pos;
-            let sb = land.getSubBasin(advX.pos.x,advX.pos.y);
+            let sb = land.getSubBasin(advX.coord());
             let scale = basin.getScale(sb);
             let scaleIconData = scale.getIcon(advX);
             let ty = advX.type;
@@ -281,7 +281,7 @@ class Storm{
                     if(this.record.length>1 && (selectedStorm===this || selectedStorm===undefined)){
                         let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
                         let adv = this.record[this.record.length-2];
-                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
+                        let col = this.basin.getScale(land.getSubBasin(adv.coord())).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[this.record.length-1].pos;
@@ -295,7 +295,7 @@ class Storm{
                             if(t>=this.dissipationTime) break;
                         }
                         let adv = this.record[n];
-                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
+                        let col = this.basin.getScale(land.getSubBasin(adv.coord())).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[n+1].pos;
@@ -321,8 +321,8 @@ class Storm{
         let year = basin.getSeason(-1);
         let cSeason = basin.fetchSeason(year,false,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
-        let sub = land.getSubBasin(data.pos.x,data.pos.y);
-        let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : sub;
+        let sub = land.getSubBasin(data.coord());
+        let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.coord()) : sub;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
         let inBasinTropical = isTropical && basin.subInBasin(sub);
@@ -633,7 +633,7 @@ class Storm{
             }
             for(let i=0;i<this.record.length;i++){
                 let d = this.record[i];
-                let sub = land.getSubBasin(d.pos.x,d.pos.y);
+                let sub = land.getSubBasin(d.coord());
                 let trop = tropOrSub(d.type);
                 let inBasinTrop = trop && basin.subInBasin(sub);
                 let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
@@ -1145,7 +1145,7 @@ class ActiveSystem extends StormData{
             let ded = round(pop*dedPot*0.0000017*pow(1.1,random(-1,1)));
             let lf = 0;
             if(!prevland && lnd) lf = 1;
-            let sub = land.getSubBasin(x,y);
+            let sub = land.getSubBasin(Coordinate.convertFromXY(basin.mapType,x,y));
             if(!this.fetchStorm().inBasinTC || basin.subInBasin(sub)){
                 this.fetchStorm().damage += dam;
                 this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
@@ -1247,7 +1247,7 @@ class ActiveSystem extends StormData{
             let r = this.storm.record;
             if(r.length>0 && tropOrSub(r[r.length-1].type)){
                 this.storm.dissipationTime = undefined;
-                if(land.inBasin(r[r.length-1].pos.x,r[r.length-1].pos.y)) this.storm.exitTime = undefined;
+                if(land.inBasin(r[r.length-1].coord())) this.storm.exitTime = undefined;
             }
             this.storm.current = this;
         }
