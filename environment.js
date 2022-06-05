@@ -197,6 +197,7 @@ class EnvField{
 
     get(x,y,z,noHem){
         try{
+            let longlat = Coordinate.convertFromXY(this.basin.mapType, x, y);
             if(!noHem) y = this.basin.hemY(y);
             if(this.mapFunc){
                 let u = {}; // utility argument
@@ -229,6 +230,7 @@ class EnvField{
                     }
                     return map(m,x[0],arr[0][0]+12,x[1],arr[0][1]);
                 };
+                u.coord = longlat;
                 u.vec = this.vec;
                 u.modifiers = this.modifiers || {};
                 let res = this.mapFunc(u,x,y,z);
