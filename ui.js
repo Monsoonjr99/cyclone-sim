@@ -699,7 +699,7 @@ UI.init = function(){
             loadable = false;
         }else{
             label = b.saveName;
-            if(b.format<EARLIEST_COMPATIBLE_FORMAT){
+            if(b.format < EARLIEST_COMPATIBLE_FORMAT || b.format > SAVE_FORMAT){
                 label += " [Incompatible]";
                 loadable = false;
             }else loadable = true;
@@ -715,7 +715,7 @@ UI.init = function(){
 
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
-        if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
+        if(b && b.format >= EARLIEST_COMPATIBLE_FORMAT && b.format <= SAVE_FORMAT){
             let basin = new Basin(b.saveName);
             basin.initialized.then(()=>{
                 basin.mount();

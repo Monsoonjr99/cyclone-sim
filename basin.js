@@ -824,7 +824,7 @@ class Season{
 
     load(data){
         let basin = this.basin;
-        if(data instanceof LoadData && data.format>=EARLIEST_COMPATIBLE_FORMAT){
+        if(data instanceof LoadData && data.format >= EARLIEST_COMPATIBLE_FORMAT && data.format <= SAVE_FORMAT){
             let oldStats = {};
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
@@ -977,7 +977,7 @@ class Season{
             for(let s in this.subBasinStats)
                 this.subBasinStats[s].update_most_intense(this);
             if(data.format===SAVE_FORMAT) this.modified = false;
-            else{
+            /* else if(simSettings.doAutosave){
                 db.transaction('rw',db.seasons,()=>{
                     let seas = {};
                     seas.format = SAVE_FORMAT;
@@ -996,7 +996,7 @@ class Season{
                 }).catch(e=>{
                     console.error(e);
                 });
-            }
+            } */
         }else this.envData = null;
     }
 }
