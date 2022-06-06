@@ -148,7 +148,7 @@ class EnvField{
         this.noise = [];
         this.accurateAfter = -1;
         this.version = attribs.version;
-        if(loadData instanceof LoadData){
+        if(loadData instanceof LoadData && loadData.value){
             if(loadData.value.version!==this.version) this.accurateAfter = this.basin.tick;
             else this.accurateAfter = loadData.value.accurateAfter;
         }
