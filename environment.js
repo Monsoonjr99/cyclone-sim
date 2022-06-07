@@ -183,7 +183,7 @@ class EnvField{
             for(let i=0;i<noiseC.length;i++){
                 if(noiseC[i] instanceof Array || (noiseC[i]==='' && a instanceof Array)){
                     let d;
-                    if(loadData instanceof LoadData){
+                    if(loadData instanceof LoadData && loadData.value){
                         d = loadData.value.noiseData[i];
                         d = loadData.sub(d);
                     }
