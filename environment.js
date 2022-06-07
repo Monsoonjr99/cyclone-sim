@@ -57,12 +57,14 @@ class EnvNoiseChannel extends NoiseChannel{
             let d = basin.fetchSeason(s);
             if(d && d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
                 t -= d.envRecordStarts;
-                let o = d.envData[this.field][this.index][t];
-                return {
-                    xo: o.x,
-                    yo: o.y,
-                    zo: o.z
-                };
+                if(t >= 0){
+                    let o = d.envData[this.field][this.index][t];
+                    return {
+                        xo: o.x,
+                        yo: o.y,
+                        zo: o.z
+                    };
+                }
             }
         }
     }

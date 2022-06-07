@@ -860,19 +860,23 @@ class Season{
                 }
                 if(data.format>ENVDATA_COMPATIBLE_FORMAT && obj.envData){
                     for(let f of basin.env.fieldList){
-                        let fd = this.envData[f] = {};
-                        for(let i=0;i<basin.env.fields[f].noise.length;i++){
-                            let nd = fd[i] = [];
-                            let sd = obj.envData[f][i];
-                            let x = [...sd.x];
-                            let y = [...sd.y];
-                            let z = [...sd.z];
-                            for(let j=0;j<x.length;j++){
-                                nd.push({
-                                    x: x[j],
-                                    y: y[j],
-                                    z: z[j]
-                                });
+                        if(obj.envData[f]){
+                            let fd = this.envData[f] = {};
+                            for(let i=0;i<basin.env.fields[f].noise.length;i++){
+                                if(obj.envData[f][i]){
+                                    let nd = fd[i] = [];
+                                    let sd = obj.envData[f][i];
+                                    let x = [...sd.x];
+                                    let y = [...sd.y];
+                                    let z = [...sd.z];
+                                    for(let j=0;j<x.length;j++){
+                                        nd.push({
+                                            x: x[j],
+                                            y: y[j],
+                                            z: z[j]
+                                        });
+                                    }
+                                }
                             }
                         }
                     }
