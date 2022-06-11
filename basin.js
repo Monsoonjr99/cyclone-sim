@@ -723,7 +723,7 @@ class Season{
         this.idSystemCache = {};
         this.subBasinStats = {};
         this.totalSystemCount = 0;
-        this.envRecordStarts = 0;
+        // this.envRecordStarts = 0;
         this.modified = true;
         this.lastAccessed = moment().valueOf();
         if(loaddata instanceof LoadData) this.load(loaddata);
@@ -783,10 +783,11 @@ class Season{
     save(forceStormRefs){
         let basin = this.basin;
         let val = {};
-        for(let p of [
-            'totalSystemCount',
-            'envRecordStarts'
-        ]) val[p] = this[p];
+        // for(let p of [
+        //     'totalSystemCount',
+        //     'envRecordStarts'
+        // ]) val[p] = this[p];
+        val.totalSystemCount = this.totalSystemCount;
         val.stats = {};
         for(let sub in this.subBasinStats){
             let s = this.subBasinStats[sub];
@@ -800,7 +801,7 @@ class Season{
                 let x = [];
                 let y = [];
                 let z = [];
-                for(let e of this.envData[f][i]){
+                for(let e of this.envData[f][i].val){
                     x.push(e.x);
                     y.push(e.y);
                     z.push(e.z);
@@ -808,6 +809,7 @@ class Season{
                 nd.x = new Float32Array(x);
                 nd.y = new Float32Array(y);
                 nd.z = new Float32Array(z);
+                nd.recordStart = this.envData[f][i].recordStart;
             }
         }
         val.systems = [];
@@ -828,10 +830,11 @@ class Season{
             let oldStats = {};
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
-                for(let p of [
-                    'totalSystemCount',
-                    'envRecordStarts'
-                ]) this[p] = obj[p] || 0;
+                // for(let p of [
+                //     'totalSystemCount',
+                //     'envRecordStarts'
+                // ]) this[p] = obj[p] || 0;
+                this.totalSystemCount = obj.totalSystemCount || 0;
                 if(data.format<FORMAT_WITH_SUBBASIN_SEASON_STATS){
                     for(let p of [
                         'depressions',
@@ -864,8 +867,10 @@ class Season{
                             let fd = this.envData[f] = {};
                             for(let i=0;i<basin.env.fields[f].noise.length;i++){
                                 if(obj.envData[f][i]){
-                                    let nd = fd[i] = [];
+                                    fd[i] = {};
+                                    let nd = fd[i].val = [];
                                     let sd = obj.envData[f][i];
+                                    fd[i].recordStart = sd.recordStart || obj.envRecordStarts || 0;
                                     let x = [...sd.x];
                                     let y = [...sd.y];
                                     let z = [...sd.z];
@@ -899,7 +904,7 @@ class Season{
                     this.envData = null;
                     return;
                 }
-                this.envRecordStarts = stats.pop() || 0;
+                let envRecordStarts = stats.pop() || 0;
                 oldStats.damage = stats.pop()*DAMAGE_DIVISOR || 0;
                 oldStats.deaths = stats.pop() || 0;
                 oldStats.ACE = stats.pop()/ACE_DIVISOR || 0;
@@ -939,7 +944,7 @@ class Season{
                             }
                             m.unshift(k);
                             if(!this.envData[f]) this.envData[f] = {};
-                            this.envData[f][j] = m;
+                            this.envData[f][j] = {recordStart: envRecordStarts, val: m};
                         }
                     }
                 }else this.envData = null;

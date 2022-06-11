@@ -56,9 +56,9 @@ class EnvNoiseChannel extends NoiseChannel{
             t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
             let d = basin.fetchSeason(s);
             if(d && d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
-                t -= d.envRecordStarts;
+                t -= d.envData[this.field][this.index].recordStart;
                 if(t >= 0){
-                    let o = d.envData[this.field][this.index][t];
+                    let o = d.envData[this.field][this.index].val[t];
                     return {
                         xo: o.x,
                         yo: o.y,
@@ -82,23 +82,26 @@ class EnvNoiseChannel extends NoiseChannel{
         let basin = this.basin;
         let seas = basin.fetchSeason(-1,true,true);
         let s = seas;
-        let startingRecord;
+        // let startingRecord;
         if(!s.envData){
             s.envData = {};
-            startingRecord = true;
+            // startingRecord = true;
         }
         s = s.envData;
         if(!s[this.field]){
             s[this.field] = {};
-            startingRecord = true;
+            // startingRecord = true;
         }
         s = s[this.field];
         if(!s[this.index]){
-            s[this.index] = [];
-            startingRecord = true;
+            s[this.index] = {
+                val: [],
+                recordStart: floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS
+            };
+            // startingRecord = true;
         }
-        s = s[this.index];
-        if(startingRecord) seas.envRecordStarts = floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS;
+        s = s[this.index].val;
+        // if(startingRecord) seas.envRecordStarts = floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS;
         s.push({
             x: this.xOff,
             y: this.yOff,
