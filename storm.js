@@ -305,7 +305,7 @@ class Storm{
             }
             if(selectedStorm===this && this.basin.viewingPresent() && this.current){
                 forecastTracks.clear();
-                let p = this.current.trackForecast.points;
+                let p = this.current.trackForecast/* .points */;
                 for(let n=0;n<p.length;n++){
                     forecastTracks.point(p[n].x,p[n].y);
                 }
@@ -981,10 +981,10 @@ class ActiveSystem extends StormData{
         this.interaction.fujiStatic = createVector(0); // A vector for 'static' use in the 'interact' method for Fujiwhara interaction
         this.interaction.shear = 0;
         this.kill = false;
-        this.trackForecast = {}; // Simple track forecast for now
-        this.trackForecast.stVec = createVector(0);
-        this.trackForecast.pVec = createVector(0);
-        this.trackForecast.points = [];
+        // this.trackForecast = {}; // Simple track forecast for now
+        // this.trackForecast.stVec = createVector(0);
+        // this.trackForecast.pVec = createVector(0);
+        this.trackForecast/* .points */ = [];
         if(data instanceof LoadData){
             this.storm = undefined;
             this.load(data);
@@ -1218,22 +1218,36 @@ class ActiveSystem extends StormData{
 
     doTrackForecast(){
         let basin = this.basin;
-        let p = this.trackForecast.pVec;
-        let s = this.trackForecast.stVec;
-        this.trackForecast.points = [];
+        // let p = this.trackForecast.pVec;
+        // let s = this.trackForecast.stVec;
+        let p = createVector(0);
+        let s = createVector(0);
+        this.trackForecast/* .points */ = [];
         p.set(this.pos);
+
+        let u = {};
+        let t = 0;
+        u.f = (field)=>basin.env.get(field, p.x, p.y, t);
+        u.land = ()=>land.get(Coordinate.convertFromXY(basin.mapType, p));
+
         for(let f=0;f<120;f++){
-            let t = basin.tick+f;
-            // Copy-paste from getSteering (will do something better in future)
-            let l = basin.env.get("LLSteering",p.x,p.y,t);
-            let u = basin.env.get("ULSteering",p.x,p.y,t);
-            let d = sqrt(this.depth);
-            let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
-            let y = lerp(l.y,u.y,d);
-            s.set(x,y);
+            t = basin.tick+f;
+            // // Copy-paste from getSteering (will do something better in future)
+            // let l = basin.env.get("LLSteering",p.x,p.y,t);
+            // let u = basin.env.get("ULSteering",p.x,p.y,t);
+            // let d = sqrt(this.depth);
+            // let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
+            // let y = lerp(l.y,u.y,d);
+            // s.set(x,y);
+
+            // use simulation mode's steering algorithm
+            if(STORM_ALGORITHM[basin.actMode].steering)
+                STORM_ALGORITHM[basin.actMode].steering(this, s, u);
+            else
+                STORM_ALGORITHM.defaults.steering(this, s, u);
 
             p.add(s);
-            if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
+            if((f+1)%ADVISORY_TICKS===0) this.trackForecast/* .points */.push({x:p.x,y:p.y});
         }
     }
 
