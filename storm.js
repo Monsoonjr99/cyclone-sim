@@ -977,9 +977,7 @@ class ActiveSystem extends StormData{
         super(basin);
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
-        this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
-        this.interaction.fujiStatic = createVector(0); // A vector for 'static' use in the 'interact' method for Fujiwhara interaction
-        this.interaction.shear = 0;
+        this.resetInteraction();
         this.kill = false;
         // this.trackForecast = {}; // Simple track forecast for now
         // this.trackForecast.stVec = createVector(0);
@@ -1038,7 +1036,7 @@ class ActiveSystem extends StormData{
             STORM_ALGORITHM[basin.actMode].steering(this,this.steering,u);
         else
             STORM_ALGORITHM.defaults.steering(this,this.steering,u);
-        this.steering.add(this.interaction.fuji);
+        // this.steering.add(this.interaction.fuji);
         let prevland = u.land();
         this.pos.add(this.steering);
 
@@ -1193,27 +1191,54 @@ class ActiveSystem extends StormData{
     //     this.steering.add(this.interaction.fuji); // Fujiwhara
     // }
 
-    interact(that,first){   // Quick and sloppy fujiwhara implementation
+    interact(that,first){   // Deals with multi-system interactions (i.e. Fujiwhara)
         let basin = this.basin;
-        let v = this.interaction.fujiStatic;
-        v.set(this.pos);
-        v.sub(that.pos);
-        let m = v.mag();
-        let r = map(that.lowerWarmCore,0,1,150,50);
-        if(m<r && m>0){
-            v.rotate(basin.hem(-TAU/4+((3/m)*TAU/16)));
-            v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
-            this.interaction.fuji.add(v);
-            this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
-            if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.kill = true;
+
+        let interactionAdd;
+        if(STORM_ALGORITHM[basin.actMode].interaction)
+            interactionAdd = STORM_ALGORITHM[basin.actMode].interaction(this, that);
+        else
+            interactionAdd = STORM_ALGORITHM.defaults.interaction(this, that);
+        for(let k in interactionAdd){
+            if(interactionAdd[k] instanceof p5.Vector)
+                this.interaction[k].add(interactionAdd[k]);
+            else
+                this.interaction[k] += interactionAdd[k];
         }
+        
+        // let v = createVector();
+        // v.set(this.pos);
+        // v.sub(that.pos);
+        // let m = v.mag();
+        // let r = map(that.lowerWarmCore,0,1,150,50);
+        // if(m<r && m>0){
+        //     v.rotate(basin.hem(-TAU/4+((3/m)*TAU/16)));
+        //     v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
+        //     this.interaction.fuji.add(v);
+        //     this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
+        //     if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.kill = true;
+        // }
+
         if(first) that.interact(this);
     }
 
     resetInteraction(){
-        let i = this.interaction;
-        i.fuji.set(0);
-        i.shear = 0;
+        let basin = this.basin;
+        let i = this.interaction = {};
+        // i.fuji.set(0);
+        // i.shear = 0;
+
+        let init;
+        if(STORM_ALGORITHM[basin.actMode].interactionInit)
+            init = STORM_ALGORITHM[basin.actMode].interactionInit;
+        else
+            init = STORM_ALGORITHM.defaults.interactionInit;
+        for(let k in init){
+            if(init[k])
+                i[k] = createVector();
+            else
+                i[k] = 0;
+        }
     }
 
     doTrackForecast(){
