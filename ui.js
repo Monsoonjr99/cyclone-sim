@@ -820,7 +820,7 @@ UI.init = function(){
     },function(){
         simSettings.setSmoothLandColor("toggle");
         if(land){
-            landBuffer.clear();
+            // landBuffer.clear();
             land.drawn = false;
         }
     });

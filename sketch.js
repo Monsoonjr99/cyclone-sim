@@ -69,8 +69,9 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    landBuffer = createBuffer(fullW,fullH,true);
-    landBuffer.noStroke();
+    landBuffer = createImage(fullW,fullH);
+    landBuffer.loadPixels();
+    // landBuffer.noStroke();
     outBasinBuffer = createBuffer(fullW,fullH,true);
     outBasinBuffer.noStroke();
     outBasinBuffer.fill(COLORS.outBasin);

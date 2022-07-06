@@ -607,6 +607,7 @@ class Land{
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(landVal){
                     for(let k=0;k<COLORS.land.length;k++){
                         if(landVal > COLORS.land[k][0]){
@@ -614,9 +615,12 @@ class Land{
                             if(simSettings.smoothLandColor && k>0){
                                 let c1 = COLORS.land[k-1][1];
                                 let f = map(landVal,COLORS.land[k][0],COLORS.land[k-1][0],0,1);
-                                landBuffer.fill(lerpColor(c,c1,f));
-                            }else landBuffer.fill(c);
-                            landBuffer.rect(i,j,1,1);
+                                c = lerpColor(c,c1,f);
+                            }
+                            landBuffer.pixels[index] = red(c);
+                            landBuffer.pixels[index + 1] = green(c);
+                            landBuffer.pixels[index + 2] = blue(c);
+                            landBuffer.pixels[index + 3] = 255;
                             break;
                         }
                     }
@@ -627,6 +631,7 @@ class Land{
                     if(j<H-1 && !lget(i,j+1)) touchingOcean = true;
                     if(touchingOcean) coastLine.rect(i,j,1,1);
                 }else{
+                    landBuffer.pixels[index + 3] = 0;
                     if(!bget(i,j)){
                         outBasinBuffer.rect(i,j,1,1);
                     }
@@ -659,6 +664,7 @@ class Land{
                 }
             }
         }
+        landBuffer.updatePixels();
         if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
@@ -726,7 +732,7 @@ class Land{
     }
 
     clear(){
-        landBuffer.clear();
+        // landBuffer.clear();
         outBasinBuffer.clear();
         coastLine.clear();
         landShader.clear();
