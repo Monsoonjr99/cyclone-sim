@@ -629,12 +629,24 @@ class Land{
                     if(j>0 && !lget(i,j-1)) touchingOcean = true;
                     if(i<W-1 && !lget(i+1,j)) touchingOcean = true;
                     if(j<H-1 && !lget(i,j+1)) touchingOcean = true;
-                    if(touchingOcean) coastLine.rect(i,j,1,1);
+                    if(touchingOcean){
+                        coastLine.pixels[index] = 0;
+                        coastLine.pixels[index + 1] = 0;
+                        coastLine.pixels[index + 2] = 0;
+                        coastLine.pixels[index + 3] = 255;
+                    }else
+                        coastLine.pixels[index + 3] = 0;
+                    outBasinBuffer.pixels[index + 3] = 0;
                 }else{
                     landBuffer.pixels[index + 3] = 0;
+                    coastLine.pixels[index + 3] = 0;
                     if(!bget(i,j)){
-                        outBasinBuffer.rect(i,j,1,1);
-                    }
+                        outBasinBuffer.pixels[index] = red(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 1] = green(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 2] = blue(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 3] = 255;
+                    }else
+                        outBasinBuffer.pixels[index + 3] = 0;
                     // for(let s of this.basin.forSubBasinChain(sget(i,j))){
                     //     let sb = this.basin.subBasins[s];
                     //     if(sb instanceof SubBasin && sb.mapOutline){
@@ -665,6 +677,8 @@ class Land{
             }
         }
         landBuffer.updatePixels();
+        outBasinBuffer.updatePixels();
+        coastLine.updatePixels();
         if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
@@ -733,8 +747,8 @@ class Land{
 
     clear(){
         // landBuffer.clear();
-        outBasinBuffer.clear();
-        coastLine.clear();
+        // outBasinBuffer.clear();
+        // coastLine.clear();
         landShader.clear();
         this.clearSnow();
         this.drawn = false;
