@@ -316,7 +316,7 @@ UI.init = function(){
                 else renderToDo = land.drawSnow();
             }
             if(simSettings.useShadows){
-                if(land.shaderDrawn) drawBuffer(landShader);
+                if(land.shaderDrawn) drawBuffer(landShadows);
                 else renderToDo = land.drawShader();
             }
             if(basin.env.displaying>=0 && !basin.env.layerIsOceanic){
@@ -820,7 +820,7 @@ UI.init = function(){
     },function(){
         simSettings.setSmoothLandColor("toggle");
         if(land){
-            landBuffer.clear();
+            // landBuffer.clear();
             land.drawn = false;
         }
     });

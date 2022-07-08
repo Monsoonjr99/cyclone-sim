@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.3.17 (2022-07-08):
+    * Tweak to make land and fx drawing a bit faster
 v0.3.16 (2022-06-06):
     + Added safeguard against loading basins in an older version which were saved in a newer version
     * Loading a season in a newer version where it must be converted to a new format no longer immediately autosaves the converted season

@@ -607,6 +607,7 @@ class Land{
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(landVal){
                     for(let k=0;k<COLORS.land.length;k++){
                         if(landVal > COLORS.land[k][0]){
@@ -614,9 +615,12 @@ class Land{
                             if(simSettings.smoothLandColor && k>0){
                                 let c1 = COLORS.land[k-1][1];
                                 let f = map(landVal,COLORS.land[k][0],COLORS.land[k-1][0],0,1);
-                                landBuffer.fill(lerpColor(c,c1,f));
-                            }else landBuffer.fill(c);
-                            landBuffer.rect(i,j,1,1);
+                                c = lerpColor(c,c1,f);
+                            }
+                            landBuffer.pixels[index] = red(c);
+                            landBuffer.pixels[index + 1] = green(c);
+                            landBuffer.pixels[index + 2] = blue(c);
+                            landBuffer.pixels[index + 3] = 255;
                             break;
                         }
                     }
@@ -625,11 +629,24 @@ class Land{
                     if(j>0 && !lget(i,j-1)) touchingOcean = true;
                     if(i<W-1 && !lget(i+1,j)) touchingOcean = true;
                     if(j<H-1 && !lget(i,j+1)) touchingOcean = true;
-                    if(touchingOcean) coastLine.rect(i,j,1,1);
+                    if(touchingOcean){
+                        coastLine.pixels[index] = 0;
+                        coastLine.pixels[index + 1] = 0;
+                        coastLine.pixels[index + 2] = 0;
+                        coastLine.pixels[index + 3] = 255;
+                    }else
+                        coastLine.pixels[index + 3] = 0;
+                    outBasinBuffer.pixels[index + 3] = 0;
                 }else{
+                    landBuffer.pixels[index + 3] = 0;
+                    coastLine.pixels[index + 3] = 0;
                     if(!bget(i,j)){
-                        outBasinBuffer.rect(i,j,1,1);
-                    }
+                        outBasinBuffer.pixels[index] = red(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 1] = green(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 2] = blue(COLORS.outBasin);
+                        outBasinBuffer.pixels[index + 3] = 255;
+                    }else
+                        outBasinBuffer.pixels[index + 3] = 0;
                     // for(let s of this.basin.forSubBasinChain(sget(i,j))){
                     //     let sb = this.basin.subBasins[s];
                     //     if(sb instanceof SubBasin && sb.mapOutline){
@@ -659,6 +676,9 @@ class Land{
                 }
             }
         }
+        landBuffer.updatePixels();
+        outBasinBuffer.updatePixels();
+        coastLine.updatePixels();
         if(simSettings.snowLayers && !this.snowDrawn){
             yield* this.drawSnow();
         }
@@ -670,34 +690,51 @@ class Land{
 
     *drawSnow(){
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
-        let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-        let H = W*HEIGHT/WIDTH;
+        let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(x/scl,y/scl);
         let snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(landVal){
                     let l = 1-this.basin.hemY(j/scl)/HEIGHT;
                     let h = 0.95-landVal;
                     let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
-                    for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);
+                    for(let k = 0; k < snowLayers; k++){
+                        if(k >= p){
+                            snow[k].pixels[index] = red(COLORS.snow);
+                            snow[k].pixels[index + 1] = green(COLORS.snow);
+                            snow[k].pixels[index + 2] = blue(COLORS.snow);
+                            snow[k].pixels[index + 3] = 255;
+                        }else
+                            snow[k].pixels[index + 3] = 0;
+                        
+                        // snow[k].rect(i,j,1,1);
+                    }
+                }else{
+                    for(let k = 0; k < snowLayers; k++){
+                        snow[k].pixels[index + 3] = 0;
+                    }
                 }
             }
+        }
+        for(let k = 0; k < snowLayers; k++){
+            snow[k].updatePixels();
         }
         this.snowDrawn = true;
     }
 
     *drawShader(){
         yield "Rendering shadows...";
-        let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-        let H = W*HEIGHT/WIDTH;
+        let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(x/scl,y/scl);
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let v = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(v===0) v = 0.5;
                 let m = 0;
                 for(let k=1;k<6;k++){
@@ -706,11 +743,17 @@ class Land{
                     if(s>m) m = s;
                 }
                 if(m>0){
-                    landShader.fill(0,m);
-                    landShader.rect(i,j,1,1);
-                }
+                    landShadows.pixels[index] = 0;
+                    landShadows.pixels[index + 1] = 0;
+                    landShadows.pixels[index + 2] = 0;
+                    landShadows.pixels[index + 3] = m;
+                    // landShadows.fill(0,m);
+                    // landShadows.rect(i,j,1,1);
+                }else
+                    landShadows.pixels[index + 3] = 0;
             }
         }
+        landShadows.updatePixels();
         this.shaderDrawn = true;
     }
 
@@ -721,15 +764,15 @@ class Land{
     }
 
     clearSnow(){
-        for(let i=0;i<MAX_SNOW_LAYERS;i++) snow[i].clear();
+        // for(let i=0;i<MAX_SNOW_LAYERS;i++) snow[i].clear();
         this.snowDrawn = false;
     }
 
     clear(){
-        landBuffer.clear();
-        outBasinBuffer.clear();
-        coastLine.clear();
-        landShader.clear();
+        // landBuffer.clear();
+        // outBasinBuffer.clear();
+        // coastLine.clear();
+        // landShadows.clear();
         this.clearSnow();
         this.drawn = false;
         this.shaderDrawn = false;

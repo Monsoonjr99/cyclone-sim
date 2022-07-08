@@ -14,7 +14,7 @@ var paused,
     forecastTracks,
     landBuffer,
     outBasinBuffer,
-    landShader,
+    landShadows,
     coastLine,
     envLayer,
     magnifyingGlass,
@@ -69,16 +69,20 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    landBuffer = createBuffer(fullW,fullH,true);
-    landBuffer.noStroke();
-    outBasinBuffer = createBuffer(fullW,fullH,true);
-    outBasinBuffer.noStroke();
-    outBasinBuffer.fill(COLORS.outBasin);
-    landShader = createBuffer(fullW,fullH,true);
-    landShader.noStroke();
-    coastLine = createBuffer(fullW,fullH,true);
-    coastLine.fill(0);
-    coastLine.noStroke();
+    landBuffer = createImage(fullW,fullH);
+    landBuffer.loadPixels();
+    // landBuffer.noStroke();
+    outBasinBuffer = createImage(fullW,fullH);
+    outBasinBuffer.loadPixels();
+    // outBasinBuffer.noStroke();
+    // outBasinBuffer.fill(COLORS.outBasin);
+    landShadows = createImage(fullW,fullH);
+    landShadows.loadPixels();
+    // landShadows.noStroke();
+    coastLine = createImage(fullW,fullH);
+    coastLine.loadPixels();
+    // coastLine.fill(0);
+    // coastLine.noStroke();
     envLayer = createBuffer(WIDTH,HEIGHT,false,true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
@@ -89,9 +93,10 @@ function setup(){
     magnifyingGlass.noStroke();
     snow = [];
     for(let i=0;i<MAX_SNOW_LAYERS;i++){
-        snow[i] = createBuffer(fullW,fullH,true);
-        snow[i].noStroke();
-        snow[i].fill(COLORS.snow);
+        snow[i] = createImage(fullW,fullH);
+        snow[i].loadPixels();
+        // snow[i].noStroke();
+        // snow[i].fill(COLORS.snow);
     }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
