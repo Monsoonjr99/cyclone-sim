@@ -711,13 +711,13 @@ class Land{
 
     *drawShader(){
         yield "Rendering shadows...";
-        let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-        let H = W*HEIGHT/WIDTH;
+        let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(x/scl,y/scl);
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let v = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(v===0) v = 0.5;
                 let m = 0;
                 for(let k=1;k<6;k++){
@@ -726,11 +726,17 @@ class Land{
                     if(s>m) m = s;
                 }
                 if(m>0){
-                    landShadows.fill(0,m);
-                    landShadows.rect(i,j,1,1);
-                }
+                    landShadows.pixels[index] = 0;
+                    landShadows.pixels[index + 1] = 0;
+                    landShadows.pixels[index + 2] = 0;
+                    landShadows.pixels[index + 3] = m;
+                    // landShadows.fill(0,m);
+                    // landShadows.rect(i,j,1,1);
+                }else
+                    landShadows.pixels[index + 3] = 0;
             }
         }
+        landShadows.updatePixels();
         this.shaderDrawn = true;
     }
 
@@ -749,7 +755,7 @@ class Land{
         // landBuffer.clear();
         // outBasinBuffer.clear();
         // coastLine.clear();
-        landShadows.clear();
+        // landShadows.clear();
         this.clearSnow();
         this.drawn = false;
         this.shaderDrawn = false;

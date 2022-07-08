@@ -76,8 +76,9 @@ function setup(){
     outBasinBuffer.loadPixels();
     // outBasinBuffer.noStroke();
     // outBasinBuffer.fill(COLORS.outBasin);
-    landShadows = createBuffer(fullW,fullH,true);
-    landShadows.noStroke();
+    landShadows = createImage(fullW,fullH);
+    landShadows.loadPixels();
+    // landShadows.noStroke();
     coastLine = createImage(fullW,fullH);
     coastLine.loadPixels();
     // coastLine.fill(0);
