@@ -14,7 +14,7 @@ var paused,
     forecastTracks,
     landBuffer,
     outBasinBuffer,
-    landShader,
+    landShadows,
     coastLine,
     envLayer,
     magnifyingGlass,
@@ -76,8 +76,8 @@ function setup(){
     outBasinBuffer.loadPixels();
     // outBasinBuffer.noStroke();
     // outBasinBuffer.fill(COLORS.outBasin);
-    landShader = createBuffer(fullW,fullH,true);
-    landShader.noStroke();
+    landShadows = createBuffer(fullW,fullH,true);
+    landShadows.noStroke();
     coastLine = createImage(fullW,fullH);
     coastLine.loadPixels();
     // coastLine.fill(0);

@@ -726,8 +726,8 @@ class Land{
                     if(s>m) m = s;
                 }
                 if(m>0){
-                    landShader.fill(0,m);
-                    landShader.rect(i,j,1,1);
+                    landShadows.fill(0,m);
+                    landShadows.rect(i,j,1,1);
                 }
             }
         }
@@ -749,7 +749,7 @@ class Land{
         // landBuffer.clear();
         // outBasinBuffer.clear();
         // coastLine.clear();
-        landShader.clear();
+        landShadows.clear();
         this.clearSnow();
         this.drawn = false;
         this.shaderDrawn = false;
