@@ -720,6 +720,9 @@ class Land{
                 }
             }
         }
+        for(let k = 0; k < snowLayers; k++){
+            snow[k].updatePixels();
+        }
         this.snowDrawn = true;
     }
 
