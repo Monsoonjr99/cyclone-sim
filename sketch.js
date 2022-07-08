@@ -93,9 +93,10 @@ function setup(){
     magnifyingGlass.noStroke();
     snow = [];
     for(let i=0;i<MAX_SNOW_LAYERS;i++){
-        snow[i] = createBuffer(fullW,fullH,true);
-        snow[i].noStroke();
-        snow[i].fill(COLORS.snow);
+        snow[i] = createImage(fullW,fullH);
+        snow[i].loadPixels();
+        // snow[i].noStroke();
+        // snow[i].fill(COLORS.snow);
     }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)

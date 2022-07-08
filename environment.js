@@ -690,19 +690,33 @@ class Land{
 
     *drawSnow(){
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
-        let W = deviceOrientation===PORTRAIT ? displayHeight : displayWidth;
-        let H = W*HEIGHT/WIDTH;
+        let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget = (x,y)=>this.get(x/scl,y/scl);
         let snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
+                let index = 4 * (j * W + i);
                 if(landVal){
                     let l = 1-this.basin.hemY(j/scl)/HEIGHT;
                     let h = 0.95-landVal;
                     let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
-                    for(let k=max(p,0);k<snowLayers;k++) snow[k].rect(i,j,1,1);
+                    for(let k = 0; k < snowLayers; k++){
+                        if(k >= p){
+                            snow[k].pixels[index] = red(COLORS.snow);
+                            snow[k].pixels[index + 1] = green(COLORS.snow);
+                            snow[k].pixels[index + 2] = blue(COLORS.snow);
+                            snow[k].pixels[index + 3] = 255;
+                        }else
+                            snow[k].pixels[index + 3] = 0;
+                        
+                        // snow[k].rect(i,j,1,1);
+                    }
+                }else{
+                    for(let k = 0; k < snowLayers; k++){
+                        snow[k].pixels[index + 3] = 0;
+                    }
                 }
             }
         }
@@ -747,7 +761,7 @@ class Land{
     }
 
     clearSnow(){
-        for(let i=0;i<MAX_SNOW_LAYERS;i++) snow[i].clear();
+        // for(let i=0;i<MAX_SNOW_LAYERS;i++) snow[i].clear();
         this.snowDrawn = false;
     }
 
