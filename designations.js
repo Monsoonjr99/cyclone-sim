@@ -581,6 +581,16 @@ DesignationSystem.southAtlantic = new DesignationSystem({
     ]
 });
 
+DesignationSystem.mediterranean = new DesignationSystem({
+    displayName: 'Mediterranean',
+    suffix: 'M',
+    annual: true,
+    anchor: 2021,
+    mainLists: [
+        ['Apollo', 'Bianca', 'Ciril', 'Diana', 'Enea', 'Fedra', 'Goran', 'Hera', 'Ivan', 'Lina', 'Marco', 'Nada', 'Ole', 'Pandora', 'Remo', 'Sandra', 'Teodor', 'Ursula', 'Vito', 'Zora']
+    ]
+});
+
 DesignationSystem.atlantic1979 = new DesignationSystem({
     displayName: 'Atlantic (1979-1984)',
     suffix: 'L',

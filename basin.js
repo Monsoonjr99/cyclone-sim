@@ -407,7 +407,10 @@ class Basin{
                 numCross: DESIG_CROSSMODE_KEEP
             })
             );
-        this.addSubBasin(ids.medi, undefined, 'Mediterranean Sea', ids.nhem);
+        this.addSubBasin(ids.medi, undefined, 'Mediterranean Sea', ids.nhem,
+            undefined,
+            DesignationSystem.mediterranean.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
+            );
         this.addSubBasin(ids.aus, undefined, 'Australian Region', ids.shem,
             Scale.australian.clone(),
             DesignationSystem.australianRegionBoM.clone().setCrossingModes(undefined, DESIG_CROSSMODE_KEEP)
