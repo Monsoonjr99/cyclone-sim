@@ -772,7 +772,7 @@ ENV_DEFS.defaults.moisture = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
         let s = seasonalSine(z);
-        let l = land.get(x,u.basin.hemY(y));
+        let l = land.get(Coordinate.convertFromXY(u.basin.mapType, x, u.basin.hemY(y)));
         let pm = u.modifiers.polarMoisture;
         let tm = u.modifiers.tropicalMoisture;
         let mm = u.modifiers.mountainMoisture;
@@ -814,7 +814,7 @@ ENV_DEFS[SIM_MODE_WILD].moisture = {
     mapFunc: (u,x,y,z)=>{
         let v = u.noise(0);
         let s = u.yearfrac(z);
-        let l = land.get(x,u.basin.hemY(y));
+        let l = land.get(Coordinate.convertFromXY(u.basin.mapType, x, u.basin.hemY(y)));
         let om = u.piecewise(s,[
             [0.5,0.35],[2,0.55],[4,0.6],[5.75,0.58],[6,0.1],[7,0.2],[7.25,0.6],[8.5,0.72],[10,0.55],[11.5,0.35]
         ]);
@@ -839,6 +839,34 @@ STORM_ALGORITHM[SIM_MODE_WILD] = {};
 STORM_ALGORITHM[SIM_MODE_MEGABLOBS] = {};
 STORM_ALGORITHM[SIM_MODE_EXPERIMENTAL] = {};
 
+// -- Interaction -- //
+
+STORM_ALGORITHM.defaults.interactionInit = {
+    fuji: true,
+    shear: false,
+    kill: false
+};
+
+STORM_ALGORITHM.defaults.interaction = function(sys0, sys1){
+    let interactionData = {};
+
+    let v = createVector();
+    v.set(sys0.pos);
+    v.sub(sys1.pos);
+    let m = v.mag();
+    let r = map(sys1.lowerWarmCore,0,1,150,50);
+    if(m<r && m>0){
+        v.rotate(sys0.basin.hem(-TAU/4+((3/m)*TAU/16)));
+        v.setMag(map(m,r,0,0,map(constrain(sys1.pressure,990,1030),1030,990,0.2,2.2)));
+        interactionData.fuji = v;
+        interactionData.shear = map(m,r,0,0,map(sys1.pressure,1030,900,0,6));
+        if((m < map(sys0.pressure,1030,1000,r/5,r/15) || m<5) && sys0.pressure > sys1.pressure)
+            interactionData.kill = 1;
+    }
+
+    return interactionData;
+};
+
 // -- Steering -- //
 
 STORM_ALGORITHM.defaults.steering = function(sys,vec,u){
@@ -848,6 +876,7 @@ STORM_ALGORITHM.defaults.steering = function(sys,vec,u){
     let x = lerp(ll.x,ul.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
     let y = lerp(ll.y,ul.y,d);
     vec.set(x,y);
+    vec.add(sys.interaction.fuji);
 };
 
 // -- Core -- //
@@ -907,7 +936,7 @@ STORM_ALGORITHM.defaults.core = function(sys,u){
     );
     sys.depth = lerp(sys.depth,targetDepth,0.05);
 
-    if(sys.pressure > 1030)
+    if(sys.pressure > 1030 || sys.interaction.kill > 0)
         sys.kill = true;
 };
 
@@ -990,7 +1019,7 @@ STORM_ALGORITHM[SIM_MODE_EXPERIMENTAL].core = function(sys,u){
     }else if(random()<0.0001)
         sys.kaboom = 1;
 
-    if(sys.pressure > 1030)
+    if(sys.pressure > 1030 || sys.interaction.kill > 0)
         sys.kill = true;
 };
 

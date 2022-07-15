@@ -1208,7 +1208,7 @@ UI.init = function(){
         },function(){
             prefix_box.enterFunc();
             suffix_box.enterFunc();
-            editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            editing_sub_basin = UI.viewBasin.mainSubBasin;
             list_lists_mode = true;
             aux_list = false;
             name_list_num = 0;
@@ -1457,7 +1457,7 @@ UI.init = function(){
                 x = getMouseX();
                 y = getMouseY();
             }
-            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(Coordinate.convertFromXY(basin.mapType, x, y)))){
                 txtStr += "N/A";
             }else{
                 let v = basin.env.get(f,x,y,viewTick);
@@ -1596,9 +1596,9 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             if(se instanceof Season){
-                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let stats = se.stats(UI.viewBasin.mainSubBasin);
                 let counters = stats.classificationCounters;
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 for(let {statName, cNumber} of scale.statDisplay())
                     info_row(statName, counters[cNumber]);
                 info_row('Total ACE', stats.ACE);
@@ -1785,8 +1785,8 @@ UI.init = function(){
                         for(let q=0;q<t.record.length;q++){
                             let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                             let d = t.record[q];
-                            if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                                let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
+                            if(tropOrSub(d.type)&&land.inBasin(d.coord())){
+                                let clsn = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).get(d);
                                 if(!aSegment){
                                     aSegment = {};
                                     part.segments.push(aSegment);
@@ -1875,7 +1875,7 @@ UI.init = function(){
                             max_wind = w;
                     }
                 }
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 if(scale.measure === SCALE_MEASURE_ONE_MIN_KNOTS || scale.measure === SCALE_MEASURE_TEN_MIN_KNOTS){
                     let color = scale.getColor(0);
                     let y0 = bBound;
@@ -1962,7 +1962,7 @@ UI.init = function(){
                     else noStroke();
                     for(let j=0;j<p.segments.length;j++){
                         let S = p.segments[j];
-                        fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
+                        fill(UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).getColor(S.maxCat,!S.fullyTrop));
                         rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
                     }
                     let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;

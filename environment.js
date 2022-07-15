@@ -56,13 +56,15 @@ class EnvNoiseChannel extends NoiseChannel{
             t = (t-basin.seasonTick(s))/ADVISORY_TICKS;
             let d = basin.fetchSeason(s);
             if(d && d.envData && d.envData[this.field] && d.envData[this.field][this.index]){
-                t -= d.envRecordStarts;
-                let o = d.envData[this.field][this.index][t];
-                return {
-                    xo: o.x,
-                    yo: o.y,
-                    zo: o.z
-                };
+                t -= d.envData[this.field][this.index].recordStart;
+                if(t >= 0){
+                    let o = d.envData[this.field][this.index].val[t];
+                    return {
+                        xo: o.x,
+                        yo: o.y,
+                        zo: o.z
+                    };
+                }
             }
         }
     }
@@ -80,23 +82,26 @@ class EnvNoiseChannel extends NoiseChannel{
         let basin = this.basin;
         let seas = basin.fetchSeason(-1,true,true);
         let s = seas;
-        let startingRecord;
+        // let startingRecord;
         if(!s.envData){
             s.envData = {};
-            startingRecord = true;
+            // startingRecord = true;
         }
         s = s.envData;
         if(!s[this.field]){
             s[this.field] = {};
-            startingRecord = true;
+            // startingRecord = true;
         }
         s = s[this.field];
         if(!s[this.index]){
-            s[this.index] = [];
-            startingRecord = true;
+            s[this.index] = {
+                val: [],
+                recordStart: floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS
+            };
+            // startingRecord = true;
         }
-        s = s[this.index];
-        if(startingRecord) seas.envRecordStarts = floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS;
+        s = s[this.index].val;
+        // if(startingRecord) seas.envRecordStarts = floor(basin.tick/ADVISORY_TICKS)-basin.seasonTick()/ADVISORY_TICKS;
         s.push({
             x: this.xOff,
             y: this.yOff,
@@ -148,7 +153,7 @@ class EnvField{
         this.noise = [];
         this.accurateAfter = -1;
         this.version = attribs.version;
-        if(loadData instanceof LoadData){
+        if(loadData instanceof LoadData && loadData.value){
             if(loadData.value.version!==this.version) this.accurateAfter = this.basin.tick;
             else this.accurateAfter = loadData.value.accurateAfter;
         }
@@ -183,7 +188,7 @@ class EnvField{
             for(let i=0;i<noiseC.length;i++){
                 if(noiseC[i] instanceof Array || (noiseC[i]==='' && a instanceof Array)){
                     let d;
-                    if(loadData instanceof LoadData){
+                    if(loadData instanceof LoadData && loadData.value && loadData.value.noiseData && loadData.value.noiseData[i]){
                         d = loadData.value.noiseData[i];
                         d = loadData.sub(d);
                     }
@@ -197,6 +202,7 @@ class EnvField{
 
     get(x,y,z,noHem){
         try{
+            let longlat = Coordinate.convertFromXY(this.basin.mapType, x, y);
             if(!noHem) y = this.basin.hemY(y);
             if(this.mapFunc){
                 let u = {}; // utility argument
@@ -229,6 +235,7 @@ class EnvField{
                     }
                     return map(m,x[0],arr[0][0]+12,x[1],arr[0][1]);
                 };
+                u.coord = longlat;
                 u.vec = this.vec;
                 u.modifiers = this.modifiers || {};
                 let res = this.mapFunc(u,x,y,z);
@@ -318,7 +325,7 @@ class EnvField{
         magnifyingGlass.noFill();
         let vCenter = this.get(centerX,centerY,viewTick);
         if(this.isVectorField){
-            if(coordinateInCanvas(centerX,centerY) && (!this.oceanic || (land.tileContainsOcean(centerX,centerY) && !land.get(centerX,centerY)))){
+            if(coordinateInCanvas(centerX,centerY) && (!this.oceanic || (land.tileContainsOcean(centerX,centerY) && !land.get(Coordinate.convertFromXY(this.basin.mapType,centerX,centerY))))){
                 let v = vCenter;
                 magnifyingGlass.push();
                 magnifyingGlass.stroke(0);
@@ -349,7 +356,7 @@ class EnvField{
                         if(sqrt(sq(i1)+sq(j1))<magnifyingGlass.width/4){
                             let x = centerX+i1/scaler;
                             let y = centerY+j1/scaler;
-                            if(coordinateInCanvas(x,y) && (!this.oceanic || (land.tileContainsOcean(x,y) && !land.get(x,y)))){
+                            if(coordinateInCanvas(x,y) && (!this.oceanic || (land.tileContainsOcean(x,y) && !land.get(Coordinate.convertFromXY(this.basin.mapType,x,y))))){
                                 let v = this.get(x,y,viewTick);
                                 if(v!==null){
                                     let h = this.hueMap;
@@ -493,6 +500,14 @@ class Environment{  // Environmental fields that determine storm strength and st
 class Land{
     constructor(basin){
         this.basin = basin instanceof Basin && basin;
+        let mapTypeDef = MAP_TYPES[this.basin.mapType];
+        this.earth = mapTypeDef.form === 'earth';
+        if(this.earth){
+            this.westBound = mapTypeDef.west;
+            this.eastBound = mapTypeDef.east;
+            this.northBound = mapTypeDef.north;
+            this.southBound = mapTypeDef.south;
+        }
         this.noise = new NoiseChannel(9,0.5,100);
         this.map = [];
         this.oceanTile = [];
@@ -503,31 +518,63 @@ class Land{
         this.calculate();
     }
 
-    get(x,y){
-        let d = this.mapDefinition;
-        x = floor(x*d);
-        y = floor(y*d);
-        if(this.map[x] && this.map[x][y]){
-            let v = this.map[x][y].val;
-            return v > 0.5 ? v : 0;
-        }else return 0;
+    get(long, lat){
+        if(long instanceof Coordinate)
+            ({longitude: long, latitude: lat} = long);
+        if(this.earth){
+            let img = this.basin.mapImg;
+            long = (long + 180) % 360 - 180;
+            let x1 = floor(map(long,-180,180,0,img.width));
+            let y1 = floor(map(lat,90,-90,0,img.height-1));
+            let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
+            let hVal = img.pixels[index];
+            let lVal = img.pixels[index+1];
+            if(!lVal)
+                return 0;
+            else
+                return map(sqrt(map(hVal,12,150,0,1,true)),0,1,0.501,1);
+        }else{
+            let d = this.mapDefinition;
+            let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
+            x = floor(x*d);
+            y = floor(y*d);
+            if(this.map[x] && this.map[x][y]){
+                let v = this.map[x][y].val;
+                return v > 0.5 ? v : 0;
+            }else return 0;
+        }
     }
 
-    getSubBasin(x,y){
-        let d = this.mapDefinition;
-        x = floor(x*d);
-        y = floor(y*d);
-        if(this.map[x] && this.map[x][y]){
-            return this.map[x][y].subBasin;
-        }else return 0;
+    getSubBasin(long, lat){
+        if(long instanceof Coordinate)
+            ({longitude: long, latitude: lat} = long);
+        if(this.earth){
+            let img = this.basin.mapImg;
+            long = (long + 180) % 360 - 180;
+            let x1 = floor(map(long,-180,180,0,img.width));
+            let y1 = floor(map(lat,90,-90,0,img.height-1));
+            let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
+            return img.pixels[index+2];
+        }else{
+            let d = this.mapDefinition;
+            let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
+            x = floor(x*d);
+            y = floor(y*d);
+            if(this.map[x] && this.map[x][y]){
+                return this.map[x][y].subBasin;
+            }else return 0;
+        }
     }
 
-    inBasin(x,y){
-        let r = this.getSubBasin(x,y);
+    inBasin(long, lat){
+        let r = this.getSubBasin(long, lat);
         return this.basin.subInBasin(r);
     }
 
     calculate(){
+        if(this.earth)
+            return;
+        
         let mapTypeControls = MAP_TYPES[this.basin.mapType];
         let W;
         let H;
@@ -595,9 +642,9 @@ class Land{
         yield "Rendering land...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
-        let sget = (x,y)=>this.getSubBasin(x/scl,y/scl);
-        let bget = (x,y)=>this.inBasin(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        let bget = (x,y)=>this.inBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         let outOfSub = (s0,s1)=>{
             for(let sub of this.basin.forSubBasinChain(s1)){
                 if(sub===s0) return false;
@@ -692,7 +739,7 @@ class Land{
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         let snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
@@ -730,7 +777,7 @@ class Land{
         yield "Rendering shadows...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(x/scl,y/scl);
+        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let v = lget(i,j);
@@ -758,6 +805,9 @@ class Land{
     }
 
     tileContainsOcean(x,y){
+        if(this.earth)
+            return true;
+        
         x = floor(x/ENV_LAYER_TILE_SIZE);
         y = floor(y/ENV_LAYER_TILE_SIZE);
         return this.oceanTile[x][y];

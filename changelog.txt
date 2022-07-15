@@ -1,5 +1,15 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4 (2022-07-15):
+    + Added Mediterranean designations (currently using Italy's 2021-22 European windstorm names)
+    * Single Earth map image file now used for all real-world map types
+    * Sub-basin system for real-world map types redefined
+        > Single global set of sub-basins used for all Earth map types
+        > Out-basin for a given Earth map type now uses appropriate designations and scale (e.g. storms that form in Eastern Pacific out-basin in Atlantic map type use Eastern Pacific names)
+    * Fixed land below sea level rendering as sea
+    * Latitude/longitude coordinate system partially implemented
+        > Storm track data now saves as latitude/longitude coordinates instead of xy
+    * Several other tweaks including some related to compatibility when updating simulation modes
 v0.3.17 (2022-07-08):
     * Tweak to make land and fx drawing a bit faster
 v0.3.16 (2022-06-06):
