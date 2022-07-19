@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.1 (2022-07-19):
+    * Fix some glitchy behavior with the designations editor
 v0.4 (2022-07-15):
     + Added Mediterranean designations (currently using Italy's 2021-22 European windstorm names)
     * Single Earth map image file now used for all real-world map types

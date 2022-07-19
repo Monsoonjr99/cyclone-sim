@@ -873,15 +873,13 @@ UI.init = function(){
 
     // designation system editor
 
-    let refresh_desig_editor;
-
-    const define_desig_editor = ()=>{
+    const desig_editor_definition = (()=>{
         const section_spacing = 36;
         const section_heights = 28;
         const section_width = 400;
         const name_sections = 6;
 
-        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+        let editing_sub_basin;
         let desig_system;
         let name_list_num = 0;
         let name_list_page = 0;
@@ -897,8 +895,8 @@ UI.init = function(){
 
         const refresh_num_section = ()=>{
             if(desig_system instanceof DesignationSystem){
-                prefix_box.value = desig_system.numbering.prefix;
-                suffix_box.value = desig_system.numbering.suffix;
+                prefix_box.value = desig_system.numbering.prefix || '';
+                suffix_box.value = desig_system.numbering.suffix || '';
             }
             if(desig_system && desig_system.numbering.enabled)
                 num_affix_section.show();
@@ -908,7 +906,9 @@ UI.init = function(){
         const refresh_name_section = ()=>{
             name_list_page = 0;
         };
-        refresh_desig_editor = ()=>{
+        const refresh_desig_editor = ()=>{
+            if(editing_sub_basin === undefined)
+                editing_sub_basin = UI.viewBasin.mainSubBasin;
             let sb = UI.viewBasin.subBasins[editing_sub_basin];
             if(sb && sb.designationSystem)
                 desig_system = sb.designationSystem;
@@ -984,7 +984,7 @@ UI.init = function(){
                 editing_sub_basin++;
                 if(editing_sub_basin > 255)
                     editing_sub_basin = 0;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         }).append(false,0,18,30,10,s=>{ // prev sub-basin button
             s.button('',true);
@@ -994,7 +994,7 @@ UI.init = function(){
                 editing_sub_basin--;
                 if(editing_sub_basin < 0)
                     editing_sub_basin = 255;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         });
 
@@ -1254,9 +1254,9 @@ UI.init = function(){
         },()=>{
             name_editor.hide();
         });
-    };
 
-    define_desig_editor();
+        return {refresh: refresh_desig_editor};
+    })();
 
     // primary "in sim" scene
 
@@ -2076,7 +2076,7 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
         s.button("Edit Designations",false,15);
     },function(){
-        refresh_desig_editor();
+        desig_editor_definition.refresh();
         primaryWrapper.hide();
         desigSystemEditor.show();
         paused = true;
