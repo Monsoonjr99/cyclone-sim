@@ -642,15 +642,37 @@ class Land{
         yield "Rendering land...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        let lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        let bget = (x,y)=>this.inBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        let outOfSub = (s0,s1)=>{
-            for(let sub of this.basin.forSubBasinChain(s1)){
-                if(sub===s0) return false;
+        if(this.earth){
+            let img = this.basin.mapImg;
+            let west_x = floor(map(this.westBound,-180,180,0,img.width));
+            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
+            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
+            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
+            if(this.eastBound < this.westBound){
+                let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
+                landBuffer.copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
+                landBuffer.copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
+            }else{
+                landBuffer.copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
             }
-            return true;
-        };
+            landBuffer.loadPixels();
+        }
+        let lget;
+        if(this.earth){
+            lget = (x,y)=>{
+                let index = 4 * (y * W + x);
+                return landBuffer.pixels[index+1] ? map(sqrt(map(landBuffer.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
+            };
+        }else
+            lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        // let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        let bget = (x,y)=>this.inBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        // let outOfSub = (s0,s1)=>{
+        //     for(let sub of this.basin.forSubBasinChain(s1)){
+        //         if(sub===s0) return false;
+        //     }
+        //     return true;
+        // };
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let landVal = lget(i,j);
