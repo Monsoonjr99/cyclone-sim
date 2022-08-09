@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.2 (2022-08-09):
+    * Another tweak to make land and fx drawing faster after v0.4 made it awfully slow again
 v0.4.1 (2022-07-19):
     * Fix some glitchy behavior with the designations editor
 v0.4 (2022-07-15):
