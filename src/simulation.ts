@@ -18,7 +18,7 @@ interface SimulationState{
 
 function state(toCopy?: SimulationState): SimulationState{
     if(toCopy)
-        return deepClone<SimulationState>({}, toCopy);
+        return deepClone<SimulationState>(toCopy);
     else
         return {
             liveTick: 0,
