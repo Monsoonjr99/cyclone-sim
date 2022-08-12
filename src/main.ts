@@ -27,8 +27,8 @@ interface TestIcon{
 }
 
 let test : TestIcon[] = [];
-let selectedIcon : TestIcon;
-let spawnIcon: TestIcon;
+let selectedIcon : TestIcon | undefined;
+let spawnIcon: TestIcon | undefined;
 
 function iconSize(){
     const BASE_ICON_SIZE = 40;
@@ -38,8 +38,8 @@ function iconSize(){
 
 let running = false;
 let lastUpdate = 0;
-let clock: HTMLDivElement = document.querySelector('.clock');
-const TEST_START_YEAR = 2021;
+let clock = <HTMLDivElement>document.querySelector('.clock');
+const TEST_START_YEAR = 2022;
 const TICK_FRAME_DELAY = 10; // real time milliseconds per simulated tick (has no bearing on rendering framerate)
 
 canvas.setDraw((ctx, time)=>{
@@ -120,11 +120,11 @@ canvas.startAnimation();
 
 // UI stuff
 
-const panelCollapseButton: HTMLButtonElement = document.querySelector('.panel-collapse');
+const panelCollapseButton = <HTMLButtonElement>document.querySelector('.panel-collapse');
 
 panelCollapseButton.addEventListener('mouseup', e=>{
     const PANEL_COLLAPSED = 'panel-collapsed';
-    let panel: HTMLDivElement = document.querySelector('.panel');
+    let panel = <HTMLDivElement>document.querySelector('.panel');
     if(panel.classList.contains(PANEL_COLLAPSED)){
         panel.classList.remove(PANEL_COLLAPSED);
         panelCollapseButton.innerText = '<';
@@ -134,7 +134,7 @@ panelCollapseButton.addEventListener('mouseup', e=>{
     }
 });
 
-const spawnModeButton: HTMLButtonElement = document.querySelector('#spawn-button');
+const spawnModeButton = <HTMLButtonElement>document.querySelector('#spawn-button');
 
 spawnModeButton.addEventListener('mouseup', e=>{
     if(spawnIcon){
@@ -151,7 +151,7 @@ spawnModeButton.addEventListener('mouseup', e=>{
     }
 });
 
-const runPauseButton: HTMLButtonElement = document.querySelector('#run-pause-button');
+const runPauseButton = <HTMLButtonElement>document.querySelector('#run-pause-button');
 
 runPauseButton.addEventListener('mouseup', e=>{
     if(running){

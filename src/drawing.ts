@@ -54,7 +54,7 @@ export function anchorStormIconRotation(key : object, omega : number, time : num
     let anchor : StormIconAnchor;
     // attempt to fetch anchor for the given key; create new anchor if none exists
     if(stormIconAnchors.has(key))
-        anchor = stormIconAnchors.get(key);
+        anchor = <StormIconAnchor>stormIconAnchors.get(key); // Typescript assertion since WeakMap.get() should not return undefined after WeakMap.has() for the same key has returned true
     else{
         anchor = {
             alpha: -omega * time / 1000, // results in an angle of 0 at the initialization time

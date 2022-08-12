@@ -23,7 +23,7 @@ export function tickToFormattedDate(t: number, startYear: number): string{
     let dt = DateTime.utc(startYear, 1, 1).plus({hours: t});
     let str = dt.toFormat(partialFormat);
     let y = dt.year;
-    let bce: boolean;
+    let bce = false;
     if(y < 1){
         y = 1 - y;
         bce = true;
