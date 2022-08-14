@@ -45,11 +45,17 @@ export function zeroPad(val: number | string, digits: number): string{
 
 // creates a copy of an object including nested object references
 export function deepClone<Type extends object>(source: Type): Type{
+    const TypedArray = Object.getPrototypeOf(Int16Array); // the generic prototype of all typed arrays; the use of Int16Array in Object.getPrototypeOf() is arbitrary
     let copy: any;
+    // Object.create() works well for making copies of most classes, but not for Arrays and TypedArrays, so their own .from() methods are used instead
     if(source instanceof Array)
         copy = Array.from(source);
-    else
+    else if(source instanceof TypedArray){
+        const SpecificTypedArray: any = source.constructor;
+        copy = SpecificTypedArray.from(source);
+    }else
         copy = Object.assign(Object.create(source.constructor.prototype), source);
+    // recursively deepClone any nested objects
     for(let i in copy){
         if(copy.hasOwnProperty(i) && typeof copy[i] === 'object')
             copy[i] = deepClone<any>(copy[i]);
