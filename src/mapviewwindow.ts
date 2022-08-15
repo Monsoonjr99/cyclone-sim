@@ -118,6 +118,14 @@ export function changeZoom(v : number, anchorX? : number, anchorY? : number){
     clipPhi();
 }
 
+export function changeZoomByRatio(ratio : number){
+    const oldAmt = zoomAmt();
+    const newAmt = oldAmt * ratio;
+    const newLvl = Math.log(newAmt) / Math.log(ZOOM_SCALER_BASE);
+    const LvlDiff = newLvl - zoomLvl;
+    changeZoom(LvlDiff);
+}
+
 export function panPL(dphi : number, dlambda : number){
     center.phi += dphi;
     clipPhi();

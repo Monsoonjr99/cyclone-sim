@@ -116,6 +116,11 @@ canvas.handleScroll((amt, x, y)=>{
         viewer.changeZoom(-amt, x, y);
 });
 
+canvas.handlePinch((ratio)=>{
+    if(ready)
+        viewer.changeZoomByRatio(1 / ratio);
+});
+
 canvas.startAnimation();
 
 // UI stuff

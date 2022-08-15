@@ -60,13 +60,16 @@ updateDimensions();
 let mouseIsDown = false;
 let mouseBeingDragged = false;
 
+const MOUSE_DRAG_THRESHOLD = 20;
+
 let clickHandler : (x : number, y : number)=>void;
 let dragHandler : (dx : number, dy : number, dragEnd : boolean)=>void;
 let scrollHandler : (amt : number, x : number, y : number)=>void;
+let pinchHandler : (ratio: number)=>void;
 
 // Initial mousedown coordinate for determining when to begin a drag
-let dragStartScreenX : number;
-let dragStartScreenY : number;
+let dragStartX : number;
+let dragStartY : number;
 
 // Canvas (clientXY * pixelRatio) mouse position for handlers and getMousePos()
 let mouseCanvasX = 0;
@@ -76,7 +79,10 @@ let mouseCanvasY = 0;
 let mouseMovementX = 0;
 let mouseMovementY = 0;
 
-function updateMouseCoordinates(e: MouseEvent){
+// Distance between two touches on a touchscreen in a "pinch" gesture
+let pinchDistance = 0;
+
+function updateMouseCoordinates(e: MouseEvent | Touch){
     let oldX = mouseCanvasX;
     let oldY = mouseCanvasY;
     mouseCanvasX = e.clientX * pixelRatio;
@@ -85,18 +91,19 @@ function updateMouseCoordinates(e: MouseEvent){
     mouseMovementY = mouseCanvasY - oldY;
 }
 
+// Handle mouse events
 canvas.addEventListener('mousedown', e=>{
     updateMouseCoordinates(e);
     if(e.button === 0){
         mouseIsDown = true;
-        dragStartScreenX = e.screenX;
-        dragStartScreenY = e.screenY;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
     }
 });
 
 canvas.addEventListener('mousemove', e=>{
     updateMouseCoordinates(e);
-    if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 15)){
+    if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) >= MOUSE_DRAG_THRESHOLD)){
         mouseBeingDragged = true;
         if(dragHandler)
             dragHandler(mouseMovementX, mouseMovementY, false);
@@ -130,6 +137,57 @@ canvas.addEventListener('wheel', e=>{
         scrollHandler(e.deltaY / 125, mouseCanvasX, mouseCanvasY);
 });
 
+// Handle touchscreen events
+canvas.addEventListener('touchstart', e=>{
+    if(e.touches.length === 1){
+        const touch = e.touches[0];
+        updateMouseCoordinates(touch);
+        mouseIsDown = true;
+        dragStartX = touch.clientX;
+        dragStartY = touch.clientY;
+    }else if(e.touches.length === 2){
+        pinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+    }
+    e.preventDefault();
+});
+
+canvas.addEventListener('touchmove', e=>{
+    if(e.touches.length === 1){
+        const touch = e.touches[0];
+        updateMouseCoordinates(touch);
+        if(mouseIsDown && (mouseBeingDragged || Math.hypot(touch.clientX - dragStartX, touch.clientY - dragStartY) >= MOUSE_DRAG_THRESHOLD)){
+            mouseBeingDragged = true;
+            if(dragHandler)
+                dragHandler(mouseMovementX, mouseMovementY, false);
+        }
+    }else if(e.touches.length > 1){
+        const newDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+        const pinchRatio = newDist / pinchDistance;
+        pinchDistance = newDist;
+        if(pinchHandler)
+            pinchHandler(pinchRatio);
+    }
+    e.preventDefault();
+});
+
+canvas.addEventListener('touchend', e=>{
+    if(e.touches.length < 1){
+        if(!mouseBeingDragged && clickHandler)
+            clickHandler(mouseCanvasX, mouseCanvasY);
+        mouseIsDown = false;
+        mouseBeingDragged = false;
+    }else if(e.touches.length === 1){
+        const touch = e.touches[0];
+        updateMouseCoordinates(touch);
+    }
+    e.preventDefault();
+});
+
+canvas.addEventListener('touchcancel', e=>{
+    mouseIsDown = false;
+    mouseBeingDragged = false;
+});
+
 export function handleClick(handler : (x : number, y : number)=>void){
     clickHandler = handler;
 }
@@ -140,6 +198,10 @@ export function handleDrag(handler : (/* beginX : number, beginY : number, xOffs
 
 export function handleScroll(handler : (amt : number, x : number, y : number)=>void){
     scrollHandler = handler;
+}
+
+export function handlePinch(handler : (ratio: number)=>void){
+    pinchHandler = handler;
 }
 
 // general mouse position function for use outside of handlers (i.e. drawing relative to current mouse position)
