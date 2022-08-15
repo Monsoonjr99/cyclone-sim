@@ -9,7 +9,7 @@ import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 // This is currently preliminary testing code
 
 console.log('Hello World!');
-console.log('Currently testing time');
+console.log('This is an alpha');
 
 let mapImage : HTMLImageElement;
 let ready = false;
@@ -62,6 +62,18 @@ canvas.setDraw((ctx, time)=>{
             let elapsedTicksSinceLastUpdate = Math.floor((time - lastUpdate) / TICK_FRAME_DELAY);
             setLiveTick(liveTick + elapsedTicksSinceLastUpdate);
             lastUpdate += elapsedTicksSinceLastUpdate * TICK_FRAME_DELAY;
+            // test "simulation"
+            for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
+                for(let j = 0; j < test.length; j++){
+                    test[j].phi += Math.random() - 0.5;
+                    test[j].lambda += Math.random() -0.5;
+                    test[j].phi = Math.max(Math.min(test[j].phi, 90), -90);
+                    if(test[j].lambda >= 180)
+                        test[j].lambda -= 360;
+                    else if(test[j].lambda < -180)
+                        test[j].lambda += 360;
+                }
+            }
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
