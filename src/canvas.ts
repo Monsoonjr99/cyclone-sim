@@ -64,18 +64,29 @@ let clickHandler : (x : number, y : number)=>void;
 let dragHandler : (dx : number, dy : number, dragEnd : boolean)=>void;
 let scrollHandler : (amt : number, x : number, y : number)=>void;
 
-// Ratio for converting e.movementX/e.movementY from screen coordinates to canvas coordinates
-const screenToCanvas = pixelRatio / window.devicePixelRatio;
-
 // Initial mousedown coordinate for determining when to begin a drag
 let dragStartScreenX : number;
 let dragStartScreenY : number;
 
-// Canvas (clientXY * pixelRatio) mouse position for getMousePos()
+// Canvas (clientXY * pixelRatio) mouse position for handlers and getMousePos()
 let mouseCanvasX = 0;
 let mouseCanvasY = 0;
 
+// Mouse movement amount in canvas coordinate space
+let mouseMovementX = 0;
+let mouseMovementY = 0;
+
+function updateMouseCoordinates(e: MouseEvent){
+    let oldX = mouseCanvasX;
+    let oldY = mouseCanvasY;
+    mouseCanvasX = e.clientX * pixelRatio;
+    mouseCanvasY = e.clientY * pixelRatio;
+    mouseMovementX = mouseCanvasX - oldX;
+    mouseMovementY = mouseCanvasY - oldY;
+}
+
 canvas.addEventListener('mousedown', e=>{
+    updateMouseCoordinates(e);
     if(e.button === 0){
         mouseIsDown = true;
         dragStartScreenX = e.screenX;
@@ -84,37 +95,39 @@ canvas.addEventListener('mousedown', e=>{
 });
 
 canvas.addEventListener('mousemove', e=>{
-    mouseCanvasX = e.clientX * pixelRatio;
-    mouseCanvasY = e.clientY * pixelRatio;
+    updateMouseCoordinates(e);
     if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.screenX - dragStartScreenX, e.screenY - dragStartScreenY) >= 15)){
         mouseBeingDragged = true;
         if(dragHandler)
-            dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, false);
+            dragHandler(mouseMovementX, mouseMovementY, false);
     }
 });
 
 canvas.addEventListener('mouseup', e=>{
+    updateMouseCoordinates(e);
     if(e.button === 0){
         if(mouseBeingDragged && dragHandler)
-            dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, true);
+            dragHandler(mouseMovementX, mouseMovementY, true);
         else if(clickHandler)
-            clickHandler(e.clientX * pixelRatio, e.clientY * pixelRatio);
+            clickHandler(mouseCanvasX, mouseCanvasY);
         mouseIsDown = false;
         mouseBeingDragged = false;
     }
 });
 
 canvas.addEventListener('mouseleave', e=>{
+    updateMouseCoordinates(e);
     if(mouseBeingDragged && dragHandler){
-        dragHandler(e.movementX * screenToCanvas, e.movementY * screenToCanvas, true);
+        dragHandler(mouseMovementX, mouseMovementY, true);
         mouseIsDown = false;
         mouseBeingDragged = false;
     }
 });
 
 canvas.addEventListener('wheel', e=>{
+    updateMouseCoordinates(e);
     if(scrollHandler)
-        scrollHandler(e.deltaY / 125, e.clientX * pixelRatio, e.clientY * pixelRatio);
+        scrollHandler(e.deltaY / 125, mouseCanvasX, mouseCanvasY);
 });
 
 export function handleClick(handler : (x : number, y : number)=>void){
