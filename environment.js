@@ -498,7 +498,7 @@ class Environment{  // Environmental fields that determine storm strength and st
 }
 
 class Land{
-    constructor(basin){
+    constructor(basin, mapImg){
         this.basin = basin instanceof Basin && basin;
         let mapTypeDef = MAP_TYPES[this.basin.mapType];
         this.earth = mapTypeDef.form === 'earth';
@@ -507,9 +507,11 @@ class Land{
             this.eastBound = mapTypeDef.east;
             this.northBound = mapTypeDef.north;
             this.southBound = mapTypeDef.south;
+            this.wholeEarthMap = mapImg;
+        }else{
+            this.map = mapImg;
         }
         this.noise = new NoiseChannel(9,0.5,100);
-        this.map = [];
         this.oceanTile = [];
         this.mapDefinition = undefined;
         this.drawn = false;
@@ -522,7 +524,7 @@ class Land{
         if(long instanceof Coordinate)
             ({longitude: long, latitude: lat} = long);
         if(this.earth){
-            let img = this.basin.mapImg;
+            let img = this.wholeEarthMap;
             long = (long + 180) % 360 - 180;
             let x1 = floor(map(long,-180,180,0,img.width));
             let y1 = floor(map(lat,90,-90,0,img.height-1));
@@ -534,12 +536,15 @@ class Land{
             else
                 return map(sqrt(map(hVal,12,150,0,1,true)),0,1,0.501,1);
         }else{
+            let img = this.map;
             let d = this.mapDefinition;
             let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
             x = floor(x*d);
             y = floor(y*d);
-            if(this.map[x] && this.map[x][y]){
-                let v = this.map[x][y].val;
+            if(img && x >= 0 && x < img.width && y >= 0 && y < img.height){
+                let d0 = img._pixelDensity;
+                let index = 4 * (y * img.width * d0 * d0 + x * d0);
+                let v = img.pixels[index] / 255;
                 return v > 0.5 ? v : 0;
             }else return 0;
         }
@@ -549,19 +554,22 @@ class Land{
         if(long instanceof Coordinate)
             ({longitude: long, latitude: lat} = long);
         if(this.earth){
-            let img = this.basin.mapImg;
+            let img = this.wholeEarthMap;
             long = (long + 180) % 360 - 180;
             let x1 = floor(map(long,-180,180,0,img.width));
             let y1 = floor(map(lat,90,-90,0,img.height-1));
             let index = 4 * (y1*img.width*sq(img._pixelDensity)+x1*img._pixelDensity);
             return img.pixels[index+2];
         }else{
+            let img = this.map;
             let d = this.mapDefinition;
             let {x, y} = Coordinate.convertToXY(this.basin.mapType, long, lat);
             x = floor(x*d);
             y = floor(y*d);
-            if(this.map[x] && this.map[x][y]){
-                return this.map[x][y].subBasin;
+            if(img && x >= 0 && x < img.width && y >= 0 && y < img.height){
+                let d0 = img._pixelDensity;
+                let index = 4 * (y * img.width * d0 * d0 + x * d0);
+                return img.pixels[index + 1];
             }else return 0;
         }
     }
@@ -572,42 +580,61 @@ class Land{
     }
 
     calculate(){
-        if(this.earth)
-            return;
-        
         let mapTypeControls = MAP_TYPES[this.basin.mapType];
-        let W;
-        let H;
-        let pixels;
-        let density;
-        let mapDef;
-        if(mapTypeControls.form==='pixelmap'){
-            let img = this.basin.mapImg;
-            W = img.width;
-            H = img.height;
-            mapDef = this.mapDefinition = W/WIDTH;
-            density = img._pixelDensity;
-            pixels = img.pixels;
-        }else{
-            W = WIDTH*MAP_DEFINITION;
-            H = HEIGHT*MAP_DEFINITION;
-            mapDef = this.mapDefinition = MAP_DEFINITION;
-        }
-        // let workerInput = {mapTypeControls, W, H, pixels, density, mapDef};
-        // landWorker.run(WORKER_TASK_CALCULATE_LAND,workerInput).then(output=>{});
+        let mapForm = mapTypeControls.form;
+        if(this.earth){                     // crop whole earth map to the map type's sector, used for drawing (but not getting)
+            let {fullW: W, fullH: H} = fullDimensions();
+            let img = this.wholeEarthMap;
+            let sector = this.map = createImage(W, H);
+            let west_x = floor(map(this.westBound,-180,180,0,img.width));
+            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
+            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
+            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
+            if(this.eastBound < this.westBound){
+                let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
+                sector.copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
+                sector.copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
+            }else{
+                sector.copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
+            }
+            sector.loadPixels();
+        }else if(mapForm === 'pixelmap'){   // map is already given; calculate ocean tile values
+            let img = this.map;
+            let W = img.width;
+            let H = img.height;
+            let mapDef = this.mapDefinition = W/WIDTH;
+            let density = img._pixelDensity;
+            let pixels = img.pixels;
+            for(let i = 0; i < W; i++){
+                for(let j = 0; j < H; j++){
+                    let x = i/mapDef;
+                    let y = j/mapDef;
+                    let index = 4 * (j * W * density * density + i * density);
+                    let landVal = pixels[index] / 255;
+                    let ox = floor(x/ENV_LAYER_TILE_SIZE);
+                    let oy = floor(y/ENV_LAYER_TILE_SIZE);
+                    if(!this.oceanTile[ox])
+                        this.oceanTile[ox] = [];
+                    if(landVal <= 0.5)
+                        this.oceanTile[ox][oy] = true;
+                }
+            }
+        }else{                              // procedurally generate map from noise and store in this.map image
+            let W = WIDTH*MAP_DEFINITION;
+            let H = HEIGHT*MAP_DEFINITION;
+            let img = this.map = createImage(W, H);
+            let mapDef = this.mapDefinition = MAP_DEFINITION;
 
-        for(let i=0;i<W;i++){
-            this.map[i] = [];
-            for(let j=0;j<H;j++){
-                let p = this.map[i][j] = {};
-                let x = i/mapDef;
-                let y = j/mapDef;
-                if(mapTypeControls.form==='pixelmap'){
-                    let index = 4 * (j*W*sq(density)+i*density);
-                    let v = pixels[index];
-                    p.val = map(v,0,255,0,1);
-                    p.subBasin = pixels[index+1];
-                }else{
+            img.loadPixels();
+            let pixels = img.pixels;
+            let density = img._pixelDensity;
+    
+            for(let i=0;i<W;i++){
+                for(let j=0;j<H;j++){
+                    let index = 4 * (j * W * density * density + i * density);
+                    let landVal;
+                    let x = i/mapDef;
+                    let y = j/mapDef;
                     let n = this.noise.get(x,y);
                     let landBiasFactors = mapTypeControls.landBiasFactors;
                     let landBias;
@@ -627,14 +654,17 @@ class Land{
                             map(pointDist,distAnchor1,distAnchor2,landBiasFactors[5],landBiasFactors[6]) :
                             landBiasFactors[6];
                     }
-                    p.val = n + landBias;
-                    p.subBasin = 0;
+                    landVal = n + landBias;
+                    pixels[index] = floor(landVal * 255);
+                    let ox = floor(x/ENV_LAYER_TILE_SIZE);
+                    let oy = floor(y/ENV_LAYER_TILE_SIZE);
+                    if(!this.oceanTile[ox])
+                        this.oceanTile[ox] = [];
+                    if(landVal <= 0.5)
+                        this.oceanTile[ox][oy] = true;
                 }
-                let ox = floor(x/ENV_LAYER_TILE_SIZE);
-                let oy = floor(y/ENV_LAYER_TILE_SIZE);
-                if(!this.oceanTile[ox]) this.oceanTile[ox] = [];
-                if(p.val<=0.5) this.oceanTile[ox][oy] = true;
             }
+            img.updatePixels();
         }
     }
 
@@ -642,26 +672,11 @@ class Land{
         yield "Rendering land...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        if(this.earth){
-            let img = this.basin.mapImg;
-            let west_x = floor(map(this.westBound,-180,180,0,img.width));
-            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
-            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
-            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
-            if(this.eastBound < this.westBound){
-                let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
-                landBuffer.copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
-                landBuffer.copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
-            }else{
-                landBuffer.copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
-            }
-            landBuffer.loadPixels();
-        }
         let lget;
         if(this.earth){
             lget = (x,y)=>{
                 let index = 4 * (y * W + x);
-                return landBuffer.pixels[index+1] ? map(sqrt(map(landBuffer.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
+                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
         }else
             lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
@@ -761,26 +776,11 @@ class Land{
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        if(this.earth){
-            let img = this.basin.mapImg;
-            let west_x = floor(map(this.westBound,-180,180,0,img.width));
-            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
-            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
-            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
-            if(this.eastBound < this.westBound){
-                let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
-                snow[0].copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
-                snow[0].copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
-            }else{
-                snow[0].copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
-            }
-            snow[0].loadPixels();
-        }
         let lget;
         if(this.earth){
             lget = (x,y)=>{
                 let index = 4 * (y * W + x);
-                return snow[0].pixels[index+1] ? map(sqrt(map(snow[0].pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
+                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
         }else
             lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
@@ -821,26 +821,11 @@ class Land{
         yield "Rendering shadows...";
         let {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
-        if(this.earth){
-            let img = this.basin.mapImg;
-            let west_x = floor(map(this.westBound,-180,180,0,img.width));
-            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
-            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
-            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
-            if(this.eastBound < this.westBound){
-                let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
-                landShadows.copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
-                landShadows.copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
-            }else{
-                landShadows.copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
-            }
-            landShadows.loadPixels();
-        }
         let lget;
         if(this.earth){
             lget = (x,y)=>{
                 let index = 4 * (y * W + x);
-                return landShadows.pixels[index+1] ? map(sqrt(map(landShadows.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
+                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
         }else
             lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
