@@ -502,14 +502,16 @@ class Land{
         this.basin = basin instanceof Basin && basin;
         let mapTypeDef = MAP_TYPES[this.basin.mapType];
         this.earth = mapTypeDef.form === 'earth';
+        const {fullW: W, fullH: H} = fullDimensions();
+        this.map = createImage(W, H);
         if(this.earth){
             this.westBound = mapTypeDef.west;
             this.eastBound = mapTypeDef.east;
             this.northBound = mapTypeDef.north;
             this.southBound = mapTypeDef.south;
             this.wholeEarthMap = mapImg;
-        }else{
-            this.map = mapImg;
+        }else if(mapImg){
+            this.map.copy(mapImg, 0, 0, mapImg.width, mapImg.height, 0, 0, W, H);
         }
         this.noise = new NoiseChannel(9,0.5,100);
         this.oceanTile = [];
@@ -544,8 +546,12 @@ class Land{
             if(img && x >= 0 && x < img.width && y >= 0 && y < img.height){
                 let d0 = img._pixelDensity;
                 let index = 4 * (y * img.width * d0 * d0 + x * d0);
-                let v = img.pixels[index] / 255;
-                return v > 0.5 ? v : 0;
+                let hVal = img.pixels[index];
+                let lVal = img.pixels[index + 1];
+                if(!lVal)
+                    return 0;
+                else
+                    return hVal / 255;
             }else return 0;
         }
     }
@@ -569,7 +575,7 @@ class Land{
             if(img && x >= 0 && x < img.width && y >= 0 && y < img.height){
                 let d0 = img._pixelDensity;
                 let index = 4 * (y * img.width * d0 * d0 + x * d0);
-                return img.pixels[index + 1];
+                return img.pixels[index + 2];
             }else return 0;
         }
     }
@@ -580,28 +586,31 @@ class Land{
     }
 
     calculate(){
+        const {fullW: W, fullH: H} = fullDimensions();
         let mapTypeControls = MAP_TYPES[this.basin.mapType];
         let mapForm = mapTypeControls.form;
         if(this.earth){                     // crop whole earth map to the map type's sector, used for drawing (but not getting)
-            let {fullW: W, fullH: H} = fullDimensions();
-            let img = this.wholeEarthMap;
-            let sector = this.map = createImage(W, H);
-            let west_x = floor(map(this.westBound,-180,180,0,img.width));
-            let east_x = floor(map(this.eastBound,-180,180,0,img.width));
-            let north_y = floor(map(this.northBound,90,-90,0,img.height-1));
-            let south_y = floor(map(this.southBound,90,-90,0,img.height-1));
+            let earth = this.wholeEarthMap;
+            let sector = this.map;
+            let west_x = floor(map(this.westBound,-180,180,0,earth.width));
+            let east_x = floor(map(this.eastBound,-180,180,0,earth.width));
+            let north_y = floor(map(this.northBound,90,-90,0,earth.height-1));
+            let south_y = floor(map(this.southBound,90,-90,0,earth.height-1));
             if(this.eastBound < this.westBound){
                 let idl_x = W * (180 - this.westBound) / (this.eastBound + 360 - this.westBound);
-                sector.copy(img, west_x, north_y, img.width - west_x, south_y - north_y, 0, 0, idl_x, H);
-                sector.copy(img, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
+                sector.copy(earth, west_x, north_y, earth.width - west_x, south_y - north_y, 0, 0, idl_x, H);
+                sector.copy(earth, 0, north_y, east_x, south_y - north_y, idl_x, 0, W - idl_x, H);
             }else{
-                sector.copy(img, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
+                sector.copy(earth, west_x, north_y, east_x - west_x, south_y - north_y, 0, 0, W, H);
             }
             sector.loadPixels();
+            // for(let i = 0; i < sector.pixels.length; i += 4){
+            //     let h = map(sqrt(map(sector.pixels[i],12,150,0,1,true)),0,1,0.501,1);
+            //     sector.pixels[i] = floor(h * 255);
+            // }
+            // sector.updatePixels();
         }else if(mapForm === 'pixelmap'){   // map is already given; calculate ocean tile values
             let img = this.map;
-            let W = img.width;
-            let H = img.height;
             let mapDef = this.mapDefinition = W/WIDTH;
             let density = img._pixelDensity;
             let pixels = img.pixels;
@@ -620,10 +629,8 @@ class Land{
                 }
             }
         }else{                              // procedurally generate map from noise and store in this.map image
-            let W = WIDTH*MAP_DEFINITION;
-            let H = HEIGHT*MAP_DEFINITION;
-            let img = this.map = createImage(W, H);
-            let mapDef = this.mapDefinition = MAP_DEFINITION;
+            let img = this.map;
+            let mapDef = this.mapDefinition = W/WIDTH;
 
             img.loadPixels();
             let pixels = img.pixels;
@@ -656,6 +663,7 @@ class Land{
                     }
                     landVal = n + landBias;
                     pixels[index] = floor(landVal * 255);
+                    pixels[index + 1] = landVal > 0.5 ? 255 : 0;
                     let ox = floor(x/ENV_LAYER_TILE_SIZE);
                     let oy = floor(y/ENV_LAYER_TILE_SIZE);
                     if(!this.oceanTile[ox])
@@ -670,7 +678,7 @@ class Land{
 
     *draw(){
         yield "Rendering land...";
-        let {fullW: W, fullH: H} = fullDimensions();
+        const {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget;
         if(this.earth){
@@ -678,10 +686,18 @@ class Land{
                 let index = 4 * (y * W + x);
                 return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
-        }else
-            lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        }else{
+            lget = (x,y)=>{
+                let index = 4 * (y * W + x);
+                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
+            };
+        }
+        let bget = (x,y)=>{
+            let index = 4 * (y * W + x);
+            let sb = this.map.pixels[index+2];
+            return this.basin.subInBasin(sb);
+        };
         // let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        let bget = (x,y)=>this.inBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
         // let outOfSub = (s0,s1)=>{
         //     for(let sub of this.basin.forSubBasinChain(s1)){
         //         if(sub===s0) return false;
@@ -774,7 +790,7 @@ class Land{
 
     *drawSnow(){
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
-        let {fullW: W, fullH: H} = fullDimensions();
+        const {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget;
         if(this.earth){
@@ -782,8 +798,12 @@ class Land{
                 let index = 4 * (y * W + x);
                 return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
-        }else
-            lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        }else{
+            lget = (x,y)=>{
+                let index = 4 * (y * W + x);
+                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
+            };
+        }
         let snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
@@ -819,7 +839,7 @@ class Land{
 
     *drawShader(){
         yield "Rendering shadows...";
-        let {fullW: W, fullH: H} = fullDimensions();
+        const {fullW: W, fullH: H} = fullDimensions();
         let scl = W/WIDTH;
         let lget;
         if(this.earth){
@@ -827,8 +847,12 @@ class Land{
                 let index = 4 * (y * W + x);
                 return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
             };
-        }else
-            lget = (x,y)=>this.get(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
+        }else{
+            lget = (x,y)=>{
+                let index = 4 * (y * W + x);
+                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
+            };
+        }
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
                 let v = lget(i,j);
