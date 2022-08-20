@@ -71,11 +71,12 @@ class Basin{
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if(load) this.initialized = this.load();
         else{
+            let mapImg;
             Basin.deleteSave(AUTOSAVE_SAVE_NAME);
             let f = ()=>{
                 noiseSeed(this.seed);
                 this.env.init();
-                land = new Land(this);
+                land = new Land(this, mapImg);
                 this.seasons[this.getSeason(-1)] = new Season(this);
                 this.expireSeasonTimer(this.getSeason(-1));
                 this.env.record();
@@ -88,7 +89,7 @@ class Basin{
                     path = MAP_TYPES[this.mapType].path;
                 this.initialized = loadImg(path).then(img=>{
                     img.loadPixels();
-                    this.mapImg = img;
+                    mapImg = img;
                     f();
                     return this;
                 }).catch(e=>{
@@ -521,6 +522,7 @@ class Basin{
 
     load(){
         return waitForAsyncProcess(()=>{
+            let mapImg;
             return db.saves.get(this.saveName).then(res=>{
                 if(res && res.format>=EARLIEST_COMPATIBLE_FORMAT){
                     let data = LoadData.wrap(res);
@@ -662,14 +664,14 @@ class Basin{
                         path = MAP_TYPES[b.mapType].path;
                     return loadImg(path).then(img=>{
                         img.loadPixels();
-                        b.mapImg = img;
+                        mapImg = img;
                         return b;
                     });
                 }
                 return b;
             }).then(b=>{
                 noiseSeed(b.seed);
-                land = new Land(b);
+                land = new Land(b, mapImg);
                 return b.fetchSeason(-1,true,false,true).then(s=>{
                     let arr = [];
                     for(let i=0;i<s.systems.length;i++){

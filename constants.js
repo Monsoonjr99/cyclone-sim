@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.4.2";
+const VERSION_NUMBER = "0.4.3";
 
 const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -16,7 +16,7 @@ const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
-const MAP_DEFINITION = 2;   // normal scaler for the land map
+// const MAP_DEFINITION = 2;   // normal scaler for the land map
 const EARTH_SB_IDS = {
     world: 0,
     nhem: 1,
