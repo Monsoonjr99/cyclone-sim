@@ -679,100 +679,77 @@ class Land{
     *draw(){
         yield "Rendering land...";
         const {fullW: W, fullH: H} = fullDimensions();
-        let scl = W/WIDTH;
-        let lget;
-        if(this.earth){
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
-            };
-        }else{
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
-            };
+        const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
+
+        // abbreviate pixel arrays of images to draw to
+        const landPx = landBuffer.pixels;
+        const coastPx = coastLine.pixels;
+        const outBasinPx = outBasinBuffer.pixels;
+
+        // cache colors for 256 possible land height values to avoid expensive calculations in pixel loop
+        const C = COLORS.land;
+        const colorCache = [];
+        for(let i = 255, ci = 0; i >= 0; i--){
+            let l;
+            if(this.earth)
+                l = map(sqrt(map(i,12,150,0,1,true)),0,1,0.501,1);
+            else
+                l = Math.max(i / 255, 0.501);
+            if(C[ci] && l <= C[ci][0])
+                ci++;
+            if(ci >= C.length)
+                colorCache[i] = {r: 0, g: 0, b: 0};
+            else{
+                let color = C[ci][1];
+                if(simSettings.smoothLandColor && ci > 0){
+                    const color1 = C[ci - 1][1];
+                    const f = map(l, C[ci][0], C[ci - 1][0], 0, 1);
+                    color = lerpColor(color, color1, f);
+                }
+                colorCache[i] = {r: red(color), g: green(color), b: blue(color)};
+            }
         }
-        let bget = (x,y)=>{
-            let index = 4 * (y * W + x);
-            let sb = this.map.pixels[index+2];
-            return this.basin.subInBasin(sb);
-        };
-        // let sget = (x,y)=>this.getSubBasin(Coordinate.convertFromXY(this.basin.mapType,x/scl,y/scl));
-        // let outOfSub = (s0,s1)=>{
-        //     for(let sub of this.basin.forSubBasinChain(s1)){
-        //         if(sub===s0) return false;
-        //     }
-        //     return true;
-        // };
+        colorCache.outBasin = {r: red(COLORS.outBasin), g: green(COLORS.outBasin), b: blue(COLORS.outBasin)};
+
+        // cache of booleans of whether a sub-basin is out-basin or not; cached as-needed from within pixel loop as sub-basin ids are assumed unknown
+        const outBasinCache = {};
+
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
-                let landVal = lget(i,j);
                 let index = 4 * (j * W + i);
-                if(landVal){
-                    for(let k=0;k<COLORS.land.length;k++){
-                        if(landVal > COLORS.land[k][0]){
-                            let c = COLORS.land[k][1];
-                            if(simSettings.smoothLandColor && k>0){
-                                let c1 = COLORS.land[k-1][1];
-                                let f = map(landVal,COLORS.land[k][0],COLORS.land[k-1][0],0,1);
-                                c = lerpColor(c,c1,f);
-                            }
-                            landBuffer.pixels[index] = red(c);
-                            landBuffer.pixels[index + 1] = green(c);
-                            landBuffer.pixels[index + 2] = blue(c);
-                            landBuffer.pixels[index + 3] = 255;
-                            break;
-                        }
-                    }
+                if(src[index + 1]){ // if pixel is on land
+                    const v = src[index]; // land elevation value
+                    landPx[index] = colorCache[v].r;
+                    landPx[index + 1] = colorCache[v].g;
+                    landPx[index + 2] = colorCache[v].b;
+                    landPx[index + 3] = 255;
+
                     let touchingOcean = false;
-                    if(i>0 && !lget(i-1,j)) touchingOcean = true;
-                    if(j>0 && !lget(i,j-1)) touchingOcean = true;
-                    if(i<W-1 && !lget(i+1,j)) touchingOcean = true;
-                    if(j<H-1 && !lget(i,j+1)) touchingOcean = true;
+                    if(i>0 && !src[index - 4 + 1]) touchingOcean = true;
+                    if(j>0 && !src[index - 4 * W + 1]) touchingOcean = true;
+                    if(i<W-1 && !src[index + 4 + 1]) touchingOcean = true;
+                    if(j<H-1 && !src[index + 4 * W + 1]) touchingOcean = true;
                     if(touchingOcean){
-                        coastLine.pixels[index] = 0;
-                        coastLine.pixels[index + 1] = 0;
-                        coastLine.pixels[index + 2] = 0;
-                        coastLine.pixels[index + 3] = 255;
+                        coastPx[index] = 0;
+                        coastPx[index + 1] = 0;
+                        coastPx[index + 2] = 0;
+                        coastPx[index + 3] = 255;
                     }else
-                        coastLine.pixels[index + 3] = 0;
-                    outBasinBuffer.pixels[index + 3] = 0;
+                        coastPx[index + 3] = 0;
+                    outBasinPx[index + 3] = 0;
                 }else{
                     landBuffer.pixels[index + 3] = 0;
-                    coastLine.pixels[index + 3] = 0;
-                    if(!bget(i,j)){
-                        outBasinBuffer.pixels[index] = red(COLORS.outBasin);
-                        outBasinBuffer.pixels[index + 1] = green(COLORS.outBasin);
-                        outBasinBuffer.pixels[index + 2] = blue(COLORS.outBasin);
-                        outBasinBuffer.pixels[index + 3] = 255;
+                    coastPx[index + 3] = 0;
+                    const sb = src[index + 2]; // sub-basin id
+                    if(outBasinCache[sb] === undefined)
+                        outBasinCache[sb] = !this.basin.subInBasin(sb);
+                    if(outBasinCache[sb]){
+                        outBasinPx[index] = colorCache.outBasin.r;
+                        outBasinPx[index + 1] = colorCache.outBasin.g;
+                        outBasinPx[index + 2] = colorCache.outBasin.b;
+                        outBasinPx[index + 3] = 255;
                     }else
-                        outBasinBuffer.pixels[index + 3] = 0;
-                    // for(let s of this.basin.forSubBasinChain(sget(i,j))){
-                    //     let sb = this.basin.subBasins[s];
-                    //     if(sb instanceof SubBasin && sb.mapOutline){
-                    //         let outline = sb.mapOutline;
-                    //         let edge = false;
-                    //         if(i>0){
-                    //             if(lget(i-1,j)) edge = true;
-                    //             else if(outOfSub(s,sget(i-1,j))) edge = true;
-                    //         }else edge = true;
-                    //         if(j>0){
-                    //             if(lget(i,j-1)) edge = true;
-                    //             else if(outOfSub(s,sget(i,j-1))) edge = true;
-                    //         }else edge = true;
-                    //         if(i<W-1){
-                    //             if(lget(i+1,j)) edge = true;
-                    //             if(outOfSub(s,sget(i+1,j))) edge = true;
-                    //         }else edge = true;
-                    //         if(j<H-1){
-                    //             if(lget(i,j+1)) edge = true;
-                    //             if(outOfSub(s,sget(i,j+1))) edge = true;
-                    //         }else edge = true;
-                    //         if(edge) outline.fill(COLORS.subBasinOutline);
-                    //         else outline.fill(red(COLORS.subBasinOutline),green(COLORS.subBasinOutline),blue(COLORS.subBasinOutline),64);
-                    //         outline.rect(i,j,1,1);
-                    //     }
-                    // }
+                        outBasinPx[index + 3] = 0;
                 }
             }
         }
@@ -791,38 +768,39 @@ class Land{
     *drawSnow(){
         yield "Rendering " + (random()<0.02 ? "sneaux" : "snow") + "...";
         const {fullW: W, fullH: H} = fullDimensions();
-        let scl = W/WIDTH;
-        let lget;
-        if(this.earth){
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
-            };
-        }else{
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
-            };
+        const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
+
+        const eleCache = []; // cache elevation values to avoid expensive function calls in pixel loop
+        for(let i = 255; i >= 0; i--){
+            let l;
+            if(this.earth)
+                l = map(sqrt(map(i,12,150,0,1,true)),0,1,0.501,1);
+            else
+                l = Math.max(i / 255, 0.501);
+            eleCache[i] = l;
         }
-        let snowLayers = simSettings.snowLayers * 10;
+        const snowColor = {r: red(COLORS.snow), g: green(COLORS.snow), b: blue(COLORS.snow)};
+        
+        const SHem = this.basin.SHem;
+        
+        const snowLayers = simSettings.snowLayers * 10;
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
-                let landVal = lget(i,j);
                 let index = 4 * (j * W + i);
-                if(landVal){
-                    let l = 1-this.basin.hemY(j/scl)/HEIGHT;
-                    let h = 0.95-landVal;
-                    let p = l>0 ? ceil(map(h/l,0.15,0.45,0,snowLayers)) : h<0 ? 0 : snowLayers;
+                if(src[index + 1]){ // if pixel is on land
+                    let l = 1 - j / H;
+                    if(SHem)
+                        l = 1 - l;
+                    let h = 0.95 - eleCache[src[index]];
+                    let p = l > 0 ? Math.ceil((snowLayers / 0.3) * (h / l - 0.15)) : h < 0 ? 0 : snowLayers;
                     for(let k = 0; k < snowLayers; k++){
                         if(k >= p){
-                            snow[k].pixels[index] = red(COLORS.snow);
-                            snow[k].pixels[index + 1] = green(COLORS.snow);
-                            snow[k].pixels[index + 2] = blue(COLORS.snow);
+                            snow[k].pixels[index] = snowColor.r;
+                            snow[k].pixels[index + 1] = snowColor.g;
+                            snow[k].pixels[index + 2] = snowColor.b;
                             snow[k].pixels[index + 3] = 255;
                         }else
                             snow[k].pixels[index + 3] = 0;
-                        
-                        // snow[k].rect(i,j,1,1);
                     }
                 }else{
                     for(let k = 0; k < snowLayers; k++){
@@ -840,37 +818,33 @@ class Land{
     *drawShader(){
         yield "Rendering shadows...";
         const {fullW: W, fullH: H} = fullDimensions();
-        let scl = W/WIDTH;
-        let lget;
-        if(this.earth){
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? map(sqrt(map(this.map.pixels[index],12,150,0,1,true)),0,1,0.501,1) : 0;
-            };
-        }else{
-            lget = (x,y)=>{
-                let index = 4 * (y * W + x);
-                return this.map.pixels[index+1] ? this.map.pixels[index] / 255 : 0;
-            };
+        const src = this.map.pixels; // source image for land data; red channel is elevation; green channel is land/water; blue channel is sub-basin id
+
+        const eleCache = []; // cache elevation values to avoid expensive function calls in pixel loop
+        for(let i = 255; i >= 0; i--){
+            let l;
+            if(this.earth)
+                l = map(sqrt(map(i,12,150,0,1,true)),0,1,0.501,1);
+            else
+                l = Math.max(i / 255, 0.501);
+            eleCache[i] = l;
         }
+        
         for(let i=0;i<W;i++){
             for(let j=0;j<H;j++){
-                let v = lget(i,j);
                 let index = 4 * (j * W + i);
-                if(v===0) v = 0.5;
+                let v = src[index + 1] ? eleCache[src[index]] : 0.5;
                 let m = 0;
-                for(let k=1;k<6;k++){
-                    let s = lget(i-k,j-k)-v-k*0.0008;
-                    s = constrain(map(s,0,0.14,0,191),0,191);
-                    if(s>m) m = s;
+                for(let k = 1; k < 6; k++){
+                    let s = eleCache[src[index - 4 * k * W - 4 * k]] - v - k * 0.0008;
+                    s = Math.min(Math.max(s * 191 / 0.14, 0), 191);
+                    if(s > m) m = s;
                 }
-                if(m>0){
+                if(m > 0){
                     landShadows.pixels[index] = 0;
                     landShadows.pixels[index + 1] = 0;
                     landShadows.pixels[index + 2] = 0;
-                    landShadows.pixels[index + 3] = m;
-                    // landShadows.fill(0,m);
-                    // landShadows.rect(i,j,1,1);
+                    landShadows.pixels[index + 3] = Math.floor(m);
                 }else
                     landShadows.pixels[index + 3] = 0;
             }
