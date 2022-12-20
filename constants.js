@@ -214,6 +214,8 @@ const SCALE_MEASURE_ONE_MIN_MPH = 4;
 const SCALE_MEASURE_TEN_MIN_MPH = 5;
 const SCALE_MEASURE_ONE_MIN_KMH = 6;
 const SCALE_MEASURE_TEN_MIN_KMH = 7;
+const MIN_SPEED = 5;
+const MAX_SPEED = 0;
 
 // Saving/loading-related constants
 

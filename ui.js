@@ -1382,7 +1382,23 @@ UI.init = function(){
     },function(){
         if(!panel_timeline_container.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
         panel_timeline_container.toggleShow();
-    }).append(false,-29,0,24,24,function(s){  // Pause/resume button
+    }).append(false,-29,0,24,10,function(s){     // Speed increase
+        let grey = simSpeed == MAX_SPEED;
+        s.button('', false, undefined, grey);
+        triangle(4,2,12,5,4,8);
+        triangle(12,2,20,5,12,8);
+    },function(){
+        if(simSpeed > MAX_SPEED)
+            simSpeed--;
+    }).append(false,0,14,24,10,function(s){     // Speed decrease
+        let grey = simSpeed == MIN_SPEED;
+        s.button('', false, undefined, grey);
+        triangle(20,2,12,5,20,8);
+        triangle(12,2,4,5,12,8);
+    },function(){
+        if(simSpeed < MIN_SPEED)
+            simSpeed++;
+    }).append(false,-29,-14,24,24,function(s){  // Pause/resume button
         s.button('');
         if(paused) triangle(3,3,21,12,3,21);
         else{
@@ -2216,12 +2232,12 @@ function keyPressed(){
         default:
         switch(keyCode){
             case KEY_LEFT_BRACKET:
-            simSpeed++;
-            if(simSpeed>5) simSpeed=5;
+            if(simSpeed < MIN_SPEED)
+                simSpeed++;
             break;
             case KEY_RIGHT_BRACKET:
-            simSpeed--;
-            if(simSpeed<0) simSpeed=0;
+            if(simSpeed > MAX_SPEED)
+                simSpeed--;
             break;
             case KEY_F11:
             toggleFullscreen();
