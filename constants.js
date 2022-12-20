@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.4.3";
+const VERSION_NUMBER = "0.4.4";
 
 const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -214,6 +214,8 @@ const SCALE_MEASURE_ONE_MIN_MPH = 4;
 const SCALE_MEASURE_TEN_MIN_MPH = 5;
 const SCALE_MEASURE_ONE_MIN_KMH = 6;
 const SCALE_MEASURE_TEN_MIN_KMH = 7;
+const MIN_SPEED = 5;
+const MAX_SPEED = 0;
 
 // Saving/loading-related constants
 
