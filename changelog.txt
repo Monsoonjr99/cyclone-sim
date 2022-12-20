@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.4 (2022-12-20):
+    + Added simulation speed control buttons
 v0.4.3 (2022-08-20):
     * Significantly improved the speed of land and fx drawing
 v0.4.2 (2022-08-09):
