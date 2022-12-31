@@ -107,6 +107,7 @@ class Basin{
         UI.viewBasin = this;
         selectedStorm = undefined;
         paused = this.tick!==0;
+        lastUpdateTimestamp = performance.now();
         refreshTracks(true);
         primaryWrapper.show();
         renderToDo = land.draw();
@@ -159,6 +160,8 @@ class Basin{
     advanceSim(steps){
         if(steps === undefined)
             steps = 1;
+        else if(steps === 0)
+            return;
         
         const advDiff = Math.floor((this.tick + steps) / ADVISORY_TICKS) - Math.floor(this.tick / ADVISORY_TICKS);
 

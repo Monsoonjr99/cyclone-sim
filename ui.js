@@ -1388,16 +1388,16 @@ UI.init = function(){
         triangle(4,2,12,5,4,8);
         triangle(12,2,20,5,12,8);
     },function(){
-        if(simSpeed > MAX_SPEED)
-            simSpeed--;
+        if(simSpeed < MAX_SPEED)
+            simSpeed++;
     }).append(false,0,14,24,10,function(s){     // Speed decrease
         let grey = simSpeed == MIN_SPEED;
         s.button('', false, undefined, grey);
         triangle(20,2,12,5,20,8);
         triangle(12,2,4,5,12,8);
     },function(){
-        if(simSpeed < MIN_SPEED)
-            simSpeed++;
+        if(simSpeed > MIN_SPEED)
+            simSpeed--;
     }).append(false,-29,-14,24,24,function(s){  // Pause/resume button
         s.button('');
         if(paused) triangle(3,3,21,12,3,21);
@@ -1407,6 +1407,7 @@ UI.init = function(){
         }
     },function(){
         paused = !paused;
+        lastUpdateTimestamp = performance.now();
     }).append(false,-105,0,100,24,function(s){  // Pause/speed/selected storm indicator
         let txtStr = "";
         if(selectedStorm){
@@ -1422,7 +1423,20 @@ UI.init = function(){
                 sName = selectedStorm.getFullNameByTick("peak");
                 txtStr = sName + " - ACE: " + selectedStorm.ACE;
             }
-        }else txtStr = paused ? "Paused" : (simSpeed===0 ? "Full-" : simSpeed===1 ? "Half-" : "1/" + pow(2,simSpeed) + " ") + "Speed";
+        }else{
+            if(paused)
+                txtStr = "Paused";
+            else if(simSpeed < -1)
+                txtStr = `1/${Math.pow(2, -simSpeed)} Speed`;
+            else if(simSpeed === -1)
+                txtStr = 'Half-Speed';
+            else if(simSpeed === 0)
+                txtStr = 'Normal-Speed';
+            else if(simSpeed === 1)
+                txtStr = 'Double-Speed';
+            else
+                txtStr = `${Math.pow(2, simSpeed)}x Speed`;
+        }
         let newW = textWidth(txtStr)+6;
         this.setBox(-newW-5,undefined,newW);
         if(this.isHovered()){
@@ -1433,8 +1447,10 @@ UI.init = function(){
         textAlign(RIGHT,TOP);
         text(txtStr,this.width-3,3);
     },function(){
-        if(!selectedStorm) paused = !paused;
-        else{
+        if(!selectedStorm){
+            paused = !paused;
+            lastUpdateTimestamp = performance.now();
+        }else{
             stormInfoPanel.target = selectedStorm;
             panel_timeline_container.show();
         }
@@ -2210,7 +2226,10 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        if(UI.viewBasin && primaryWrapper.showing) paused = !paused;
+        if(UI.viewBasin && primaryWrapper.showing){
+            paused = !paused;
+            lastUpdateTimestamp = performance.now();
+        }
         break;
         case "a":
         if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
@@ -2232,12 +2251,12 @@ function keyPressed(){
         default:
         switch(keyCode){
             case KEY_LEFT_BRACKET:
-            if(simSpeed < MIN_SPEED)
-                simSpeed++;
+            if(simSpeed > MIN_SPEED)
+                simSpeed--;
             break;
             case KEY_RIGHT_BRACKET:
-            if(simSpeed > MAX_SPEED)
-                simSpeed--;
+            if(simSpeed < MAX_SPEED)
+                simSpeed++;
             break;
             case KEY_F11:
             toggleFullscreen();
