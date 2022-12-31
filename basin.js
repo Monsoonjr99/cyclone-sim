@@ -107,12 +107,14 @@ class Basin{
         UI.viewBasin = this;
         selectedStorm = undefined;
         paused = this.tick!==0;
+        lastUpdateTimestamp = performance.now();
         refreshTracks(true);
         primaryWrapper.show();
         renderToDo = land.draw();
     }
 
-    advanceSim(){
+    advanceSimOneStep(){
+        let metadata = {needTrackRefresh: false, needForceTrackRefresh: false, needEnvLayerRefresh: false, needSave: false};
         let vp = this.viewingPresent();
         let os = this.getSeason(-1);
         this.tick++;
@@ -125,7 +127,10 @@ class Basin{
             this.seasons[curSeason] = e;
             this.expireSeasonTimer(curSeason);
         }
-        if(!vp || curSeason!==vs) refreshTracks(curSeason!==vs);
+        if(!vp || curSeason!==vs){
+            metadata.needTrackRefresh = true;
+            metadata.needForceTrackRefresh = curSeason!==vs;
+        }
         this.env.wobble();    // random change in environment for future forecast realism
         for(let i=0;i<this.activeSystems.length;i++){   // update active storm systems
             for(let j=i+1;j<this.activeSystems.length;j++){
@@ -141,13 +146,52 @@ class Basin{
                 stormKilled = true;
             }
         }
-        if(stormKilled) refreshTracks();    // redraw tracks whenever a storm system dies
-        if(this.tick%ADVISORY_TICKS===0){   // redraw map layer and record environmental field state every advisory
-            this.env.displayLayer();
+        metadata.needTrackRefresh |= stormKilled;   // redraw tracks whenever a storm system dies
+        if(this.tick % ADVISORY_TICKS === 0){   // redraw map layer and record environmental field state every advisory
+            metadata.needEnvLayerRefresh = true;
             this.env.record();
-        }else if(simSettings.showMagGlass) this.env.updateMagGlass();   // redraw magnifying glass if displayed (and if it wasn't already redrawn with the map layer)
+        }
         let curTime = this.tickMoment();
-        if(simSettings.doAutosave && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0) this.save();    // autosave at 00z on the 1st and 15th days of every month
+        if(simSettings.doAutosave && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0)    // autosave at 00z on the 1st and 15th days of every month
+            metadata.needSave = true;
+        return metadata;
+    }
+
+    advanceSim(steps){
+        if(steps === undefined)
+            steps = 1;
+        else if(steps === 0)
+            return;
+        
+        const advDiff = Math.floor((this.tick + steps) / ADVISORY_TICKS) - Math.floor(this.tick / ADVISORY_TICKS);
+
+        let needTrackRefresh = false,
+            needForceTrackRefresh = false,
+            needEnvLayerRefresh = false,
+            needSave = false;
+
+        for(let i = 0; i < steps; i++){
+            let metadata = this.advanceSimOneStep();
+            needTrackRefresh |= metadata.needTrackRefresh;
+            needForceTrackRefresh |= metadata.needForceTrackRefresh;
+            needEnvLayerRefresh |= metadata.needEnvLayerRefresh;
+            needSave |= metadata.needSave;
+        }
+
+        if(needTrackRefresh || advDiff >= 2)
+            refreshTracks(needForceTrackRefresh || advDiff >= 2);
+        else if(advDiff === 1){
+            for(let i = 0; i < this.activeSystems.length; i++)
+                this.activeSystems[i].fetchStorm().renderTrack(true);
+        }
+
+        if(needEnvLayerRefresh)
+            this.env.displayLayer();
+        else if(simSettings.showMagGlass)   // redraw magnifying glass if displayed (and if it wasn't already redrawn with the map layer)
+            this.env.updateMagGlass();
+        
+        if(needSave)
+            this.save();
     }
 
     startTime(){

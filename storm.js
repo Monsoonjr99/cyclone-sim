@@ -1177,7 +1177,7 @@ class ActiveSystem extends StormData{
         this.fetchStorm().updateStats(adv);
         this.fetchStorm().record.push(adv);
         this.doTrackForecast();
-        this.fetchStorm().renderTrack(true);
+        // this.fetchStorm().renderTrack(true);
     }
 
     // getSteering(){

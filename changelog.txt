@@ -1,5 +1,11 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.6 (2022-12-31):
+    + Added faster simulation speed settings
+        > Simulation speeds now range from 1/32 to 32x
+        > Caution: faster simulation speeds may result in lag
+    * Technical changes to support faster speed settings
+        > Rendering of tracks and environmental map layers decoupled from simulation steps
 v0.4.5 (2022-12-21):
     * "Wiki" scale color schemes reverted to as they were before v0.3.15, following Wikipedia consensus (or lack thereof)
 v0.4.4 (2022-12-20):

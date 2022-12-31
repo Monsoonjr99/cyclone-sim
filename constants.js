@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.4.5";
+const VERSION_NUMBER = "0.4.6";
 
 const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -12,6 +12,7 @@ const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
+const STEP = 30;            // Number of milliseconds in real time a simulation step lasts at default speed
 const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
@@ -214,8 +215,8 @@ const SCALE_MEASURE_ONE_MIN_MPH = 4;
 const SCALE_MEASURE_TEN_MIN_MPH = 5;
 const SCALE_MEASURE_ONE_MIN_KMH = 6;
 const SCALE_MEASURE_TEN_MIN_KMH = 7;
-const MIN_SPEED = 5;
-const MAX_SPEED = 0;
+const MIN_SPEED = -5;
+const MAX_SPEED = 5;
 
 // Saving/loading-related constants
 
