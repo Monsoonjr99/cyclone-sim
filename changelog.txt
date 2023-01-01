@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.7 (2023-01-01):
+    * Fixed random gaps appearing in tracks when simulating in season track summary mode
 v0.4.6 (2022-12-31):
     + Added faster simulation speed settings
         > Simulation speeds now range from 1/32 to 32x
