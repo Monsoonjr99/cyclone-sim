@@ -180,7 +180,8 @@ class Basin{
 
         if(needTrackRefresh || advDiff >= 2)
             refreshTracks(needForceTrackRefresh || advDiff >= 2);
-        else if(advDiff === 1){
+
+        if(advDiff === 1){
             for(let i = 0; i < this.activeSystems.length; i++)
                 this.activeSystems[i].fetchStorm().renderTrack(true);
         }
