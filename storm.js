@@ -263,7 +263,7 @@ class Storm{
             stormIcons.fill(0);
             if(simSettings.showStrength){
                 stormIcons.textSize(10);
-                stormIcons.text(floor(st) + " / " + floor(pr), 0, DIAMETER);
+                stormIcons.text(`${displayWindspeed(floor(st), 1)}\n${floor(pr)} hPa`, 0, DIAMETER + 5);
             }
             if(name){
                 stormIcons.textAlign(LEFT,CENTER);
