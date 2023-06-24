@@ -1,5 +1,10 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.9 (2023-06-24):
+    + Added setting for wind speed unit to display (kts, mph, or km/h)
+        > Hotkey: "u"
+        > Applies everywhere a wind speed value is displayed (top bar, side panel, etc.)
+    * Storm icon intensity indicator improved and now shows units
 v0.4.8 (2023-04-01):
     * Updated several name lists
     * Fixed subtropical storms
