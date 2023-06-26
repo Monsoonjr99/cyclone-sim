@@ -594,8 +594,63 @@ DesignationSystem.mediterranean = new DesignationSystem({
     ]
 });
 
+DesignationSystem.atlantic1950 = new DesignationSystem({
+    displayName: 'Atlantic (1950-52)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1950,
+    mainLists: [
+        ['Able', 'Baker', 'Charlie', 'Dog', 'Easy', 'Fox', 'George', 'How', 'Item', 'Jig', 'King', 'Love', 'Mike', 'Nan', 'Oboe', 'Peter', 'Queen', 'Roger', 'Sugar', 'Tare', 'Uncle', 'Victor', 'William', 'Xray', 'Yoke', 'Zebra']
+    ]
+});
+
+DesignationSystem.atlantic1953 = new DesignationSystem({
+    displayName: 'Atlantic (1953-59)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1953,
+    mainLists: [
+        ['Alice', 'Barbara', 'Carol', 'Dolly', 'Edna', 'Florence', 'Gail', 'Hazel', 'Irene', 'Jill', 'Katherine', 'Lucy', 'Mabel', 'Norma', 'Orpha', 'Patsy', 'Queen', 'Rachel', 'Susie', 'Tina', 'Una', 'Vicky', 'Wallis'],
+        ['Alice', 'Barbara', 'Carol', 'Dolly', 'Edna', 'Florence', 'Gilda', 'Hazel', 'Irene', 'Jill', 'Katherine', 'Lucy', 'Mabel', 'Norma', 'Orpha', 'Patsy', 'Queen', 'Rachel', 'Susie', 'Tina', 'Una', 'Vicky', 'Wallis'],
+        ['Alice', 'Brenda', 'Connie', 'Diane', 'Edith', 'Flora', 'Gladys', 'Hilda', 'Ione', 'Janet', 'Katie', 'Linda', 'Martha', 'Nelly', 'Orva', 'Peggy', 'Queena', 'Rosa', 'Stella', 'Trudy', 'Ursa', 'Verna', 'Wilma', 'Xenia', 'Yvonne', 'Zelda'],
+        ['Anna', 'Betsy', 'Carla', 'Dora', 'Ethel', 'Flossy', 'Greta', 'Hattie', 'Inez', 'Judith', 'Kitty', 'Laura', 'Molly', 'Nona', 'Odette', 'Paula', 'Quenby', 'Rhoda', 'Sadie', 'Terese', 'Ursel', 'Vesta', 'Winny', 'Xina', 'Yola', 'Zenda'],
+        ['Audrey', 'Bertha', 'Carrie', 'Debbie', 'Esther', 'Frieda', 'Gracie', 'Hannah', 'Inga', 'Jessie', 'Kathie', 'Lisa', 'Margo', 'Netty', 'Odelle', 'Patty', 'Quinta', 'Roxie', 'Sandra', 'Theo', 'Undine', 'Venus', 'Wenda', 'Xmay', 'Yasmin', 'Zita'],
+        ['Alma', 'Becky', 'Cleo', 'Daisy', 'Ella', 'Fifi', 'Gerda', 'Helene', 'Ilsa', 'Janice', 'Katy', 'Lila', 'Milly', 'Nola', 'Orchid', 'Portia', 'Queeny', 'Rena', 'Sherry', 'Thora', 'Udele', 'Virgy', 'Wilna', 'Xrae', 'Yurith', 'Zorna'],
+        ['Arlene', 'Beulah', 'Cindy', 'Debra', 'Edith', 'Flora', 'Gracie', 'Hannah', 'Irene', 'Judith', 'Kristy', 'Lois', 'Marsha', 'Nellie', 'Orpha', 'Penny', 'Quella', 'Rachel', 'Sophie', 'Tanya', 'Udele', 'Vicky', 'Wilma', 'Xcel', 'Yasmin', 'Zasu']
+    ]
+});
+
+DesignationSystem.atlantic1960 = new DesignationSystem({
+    displayName: 'Atlantic (1960-63)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1960,
+    mainLists: [
+        ['Abby', 'Brenda', 'Cleo', 'Donna', 'Ethel', 'Florence', 'Gladys', 'Hilda', 'Isbell', 'Janet', 'Katy', 'Lila', 'Molly', 'Nita', 'Odette', 'Paula', 'Roxie', 'Stella', 'Trudy', 'Vesta', 'Winny'],
+        ['Anna', 'Betsy', 'Carla', 'Debbie', 'Esther', 'Frances', 'Gerda', 'Hattie', 'Inga', 'Jenny', 'Kara', 'Laurie', 'Martha', 'Netty', 'Orva', 'Peggy', 'Rhoda', 'Sadie', 'Tanya', 'Virgy', 'Wenda'],
+        ['Alma', 'Becky', 'Celia', 'Daisy', 'Ella', 'Flossie', 'Greta', 'Hallie', 'Inez', 'Judith', 'Kendra', 'Lois', 'Marsha', 'Noreen', 'Orpha', 'Patty', 'Rena', 'Sherry', 'Thora', 'Vicky', 'Wilna'],
+        ['Arlene', 'Beulah', 'Cindy', 'Debra', 'Edith', 'Flora', 'Ginny', 'Helena', 'Irene', 'Janice', 'Kristy', 'Laura', 'Margo', 'Nona', 'Orchid', 'Portia', 'Rachel', 'Sandra', 'Terese', 'Verna', 'Wallis']
+    ]
+});
+
+DesignationSystem.atlantic1972 = new DesignationSystem({
+    displayName: 'Atlantic (1972-78)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1972,
+    mainLists: [
+        ['Agnes', 'Betty', 'Carrie', 'Dawn', 'Edna', 'Felice', 'Gerda', 'Harriet', 'Ilene', 'Jane', 'Kara', 'Lucile', 'Mae', 'Nadine', 'Odette', 'Polly', 'Rita', 'Sarah', 'Tina', 'Velma', 'Wendy'],
+        ['Alice', 'Brenda', 'Christine', 'Delia', 'Ellen', 'Fran', 'Gilda', 'Helen', 'Imogene', 'Joy', 'Kate', 'Loretta', 'Madge', 'Nancy', 'Ona', 'Patsy', 'Rose', 'Sally', 'Tam', 'Vera', 'Wilda'],
+        ['Alma', 'Becky', 'Dolly', 'Elaine', 'Fifi', 'Gertrude', 'Hester', 'Ivy', 'Justine', 'Kathy', 'Linda', 'Marsha', 'Nelly', 'Olga', 'Pearl', 'Roxanne', 'Sabrina', 'Thelma', 'Viola', 'Wilma'],
+        ['Amy', 'Blanche', 'Caroline', 'Doris', 'Eloise', 'Faye', 'Gladys', 'Hallie', 'Ingrid', 'Julia', 'Kitty', 'Lilly', 'Mabel', 'Niki', 'Opal', 'Peggy', 'Ruby', 'Sheila', 'Tilda', 'Vicky', 'Winnie'],
+        ['Anna', 'Belle', 'Candice', 'Dottie', 'Emmy', 'Frances', 'Gloria', 'Holly', 'Inga', 'Jill', 'Kay', 'Lilias', 'Maria', 'Nola', 'Orpha', 'Pamela' ,'Ruth', 'Shirley', 'Trixie', 'Vilda', 'Wynne'],
+        ['Anita', 'Babe', 'Clara', 'Dorothy', 'Evelyn', 'Frieda', 'Grace', 'Hannah', 'Ida', 'Jodie', 'Kristina', 'Lois', 'Mary', 'Nora', 'Odel', 'Penny', 'Raquel', 'Sophia', 'Trudy', 'Virginia', 'Willene'],
+        ['Amelia', 'Bess', 'Cora', 'Debra', 'Ella', 'Flossie', 'Greta', 'Hope', 'Irma', 'Juliet', 'Kendra', 'Louise', 'Martha', 'Noreen', 'Ora', 'Paula', 'Rosalie', 'Susan', 'Tanya', 'Vanessa', 'Wanda']
+    ]
+});
+
 DesignationSystem.atlantic1979 = new DesignationSystem({
-    displayName: 'Atlantic (1979-1984)',
+    displayName: 'Atlantic (1979-84)',
     suffix: 'L',
     annual: true,
     anchor: 1979,
@@ -638,6 +693,10 @@ DesignationSystem.presetDesignationSystems = [
     DesignationSystem.mediterranean,
     DesignationSystem.australianRegionJakarta,
     DesignationSystem.australianRegionPortMoresby,
+    DesignationSystem.atlantic1950,
+    DesignationSystem.atlantic1953,
+    DesignationSystem.atlantic1960,
+    DesignationSystem.atlantic1972,
     DesignationSystem.atlantic1979,
     DesignationSystem.periodicTable,
     DesignationSystem.periodicTableAnnual
