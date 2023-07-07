@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.10 (2023-07-07):
+    + Added more historic name lists for the Atlantic going back to 1950
+    + Added historic name lists for the Eastern Pacific going back to 1960
 v0.4.9 (2023-06-24):
     + Added setting for wind speed unit to display (kts, mph, or km/h)
         > Hotkey: "u"

@@ -594,8 +594,63 @@ DesignationSystem.mediterranean = new DesignationSystem({
     ]
 });
 
+DesignationSystem.atlantic1950 = new DesignationSystem({
+    displayName: 'Atlantic (1950-52)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1950,
+    mainLists: [
+        ['Able', 'Baker', 'Charlie', 'Dog', 'Easy', 'Fox', 'George', 'How', 'Item', 'Jig', 'King', 'Love', 'Mike', 'Nan', 'Oboe', 'Peter', 'Queen', 'Roger', 'Sugar', 'Tare', 'Uncle', 'Victor', 'William', 'Xray', 'Yoke', 'Zebra']
+    ]
+});
+
+DesignationSystem.atlantic1953 = new DesignationSystem({
+    displayName: 'Atlantic (1953-59)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1953,
+    mainLists: [
+        ['Alice', 'Barbara', 'Carol', 'Dolly', 'Edna', 'Florence', 'Gail', 'Hazel', 'Irene', 'Jill', 'Katherine', 'Lucy', 'Mabel', 'Norma', 'Orpha', 'Patsy', 'Queen', 'Rachel', 'Susie', 'Tina', 'Una', 'Vicky', 'Wallis'],
+        ['Alice', 'Barbara', 'Carol', 'Dolly', 'Edna', 'Florence', 'Gilda', 'Hazel', 'Irene', 'Jill', 'Katherine', 'Lucy', 'Mabel', 'Norma', 'Orpha', 'Patsy', 'Queen', 'Rachel', 'Susie', 'Tina', 'Una', 'Vicky', 'Wallis'],
+        ['Alice', 'Brenda', 'Connie', 'Diane', 'Edith', 'Flora', 'Gladys', 'Hilda', 'Ione', 'Janet', 'Katie', 'Linda', 'Martha', 'Nelly', 'Orva', 'Peggy', 'Queena', 'Rosa', 'Stella', 'Trudy', 'Ursa', 'Verna', 'Wilma', 'Xenia', 'Yvonne', 'Zelda'],
+        ['Anna', 'Betsy', 'Carla', 'Dora', 'Ethel', 'Flossy', 'Greta', 'Hattie', 'Inez', 'Judith', 'Kitty', 'Laura', 'Molly', 'Nona', 'Odette', 'Paula', 'Quenby', 'Rhoda', 'Sadie', 'Terese', 'Ursel', 'Vesta', 'Winny', 'Xina', 'Yola', 'Zenda'],
+        ['Audrey', 'Bertha', 'Carrie', 'Debbie', 'Esther', 'Frieda', 'Gracie', 'Hannah', 'Inga', 'Jessie', 'Kathie', 'Lisa', 'Margo', 'Netty', 'Odelle', 'Patty', 'Quinta', 'Roxie', 'Sandra', 'Theo', 'Undine', 'Venus', 'Wenda', 'Xmay', 'Yasmin', 'Zita'],
+        ['Alma', 'Becky', 'Cleo', 'Daisy', 'Ella', 'Fifi', 'Gerda', 'Helene', 'Ilsa', 'Janice', 'Katy', 'Lila', 'Milly', 'Nola', 'Orchid', 'Portia', 'Queeny', 'Rena', 'Sherry', 'Thora', 'Udele', 'Virgy', 'Wilna', 'Xrae', 'Yurith', 'Zorna'],
+        ['Arlene', 'Beulah', 'Cindy', 'Debra', 'Edith', 'Flora', 'Gracie', 'Hannah', 'Irene', 'Judith', 'Kristy', 'Lois', 'Marsha', 'Nellie', 'Orpha', 'Penny', 'Quella', 'Rachel', 'Sophie', 'Tanya', 'Udele', 'Vicky', 'Wilma', 'Xcel', 'Yasmin', 'Zasu']
+    ]
+});
+
+DesignationSystem.atlantic1960 = new DesignationSystem({
+    displayName: 'Atlantic (1960-63)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1960,
+    mainLists: [
+        ['Abby', 'Brenda', 'Cleo', 'Donna', 'Ethel', 'Florence', 'Gladys', 'Hilda', 'Isbell', 'Janet', 'Katy', 'Lila', 'Molly', 'Nita', 'Odette', 'Paula', 'Roxie', 'Stella', 'Trudy', 'Vesta', 'Winny'],
+        ['Anna', 'Betsy', 'Carla', 'Debbie', 'Esther', 'Frances', 'Gerda', 'Hattie', 'Inga', 'Jenny', 'Kara', 'Laurie', 'Martha', 'Netty', 'Orva', 'Peggy', 'Rhoda', 'Sadie', 'Tanya', 'Virgy', 'Wenda'],
+        ['Alma', 'Becky', 'Celia', 'Daisy', 'Ella', 'Flossie', 'Greta', 'Hallie', 'Inez', 'Judith', 'Kendra', 'Lois', 'Marsha', 'Noreen', 'Orpha', 'Patty', 'Rena', 'Sherry', 'Thora', 'Vicky', 'Wilna'],
+        ['Arlene', 'Beulah', 'Cindy', 'Debra', 'Edith', 'Flora', 'Ginny', 'Helena', 'Irene', 'Janice', 'Kristy', 'Laura', 'Margo', 'Nona', 'Orchid', 'Portia', 'Rachel', 'Sandra', 'Terese', 'Verna', 'Wallis']
+    ]
+});
+
+DesignationSystem.atlantic1972 = new DesignationSystem({
+    displayName: 'Atlantic (1972-78)',
+    suffix: 'L',
+    annual: true,
+    anchor: 1972,
+    mainLists: [
+        ['Agnes', 'Betty', 'Carrie', 'Dawn', 'Edna', 'Felice', 'Gerda', 'Harriet', 'Ilene', 'Jane', 'Kara', 'Lucile', 'Mae', 'Nadine', 'Odette', 'Polly', 'Rita', 'Sarah', 'Tina', 'Velma', 'Wendy'],
+        ['Alice', 'Brenda', 'Christine', 'Delia', 'Ellen', 'Fran', 'Gilda', 'Helen', 'Imogene', 'Joy', 'Kate', 'Loretta', 'Madge', 'Nancy', 'Ona', 'Patsy', 'Rose', 'Sally', 'Tam', 'Vera', 'Wilda'],
+        ['Alma', 'Becky', 'Dolly', 'Elaine', 'Fifi', 'Gertrude', 'Hester', 'Ivy', 'Justine', 'Kathy', 'Linda', 'Marsha', 'Nelly', 'Olga', 'Pearl', 'Roxanne', 'Sabrina', 'Thelma', 'Viola', 'Wilma'],
+        ['Amy', 'Blanche', 'Caroline', 'Doris', 'Eloise', 'Faye', 'Gladys', 'Hallie', 'Ingrid', 'Julia', 'Kitty', 'Lilly', 'Mabel', 'Niki', 'Opal', 'Peggy', 'Ruby', 'Sheila', 'Tilda', 'Vicky', 'Winnie'],
+        ['Anna', 'Belle', 'Candice', 'Dottie', 'Emmy', 'Frances', 'Gloria', 'Holly', 'Inga', 'Jill', 'Kay', 'Lilias', 'Maria', 'Nola', 'Orpha', 'Pamela' ,'Ruth', 'Shirley', 'Trixie', 'Vilda', 'Wynne'],
+        ['Anita', 'Babe', 'Clara', 'Dorothy', 'Evelyn', 'Frieda', 'Grace', 'Hannah', 'Ida', 'Jodie', 'Kristina', 'Lois', 'Mary', 'Nora', 'Odel', 'Penny', 'Raquel', 'Sophia', 'Trudy', 'Virginia', 'Willene'],
+        ['Amelia', 'Bess', 'Cora', 'Debra', 'Ella', 'Flossie', 'Greta', 'Hope', 'Irma', 'Juliet', 'Kendra', 'Louise', 'Martha', 'Noreen', 'Ora', 'Paula', 'Rosalie', 'Susan', 'Tanya', 'Vanessa', 'Wanda']
+    ]
+});
+
 DesignationSystem.atlantic1979 = new DesignationSystem({
-    displayName: 'Atlantic (1979-1984)',
+    displayName: 'Atlantic (1979-84)',
     suffix: 'L',
     annual: true,
     anchor: 1979,
@@ -609,6 +664,64 @@ DesignationSystem.atlantic1979 = new DesignationSystem({
     ],
     auxLists: [
         ['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta','Iota','Kappa','Lambda','Mu','Nu','Xi','Omicron','Pi','Rho','Sigma','Tau','Upsilon','Phi','Chi','Psi','Omega']
+    ]
+});
+
+DesignationSystem.easternPacific1960 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1960-65)',
+    suffix: 'E',
+    mainLists: [
+        ['Annette', 'Bonny', 'Celeste', 'Diana', 'Estelle', 'Fernanda', 'Gwen', 'Hyacinth', 'Iva', 'Joanne', 'Kathleen', 'Liza', 'Madeline', 'Naomi', 'Orla', 'Pauline', 'Rebecca', 'Simone', 'Tara', 'Valerie', 'Willa'],
+        ['Ava', 'Bernice', 'Claudia', 'Doreen', 'Emily', 'Florence', 'Glenda', 'Hazel', 'Irah', 'Jennifer', 'Katherine', 'Lillian', 'Mona', 'Natalie', 'Odessa', 'Prudence', 'Roslyn', 'Silvia', 'Tillie', 'Victoria', 'Wallie']
+    ]
+});
+
+DesignationSystem.easternPacific1965 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1965-68)',
+    suffix: 'E',
+    annual: true,
+    anchor: 1965,
+    mainLists: [
+        ['Ava', 'Bernice', 'Claudia', 'Doreen', 'Emily', 'Florence', 'Glenda', 'Hazel', 'Irah', 'Jennifer', 'Katherine', 'Lillian', 'Mona', 'Natalie', 'Odessa', 'Prudence', 'Roslyn', 'Silvia', 'Tillie', 'Victoria', 'Wallie'],
+        ['Adele', 'Blanca', 'Connie', 'Dolores', 'Eileen', 'Francesca', 'Gretchen', 'Helga', 'Ione', 'Joyce', 'Kirsten', 'Lorraine', 'Maggie', 'Norma', 'Orlene', 'Patricia', 'Rosalie', 'Selma', 'Toni', 'Vivian', 'Winona'],
+        ['Agatha', 'Bridget', 'Carlotta', 'Denise', 'Eleanor', 'Francene', 'Georgette', 'Hilary', 'Ilsa', 'Jewel', 'Katrina', 'Lily', 'Monica', 'Nanette', 'Olivia', 'Priscilla', 'Ramona', 'Sharon', 'Terry', 'Veronica', 'Winifred'],
+        ['Annette', 'Bonny', 'Celeste', 'Diana', 'Estelle', 'Fernanda', 'Gwen', 'Hyacinth', 'Iva', 'Joanne', 'Kathleen', 'Liza', 'Madeline', 'Naomi', 'Orla', 'Pauline', 'Rebecca', 'Simone', 'Tara', 'Valerie', 'Willa']
+    ]
+});
+
+// original four-year rotation of male/female EPac names
+DesignationSystem.easternPacific1978 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1978-81)',
+    suffix: 'E',
+    annual: true,
+    anchor: 1978,
+    mainLists: [
+        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fico', 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
+        ['Andres', 'Blanca', 'Carlos', 'Dolores', 'Enrique', 'Fefa', 'Guillermo', 'Hilda', 'Ignacio', 'Jimena', 'Kevin', 'Linda', 'Marty', 'Nora', 'Olaf', 'Pauline', 'Rick', 'Sandra', 'Terry', 'Vivian', 'Waldo'],
+        ['Agatha', 'Blas', 'Celia', 'Darby', 'Estelle', 'Frank', 'Georgetta', 'Howard', 'Isis', 'Javier', 'Kay', 'Lester', 'Madeline', 'Newton', 'Orlene', 'Paine', 'Roslyn', 'Seymour', 'Tina', 'Virgil', 'Winifred'],
+        ['Adrian', 'Beatriz', 'Calvin', 'Dora', 'Eugene', 'Fernanda', 'Greg', 'Hilary', 'Irwin', 'Jova', 'Knut', 'Lidia', 'Max', 'Norma', 'Otis', 'Pilar', 'Ramon', 'Selma', 'Todd', 'Veronica', 'Wiley']
+    ],
+    auxLists: [
+        ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega']
+    ]
+});
+
+// modern six-year rotation of male/female EPac names (overlaps with previous four-year rotation)
+DesignationSystem.easternPacific1979 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1979-84)',
+    suffix: 'E',
+    annual: true, 
+    anchor: 1979,
+    mainLists: [
+        ['Andres', 'Blanca', 'Carlos', 'Dolores', 'Enrique', 'Fefa', 'Guillermo', 'Hilda', 'Ignacio', 'Jimena', 'Kevin', 'Linda', 'Marty', 'Nora', 'Olaf', 'Pauline', 'Rick', 'Sandra', 'Terry', 'Vivian', 'Waldo'],
+        ['Agatha', 'Blas', 'Celia', 'Darby', 'Estelle', 'Frank', 'Georgetta', 'Howard', 'Isis', 'Javier', 'Kay', 'Lester', 'Madeline', 'Newton', 'Orlene', 'Paine', 'Roslyn', 'Seymour', 'Tina', 'Virgil', 'Winifred'],
+        ['Adrian', 'Beatriz', 'Calvin', 'Dora', 'Eugene', 'Fernanda', 'Greg', 'Hilary', 'Irwin', 'Jova', 'Knut', 'Lidia', 'Max', 'Norma', 'Otis', 'Pilar', 'Ramon', 'Selma', 'Todd', 'Veronica', 'Wiley'],
+        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fabio', 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
+        ['Adolph', 'Barbara', 'Cosme', 'Dalila', 'Erick', 'Flossie', 'Gil', 'Henriette', 'Ismael', 'Juliette', 'Kiko', 'Lorena', 'Manuel', 'Narda', 'Octave', 'Priscilla', 'Raymond', 'Sonia', 'Tico', 'Velma', 'Winnie'],
+        ['Alma', 'Boris', 'Cristina', 'Douglas', 'Elida', 'Fausto', 'Genevieve', 'Hernan', 'Iselle', 'Julio', 'Kenna', 'Lowell', 'Marie', 'Norbert', 'Odile', 'Polo', 'Rachel', 'Simon', 'Trudy', 'Vance', 'Wallis']
+    ],
+    auxLists: [
+        ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega']
     ]
 });
 
@@ -638,7 +751,15 @@ DesignationSystem.presetDesignationSystems = [
     DesignationSystem.mediterranean,
     DesignationSystem.australianRegionJakarta,
     DesignationSystem.australianRegionPortMoresby,
+    DesignationSystem.atlantic1950,
+    DesignationSystem.atlantic1953,
+    DesignationSystem.atlantic1960,
+    DesignationSystem.atlantic1972,
     DesignationSystem.atlantic1979,
+    DesignationSystem.easternPacific1960,
+    DesignationSystem.easternPacific1965,
+    DesignationSystem.easternPacific1978,
+    DesignationSystem.easternPacific1979,
     DesignationSystem.periodicTable,
     DesignationSystem.periodicTableAnnual
 ];
