@@ -667,6 +667,52 @@ DesignationSystem.atlantic1979 = new DesignationSystem({
     ]
 });
 
+DesignationSystem.easternPacific1960 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1960-65)',
+    suffix: 'E',
+    mainLists: [
+        ['Annette', 'Bonny', 'Celeste', 'Diana', 'Estelle', 'Fernanda', 'Gwen', 'Hyacinth', 'Iva', 'Joanne', 'Kathleen', 'Liza', 'Madeline', 'Naomi', 'Orla', 'Pauline', 'Rebecca', 'Simone', 'Tara', 'Valerie', 'Willa'],
+        ['Ava', 'Bernice', 'Claudia', 'Doreen', 'Emily', 'Florence', 'Glenda', 'Hazel', 'Irah', 'Jennifer', 'Katherine', 'Lillian', 'Mona', 'Natalie', 'Odessa', 'Prudence', 'Roslyn', 'Silvia', 'Tillie', 'Victoria', 'Wallie']
+    ]
+});
+
+DesignationSystem.easternPacific1965 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1965-68)',
+    suffix: 'E',
+    annual: true,
+    anchor: 1965,
+    mainLists: [
+        ['Ava', 'Bernice', 'Claudia', 'Doreen', 'Emily', 'Florence', 'Glenda', 'Hazel', 'Irah', 'Jennifer', 'Katherine', 'Lillian', 'Mona', 'Natalie', 'Odessa', 'Prudence', 'Roslyn', 'Silvia', 'Tillie', 'Victoria', 'Wallie'],
+        ['Adele', 'Blanca', 'Connie', 'Dolores', 'Eileen', 'Francesca', 'Gretchen', 'Helga', 'Ione', 'Joyce', 'Kirsten', 'Lorraine', 'Maggie', 'Norma', 'Orlene', 'Patricia', 'Rosalie', 'Selma', 'Toni', 'Vivian', 'Winona'],
+        ['Agatha', 'Bridget', 'Carlotta', 'Denise', 'Eleanor', 'Francene', 'Georgette', 'Hilary', 'Ilsa', 'Jewel', 'Katrina', 'Lily', 'Monica', 'Nanette', 'Olivia', 'Priscilla', 'Ramona', 'Sharon', 'Terry', 'Veronica', 'Winifred'],
+        ['Annette', 'Bonny', 'Celeste', 'Diana', 'Estelle', 'Fernanda', 'Gwen', 'Hyacinth', 'Iva', 'Joanne', 'Kathleen', 'Liza', 'Madeline', 'Naomi', 'Orla', 'Pauline', 'Rebecca', 'Simone', 'Tara', 'Valerie', 'Willa']
+    ]
+});
+
+/*
+    Techinically speaking, this set of lists begins in 1978,
+    but due to the 1978 list being out of order from the rest,
+    this starts at 1979 to keep the lists flowing in order.
+    For completely original lists, Fabio may be edited to Fico in the Designations Editor
+*/
+DesignationSystem.easternPacific1979 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1979-84)',
+    suffix: 'E',
+    annual: true, 
+    anchor: 1979,
+    mainLists: [
+        ['Andres', 'Blanca', 'Carlos', 'Dolores', 'Enrique', 'Fefa', 'Guillermo', 'Hilda', 'Ignacio', 'Jimena', 'Kevin', 'Linda', 'Marty', 'Nora', 'Olaf', 'Pauline', 'Rick', 'Sandra', 'Terry', 'Vivian', 'Waldo'],
+        ['Agatha', 'Blas', 'Celia', 'Darby', 'Estelle', 'Frank', 'Georgetta', 'Howard', 'Isis', 'Javier', 'Kay', 'Lester', 'Madeline', 'Newton', 'Orlene', 'Paine', 'Roslyn', 'Seymour', 'Tina', 'Virgil', 'Winifred'],
+        ['Adrian', 'Beatriz', 'Calvin', 'Dora', 'Eugene', 'Fernanda', 'Greg', 'Hilary', 'Irwin', 'Jova', 'Knut', 'Lidia', 'Max', 'Norma', 'Otis', 'Pilar', 'Ramon', 'Selma', 'Todd', 'Veronica', 'Wiley'],
+        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fabio' /* Fico in 1978 */, 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
+        ['Adolph', 'Barbara', 'Cosme', 'Dalila', 'Erick', 'Flossie', 'Gil', 'Henriette', 'Ismael', 'Juliette', 'Kiko', 'Lorena', 'Manuel', 'Narda', 'Octave', 'Priscilla', 'Raymond', 'Sonia', 'Tico', 'Velma', 'Winnie'],
+        ['Alma', 'Boris', 'Cristina', 'Douglas', 'Elida', 'Fausto', 'Genevieve', 'Hernan', 'Iselle', 'Julio', 'Kenna', 'Lowell', 'Marie', 'Norbert', 'Odile', 'Polo', 'Rachel', 'Simon', 'Trudy', 'Vance', 'Wallis']
+    ],
+    auxLists: [
+        ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega']
+    ]
+});
+
 DesignationSystem.periodicTable = new DesignationSystem({
     displayName: 'Periodic Table',
     suffix: DEPRESSION_LETTER,
@@ -698,6 +744,9 @@ DesignationSystem.presetDesignationSystems = [
     DesignationSystem.atlantic1960,
     DesignationSystem.atlantic1972,
     DesignationSystem.atlantic1979,
+    DesignationSystem.easternPacific1960,
+    DesignationSystem.easternPacific1965,
+    DesignationSystem.easternPacific1979,
     DesignationSystem.periodicTable,
     DesignationSystem.periodicTableAnnual
 ];
