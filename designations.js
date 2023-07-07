@@ -689,12 +689,24 @@ DesignationSystem.easternPacific1965 = new DesignationSystem({
     ]
 });
 
-/*
-    Techinically speaking, this set of lists begins in 1978,
-    but due to the 1978 list being out of order from the rest,
-    this starts at 1979 to keep the lists flowing in order.
-    For completely original lists, Fabio may be edited to Fico in the Designations Editor
-*/
+// original four-year rotation of male/female EPac names
+DesignationSystem.easternPacific1978 = new DesignationSystem({
+    displayName: 'Eastern Pacific (1978-81)',
+    suffix: 'E',
+    annual: true,
+    anchor: 1978,
+    mainLists: [
+        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fico', 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
+        ['Andres', 'Blanca', 'Carlos', 'Dolores', 'Enrique', 'Fefa', 'Guillermo', 'Hilda', 'Ignacio', 'Jimena', 'Kevin', 'Linda', 'Marty', 'Nora', 'Olaf', 'Pauline', 'Rick', 'Sandra', 'Terry', 'Vivian', 'Waldo'],
+        ['Agatha', 'Blas', 'Celia', 'Darby', 'Estelle', 'Frank', 'Georgetta', 'Howard', 'Isis', 'Javier', 'Kay', 'Lester', 'Madeline', 'Newton', 'Orlene', 'Paine', 'Roslyn', 'Seymour', 'Tina', 'Virgil', 'Winifred'],
+        ['Adrian', 'Beatriz', 'Calvin', 'Dora', 'Eugene', 'Fernanda', 'Greg', 'Hilary', 'Irwin', 'Jova', 'Knut', 'Lidia', 'Max', 'Norma', 'Otis', 'Pilar', 'Ramon', 'Selma', 'Todd', 'Veronica', 'Wiley']
+    ],
+    auxLists: [
+        ['Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta', 'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi', 'Rho', 'Sigma', 'Tau', 'Upsilon', 'Phi', 'Chi', 'Psi', 'Omega']
+    ]
+});
+
+// modern six-year rotation of male/female EPac names (overlaps with previous four-year rotation)
 DesignationSystem.easternPacific1979 = new DesignationSystem({
     displayName: 'Eastern Pacific (1979-84)',
     suffix: 'E',
@@ -704,7 +716,7 @@ DesignationSystem.easternPacific1979 = new DesignationSystem({
         ['Andres', 'Blanca', 'Carlos', 'Dolores', 'Enrique', 'Fefa', 'Guillermo', 'Hilda', 'Ignacio', 'Jimena', 'Kevin', 'Linda', 'Marty', 'Nora', 'Olaf', 'Pauline', 'Rick', 'Sandra', 'Terry', 'Vivian', 'Waldo'],
         ['Agatha', 'Blas', 'Celia', 'Darby', 'Estelle', 'Frank', 'Georgetta', 'Howard', 'Isis', 'Javier', 'Kay', 'Lester', 'Madeline', 'Newton', 'Orlene', 'Paine', 'Roslyn', 'Seymour', 'Tina', 'Virgil', 'Winifred'],
         ['Adrian', 'Beatriz', 'Calvin', 'Dora', 'Eugene', 'Fernanda', 'Greg', 'Hilary', 'Irwin', 'Jova', 'Knut', 'Lidia', 'Max', 'Norma', 'Otis', 'Pilar', 'Ramon', 'Selma', 'Todd', 'Veronica', 'Wiley'],
-        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fabio' /* Fico in 1978 */, 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
+        ['Aletta', 'Bud', 'Carlotta', 'Daniel', 'Emilia', 'Fabio', 'Gilma', 'Hector', 'Iva', 'John', 'Kristy', 'Lane', 'Miriam', 'Norman', 'Olivia', 'Paul', 'Rosa', 'Sergio', 'Tara', 'Vicente', 'Willa'],
         ['Adolph', 'Barbara', 'Cosme', 'Dalila', 'Erick', 'Flossie', 'Gil', 'Henriette', 'Ismael', 'Juliette', 'Kiko', 'Lorena', 'Manuel', 'Narda', 'Octave', 'Priscilla', 'Raymond', 'Sonia', 'Tico', 'Velma', 'Winnie'],
         ['Alma', 'Boris', 'Cristina', 'Douglas', 'Elida', 'Fausto', 'Genevieve', 'Hernan', 'Iselle', 'Julio', 'Kenna', 'Lowell', 'Marie', 'Norbert', 'Odile', 'Polo', 'Rachel', 'Simon', 'Trudy', 'Vance', 'Wallis']
     ],
@@ -746,6 +758,7 @@ DesignationSystem.presetDesignationSystems = [
     DesignationSystem.atlantic1979,
     DesignationSystem.easternPacific1960,
     DesignationSystem.easternPacific1965,
+    DesignationSystem.easternPacific1978,
     DesignationSystem.easternPacific1979,
     DesignationSystem.periodicTable,
     DesignationSystem.periodicTableAnnual
