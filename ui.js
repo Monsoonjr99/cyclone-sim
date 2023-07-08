@@ -828,6 +828,11 @@ UI.init = function(){
         s.button("Windspeed Unit: " + u, true);
     },function(){
         simSettings.setSpeedUnit("incmod", 3);
+    }).append(false,0,37,300,30,function(s){     // color scheme
+        let n = COLOR_SCHEMES[simSettings.colorScheme].name;
+        s.button("Color Scheme: " + n, true);
+    },function(){
+        simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button

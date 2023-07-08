@@ -77,8 +77,12 @@ class Scale{
         let color;
         if(subtropical && clsn.subtropicalColor) color = clsn.subtropicalColor;
         else color = clsn.color;
-        if(color instanceof Array) return color[this.colorSchemeValue];
-        return color;
+        if(color instanceof Array)
+            return color[this.colorSchemeValue];
+        else if(typeof color === 'string' && color.charAt(0) === '$')
+            return COLOR_SCHEMES[simSettings.colorScheme].values[color.slice(1)];
+        else
+            return color;
     }
 
     getIcon(){
@@ -307,8 +311,8 @@ Scale.extendedSaffirSimpson = new Scale({
     classifications: [
         {
             threshold: 0,
-            color: ['rgb(20,20,230)','#5ebaff'],
-            subtropicalColor: ['rgb(60,60,220)','#5ebaff'],
+            color: '$TD',
+            subtropicalColor: '$SD',
             symbol: 'D',
             arms: 0,
             stormNom: 'Tropical Depression',
@@ -318,8 +322,8 @@ Scale.extendedSaffirSimpson = new Scale({
         },
         {
             threshold: 34,
-            color: ['rgb(20,230,20)','#00faf4'],
-            subtropicalColor: ['rgb(60,220,60)','#00faf4'],
+            color: '$TS',
+            subtropicalColor: '$SS',
             symbol: 'S',
             stormNom: 'Tropical Storm',
             subtropicalStormNom: 'Subtropical Storm',
@@ -328,7 +332,7 @@ Scale.extendedSaffirSimpson = new Scale({
         },
         {
             threshold: 64,
-            color: ['rgb(230,230,20)','#ffffcc'],
+            color: '$C1',
             symbol: '1',
             stormNom: ['Hurricane','Typhoon','Cyclone'],
             stat: ['Hurricanes','Typhoons','Cyclones'],
@@ -336,13 +340,13 @@ Scale.extendedSaffirSimpson = new Scale({
         },
         {
             threshold: 83,
-            color: ['rgb(240,170,20)','#ffe775'],
+            color: '$C2',
             symbol: '2',
             cName: 'Category 2'
         },
         {
             threshold: 96,
-            color: ['rgb(240,20,20)','#ffc140'],
+            color: '$C3',
             symbol: '3',
             stormNom: ['Major Hurricane','Typhoon','Cyclone'],
             stat: ['Major Hurricanes','Category 3+','Category 3+'],
@@ -350,13 +354,13 @@ Scale.extendedSaffirSimpson = new Scale({
         },
         {
             threshold: 113,
-            color: ['rgb(250,40,250)','#ff8f20'],
+            color: '$C4',
             symbol: '4',
             cName: 'Category 4'
         },
         {
             threshold: 130,
-            color: ['rgb(250,40,250)','#ff8f20'],
+            color: '$C4',
             symbol: '4',
             stormNom: ['Major Hurricane','Super Typhoon','Cyclone'],
             stat: [undefined,'Super Typhoons'],
@@ -364,45 +368,45 @@ Scale.extendedSaffirSimpson = new Scale({
         },
         {
             threshold: 137,
-            color: ['rgb(250,140,250)','#ff6060'],
+            color: '$C5',
             symbol: '5',
             stat: 'Category 5+',
             cName: 'Category 5'
         },
         {
             threshold: 165,
-            color: ['rgb(250,200,250)','#8b0000'],
+            color: '$C6',
             symbol: '6',
             cName: 'Category 6'
         },
         {
             threshold: 198,
-            color: ['rgb(240,90,90)','#cc0033'],
+            color: '$C7',
             symbol: '7',
             cName: 'Category 7'
         },
         {
             threshold: 255,
-            color: ['rgb(190,60,60)','#cc0066'],
+            color: '$C8',
             symbol: '8',
             stat: 'Category 8+',
             cName: 'Category 8'
         },
         {
             threshold: 318,
-            color: ['rgb(130,10,10)','#9B30FF'],
+            color: '$C9',
             symbol: '9',
             cName: 'Category 9'
         },
         {
             threshold: 378,
-            color: ['rgb(120,10,120)','#F9A7B0'],
+            color: '$C10',
             symbol: '10',
             cName: 'Category 10'
         },
         {
             threshold: 434,
-            color: ['rgb(20,0,140)','#ff99ff'],
+            color: '$HYC',
             symbol: 'HY',
             stormNom: ['Hypercane','Hyperphoon','Hyperclone'],
             stat: ['Hypercanes','Hyperphoons','Hyperclones'],
@@ -700,4 +704,53 @@ Scale.presetScales = [
     Scale.JMA,
     Scale.IMD,
     Scale.southwestIndianOcean
+];
+
+// -- Color Schemes -- //
+
+const COLOR_SCHEMES = [
+    {
+        name: 'Classic',
+        values: {
+            'TD': 'rgb(20,20,230)',
+            'SD': 'rgb(60,60,220)',
+            'TS': 'rgb(20,230,20)',
+            'SS': 'rgb(60,220,60)',
+            'STS': 'rgb(180,230,20)',
+            'SSS': 'rgb(180,220,85)',
+            'C1': 'rgb(230,230,20)',
+            'C2': 'rgb(240,170,20)',
+            'C3': 'rgb(240,20,20)',
+            'C4': 'rgb(250,40,250)',
+            'C5': 'rgb(250,140,250)',
+            'C6': 'rgb(250,200,250)',
+            'C7': 'rgb(240,90,90)',
+            'C8': 'rgb(190,60,60)',
+            'C9': 'rgb(130,10,10)',
+            'C10': 'rgb(120,10,120)',
+            'HYC': 'rgb(20,0,140)'
+        }
+    },
+    {
+        name: 'Wiki',
+        values: {
+            'TD': '#5ebaff',
+            'SD': '#5ebaff',
+            'TS': '#00faf4',
+            'SS': '#00faf4',
+            'STS': '#ccffff',
+            'SSS': '#ccffff',
+            'C1': '#ffffcc',
+            'C2': '#ffe775',
+            'C3': '#ffc140',
+            'C4': '#ff8f20',
+            'C5': '#ff6060',
+            'C6': '#8b0000',
+            'C7': '#cc0033',
+            'C8': '#cc0066',
+            'C9': '#9B30FF',
+            'C10': '#F9A7B0',
+            'HYC': '#ff99ff'
+        }
+    }
 ];
