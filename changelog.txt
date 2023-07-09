@@ -1,5 +1,12 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.11 (2023-07-09):
+    * Scale color schemes changed to use a global setting rather than individually per sub-basin scale for more consistent color experience
+        > Hotkey: "c"
+        > Note: does not apply to basins saved before this update due to how scale saving works, thus their colors are locked
+    * "Wiki" scale color scheme again updated to new Wikipedia colors
+        > Old colors preserved as "Wiki (Pre-2023/HHW)" (includes some colors for hypothetical extended Saffir-Simpson categories)
+    * Happy fifth birthday to Cyclone Simulator!
 v0.4.10 (2023-07-07):
     + Added more historic name lists for the Atlantic going back to 1950
     + Added historic name lists for the Eastern Pacific going back to 1960
