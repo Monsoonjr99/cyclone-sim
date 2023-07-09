@@ -30,8 +30,6 @@ class Scale{
                 this.classifications.push(clsn);
             }
         }
-        this.colorSchemeValue = 0;
-        this.colorSchemeDisplayNames = opts.colorSchemeDisplayNames || [];
         this.flavorValue = 0;
         this.flavorDisplayNames = opts.flavorDisplayNames || [];
         // numbering/naming thresholds may be overridden by DesignationSystem
@@ -77,9 +75,7 @@ class Scale{
         let color;
         if(subtropical && clsn.subtropicalColor) color = clsn.subtropicalColor;
         else color = clsn.color;
-        if(color instanceof Array)
-            return color[this.colorSchemeValue];
-        else if(typeof color === 'string' && color.charAt(0) === '$')
+        if(typeof color === 'string' && color.charAt(0) === '$')
             return COLOR_SCHEMES[simSettings.colorScheme].values[color.slice(1)];
         else
             return color;
@@ -159,14 +155,6 @@ class Scale{
         }
     }
 
-    colorScheme(v){
-        if(typeof v === 'number'){
-            this.colorSchemeValue = v;
-            return this;
-        }
-        return this.colorSchemeValue;
-    }
-
     flavor(v){
         if(typeof v === 'number'){
             this.flavorValue = v;
@@ -180,14 +168,12 @@ class Scale{
         for(let p of [
             'displayName',
             'measure',
-            'colorSchemeValue',
             'flavorValue',
             'numberingThreshold',
             'namingThreshold'
         ]) newScale[p] = this[p];
         for(let p of [
             'classifications',
-            'colorSchemeDisplayNames',
             'flavorDisplayNames'
         ]) newScale[p] = JSON.parse(JSON.stringify(this[p]));
         return newScale;
@@ -199,8 +185,6 @@ class Scale{
             'displayName',
             'measure',
             'classifications',
-            'colorSchemeValue',
-            'colorSchemeDisplayNames',
             'flavorValue',
             'flavorDisplayNames',
             'numberingThreshold',
@@ -216,13 +200,19 @@ class Scale{
                 'displayName',
                 'measure',
                 'classifications',
-                'colorSchemeValue',
-                'colorSchemeDisplayNames',
                 'flavorValue',
                 'flavorDisplayNames'
             ]) this[p] = d[p];
-            if(d.numberingThreshold!==undefined) this.numberingThreshold = d.numberingThreshold;
-            if(d.namingThreshold!==undefined) this.namingThreshold = d.namingThreshold;
+            if(d.numberingThreshold !== undefined)
+                this.numberingThreshold = d.numberingThreshold;
+            if(d.namingThreshold !== undefined)
+                this.namingThreshold = d.namingThreshold;
+            if(d.colorSchemeValue !== undefined){
+                for(let c of this.classifications){
+                    if(c.color instanceof Array)
+                        c.color = c.color[d.colorSchemeValue];
+                }
+            }
         }
     }
 
@@ -234,7 +224,6 @@ class Scale{
 
 Scale.saffirSimpson = new Scale({
     displayName: 'Saffir-Simpson',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
     flavorDisplayNames: ['Hurricane','Typhoon','Cyclone'],
     classifications: [
         {
@@ -306,7 +295,6 @@ Scale.saffirSimpson = new Scale({
 
 Scale.extendedSaffirSimpson = new Scale({
     displayName: 'Extended Saffir-Simpson',
-    colorSchemeDisplayNames: ['Classic','Wiki (HHW)'],
     flavorDisplayNames: ['Hurricane','Typhoon','Cyclone'],
     classifications: [
         {
@@ -418,7 +406,6 @@ Scale.extendedSaffirSimpson = new Scale({
 Scale.australian = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
     displayName: 'Australian',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
     flavorDisplayNames: ['Cyclone'],
     classifications: [
         {
@@ -477,7 +464,6 @@ Scale.australian = new Scale({
 Scale.JMA = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
     displayName: 'Japan Meteorological Agency',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
     flavorDisplayNames: ['Typhoon'],
     classifications: [
         {
@@ -540,7 +526,6 @@ Scale.JMA = new Scale({
 Scale.IMD = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,   // technically should be 3-minute, but I didn't bother making a conversion for that
     displayName: 'India Meteorological Dept.',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
     flavorDisplayNames: ['Cyclone'],
     namingThreshold: 2,
     classifications: [
@@ -617,7 +602,6 @@ Scale.IMD = new Scale({
 Scale.southwestIndianOcean = new Scale({
     measure: SCALE_MEASURE_TEN_MIN_KNOTS,
     displayName: 'Southwest Indian Ocean',
-    colorSchemeDisplayNames: ['Classic','Wiki'],
     flavorDisplayNames: ['Cyclone'],
     namingThreshold: 2,
     classifications: [

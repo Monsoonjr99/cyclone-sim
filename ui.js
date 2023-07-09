@@ -547,7 +547,6 @@ UI.init = function(){
         newBasinSettings.scale++;
         newBasinSettings.scale %= Scale.presetScales.length;
         newBasinSettings.scaleFlavor = 0;
-        newBasinSettings.scaleColorScheme = 0;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
@@ -562,20 +561,6 @@ UI.init = function(){
         if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleFlavor++;
         newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        let scheme = newBasinSettings.scaleColorScheme || 0;
-        let grey = scale.colorSchemeDisplayNames.length<2;
-        s.button('Scale Color Scheme: '+(scale.colorSchemeDisplayNames[scheme] || 'N/A'),true,18,grey);
-    },function(){
-        yearselbox.enterFunc();
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        if(scale.colorSchemeDisplayNames.length<2) return;
-        if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
-        newBasinSettings.scaleColorScheme++;
-        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Designations selector
         let ds = newBasinSettings.designations || 0;
         ds = DesignationSystem.presetDesignationSystems[ds].displayName;
@@ -629,8 +614,7 @@ UI.init = function(){
             'mapType',
             'godMode',
             'scale',
-            'scaleFlavor',
-            'scaleColorScheme'
+            'scaleFlavor'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false,opts);
         newBasinSettings = {};
