@@ -722,6 +722,32 @@ const COLOR_SCHEMES = [
     {
         name: 'Wiki',
         values: {
+            'TDi': '#1591DE',
+            'SDi': '#1591DE',
+            'TD': '#6EC1EA',
+            'SD': '#6EC1EA',
+            'TS': '#4DFFFF',
+            'SS': '#4DFFFF',
+            'STS': '#C0FFC0',
+            'SSS': '#C0FFC0',
+            'TY': '#FFD98C',
+            'VSTY': '#FF738A',
+            'C1': '#FFFFD9',
+            'C2': '#FFD98C',
+            'C3': '#FF9E59',
+            'C4': '#FF738A',
+            'C5': '#A188FC',
+            'C6': '#A188FC',
+            'C7': '#A188FC',
+            'C8': '#A188FC',
+            'C9': '#A188FC',
+            'C10': '#A188FC',
+            'HYC': '#A188FC'
+        }
+    },
+    {
+        name: 'Wiki (Pre-2023/HHW)',
+        values: {
             'TDi': '#80ccff',
             'SDi': '#80ccff',
             'TD': '#5ebaff',
