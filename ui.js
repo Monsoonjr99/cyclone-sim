@@ -547,7 +547,6 @@ UI.init = function(){
         newBasinSettings.scale++;
         newBasinSettings.scale %= Scale.presetScales.length;
         newBasinSettings.scaleFlavor = 0;
-        newBasinSettings.scaleColorScheme = 0;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
@@ -562,20 +561,6 @@ UI.init = function(){
         if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleFlavor++;
         newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        let scheme = newBasinSettings.scaleColorScheme || 0;
-        let grey = scale.colorSchemeDisplayNames.length<2;
-        s.button('Scale Color Scheme: '+(scale.colorSchemeDisplayNames[scheme] || 'N/A'),true,18,grey);
-    },function(){
-        yearselbox.enterFunc();
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        if(scale.colorSchemeDisplayNames.length<2) return;
-        if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
-        newBasinSettings.scaleColorScheme++;
-        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Designations selector
         let ds = newBasinSettings.designations || 0;
         ds = DesignationSystem.presetDesignationSystems[ds].displayName;
@@ -629,8 +614,7 @@ UI.init = function(){
             'mapType',
             'godMode',
             'scale',
-            'scaleFlavor',
-            'scaleColorScheme'
+            'scaleFlavor'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false,opts);
         newBasinSettings = {};
@@ -828,6 +812,12 @@ UI.init = function(){
         s.button("Windspeed Unit: " + u, true);
     },function(){
         simSettings.setSpeedUnit("incmod", 3);
+    }).append(false,0,37,300,30,function(s){     // color scheme
+        let n = COLOR_SCHEMES[simSettings.colorScheme].name;
+        s.button("Color Scheme: " + n, true);
+    },function(){
+        simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+        refreshTracks(true);
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -2231,47 +2221,51 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        if(UI.viewBasin && primaryWrapper.showing){
-            paused = !paused;
-            lastUpdateTimestamp = performance.now();
-        }
-        break;
+            if(UI.viewBasin && primaryWrapper.showing){
+                paused = !paused;
+                lastUpdateTimestamp = performance.now();
+            }
+            break;
         case "a":
-        if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
-        break;
+            if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
+            break;
         case "w":
-        simSettings.setShowStrength("toggle");
-        break;
+            simSettings.setShowStrength("toggle");
+            break;
         case "e":
-        if(UI.viewBasin) UI.viewBasin.env.displayNext();
-        break;
+            if(UI.viewBasin) UI.viewBasin.env.displayNext();
+            break;
         case "t":
-        simSettings.setTrackMode("incmod",4);
-        refreshTracks(true);
-        break;
+            simSettings.setTrackMode("incmod",4);
+            refreshTracks(true);
+            break;
         case "m":
-        simSettings.setShowMagGlass("toggle");
-        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-        break;
+            simSettings.setShowMagGlass("toggle");
+            if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+            break;
         case 'u':
-        simSettings.setSpeedUnit("incmod", 3);
-        break;
+            simSettings.setSpeedUnit("incmod", 3);
+            break;
+        case 'c':
+            simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+            refreshTracks(true);
+            break;
         default:
-        switch(keyCode){
-            case KEY_LEFT_BRACKET:
-            if(simSpeed > MIN_SPEED)
-                simSpeed--;
-            break;
-            case KEY_RIGHT_BRACKET:
-            if(simSpeed < MAX_SPEED)
-                simSpeed++;
-            break;
-            case KEY_F11:
-            toggleFullscreen();
-            break;
-            default:
-            return;
-        }
+            switch(keyCode){
+                case KEY_LEFT_BRACKET:
+                if(simSpeed > MIN_SPEED)
+                    simSpeed--;
+                break;
+                case KEY_RIGHT_BRACKET:
+                if(simSpeed < MAX_SPEED)
+                    simSpeed++;
+                break;
+                case KEY_F11:
+                toggleFullscreen();
+                break;
+                default:
+                return;
+            }
     }
     return false;
 }
