@@ -833,6 +833,7 @@ UI.init = function(){
         s.button("Color Scheme: " + n, true);
     },function(){
         simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+        refreshTracks(true);
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -2236,47 +2237,51 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        if(UI.viewBasin && primaryWrapper.showing){
-            paused = !paused;
-            lastUpdateTimestamp = performance.now();
-        }
-        break;
+            if(UI.viewBasin && primaryWrapper.showing){
+                paused = !paused;
+                lastUpdateTimestamp = performance.now();
+            }
+            break;
         case "a":
-        if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
-        break;
+            if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
+            break;
         case "w":
-        simSettings.setShowStrength("toggle");
-        break;
+            simSettings.setShowStrength("toggle");
+            break;
         case "e":
-        if(UI.viewBasin) UI.viewBasin.env.displayNext();
-        break;
+            if(UI.viewBasin) UI.viewBasin.env.displayNext();
+            break;
         case "t":
-        simSettings.setTrackMode("incmod",4);
-        refreshTracks(true);
-        break;
+            simSettings.setTrackMode("incmod",4);
+            refreshTracks(true);
+            break;
         case "m":
-        simSettings.setShowMagGlass("toggle");
-        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-        break;
+            simSettings.setShowMagGlass("toggle");
+            if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+            break;
         case 'u':
-        simSettings.setSpeedUnit("incmod", 3);
-        break;
+            simSettings.setSpeedUnit("incmod", 3);
+            break;
+        case 'c':
+            simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+            refreshTracks(true);
+            break;
         default:
-        switch(keyCode){
-            case KEY_LEFT_BRACKET:
-            if(simSpeed > MIN_SPEED)
-                simSpeed--;
-            break;
-            case KEY_RIGHT_BRACKET:
-            if(simSpeed < MAX_SPEED)
-                simSpeed++;
-            break;
-            case KEY_F11:
-            toggleFullscreen();
-            break;
-            default:
-            return;
-        }
+            switch(keyCode){
+                case KEY_LEFT_BRACKET:
+                if(simSpeed > MIN_SPEED)
+                    simSpeed--;
+                break;
+                case KEY_RIGHT_BRACKET:
+                if(simSpeed < MAX_SPEED)
+                    simSpeed++;
+                break;
+                case KEY_F11:
+                toggleFullscreen();
+                break;
+                default:
+                return;
+            }
     }
     return false;
 }
