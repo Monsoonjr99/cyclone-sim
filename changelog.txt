@@ -1,5 +1,69 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.11 (2023-07-09):
+    * Scale color schemes changed to use a global setting rather than individually per sub-basin scale for more consistent color experience
+        > Hotkey: "c"
+        > Note: does not apply to basins saved before this update due to how scale saving works, thus their colors are locked
+    * "Wiki" scale color scheme again updated to new Wikipedia colors
+        > Old colors preserved as "Wiki (Pre-2023/HHW)" (includes some colors for hypothetical extended Saffir-Simpson categories)
+    * Happy fifth birthday to Cyclone Simulator!
+v0.4.10 (2023-07-07):
+    + Added more historic name lists for the Atlantic going back to 1950
+    + Added historic name lists for the Eastern Pacific going back to 1960
+v0.4.9 (2023-06-24):
+    + Added setting for wind speed unit to display (kts, mph, or km/h)
+        > Hotkey: "u"
+        > Applies everywhere a wind speed value is displayed (top bar, side panel, etc.)
+    * Storm icon intensity indicator improved and now shows units
+v0.4.8 (2023-04-01):
+    * Updated several name lists
+    * Fixed subtropical storms
+        > April Fools! They are still broken :(
+v0.4.7 (2023-01-01):
+    * Fixed random gaps appearing in tracks when simulating in season track summary mode
+v0.4.6 (2022-12-31):
+    + Added faster simulation speed settings
+        > Simulation speeds now range from 1/32 to 32x
+        > Caution: faster simulation speeds may result in lag
+    * Technical changes to support faster speed settings
+        > Rendering of tracks and environmental map layers decoupled from simulation steps
+v0.4.5 (2022-12-21):
+    * "Wiki" scale color schemes reverted to as they were before v0.3.15, following Wikipedia consensus (or lack thereof)
+v0.4.4 (2022-12-20):
+    + Added simulation speed control buttons
+v0.4.3 (2022-08-20):
+    * Significantly improved the speed of land and fx drawing
+v0.4.2 (2022-08-09):
+    * Another tweak to make land and fx drawing faster after v0.4 made it awfully slow again
+v0.4.1 (2022-07-19):
+    * Fix some glitchy behavior with the designations editor
+v0.4 (2022-07-15):
+    + Added Mediterranean designations (currently using Italy's 2021-22 European windstorm names)
+    * Single Earth map image file now used for all real-world map types
+    * Sub-basin system for real-world map types redefined
+        > Single global set of sub-basins used for all Earth map types
+        > Out-basin for a given Earth map type now uses appropriate designations and scale (e.g. storms that form in Eastern Pacific out-basin in Atlantic map type use Eastern Pacific names)
+    * Fixed land below sea level rendering as sea
+    * Latitude/longitude coordinate system partially implemented
+        > Storm track data now saves as latitude/longitude coordinates instead of xy
+    * Several other tweaks including some related to compatibility when updating simulation modes
+v0.3.17 (2022-07-08):
+    * Tweak to make land and fx drawing a bit faster
+v0.3.16 (2022-06-06):
+    + Added safeguard against loading basins in an older version which were saved in a newer version
+    * Loading a season in a newer version where it must be converted to a new format no longer immediately autosaves the converted season
+v0.3.15 (2022-05-10):
+    * Updated "Wiki" scale color schemes to reflect new Wikipedia storm colors
+        > Old colors still available as "Wiki (Old)" color scheme
+    * JMA scale extended to include all typhoon classifications
+v0.3.14 (2022-04-28):
+    * Replaced retired names for Atlantic, Western Pacific, and PAGASA name lists
+v0.3.13 (2022-01-02):
+    * Designations editor improvements
+        > Main and auxiliary name lists listed for easier navigation
+        > Can now add and remove name lists
+v0.3.12 (2021-12-31):
+    * Updates to several name lists
 v0.3.11 (2021-08-06):
     * Fix to storm icons to make arms truly flush with the body
 v0.3.10 (2021-03-17):

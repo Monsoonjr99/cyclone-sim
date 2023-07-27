@@ -167,7 +167,7 @@ class Storm{
         let data = t==="peak" ? this.windPeak : this.getStormDataByTick(t);
         let name = this.getNameByTick(t==='peak' ? -1 : t);
         let ty = data ? data.type : null;
-        let clsnNom = data ? basin.getScale(land.getSubBasin(data.pos.x,data.pos.y)).getStormNom(data) : null;
+        let clsnNom = data ? basin.getScale(land.getSubBasin(data.coord())).getStormNom(data) : null;
         let hasbeenTC;
         if(t==='peak') hasbeenTC = this.TC;
         else if(t>=this.formationTime) hasbeenTC = true;
@@ -211,7 +211,7 @@ class Storm{
             let pr = advC.pressure;
             let st = advC.windSpeed;
             let pos = advC.pos;
-            let sb = land.getSubBasin(advX.pos.x,advX.pos.y);
+            let sb = land.getSubBasin(advX.coord());
             let scale = basin.getScale(sb);
             let scaleIconData = scale.getIcon(advX);
             let ty = advX.type;
@@ -263,7 +263,7 @@ class Storm{
             stormIcons.fill(0);
             if(simSettings.showStrength){
                 stormIcons.textSize(10);
-                stormIcons.text(floor(st) + " / " + floor(pr), 0, DIAMETER);
+                stormIcons.text(`${displayWindspeed(floor(st), 1)}\n${floor(pr)} hPa`, 0, DIAMETER + 5);
             }
             if(name){
                 stormIcons.textAlign(LEFT,CENTER);
@@ -281,7 +281,7 @@ class Storm{
                     if(this.record.length>1 && (selectedStorm===this || selectedStorm===undefined)){
                         let t = (this.record.length-2)*ADVISORY_TICKS+ceil(this.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS;
                         let adv = this.record[this.record.length-2];
-                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
+                        let col = this.basin.getScale(land.getSubBasin(adv.coord())).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[this.record.length-1].pos;
@@ -295,7 +295,7 @@ class Storm{
                             if(t>=this.dissipationTime) break;
                         }
                         let adv = this.record[n];
-                        let col = this.basin.getScale(land.getSubBasin(adv.pos.x,adv.pos.y)).getColor(adv);
+                        let col = this.basin.getScale(land.getSubBasin(adv.coord())).getColor(adv);
                         tracks.stroke(col);
                         let pos = adv.pos;
                         let nextPos = this.record[n+1].pos;
@@ -305,7 +305,7 @@ class Storm{
             }
             if(selectedStorm===this && this.basin.viewingPresent() && this.current){
                 forecastTracks.clear();
-                let p = this.current.trackForecast.points;
+                let p = this.current.trackForecast/* .points */;
                 for(let n=0;n<p.length;n++){
                     forecastTracks.point(p[n].x,p[n].y);
                 }
@@ -321,8 +321,8 @@ class Storm{
         let year = basin.getSeason(-1);
         let cSeason = basin.fetchSeason(year,false,true);
         let prevAdvisory = this.record.length>0 ? this.record[this.record.length-1] : undefined;
-        let sub = land.getSubBasin(data.pos.x,data.pos.y);
-        let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.pos.x,prevAdvisory.pos.y) : sub;
+        let sub = land.getSubBasin(data.coord());
+        let prevSub = prevAdvisory ? land.getSubBasin(prevAdvisory.coord()) : sub;
         let wasTCB4Update = prevAdvisory ? tropOrSub(prevAdvisory.type) : false;
         let isTropical = tropOrSub(type);
         let inBasinTropical = isTropical && basin.subInBasin(sub);
@@ -433,18 +433,18 @@ class Storm{
                         break;
                     case DESIG_CROSSMODE_REGEN:
                     case DESIG_CROSSMODE_STRICT_REGEN:
-                        let a = data;
-                        for(let i=this.record.length-1;i>=0;i--){
-                            if(tropOrSub(this.record[i].type)) a = this.record[i];
-                            else break;
-                        }
-                        let lastFormedSB = land.getSubBasin(a.pos.x,a.pos.y);
-                        lastFormedSB = basin.relevantPrimaryDesignationSubBasins(lastFormedSB);
-                        if(isNaming) lastFormedSB = lastFormedSB.naming;
-                        else lastFormedSB = lastFormedSB.numbering;
-                        if(lastFormedSB!==subId) keep = true;
-                        else if(ds.crossingMode===DESIG_CROSSMODE_REGEN) findold = true;
-                        break;
+                        // let a = data;
+                        // for(let i=this.record.length-1;i>=0;i--){
+                        //     if(tropOrSub(this.record[i].type)) a = this.record[i];
+                        //     else break;
+                        // }
+                        // let lastFormedSB = land.getSubBasin(a.pos.x,a.pos.y);
+                        // lastFormedSB = basin.relevantPrimaryDesignationSubBasins(lastFormedSB);
+                        // if(isNaming) lastFormedSB = lastFormedSB.naming;
+                        // else lastFormedSB = lastFormedSB.numbering;
+                        // if(lastFormedSB!==subId) keep = true;
+                        // else if(ds.crossingMode===DESIG_CROSSMODE_REGEN) findold = true;
+                        // break;
                     case DESIG_CROSSMODE_KEEP:
                         keep = true;
                         break;
@@ -633,7 +633,7 @@ class Storm{
             }
             for(let i=0;i<this.record.length;i++){
                 let d = this.record[i];
-                let sub = land.getSubBasin(d.pos.x,d.pos.y);
+                let sub = land.getSubBasin(d.coord());
                 let trop = tropOrSub(d.type);
                 let inBasinTrop = trop && basin.subInBasin(sub);
                 let t = (i+ceil(this.birthTime/ADVISORY_TICKS))*ADVISORY_TICKS;
@@ -650,8 +650,8 @@ class Storm{
                     for(let subId of basin.forSubBasinChain(sub)){
                         for(let j=0;j<=clsn;j++) this.subBasinData(subId,yr,j,true);
                     }
-                    this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'num',true);
-                    if(clsn>=1) this.subBasinData(DEFAULT_MAIN_SUBBASIN,yr,'name',true);
+                    this.subBasinData(this.basin.mainSubBasin,yr,'num',true);
+                    if(clsn>=1) this.subBasinData(this.basin.mainSubBasin,yr,'name',true);
                 }
                 if(trop && !this.TC){
                     this.TC = true;
@@ -703,7 +703,7 @@ class Storm{
                     this.designations.secondary.push(new Designation(loadData.sub(S[i])));
                 }
             }else{
-                let sb = basin.subBasins[DEFAULT_MAIN_SUBBASIN];
+                let sb = basin.subBasins[this.basin.mainSubBasin];
                 if(sb instanceof SubBasin && sb.designationSystem){     // converts pre-v20191004a designations; needs testing
                     if(nameNum!==undefined){
                         let desig = sb.designationSystem.getName(namedTime,basin.getSeason(namedTime),nameNum);
@@ -787,9 +787,14 @@ class StormData{
         }
     }
 
+    coord(){
+        return Coordinate.convertFromXY(this.basin.mapType, this.pos);
+    }
+
     save(){
         let obj = {};
-        obj.pos = {x: this.pos.x, y: this.pos.y};
+        let {longitude, latitude} = this.coord();
+        obj.pos = {longitude, latitude};
         for(let p of ['pressure','windSpeed','type']) obj[p] = this[p];
         return obj;
     }
@@ -798,7 +803,10 @@ class StormData{
         if(data instanceof LoadData){
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
-                this.pos = createVector(obj.pos.x,obj.pos.y);
+                if(data.format >= FORMAT_WITH_LONG_LAT)
+                    this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
+                else
+                    this.pos = createVector(obj.pos.x,obj.pos.y);
                 for(let p of ['pressure','windSpeed','type']) this[p] = obj[p];
             }else{
                 let str = data.value;
@@ -818,22 +826,23 @@ class StormData{
     }
 
     static saveArr(arr){
-        let x = [];
-        let y = [];
+        let longitude = [];
+        let latitude = [];
         let pressure = [];
         let windSpeed = [];
         let type = [];
         for(let d of arr){
             if(d instanceof StormData){
-                x.push(d.pos.x);
-                y.push(d.pos.y);
+                let coord = d.coord();
+                longitude.push(coord.longitude);
+                latitude.push(coord.latitude);
                 pressure.push(constrain(d.pressure,0,pow(2,16)-1));
                 windSpeed.push(constrain(d.windSpeed,0,pow(2,16)-1));
                 type.push(d.type);
             }
         }
         let obj = {};
-        obj.pos = {x: new Float32Array(x), y: new Float32Array(y)};
+        obj.pos = {longitude: new Float32Array(longitude), latitude: new Float32Array(latitude)};
         obj.pressure = new Uint16Array(pressure);
         obj.windSpeed = new Uint16Array(windSpeed);
         obj.type = new Uint8ClampedArray(type);
@@ -845,8 +854,21 @@ class StormData{
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
                 let arr = [];
-                let x = [...obj.pos.x];
-                let y = [...obj.pos.y];
+                let x, y;
+                if(data.format >= FORMAT_WITH_LONG_LAT){
+                    let longitude = [...obj.pos.longitude];
+                    let latitude = [...obj.pos.latitude];
+                    x = [];
+                    y = [];
+                    for(let i = 0; i < longitude.length; i++){
+                        let vec = Coordinate.convertToXY(basin.mapType, longitude[i], latitude[i]);
+                        x.push(vec.x);
+                        y.push(vec.y);
+                    }
+                }else{
+                    x = [...obj.pos.x];
+                    y = [...obj.pos.y];
+                }
                 let pressure = [...obj.pressure];
                 let windSpeed = [...obj.windSpeed];
                 let type = [...obj.type];
@@ -955,14 +977,12 @@ class ActiveSystem extends StormData{
         super(basin);
         this.steering = createVector(0); // A vector that updates with the environmental steering
         this.interaction = {}; // Data for interaction with other storms (e.g. Fujiwhara)
-        this.interaction.fuji = createVector(0); // A vector for Fujiwhara interaction
-        this.interaction.fujiStatic = createVector(0); // A vector for 'static' use in the 'interact' method for Fujiwhara interaction
-        this.interaction.shear = 0;
+        this.resetInteraction();
         this.kill = false;
-        this.trackForecast = {}; // Simple track forecast for now
-        this.trackForecast.stVec = createVector(0);
-        this.trackForecast.pVec = createVector(0);
-        this.trackForecast.points = [];
+        // this.trackForecast = {}; // Simple track forecast for now
+        // this.trackForecast.stVec = createVector(0);
+        // this.trackForecast.pVec = createVector(0);
+        this.trackForecast/* .points */ = [];
         if(data instanceof LoadData){
             this.storm = undefined;
             this.load(data);
@@ -1009,14 +1029,14 @@ class ActiveSystem extends StormData{
 
         let u = {};
         u.f = (field)=>basin.env.get(field,this.pos.x,this.pos.y,basin.tick);
-        u.land = ()=>land.get(this.pos.x,this.pos.y);
+        u.land = ()=>land.get(this.coord());
 
         // this.getSteering();
         if(STORM_ALGORITHM[basin.actMode].steering)
             STORM_ALGORITHM[basin.actMode].steering(this,this.steering,u);
         else
             STORM_ALGORITHM.defaults.steering(this,this.steering,u);
-        this.steering.add(this.interaction.fuji);
+        // this.steering.add(this.interaction.fuji);
         let prevland = u.land();
         this.pos.add(this.steering);
 
@@ -1037,7 +1057,7 @@ class ActiveSystem extends StormData{
         // let SST = basin.env.get("SST",x,y,z);
         // let jet = basin.env.get("jetstream",x,y,z);
         // jet = basin.hemY(y)-jet;
-        let lnd = land.get(x,y);
+        let lnd = land.get(this.coord());
         // let moisture = basin.env.get("moisture",x,y,z);
         // let shear = basin.env.get("shear",x,y,z).mag()+this.interaction.shear;
         
@@ -1123,7 +1143,7 @@ class ActiveSystem extends StormData{
             let ded = round(pop*dedPot*0.0000017*pow(1.1,random(-1,1)));
             let lf = 0;
             if(!prevland && lnd) lf = 1;
-            let sub = land.getSubBasin(x,y);
+            let sub = land.getSubBasin(Coordinate.convertFromXY(basin.mapType,x,y));
             if(!this.fetchStorm().inBasinTC || basin.subInBasin(sub)){
                 this.fetchStorm().damage += dam;
                 this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
@@ -1157,7 +1177,7 @@ class ActiveSystem extends StormData{
         this.fetchStorm().updateStats(adv);
         this.fetchStorm().record.push(adv);
         this.doTrackForecast();
-        this.fetchStorm().renderTrack(true);
+        // this.fetchStorm().renderTrack(true);
     }
 
     // getSteering(){
@@ -1171,47 +1191,88 @@ class ActiveSystem extends StormData{
     //     this.steering.add(this.interaction.fuji); // Fujiwhara
     // }
 
-    interact(that,first){   // Quick and sloppy fujiwhara implementation
+    interact(that,first){   // Deals with multi-system interactions (i.e. Fujiwhara)
         let basin = this.basin;
-        let v = this.interaction.fujiStatic;
-        v.set(this.pos);
-        v.sub(that.pos);
-        let m = v.mag();
-        let r = map(that.lowerWarmCore,0,1,150,50);
-        if(m<r && m>0){
-            v.rotate(basin.hem(-TAU/4+((3/m)*TAU/16)));
-            v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
-            this.interaction.fuji.add(v);
-            this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
-            if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.kill = true;
+
+        let interactionAdd;
+        if(STORM_ALGORITHM[basin.actMode].interaction)
+            interactionAdd = STORM_ALGORITHM[basin.actMode].interaction(this, that);
+        else
+            interactionAdd = STORM_ALGORITHM.defaults.interaction(this, that);
+        for(let k in interactionAdd){
+            if(interactionAdd[k] instanceof p5.Vector)
+                this.interaction[k].add(interactionAdd[k]);
+            else
+                this.interaction[k] += interactionAdd[k];
         }
+        
+        // let v = createVector();
+        // v.set(this.pos);
+        // v.sub(that.pos);
+        // let m = v.mag();
+        // let r = map(that.lowerWarmCore,0,1,150,50);
+        // if(m<r && m>0){
+        //     v.rotate(basin.hem(-TAU/4+((3/m)*TAU/16)));
+        //     v.setMag(map(m,r,0,0,map(constrain(that.pressure,990,1030),1030,990,0.2,2.2)));
+        //     this.interaction.fuji.add(v);
+        //     this.interaction.shear += map(m,r,0,0,map(that.pressure,1030,900,0,6));
+        //     if((m<map(this.pressure,1030,1000,r/5,r/15) || m<5) && this.pressure>that.pressure) this.kill = true;
+        // }
+
         if(first) that.interact(this);
     }
 
     resetInteraction(){
-        let i = this.interaction;
-        i.fuji.set(0);
-        i.shear = 0;
+        let basin = this.basin;
+        let i = this.interaction = {};
+        // i.fuji.set(0);
+        // i.shear = 0;
+
+        let init;
+        if(STORM_ALGORITHM[basin.actMode].interactionInit)
+            init = STORM_ALGORITHM[basin.actMode].interactionInit;
+        else
+            init = STORM_ALGORITHM.defaults.interactionInit;
+        for(let k in init){
+            if(init[k])
+                i[k] = createVector();
+            else
+                i[k] = 0;
+        }
     }
 
     doTrackForecast(){
         let basin = this.basin;
-        let p = this.trackForecast.pVec;
-        let s = this.trackForecast.stVec;
-        this.trackForecast.points = [];
+        // let p = this.trackForecast.pVec;
+        // let s = this.trackForecast.stVec;
+        let p = createVector(0);
+        let s = createVector(0);
+        this.trackForecast/* .points */ = [];
         p.set(this.pos);
+
+        let u = {};
+        let t = 0;
+        u.f = (field)=>basin.env.get(field, p.x, p.y, t);
+        u.land = ()=>land.get(Coordinate.convertFromXY(basin.mapType, p));
+
         for(let f=0;f<120;f++){
-            let t = basin.tick+f;
-            // Copy-paste from getSteering (will do something better in future)
-            let l = basin.env.get("LLSteering",p.x,p.y,t);
-            let u = basin.env.get("ULSteering",p.x,p.y,t);
-            let d = sqrt(this.depth);
-            let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
-            let y = lerp(l.y,u.y,d);
-            s.set(x,y);
+            t = basin.tick+f;
+            // // Copy-paste from getSteering (will do something better in future)
+            // let l = basin.env.get("LLSteering",p.x,p.y,t);
+            // let u = basin.env.get("ULSteering",p.x,p.y,t);
+            // let d = sqrt(this.depth);
+            // let x = lerp(l.x,u.x,d);       // Deeper systems follow upper-level steering more and lower-level steering less
+            // let y = lerp(l.y,u.y,d);
+            // s.set(x,y);
+
+            // use simulation mode's steering algorithm
+            if(STORM_ALGORITHM[basin.actMode].steering)
+                STORM_ALGORITHM[basin.actMode].steering(this, s, u);
+            else
+                STORM_ALGORITHM.defaults.steering(this, s, u);
 
             p.add(s);
-            if((f+1)%ADVISORY_TICKS===0) this.trackForecast.points.push({x:p.x,y:p.y});
+            if((f+1)%ADVISORY_TICKS===0) this.trackForecast/* .points */.push({x:p.x,y:p.y});
         }
     }
 
@@ -1225,7 +1286,7 @@ class ActiveSystem extends StormData{
             let r = this.storm.record;
             if(r.length>0 && tropOrSub(r[r.length-1].type)){
                 this.storm.dissipationTime = undefined;
-                if(land.inBasin(r[r.length-1].pos.x,r[r.length-1].pos.y)) this.storm.exitTime = undefined;
+                if(land.inBasin(r[r.length-1].coord())) this.storm.exitTime = undefined;
             }
             this.storm.current = this;
         }

@@ -14,13 +14,13 @@ var paused,
     forecastTracks,
     landBuffer,
     outBasinBuffer,
-    landShader,
+    landShadows,
     coastLine,
     envLayer,
     magnifyingGlass,
     snow,
     simSpeed,
-    simSpeedFrameCounter,
+    lastUpdateTimestamp,
     keyRepeatFrameCounter,
     viewTick,
     selectedStorm,
@@ -69,16 +69,20 @@ function setup(){
     forecastTracks = createBuffer();
     forecastTracks.strokeWeight(3);
     forecastTracks.stroke(240,240,0);
-    landBuffer = createBuffer(fullW,fullH,true);
-    landBuffer.noStroke();
-    outBasinBuffer = createBuffer(fullW,fullH,true);
-    outBasinBuffer.noStroke();
-    outBasinBuffer.fill(COLORS.outBasin);
-    landShader = createBuffer(fullW,fullH,true);
-    landShader.noStroke();
-    coastLine = createBuffer(fullW,fullH,true);
-    coastLine.fill(0);
-    coastLine.noStroke();
+    landBuffer = createImage(fullW,fullH);
+    landBuffer.loadPixels();
+    // landBuffer.noStroke();
+    outBasinBuffer = createImage(fullW,fullH);
+    outBasinBuffer.loadPixels();
+    // outBasinBuffer.noStroke();
+    // outBasinBuffer.fill(COLORS.outBasin);
+    landShadows = createImage(fullW,fullH);
+    landShadows.loadPixels();
+    // landShadows.noStroke();
+    coastLine = createImage(fullW,fullH);
+    coastLine.loadPixels();
+    // coastLine.fill(0);
+    // coastLine.noStroke();
     envLayer = createBuffer(WIDTH,HEIGHT,false,true);
     envLayer.colorMode(HSB);
     envLayer.strokeWeight(2);
@@ -89,13 +93,14 @@ function setup(){
     magnifyingGlass.noStroke();
     snow = [];
     for(let i=0;i<MAX_SNOW_LAYERS;i++){
-        snow[i] = createBuffer(fullW,fullH,true);
-        snow[i].noStroke();
-        snow[i].fill(COLORS.snow);
+        snow[i] = createImage(fullW,fullH);
+        snow[i].loadPixels();
+        // snow[i].noStroke();
+        // snow[i].fill(COLORS.snow);
     }
 
     simSpeed = 0; // The exponent for the simulation speed (0 is full-speed, 1 is half-speed, etc.)
-    simSpeedFrameCounter = 0; // Counts frames of draw() while unpaused; modulo 2^simSpeed to advance sim when 0
+    lastUpdateTimestamp = performance.now(); // Keeps track of how much time has passed since the last simulation step to control the simulation at varying speeds
     keyRepeatFrameCounter = 0;
 
     upgradeLegacySaves();
@@ -123,9 +128,10 @@ function draw(){
                 }
                 stormIcons.clear();
                 if(!paused){
-                    simSpeedFrameCounter++;
-                    simSpeedFrameCounter%=pow(2,simSpeed);
-                    if(simSpeedFrameCounter===0) UI.viewBasin.advanceSim();
+                    const step = STEP / Math.pow(2, simSpeed);
+                    let delta = Math.floor((performance.now() - lastUpdateTimestamp) / step);
+                    UI.viewBasin.advanceSim(delta);
+                    lastUpdateTimestamp += delta * step;
                 }
                 keyRepeatFrameCounter++;
                 if(keyIsPressed && document.activeElement!==textInput && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0){
@@ -238,11 +244,11 @@ class Settings{
     }
 
     static order(){
-        return ["smoothLandColor","showMagGlass","snowLayers","useShadows","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["colorScheme","speedUnit","smoothLandColor","showMagGlass","snowLayers","useShadows","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [true,false,2,false,0,false,true];  // add new defaults to the beginning of this array
+        return [0,0,true,false,2,false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){

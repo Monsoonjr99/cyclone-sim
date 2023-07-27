@@ -1,7 +1,7 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.3.11";
+const VERSION_NUMBER = "0.4.11";
 
-const SAVE_FORMAT = 6;  // Format #6 in use starting in v0.2
+const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
 const ENVDATA_COMPATIBLE_FORMAT = 0;
 
@@ -12,11 +12,35 @@ const PERLIN_ZOOM = 100;    // Resolution for perlin noise
 const TICK_DURATION = 3600000;  // How long in sim time does a tick last in milliseconds (1 hour)
 const ADVISORY_TICKS = 6;    // Number of ticks per advisory
 const YEAR_LENGTH = 365.2425*24;        // The length of a year in ticks; used for seasonal activity
+const STEP = 30;            // Number of milliseconds in real time a simulation step lasts at default speed
 const NHEM_DEFAULT_YEAR = moment.utc().year();
 const SHEM_DEFAULT_YEAR = moment.utc().month() < 6 ? NHEM_DEFAULT_YEAR : NHEM_DEFAULT_YEAR+1;
 const DEPRESSION_LETTER = "H";
 const WINDSPEED_ROUNDING = 5;
-const MAP_DEFINITION = 2;   // normal scaler for the land map
+// const MAP_DEFINITION = 2;   // normal scaler for the land map
+const EARTH_SB_IDS = {
+    world: 0,
+    nhem: 1,
+    atl: 2,
+    atlland: 3,
+    epac: 4,
+    epacland: 5,
+    cpac: 6,
+    wpac: 7,
+    pagasa: 8,
+    bob: 9,
+    arb: 10,
+    nioland: 11,
+    medi: 12,
+    shem: 128,
+    aus: 129,
+    jakarta: 130,
+    pm: 131,
+    swio: 132,
+    spac: 133,
+    satl: 134,
+    nio: 192
+};
 const MAP_TYPES = [     // Land generation controls for different map types
     {   // "Two Continents" map type
         form: "linear",
@@ -79,50 +103,87 @@ const MAP_TYPES = [     // Land generation controls for different map types
         ]
     },
     {   // "Atlantic" map type
-        form: 'pixelmap',
-        path: 'resources/Atlantic.png'
+        form: 'earth',
+        west: -102.67,
+        east: 3,
+        north: 59.45,
+        south: 0,
+        mainSubBasin: EARTH_SB_IDS.atl
     },
     {   // "Eastern Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/EasternPacific.png',
-        special: 'CPac'
+        form: 'earth',
+        west: -180,
+        east: -74.33,
+        north: 59.45,
+        south: 0,
+        mainSubBasin: EARTH_SB_IDS.epac/* ,
+        special: 'CPac' */
     },
     {   // "Western Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/WesternPacific.png',
-        special: 'PAGASA'
+        form: 'earth',
+        west: 94.42,
+        east: -159.91,
+        north: 59.45,
+        south: 0,
+        mainSubBasin: EARTH_SB_IDS.wpac/* ,
+        special: 'PAGASA' */
     },
     {   // "Northern Indian Ocean" map type
-        form: 'pixelmap',
-        path: 'resources/NIO.png',
-        special: 'NIO'
+        form: 'earth',
+        west: 25.95,
+        east: 131.62,
+        north: 59.45,
+        south: 0,
+        mainSubBasin: EARTH_SB_IDS.nio/* ,
+        special: 'NIO' */
     },
     {   // "Australian Region" map type
-        form: 'pixelmap',
-        path: 'resources/Aus.png',
-        special: 'AUS'
+        form: 'earth',
+        west: 82.03,
+        east: -172.29,
+        north: 0,
+        south: -59.45,
+        mainSubBasin: EARTH_SB_IDS.aus/* ,
+        special: 'AUS' */
     },
     {   // "South Pacific" map type
-        form: 'pixelmap',
-        path: 'resources/SouthPacific.png'
+        form: 'earth',
+        west: 147.2,
+        east: -107.13,
+        north: 0,
+        south: -59.45,
+        mainSubBasin: EARTH_SB_IDS.spac
     },
     {   // "South-West Indian Ocean" map type
-        form: 'pixelmap',
-        path: 'resources/SWIO.png'
+        form: 'earth',
+        west: 17.25,
+        east: 122.93,
+        north: 0,
+        south: -59.45,
+        mainSubBasin: EARTH_SB_IDS.swio
     },
     {   // "South Atlantic" map type
-        form: 'pixelmap',
-        path: 'resources/SouthAtlantic.png'
+        form: 'earth',
+        west: -81.48,
+        east: 24.19,
+        north: 0,
+        south: -59.45,
+        mainSubBasin: EARTH_SB_IDS.satl
     },
     {   // "Mediterranean" map type
-        form: 'pixelmap',
-        path: 'resources/Medi.png'
+        form: 'earth',
+        west: -10.32,
+        east: 42.52,
+        north: 55.38,
+        south: 25.65,
+        mainSubBasin: EARTH_SB_IDS.medi
     }
     {   // "NPAC" map type
         form: 'pixelmap',
         path: 'resources/NPAC.png'
     }
 ];
+const EARTH_MAP_PATH = 'resources/earth.png';
 const EXTROP = 0;
 const SUBTROP = 1;
 const TROP = 2;
@@ -158,6 +219,8 @@ const SCALE_MEASURE_ONE_MIN_MPH = 4;
 const SCALE_MEASURE_TEN_MIN_MPH = 5;
 const SCALE_MEASURE_ONE_MIN_KMH = 6;
 const SCALE_MEASURE_TEN_MIN_KMH = 7;
+const MIN_SPEED = -5;
+const MAX_SPEED = 5;
 
 // Saving/loading-related constants
 
@@ -170,6 +233,8 @@ const FORMAT_WITH_IMPROVED_ENV = 3;
 const FORMAT_WITH_SUBBASIN_SEASON_STATS = 4;
 const FORMAT_WITH_STORM_SUBBASIN_DATA = 5;
 const FORMAT_WITH_SCALES = 6;
+const FORMAT_WITH_EARTH_SUBBASINS = 7;
+const FORMAT_WITH_LONG_LAT = 7;
 
 // Legacy saving/loading-related constants (backwards-compatibility)
 

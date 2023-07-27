@@ -316,7 +316,7 @@ UI.init = function(){
                 else renderToDo = land.drawSnow();
             }
             if(simSettings.useShadows){
-                if(land.shaderDrawn) drawBuffer(landShader);
+                if(land.shaderDrawn) drawBuffer(landShadows);
                 else renderToDo = land.drawShader();
             }
             if(basin.env.displaying>=0 && !basin.env.layerIsOceanic){
@@ -547,7 +547,6 @@ UI.init = function(){
         newBasinSettings.scale++;
         newBasinSettings.scale %= Scale.presetScales.length;
         newBasinSettings.scaleFlavor = 0;
-        newBasinSettings.scaleColorScheme = 0;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale flavor selector
         let scale = newBasinSettings.scale || 0;
         scale = Scale.presetScales[scale];
@@ -562,20 +561,6 @@ UI.init = function(){
         if(newBasinSettings.scaleFlavor===undefined) newBasinSettings.scaleFlavor = 0;
         newBasinSettings.scaleFlavor++;
         newBasinSettings.scaleFlavor %= scale.flavorDisplayNames.length;
-    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Scale color scheme selector
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        let scheme = newBasinSettings.scaleColorScheme || 0;
-        let grey = scale.colorSchemeDisplayNames.length<2;
-        s.button('Scale Color Scheme: '+(scale.colorSchemeDisplayNames[scheme] || 'N/A'),true,18,grey);
-    },function(){
-        yearselbox.enterFunc();
-        let scale = newBasinSettings.scale || 0;
-        scale = Scale.presetScales[scale];
-        if(scale.colorSchemeDisplayNames.length<2) return;
-        if(newBasinSettings.scaleColorScheme===undefined) newBasinSettings.scaleColorScheme = 0;
-        newBasinSettings.scaleColorScheme++;
-        newBasinSettings.scaleColorScheme %= scale.colorSchemeDisplayNames.length;
     }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){     // Designations selector
         let ds = newBasinSettings.designations || 0;
         ds = DesignationSystem.presetDesignationSystems[ds].displayName;
@@ -629,8 +614,7 @@ UI.init = function(){
             'mapType',
             'godMode',
             'scale',
-            'scaleFlavor',
-            'scaleColorScheme'
+            'scaleFlavor'
         ]) opts[o] = newBasinSettings[o];
         let basin = new Basin(false,opts);
         newBasinSettings = {};
@@ -699,7 +683,7 @@ UI.init = function(){
             loadable = false;
         }else{
             label = b.saveName;
-            if(b.format<EARLIEST_COMPATIBLE_FORMAT){
+            if(b.format < EARLIEST_COMPATIBLE_FORMAT || b.format > SAVE_FORMAT){
                 label += " [Incompatible]";
                 loadable = false;
             }else loadable = true;
@@ -715,7 +699,7 @@ UI.init = function(){
 
     let loadbuttonclick = function(){
         let b = loadMenu.loadables[loadMenu.page*LOAD_MENU_BUTTONS_PER_PAGE+this.buttonNum];
-        if(b && b.format>=EARLIEST_COMPATIBLE_FORMAT){
+        if(b && b.format >= EARLIEST_COMPATIBLE_FORMAT && b.format <= SAVE_FORMAT){
             let basin = new Basin(b.saveName);
             basin.initialized.then(()=>{
                 basin.mount();
@@ -781,7 +765,7 @@ UI.init = function(){
         text("Settings",0,0);
     });
 
-    settingsMenu.append(false,WIDTH/2-150,HEIGHT/4,300,30,function(s){   // storm intensity indicator
+    settingsMenu.append(false, WIDTH / 2 - 150, 3 * HEIGHT / 16, 300, 30, function(s){   // storm intensity indicator
         let b = simSettings.showStrength ? "Enabled" : "Disabled";
         s.button("Intensity Indicator: "+b,true);
     },function(){
@@ -820,9 +804,20 @@ UI.init = function(){
     },function(){
         simSettings.setSmoothLandColor("toggle");
         if(land){
-            landBuffer.clear();
+            // landBuffer.clear();
             land.drawn = false;
         }
+    }).append(false,0,37,300,30,function(s){     // speed unit
+        let u = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
+        s.button("Windspeed Unit: " + u, true);
+    },function(){
+        simSettings.setSpeedUnit("incmod", 3);
+    }).append(false,0,37,300,30,function(s){     // color scheme
+        let n = COLOR_SCHEMES[simSettings.colorScheme].name;
+        s.button("Color Scheme: " + n, true);
+    },function(){
+        simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+        refreshTracks(true);
     });
 
     settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
@@ -873,18 +868,17 @@ UI.init = function(){
 
     // designation system editor
 
-    let refresh_desig_editor;
-
-    const define_desig_editor = ()=>{
+    const desig_editor_definition = (()=>{
         const section_spacing = 36;
         const section_heights = 28;
         const section_width = 400;
         const name_sections = 6;
 
-        let editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+        let editing_sub_basin;
         let desig_system;
         let name_list_num = 0;
         let name_list_page = 0;
+        let list_lists_mode = true;
         let aux_list = false;
         let prefix_box;
         let suffix_box;
@@ -896,8 +890,8 @@ UI.init = function(){
 
         const refresh_num_section = ()=>{
             if(desig_system instanceof DesignationSystem){
-                prefix_box.value = desig_system.numbering.prefix;
-                suffix_box.value = desig_system.numbering.suffix;
+                prefix_box.value = desig_system.numbering.prefix || '';
+                suffix_box.value = desig_system.numbering.suffix || '';
             }
             if(desig_system && desig_system.numbering.enabled)
                 num_affix_section.show();
@@ -907,25 +901,34 @@ UI.init = function(){
         const refresh_name_section = ()=>{
             name_list_page = 0;
         };
-        refresh_desig_editor = ()=>{
+        const refresh_desig_editor = ()=>{
+            if(editing_sub_basin === undefined)
+                editing_sub_basin = UI.viewBasin.mainSubBasin;
             let sb = UI.viewBasin.subBasins[editing_sub_basin];
             if(sb && sb.designationSystem)
                 desig_system = sb.designationSystem;
             name_list_num = 0;
+            list_lists_mode = true;
             aux_list = false;
             refresh_num_section();
             refresh_name_section();
         };
 
-        const get_list = ()=>{
+        const list_array = ()=>{
             if(desig_system instanceof DesignationSystem){
-                let list;
                 if(aux_list)
-                    list = desig_system.naming.auxiliaryLists[name_list_num];
+                    return desig_system.naming.auxiliaryLists;
                 else
-                    list = desig_system.naming.mainLists[name_list_num];
-                return list;
+                    return desig_system.naming.mainLists;
             }
+        };
+        const get_list_from_index = (i)=>{
+            let list_arr = list_array();
+            if(list_arr)
+                return list_arr[i];
+        };
+        const get_list = ()=>{
+            return get_list_from_index(name_list_num);
         };
         const name_at = (i)=>{
             let txt;
@@ -976,7 +979,7 @@ UI.init = function(){
                 editing_sub_basin++;
                 if(editing_sub_basin > 255)
                     editing_sub_basin = 0;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         }).append(false,0,18,30,10,s=>{ // prev sub-basin button
             s.button('',true);
@@ -986,7 +989,7 @@ UI.init = function(){
                 editing_sub_basin--;
                 if(editing_sub_basin < 0)
                     editing_sub_basin = 255;
-            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin));
+            }while(!(UI.viewBasin.subBasins[editing_sub_basin] instanceof SubBasin && UI.viewBasin.subBasins[editing_sub_basin].designationSystem));
             refresh_desig_editor();
         });
 
@@ -1033,49 +1036,19 @@ UI.init = function(){
         }]);
 
         // name list selector
-        let list_selector = num_button.append(false,0,section_spacing*2,section_width,0,s=>{
-            let txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
-            text(txt,section_width/2,section_heights/2);
-        });
-
-        list_selector.append(false,0,0,30,10,s=>{ // next name list button
-            s.button('',true);
-            triangle(15,2,23,8,7,8);
+        let list_selector = num_button.append(false,0,section_spacing*2,section_width,section_heights,s=>{
+            let txt;
+            if(list_lists_mode)
+                txt = aux_list ? `Auxiliary Name Lists` : `Main Name Lists`;
+            else
+                txt = `Editing name list:${aux_list ? ' Aux.' : ''} List ${name_list_num + 1}`;
+            s.button(txt,true,18);
         },()=>{
             if(desig_system instanceof DesignationSystem){
-                name_list_num++;
-                if(!aux_list && name_list_num >= desig_system.naming.mainLists.length){
-                    if(desig_system.naming.auxiliaryLists.length > 0)
-                        aux_list = true;
-                    name_list_num = 0;
-                }else if(aux_list && name_list_num >= desig_system.naming.auxiliaryLists.length){
-                    if(desig_system.naming.mainLists.length > 0)
-                        aux_list = false;
-                    name_list_num = 0;
-                }
-                refresh_name_section();
-            }
-        }).append(false,0,18,30,10,s=>{ // prev name list button
-            s.button('',true);
-            triangle(15,8,23,2,7,2);
-        },()=>{
-            if(desig_system instanceof DesignationSystem){
-                name_list_num--;
-                if(name_list_num < 0){
-                    if(aux_list){
-                        if(desig_system.naming.mainLists.length > 0){
-                            aux_list = false;
-                            name_list_num = desig_system.naming.mainLists.length - 1;
-                        }else
-                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
-                    }else{
-                        if(desig_system.naming.auxiliaryLists.length > 0){
-                            aux_list = true;
-                            name_list_num = desig_system.naming.auxiliaryLists.length - 1;
-                        }else
-                            name_list_num = desig_system.naming.mainLists.length - 1;
-                    }
-                }
+                if(list_lists_mode)
+                    aux_list = !aux_list;
+                else
+                    list_lists_mode = true;
                 refresh_name_section();
             }
         });
@@ -1087,49 +1060,109 @@ UI.init = function(){
             let section = prev.append(false,0,section_spacing,my_width,section_heights,s=>{
                 let txt = '--';
                 let grey = true;
-                let name = name_at(index());
-                if(name){
-                    txt = name;
-                    grey = false;
+                if(list_lists_mode){
+                    let list = get_list_from_index(index());
+                    if(list){
+                        txt = `${aux_list ? ' Aux.' : ''} List ${index() + 1}`;
+                        grey = false;
+                    }
+                }else{
+                    let name = name_at(index());
+                    if(name){
+                        txt = name;
+                        grey = false;
+                    }
                 }
                 s.button(txt,true,18,grey);
             },()=>{
-                let name = name_at(index());
-                if(name)
-                    invoke_name_editor(index(),false);
+                if(list_lists_mode){
+                    let list = get_list_from_index(index());
+                    if(list){
+                        name_list_num = index();
+                        list_lists_mode = false;
+                        refresh_name_section();
+                    }
+                }else{
+                    let name = name_at(index());
+                    if(name)
+                        invoke_name_editor(index(),false);
+                }
             });
 
             section.append(false,my_width+10,0,30,12,s=>{
                 let grey = true;
-                let list = get_list();
-                if(list && index() <= list.length)
-                    grey = false;
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && index() <= list_arr.length)
+                        grey = false;
+                }else{
+                    let list = get_list();
+                    if(list && index() <= list.length)
+                        grey = false;
+                }
                 s.button('+',true,15,grey);
                 triangle(25,3,28,10,22,10);
             },()=>{
-                let list = get_list();
-                if(list && index() <= list.length)
-                    invoke_name_editor(index(), true);
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && index() <= list_arr.length){
+                        list_arr.splice(index(), 0, []);
+                        name_list_num = index();
+                        list_lists_mode = false;
+                    }
+                }else{
+                    let list = get_list();
+                    if(list && index() <= list.length)
+                        invoke_name_editor(index(), true);
+                }
             }).append(false,0,section_heights-12,30,12,s=>{
                 let grey = true;
-                let list = get_list();
-                if(list && (index() + 1) <= list.length)
-                    grey = false;
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && (index() + 1) <= list_arr.length)
+                        grey = false;
+                }else{
+                    let list = get_list();
+                    if(list && (index() + 1) <= list.length)
+                        grey = false;
+                }
                 s.button('+',true,15,grey);
                 triangle(25,9,28,2,22,2);
             },()=>{
-                let list = get_list();
-                if(list && (index() + 1) <= list.length)
-                    invoke_name_editor(index() + 1, true);
+                if(list_lists_mode){
+                    let list_arr = list_array();
+                    if(list_arr && (index() + 1) <= list_arr.length){
+                        list_arr.splice(index() + 1, 0, []);
+                        name_list_num = index() + 1;
+                        list_lists_mode = false;
+                    }
+                }else{
+                    let list = get_list();
+                    if(list && (index() + 1) <= list.length)
+                        invoke_name_editor(index() + 1, true);
+                }
             });
 
             section.append(false,my_width+50,0,30,section_heights,s=>{
-                let grey = !name_at(index());
+                let grey;
+                if(list_lists_mode)
+                    grey = !get_list_from_index(index());
+                else
+                    grey = !name_at(index());
                 s.button('X',true,21,grey);
             },()=>{
-                if(name_at(index())){
+                if(list_lists_mode){
+                    if(get_list_from_index(index())){
+                        let list_arr = list_array();
+                        areYouSure.dialog(()=>{
+                            list_arr.splice(index(), 1);
+                            if(list_arr.length <= name_list_page * name_sections && list_arr.length > 0)
+                                name_list_page--;
+                        }, `Delete ${aux_list ? 'Aux. ' : ''} List ${index() + 1}?`);
+                    }
+                }else if(name_at(index())){
                     let list = get_list();
-                    list.splice(index(),1);
+                    list.splice(index(), 1);
                     if(list.length <= name_list_page * name_sections && list.length > 0)
                         name_list_page--;
                 }
@@ -1154,13 +1187,13 @@ UI.init = function(){
                 name_list_page--;
         }).append(false,50,0,30,section_heights,s=>{
             let grey = true;
-            let list = get_list();
+            let list = list_lists_mode ? list_array() : get_list();
             if(list && (name_list_page + 1) * name_sections < list.length)
                 grey = false;
             s.button('',true,18,grey);
             triangle(26,14,4,4,4,24);
         },()=>{
-            let list = get_list();
+            let list = list_lists_mode ? list_array() : get_list();
             if(list && (name_list_page + 1) * name_sections < list.length)
                 name_list_page++;
         });
@@ -1170,7 +1203,8 @@ UI.init = function(){
         },function(){
             prefix_box.enterFunc();
             suffix_box.enterFunc();
-            editing_sub_basin = DEFAULT_MAIN_SUBBASIN;
+            editing_sub_basin = UI.viewBasin.mainSubBasin;
+            list_lists_mode = true;
             aux_list = false;
             name_list_num = 0;
             name_list_page = 0;
@@ -1215,9 +1249,9 @@ UI.init = function(){
         },()=>{
             name_editor.hide();
         });
-    };
 
-    define_desig_editor();
+        return {refresh: refresh_desig_editor};
+    })();
 
     // primary "in sim" scene
 
@@ -1343,7 +1377,23 @@ UI.init = function(){
     },function(){
         if(!panel_timeline_container.showing) stormInfoPanel.target = selectedStorm || UI.viewBasin.getSeason(viewTick);
         panel_timeline_container.toggleShow();
-    }).append(false,-29,0,24,24,function(s){  // Pause/resume button
+    }).append(false,-29,0,24,10,function(s){     // Speed increase
+        let grey = simSpeed == MAX_SPEED;
+        s.button('', false, undefined, grey);
+        triangle(4,2,12,5,4,8);
+        triangle(12,2,20,5,12,8);
+    },function(){
+        if(simSpeed < MAX_SPEED)
+            simSpeed++;
+    }).append(false,0,14,24,10,function(s){     // Speed decrease
+        let grey = simSpeed == MIN_SPEED;
+        s.button('', false, undefined, grey);
+        triangle(20,2,12,5,20,8);
+        triangle(12,2,4,5,12,8);
+    },function(){
+        if(simSpeed > MIN_SPEED)
+            simSpeed--;
+    }).append(false,-29,-14,24,24,function(s){  // Pause/resume button
         s.button('');
         if(paused) triangle(3,3,21,12,3,21);
         else{
@@ -1352,22 +1402,35 @@ UI.init = function(){
         }
     },function(){
         paused = !paused;
+        lastUpdateTimestamp = performance.now();
     }).append(false,-105,0,100,24,function(s){  // Pause/speed/selected storm indicator
         let txtStr = "";
         if(selectedStorm){
             let sName = selectedStorm.getFullNameByTick(viewTick);
             let sData = selectedStorm.getStormDataByTick(viewTick);
             if(sData){
-                let sKts = sData ? sData.windSpeed : 0;
-                let sMph = ktsToMph(sKts,WINDSPEED_ROUNDING);
-                let sKmh = ktsToKmh(sKts,WINDSPEED_ROUNDING);
+                let sWind = sData ? sData.windSpeed : 0;
+                sWind = displayWindspeed(sWind);
                 let sPrsr = sData ? sData.pressure: 1031;
-                txtStr = sName + ": " + sKts + " kts, " + sMph + " mph, " + sKmh + " km/h / " + sPrsr + " hPa";
+                txtStr = `${sName}: ${sWind} / ${sPrsr} hPa`;
             }else{
                 sName = selectedStorm.getFullNameByTick("peak");
                 txtStr = sName + " - ACE: " + selectedStorm.ACE;
             }
-        }else txtStr = paused ? "Paused" : (simSpeed===0 ? "Full-" : simSpeed===1 ? "Half-" : "1/" + pow(2,simSpeed) + " ") + "Speed";
+        }else{
+            if(paused)
+                txtStr = "Paused";
+            else if(simSpeed < -1)
+                txtStr = `1/${Math.pow(2, -simSpeed)} Speed`;
+            else if(simSpeed === -1)
+                txtStr = 'Half-Speed';
+            else if(simSpeed === 0)
+                txtStr = 'Normal-Speed';
+            else if(simSpeed === 1)
+                txtStr = 'Double-Speed';
+            else
+                txtStr = `${Math.pow(2, simSpeed)}x Speed`;
+        }
         let newW = textWidth(txtStr)+6;
         this.setBox(-newW-5,undefined,newW);
         if(this.isHovered()){
@@ -1378,8 +1441,10 @@ UI.init = function(){
         textAlign(RIGHT,TOP);
         text(txtStr,this.width-3,3);
     },function(){
-        if(!selectedStorm) paused = !paused;
-        else{
+        if(!selectedStorm){
+            paused = !paused;
+            lastUpdateTimestamp = performance.now();
+        }else{
             stormInfoPanel.target = selectedStorm;
             panel_timeline_container.show();
         }
@@ -1418,7 +1483,7 @@ UI.init = function(){
                 x = getMouseX();
                 y = getMouseY();
             }
-            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(x,y))){
+            if(x >= WIDTH || x < 0 || y >= HEIGHT || y < 0 || (basin.env.fields[f].oceanic && land.get(Coordinate.convertFromXY(basin.mapType, x, y)))){
                 txtStr += "N/A";
             }else{
                 let v = basin.env.get(f,x,y,viewTick);
@@ -1542,7 +1607,7 @@ UI.init = function(){
             else
                 info_row('Peak pressure', 'N/A');
             if(S.windPeak)
-                info_row('Peak wind speed', S.windPeak.windSpeed + ' kts');
+                info_row('Peak wind speed', displayWindspeed(S.windPeak.windSpeed));
             else
                 info_row('Peak wind speed', 'N/A');
             info_row('ACE', S.ACE);
@@ -1557,9 +1622,9 @@ UI.init = function(){
             textSize(15);
             let se = UI.viewBasin.fetchSeason(S);
             if(se instanceof Season){
-                let stats = se.stats(DEFAULT_MAIN_SUBBASIN);
+                let stats = se.stats(UI.viewBasin.mainSubBasin);
                 let counters = stats.classificationCounters;
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 for(let {statName, cNumber} of scale.statDisplay())
                     info_row(statName, counters[cNumber]);
                 info_row('Total ACE', stats.ACE);
@@ -1568,7 +1633,7 @@ UI.init = function(){
                 info_row('Landfalls', stats.landfalls);
                 if(stats.most_intense){
                     let most_intense = stats.most_intense.fetch();
-                    info_row('Most Intense', most_intense.getNameByTick(-1) + '\n' + most_intense.peak.pressure + ' hPa\n' + most_intense.windPeak.windSpeed + ' kts');
+                    info_row('Most Intense', most_intense.getNameByTick(-1) + '\n' + most_intense.peak.pressure + ' hPa\n' + displayWindspeed(most_intense.windPeak.windSpeed));
                 }else
                     info_row('Most Intense', 'N/A');
             }else
@@ -1746,8 +1811,8 @@ UI.init = function(){
                         for(let q=0;q<t.record.length;q++){
                             let rt = ceil(t.birthTime/ADVISORY_TICKS)*ADVISORY_TICKS + q*ADVISORY_TICKS;
                             let d = t.record[q];
-                            if(tropOrSub(d.type)&&land.inBasin(d.pos.x,d.pos.y)){
-                                let clsn = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).get(d);
+                            if(tropOrSub(d.type)&&land.inBasin(d.coord())){
+                                let clsn = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).get(d);
                                 if(!aSegment){
                                     aSegment = {};
                                     part.segments.push(aSegment);
@@ -1836,7 +1901,7 @@ UI.init = function(){
                             max_wind = w;
                     }
                 }
-                let scale = UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN);
+                let scale = UI.viewBasin.getScale(UI.viewBasin.mainSubBasin);
                 if(scale.measure === SCALE_MEASURE_ONE_MIN_KNOTS || scale.measure === SCALE_MEASURE_TEN_MIN_KNOTS){
                     let color = scale.getColor(0);
                     let y0 = bBound;
@@ -1874,7 +1939,8 @@ UI.init = function(){
                     let y = map(i, 0, max_wind, bBound, tBound);
                     line(lBound - BOX_WIDTH * 0.008, y, lBound, y);
                     noStroke();
-                    text(i, lBound - BOX_WIDTH * 0.01, y);
+                    let unitLocalizedWind = [i, ktsToMph(i, WINDSPEED_ROUNDING), ktsToKmh(i, WINDSPEED_ROUNDING)][simSettings.speedUnit];
+                    text(unitLocalizedWind, lBound - BOX_WIDTH * 0.01, y);
                 }
                 for(let t0 = begin_tick, t1 = t0 + ADVISORY_TICKS; t1 <= end_tick; t0 = t1, t1 += ADVISORY_TICKS){
                     let w0 = target.getStormDataByTick(t0).windSpeed;
@@ -1923,7 +1989,7 @@ UI.init = function(){
                     else noStroke();
                     for(let j=0;j<p.segments.length;j++){
                         let S = p.segments[j];
-                        fill(UI.viewBasin.getScale(DEFAULT_MAIN_SUBBASIN).getColor(S.maxCat,!S.fullyTrop));
+                        fill(UI.viewBasin.getScale(UI.viewBasin.mainSubBasin).getColor(S.maxCat,!S.fullyTrop));
                         rect(lBound+S.startX,y,max(S.endX-S.startX,1),10);
                     }
                     let labelLeftBound = lBound + p.segments[p.segments.length-1].endX;
@@ -2037,7 +2103,7 @@ UI.init = function(){
     }).append(false,0,30,sideMenu.width-10,25,function(s){   // Designation system editor menu button
         s.button("Edit Designations",false,15);
     },function(){
-        refresh_desig_editor();
+        desig_editor_definition.refresh();
         primaryWrapper.hide();
         desigSystemEditor.show();
         paused = true;
@@ -2155,41 +2221,51 @@ function keyPressed(){
     keyRepeatFrameCounter = -1;
     switch(key){
         case " ":
-        if(UI.viewBasin && primaryWrapper.showing) paused = !paused;
-        break;
+            if(UI.viewBasin && primaryWrapper.showing){
+                paused = !paused;
+                lastUpdateTimestamp = performance.now();
+            }
+            break;
         case "a":
-        if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
-        break;
+            if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
+            break;
         case "w":
-        simSettings.setShowStrength("toggle");
-        break;
+            simSettings.setShowStrength("toggle");
+            break;
         case "e":
-        if(UI.viewBasin) UI.viewBasin.env.displayNext();
-        break;
+            if(UI.viewBasin) UI.viewBasin.env.displayNext();
+            break;
         case "t":
-        simSettings.setTrackMode("incmod",4);
-        refreshTracks(true);
-        break;
+            simSettings.setTrackMode("incmod",4);
+            refreshTracks(true);
+            break;
         case "m":
-        simSettings.setShowMagGlass("toggle");
-        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-        break;
+            simSettings.setShowMagGlass("toggle");
+            if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+            break;
+        case 'u':
+            simSettings.setSpeedUnit("incmod", 3);
+            break;
+        case 'c':
+            simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+            refreshTracks(true);
+            break;
         default:
-        switch(keyCode){
-            case KEY_LEFT_BRACKET:
-            simSpeed++;
-            if(simSpeed>5) simSpeed=5;
-            break;
-            case KEY_RIGHT_BRACKET:
-            simSpeed--;
-            if(simSpeed<0) simSpeed=0;
-            break;
-            case KEY_F11:
-            toggleFullscreen();
-            break;
-            default:
-            return;
-        }
+            switch(keyCode){
+                case KEY_LEFT_BRACKET:
+                if(simSpeed > MIN_SPEED)
+                    simSpeed--;
+                break;
+                case KEY_RIGHT_BRACKET:
+                if(simSpeed < MAX_SPEED)
+                    simSpeed++;
+                break;
+                case KEY_F11:
+                toggleFullscreen();
+                break;
+                default:
+                return;
+            }
     }
     return false;
 }
@@ -2289,6 +2365,14 @@ function ktsToKmh(k,rnd){
     let val = k*1.852;
     if(rnd) val = round(val/rnd)*rnd;
     return val;
+}
+
+function displayWindspeed(kts, rnd){
+    if(!rnd)
+        rnd = WINDSPEED_ROUNDING;
+    let value = [kts, ktsToMph(kts,rnd), ktsToKmh(kts,rnd)][simSettings.speedUnit];
+    let unitLabel = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
+    return `${value} ${unitLabel}`;
 }
 
 function oneMinToTenMin(w,rnd){
