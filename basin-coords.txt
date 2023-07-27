@@ -1,5 +1,11 @@
 Longitude-latitude coordinates of basin maps' boundaries:
 
+
+World
+    west       0.00
+    east       0.00
+    north      0.00
+    south      0.00
 Atlantic
     west    -102.67
     east       3.00
