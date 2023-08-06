@@ -67,8 +67,9 @@ function setup(){
     stormIcons = createBuffer();
     stormIcons.strokeWeight(3);
     forecastTracks = createBuffer();
-    forecastTracks.strokeWeight(3);
+    forecastTracks.strokeWeight(2);
     forecastTracks.stroke(240,240,0);
+    forecastTracks.noFill();
     landBuffer = createImage(fullW,fullH);
     landBuffer.loadPixels();
     // landBuffer.noStroke();
