@@ -178,9 +178,13 @@ const MAP_TYPES = [     // Land generation controls for different map types
         south: 25.65,
         mainSubBasin: EARTH_SB_IDS.medi
     }
-    {   // "NPAC" map type
-        form: 'pixelmap',
-        path: 'resources/NPAC.png'
+    {   // "World" map type
+        form: 'earth',
+        west: -180,
+        east: 180,
+        north: 180,
+        south: -180,
+        mainSubBasin: EARTH_SB_IDS.world
     }
 ];
 const EARTH_MAP_PATH = 'resources/earth.png';
