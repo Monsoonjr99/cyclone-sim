@@ -1,7 +1,6 @@
 var paused,
     land,
     // landWorker,
-    newBasinSettings,
     waitingFor,
     waitingDescs,
     waitingTCSymbolSHem,
@@ -38,7 +37,6 @@ function setup(){
     defineColors(); // Set the values of COLORS since color() can't be used before setup()
     background(COLORS.bg);
     paused = false;
-    newBasinSettings = {};
     waitingFor = 0;
     waitingDescs = {};
     waitingDescs.lowestAvailable = 0;
