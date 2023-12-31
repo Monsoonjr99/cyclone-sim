@@ -1,5 +1,5 @@
 const TITLE = "Cyclone Simulator";
-const VERSION_NUMBER = "0.4.12";
+const VERSION_NUMBER = "0.4.13";
 
 const SAVE_FORMAT = 7;  // Format #7 in use starting in v0.4
 const EARLIEST_COMPATIBLE_FORMAT = 0;
@@ -41,44 +41,61 @@ const EARTH_SB_IDS = {
     satl: 134,
     nio: 192
 };
-const MAP_TYPES = [     // Land generation controls for different map types
-    {   // "Two Continents" map type
+const MAP_TYPES = [     // Land generation controls and option presets for different map types
+    {   
+		label: "Two Continents",
         form: "linear",
         landBiasFactors: [
             5/8,        // Where the "center" should be for land/ocean bias (0-1 scale from west to east)
             0.15,       // Bias factor for the west edge (positive = land more likely, negative = sea more likely)
             -0.3,       // Bias factor for the "center" (as defined by .landBiasFactors[0])
             0.1         // Bias factor for the east edge
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "East Continent" map type
+    {   
+		label: "East Continent",
         form: "linear",
         landBiasFactors: [
             5/8,
             -0.3,
             -0.3,
             0.15
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "West Continent" map type
+    {   
+		label: "West Continent",
         form: "linear",
         landBiasFactors: [
             1/2,
             0.15,
             -0.3,
             -0.3
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "Island Ocean" map type
+    {   
+		label: "Island Ocean",
         form: "linear",
         landBiasFactors: [
             1/2,
             -0.28,
             -0.28,
             -0.28
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "Central Continent" map type
+    {   
+		label: "Central Continent",
         form: "radial",
         landBiasFactors: [
             1/2,    // Where the east-west center should be (0-1 scale from west to east)
@@ -88,9 +105,13 @@ const MAP_TYPES = [     // Land generation controls for different map types
             0.15,   // Bias factor for the center
             -0.27,   // Bias factor for the first control distance
             -0.3    // Bias factor for the second control distance and outward
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "Central Inland Sea" map type
+    {   
+		label: "Central Inland Sea",
         form: "radial",
         landBiasFactors: [
             1/2,
@@ -100,83 +121,136 @@ const MAP_TYPES = [     // Land generation controls for different map types
             -0.3,
             0.2,
             0.3
-        ]
+        ],
+        optionPresets: {
+            designations: 22
+        }
     },
-    {   // "Atlantic" map type
+    {   
+		label: "Atlantic",
         form: 'earth',
         west: -102.67,
         east: 3,
         north: 59.45,
         south: 0,
-        mainSubBasin: EARTH_SB_IDS.atl
+        mainSubBasin: EARTH_SB_IDS.atl,
+        optionPresets: {
+            hem: 1,
+            scale: 0,
+            designations: 0
+        }
     },
-    {   // "Eastern Pacific" map type
+    {   
+		label: "Eastern Pacific",
         form: 'earth',
         west: -180,
         east: -74.33,
         north: 59.45,
         south: 0,
-        mainSubBasin: EARTH_SB_IDS.epac/* ,
-        special: 'CPac' */
+        mainSubBasin: EARTH_SB_IDS.epac,
+        optionPresets: {
+            hem: 1,
+            scale: 0,
+            designations: 1
+        }
     },
-    {   // "Western Pacific" map type
+    {   
+		label: "Western Pacific",
         form: 'earth',
         west: 94.42,
         east: -159.91,
         north: 59.45,
         south: 0,
-        mainSubBasin: EARTH_SB_IDS.wpac/* ,
-        special: 'PAGASA' */
+        mainSubBasin: EARTH_SB_IDS.wpac,
+        optionPresets: {
+            hem: 1,
+            scale: 3,
+            designations: 3
+        }
     },
-    {   // "Northern Indian Ocean" map type
+    {   
+		label: "Northern Indian Ocean",
         form: 'earth',
         west: 25.95,
         east: 131.62,
         north: 59.45,
         south: 0,
-        mainSubBasin: EARTH_SB_IDS.nio/* ,
-        special: 'NIO' */
+        mainSubBasin: EARTH_SB_IDS.nio,
+        optionPresets: {
+            hem: 1,
+            scale: 4,
+            designations: 5
+        }
     },
-    {   // "Australian Region" map type
+    {   
+		label: "Australian Region",
         form: 'earth',
         west: 82.03,
         east: -172.29,
         north: 0,
         south: -59.45,
-        mainSubBasin: EARTH_SB_IDS.aus/* ,
-        special: 'AUS' */
+        mainSubBasin: EARTH_SB_IDS.aus,
+        optionPresets: {
+            hem: 2,
+            scale: 2,
+            designations: 6
+        }
     },
-    {   // "South Pacific" map type
+    {   
+		label: "South Pacific",
         form: 'earth',
         west: 147.2,
         east: -107.13,
         north: 0,
         south: -59.45,
-        mainSubBasin: EARTH_SB_IDS.spac
+        mainSubBasin: EARTH_SB_IDS.spac,
+        optionPresets: {
+            hem: 2,
+            scale: 2,
+            designations: 7
+        }
     },
-    {   // "South-West Indian Ocean" map type
+    {   
+		label: "South-West Indian Ocean",
         form: 'earth',
         west: 17.25,
         east: 122.93,
         north: 0,
         south: -59.45,
-        mainSubBasin: EARTH_SB_IDS.swio
+        mainSubBasin: EARTH_SB_IDS.swio,
+        optionPresets: {
+            hem: 2,
+            scale: 5,
+            designations: 8
+        }
     },
-    {   // "South Atlantic" map type
+    {   
+		label: "South Atlantic",
         form: 'earth',
         west: -81.48,
         east: 24.19,
         north: 0,
         south: -59.45,
-        mainSubBasin: EARTH_SB_IDS.satl
+        mainSubBasin: EARTH_SB_IDS.satl,
+        optionPresets: {
+            hem: 2,
+            scale: 0,
+            designations: 9
+        }
     },
-    {   // "Mediterranean" map type
+    {   
+		label: "Mediterranean",
         form: 'earth',
         west: -10.32,
         east: 42.52,
         north: 55.38,
         south: 25.65,
-        mainSubBasin: EARTH_SB_IDS.medi
+        mainSubBasin: EARTH_SB_IDS.medi,
+        optionPresets: {
+            hem: 1,
+            scale: 0,
+            designations: 10
+        }
     }
 ];
 const EARTH_MAP_PATH = 'resources/earth.png';

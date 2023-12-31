@@ -1,5 +1,8 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.13 (2023-12-31):
+    * Split some of the new basin creation options into an "Advanced" menu
+    * Map types now have automatic presets for the advanced basin options
 v0.4.12 (2023-08-06):
     * Improved the "yellow dots" track prediction by making it an actual cone
         > Still fairly rudimentary
