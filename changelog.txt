@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.14 (2024-01-01):
+    * Updated the PAGASA, Australian region, South-West Indian Ocean, South Pacific, and Mediterranean name lists
 v0.4.13 (2023-12-31):
     * Split some of the new basin creation options into an "Advanced" menu
     * Map types now have automatic presets for the advanced basin options
