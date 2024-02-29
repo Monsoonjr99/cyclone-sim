@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.15 (2024-02-29):
+    * Another tweak to the appearance of the track forecast cone
 v0.4.14 (2024-01-01):
     * Updated the PAGASA, Australian region, South-West Indian Ocean, South Pacific, and Mediterranean name lists
 v0.4.13 (2023-12-31):
