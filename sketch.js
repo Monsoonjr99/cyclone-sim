@@ -69,7 +69,7 @@ function setup(){
     // forecastTracks.stroke(240,240,0);
     // forecastTracks.noFill();
     forecastTracks.noStroke();
-    forecastTracks.fill(255, 100);
+    forecastTracks.fill(255);
     landBuffer = createImage(fullW,fullH);
     landBuffer.loadPixels();
     // landBuffer.noStroke();
