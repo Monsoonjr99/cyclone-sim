@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.16 (2024-03-02):
+    * Another small tweak to make the track forecast cone a little less janky
 v0.4.15 (2024-02-29):
     * Another tweak to the appearance of the track forecast cone
 v0.4.14 (2024-01-01):

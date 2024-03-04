@@ -317,7 +317,7 @@ class Storm{
                     r1 = hour * 0.7 / 2;
                     p0 = p1;
                     p1 = points[n];
-                    // forecastTracks.circle(p1.x, p1.y, r1 * 2);
+                    forecastTracks.circle(p1.x, p1.y, r1 * 2);
                     forecastTracks.beginShape();
                     rVec.set(p1.x, p1.y);
                     rVec.sub(p0.x, p0.y);
@@ -331,16 +331,9 @@ class Storm{
                     rVec.rotate(PI);
                     forecastTracks.vertex(p1.x + rVec.x, p1.y + rVec.y);
                     forecastTracks.endShape();
-                    // forecastTracks.erase(128, 0);
-                    // forecastTracks.rect(0, 0, WIDTH, HEIGHT);
-                    // forecastTracks.noErase();
+                    
 
-                    // forecastTracks.loadPixels();
-                    // for(let i = 0; i < forecastTracks.pixels.length; i += 4){
-                    //     if(forecastTracks.pixels[i + 3] > 0)
-                    //         forecastTracks.pixels[i + 3] = 100;
-                    // }
-                    // forecastTracks.updatePixels();
+                    
                 };
                 coneSegment(12);
                 coneSegment(24);
@@ -350,6 +343,18 @@ class Storm{
                 coneSegment(72);
                 coneSegment(96);
                 coneSegment(120);
+                
+                forecastTracks.loadPixels();
+                for(let i = 0; i < forecastTracks.pixels.length; i += 4){
+                    if(forecastTracks.pixels[i + 3] > 0)
+                        forecastTracks.pixels[i + 3] = 128;
+                }
+                forecastTracks.updatePixels();
+
+                    // Use this instead after upgrading to p5.js 1.9.1
+                // forecastTracks.erase(128, 0);
+                // forecastTracks.rect(0, 0, WIDTH, HEIGHT);
+                // forecastTracks.noErase();
             }
         }
     }
