@@ -331,9 +331,6 @@ class Storm{
                     rVec.rotate(PI);
                     forecastTracks.vertex(p1.x + rVec.x, p1.y + rVec.y);
                     forecastTracks.endShape();
-                    
-
-                    
                 };
                 coneSegment(12);
                 coneSegment(24);
