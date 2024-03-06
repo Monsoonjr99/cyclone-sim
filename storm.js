@@ -311,7 +311,7 @@ class Storm{
                 let rVec = createVector(0);
                 let r0 = 0;
                 let r1 = 0.01;
-                const coneSegment = hour=>{
+                for(let hour of [12, 24, 36, 48, 60, 72, 96, 120]){
                     const n = hour / ADVISORY_TICKS - 1;
                     r0 = r1;
                     r1 = hour * 0.7 / 2;
@@ -331,15 +331,7 @@ class Storm{
                     rVec.rotate(PI);
                     forecastTracks.vertex(p1.x + rVec.x, p1.y + rVec.y);
                     forecastTracks.endShape();
-                };
-                coneSegment(12);
-                coneSegment(24);
-                coneSegment(36);
-                coneSegment(48);
-                coneSegment(60);
-                coneSegment(72);
-                coneSegment(96);
-                coneSegment(120);
+                }
                 
                 forecastTracks.erase(128, 0);
                 forecastTracks.rect(0, 0, WIDTH, HEIGHT);
