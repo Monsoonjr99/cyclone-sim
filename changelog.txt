@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.17 (2024-03-06):
+    * Optimization to track forecast cone
+    % Upgraded p5.js from 0.8.0 to 1.9.1
+        > Indeed a large jump - be on the lookout for any bugs or issues that might arise
 v0.4.16 (2024-03-02):
     * Another small tweak to make the track forecast cone a little less janky
 v0.4.15 (2024-02-29):
