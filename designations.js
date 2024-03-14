@@ -462,11 +462,11 @@ DesignationSystem.westernPacific = new DesignationSystem({
     displayName: 'Western Pacific',
     suffix: 'W',
     mainLists: [    // names marked with empty comments are retired and will be replaced when replacement names are announced
-        ["Damrey","Haikui","Kirogi","Yun-yeung","Koinu","Bolaven","Sanba","Jelawat","Ewiniar","Maliksi","Gaemi","Prapiroon","Maria","Son-Tinh","Ampil","Wukong","Jongdari","Shanshan","Yagi","Leepi","Bebinca","Pulasan","Soulik","Cimaron","Jebi","Krathon","Barijat","Trami"],
+        ["Damrey","Haikui"/**/,"Kirogi","Yun-yeung","Koinu","Bolaven","Sanba","Jelawat","Ewiniar","Maliksi","Gaemi","Prapiroon","Maria","Son-Tinh","Ampil","Wukong","Jongdari","Shanshan","Yagi","Leepi","Bebinca","Pulasan","Soulik","Cimaron","Jebi","Krathon","Barijat","Trami"],
         ["Kong-rey","Yinxing","Toraji","Man-yi","Usagi","Pabuk","Wutip","Sepat","Mun","Danas","Nari","Wipha","Francisco","Co-May","Krosa","Bailu","Podul","Lingling","Kajiki","Nongfa","Peipah","Tapah","Mitag","Ragasa","Neoguri","Bualoi","Matmo","Halong"],
         ["Nakri","Fengshen","Kalmaegi","Fung-wong","Koto","Nokaen","Penha","Nuri","Sinlaku","Hagupit","Jangmi","Mekkhala","Higos","Bavi","Maysak","Haishen","Noul","Dolphin","Kujira","Chan-hom","Peilou","Nangka","Saudel","Narra","Gaenari","Atsani","Etau","Bang-lang"],
-        ["Krovanh","Dujuan","Surigae","Choi-wan","Koguma","Champi","In-fa","Cempaka","Nepartak","Lupit","Mirinae","Nida","Omais","Conson"/**/,"Chanthu","Dianmu","Mindulle","Lionrock","Kompasu"/**/,"Namtheun","Malou","Nyatoh","Rai"/**/,"Malakas"/**/,"Megi"/**/,"Chaba","Aere","Songda"],
-        ["Trases","Mulan","Meari","Ma-on"/**/,"Tokage","Hinnamnor"/**/,"Muifa","Merbok","Nanmadol","Talas","Noru"/**/,"Kulap","Roke","Sonca","Nesat","Haitang","Nalgae"/**/,"Banyan","Yamaneko","Pakhar","Sanvu","Mawar","Guchol","Talim","Doksuri","Khanun","Lan","Saola"]
+        ["Krovanh","Dujuan","Surigae","Choi-wan","Koguma","Champi","In-fa","Cempaka","Nepartak","Lupit","Mirinae","Nida","Omais","Luc-binh","Chanthu","Dianmu","Mindulle","Lionrock","Tokei","Namtheun","Malou","Nyatoh","Sarbul","Amuyao","Gosari","Chaba","Aere","Songda"],
+        ["Trases","Mulan","Meari","Tsing-ma","Tokage","Ong-mang","Muifa","Merbok","Nanmadol","Talas","Hodu","Kulap","Roke","Sonca","Nesat","Haitang","Jamjari","Banyan","Yamaneko","Pakhar","Sanvu","Mawar","Guchol","Talim","Doksuri"/**/,"Khanun","Lan","Saola"/**/]
     ]
 });
 

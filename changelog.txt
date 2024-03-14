@@ -1,5 +1,7 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.18 (2024-03-14):
+    * Updated Western Pacific name list to reflect recent replacements for retired names
 v0.4.17 (2024-03-06):
     * Optimization to track forecast cone
     % Upgraded p5.js from 0.8.0 to 1.9.1
