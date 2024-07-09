@@ -59,13 +59,22 @@ class City{
 }
 
 City.cities = [
-    new City('Miami', -80.2, 25.8),
-    new City('Houston', -95.4, 29.8),
-    new City('New York', -74.0, 40.7),
-    new City('Washington', -77.0, 38.9),
-    new City('New Orleans', -90.1, 29.9),
-    new City('Havana', -82.4, 23.1),
-    new City('San Juan', -66.1, 18.4),
-    new City('Boston', -71.1, 42.4),
-    new City('Lisbon', -9.1, 38.7)
+    // North America
+    new City('Miami', -80.2, 25.8, 456),
+    new City('Houston', -95.4, 29.8, 2314),
+    new City('New York', -74.0, 40.7, 8336),
+    new City('Washington', -77.0, 38.9, 672),
+    new City('New Orleans', -90.1, 29.9, 384),
+    new City('Havana', -82.4, 23.1, 2138),
+    new City('San Juan', -66.1, 18.4, 342),
+    new City('Boston', -71.1, 42.4, 655),
+    new City('Mexico City', -99.1, 19.4, 9210),
+    new City('Los Angeles', -118.2, 34.0, 3822),
+    // Europe
+    new City('Lisbon', -9.1, 38.7),
+    // Asia
+    new City('Manila', 121.0, 14.6, 13484),
+    new City('Tokyo', 139.8, 35.7, 40800),
+    // Oceania
+    new City('Sydney', 151.2, -33.9, 5450)
 ];
