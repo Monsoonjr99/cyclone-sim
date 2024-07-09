@@ -11,6 +11,23 @@ class City{
         return Coordinate.convertToXY(mapType, this.location.longitude, this.location.latitude);
     }
 
+    onMap(mapType){
+        if(MAP_TYPES[mapType].form !== 'earth')
+            return false;
+
+        let {west, east, north, south} = MAP_TYPES[mapType];
+        let inbounds = true;
+        if(this.location.latitude > north || this.location.latitude <= south)
+            inbounds = false;
+        if(west > east){
+            if(this.location.longitude < west && this.location.longitude >= east)
+                inbounds = false;
+        }else if(this.location.longitude < west || this.location.longitude >= east)
+            inbounds = false;
+        
+        return inbounds;
+    }
+
     renderIcon(mapType, minimal){
         const icon_diameter = 10;
         let pos = this.pos(mapType);

@@ -295,7 +295,8 @@ UI.init = function(){
                 let p = c.pos(basin.mapType);
                 if(Math.hypot(getMouseX() - p.x, getMouseY() - p.y) < 6)
                     minimal = false;
-                c.renderIcon(basin.mapType, minimal);
+                if(c.onMap(basin.mapType))
+                    c.renderIcon(basin.mapType, minimal);
             }
     
             if(!land.drawn){
