@@ -10,6 +10,7 @@ var paused,
     scaler,
     tracks,
     stormIcons,
+    cityIcons,
     forecastTracks,
     landBuffer,
     outBasinBuffer,
@@ -64,6 +65,7 @@ function setup(){
     tracks.strokeWeight(2);
     stormIcons = createBuffer();
     stormIcons.strokeWeight(3);
+    cityIcons = createBuffer();
     forecastTracks = createBuffer();
     // forecastTracks.strokeWeight(2);
     // forecastTracks.stroke(240,240,0);
@@ -128,6 +130,7 @@ function draw(){
                     return;
                 }
                 stormIcons.clear();
+                cityIcons.clear();
                 if(!paused){
                     const step = STEP / Math.pow(2, simSpeed);
                     let delta = Math.floor((performance.now() - lastUpdateTimestamp) / step);

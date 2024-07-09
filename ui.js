@@ -289,6 +289,14 @@ UI.init = function(){
                 let seas = basin.fetchSeason(viewTick,true);
                 if(seas) for(let S of seas.forSystems(true)) S.renderIcon();
             }
+
+            for(let c of City.cities){
+                let minimal = true;
+                let p = c.pos(basin.mapType);
+                if(Math.hypot(getMouseX() - p.x, getMouseY() - p.y) < 6)
+                    minimal = false;
+                c.renderIcon(basin.mapType, minimal);
+            }
     
             if(!land.drawn){
                 renderToDo = land.draw();
@@ -327,6 +335,7 @@ UI.init = function(){
             }
             // let sub = land.getSubBasin(getMouseX(),getMouseY());
             // if(basin.subBasins[sub] instanceof SubBasin && basin.subBasins[sub].mapOutline) drawBuffer(basin.subBasins[sub].mapOutline);   // test
+            drawBuffer(cityIcons);
             drawBuffer(tracks);
             drawBuffer(forecastTracks);
             drawBuffer(stormIcons);
