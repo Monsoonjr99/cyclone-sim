@@ -10,16 +10,17 @@ class UI{
         this.height = h;
         if(renderer instanceof Function) this.renderFunc = renderer;
         if(renderer instanceof Array){
-            let size = renderer[0];
-            let charLimit = renderer[1];
-            let enterFunc = renderer[2];
+            let [size, charLimit, enterFunc] = renderer;
             this.isInput = true;
             this.value = '';
             this.clickFunc = function(){
-                textInput.value = this.value;
-                if(charLimit) textInput.maxLength = charLimit;
-                else textInput.removeAttribute('maxlength');
-                textInput.focus();
+                // textInput.value = this.value;
+                // if(charLimit) textInput.maxLength = charLimit;
+                // else textInput.removeAttribute('maxlength');
+                // textInput.focus();
+                UI.inputData.value = this.value;
+                UI.inputData.maxLength = charLimit;
+                UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
                 UI.focusedInput = this;
                 if(onclick instanceof Function) onclick.call(this,UI.focusedInput===this);
             };
@@ -101,25 +102,25 @@ class UI{
             c.noStroke();
             c.fill(COLORS.UI.text);
             c.textSize(size || 18);
-            let t = UI.focusedInput===this ? textInput.value : this.value;
+            let t = UI.focusedInput===this ? /* textInput */UI.inputData.value : this.value;
             let xAnchor;
             if(UI.focusedInput===this){
                 c.textAlign(LEFT,CENTER);
-                let caret1X = c.textWidth(t.slice(0,textInput.selectionStart));
-                let caret2X = c.textWidth(t.slice(0,textInput.selectionEnd));
+                let caret1X = c.textWidth(t.slice(0,/* textInput */UI.inputData.selectionStart));
+                let caret2X = c.textWidth(t.slice(0,/* textInput */UI.inputData.selectionEnd));
                 if(caret2X>this.width-5) xAnchor = this.width-5-caret2X;
                 else xAnchor = 5;
                 caret1X += xAnchor;
                 caret2X += xAnchor;
                 c.text(t,xAnchor,this.height/2);
-                if(textInput.selectionStart===textInput.selectionEnd){
+                if(/* textInput */UI.inputData.selectionStart === /* textInput */UI.inputData.selectionEnd){
                     c.stroke(COLORS.UI.text);
                     c.noFill();
                     if(millis()%1000<500) c.line(caret1X,this.height/8,caret1X,7*this.height/8);
                 }else{
                     c.rect(caret1X,this.height/8,caret2X-caret1X,3*this.height/4);
                     c.fill(COLORS.UI.input);
-                    c.text(t.slice(textInput.selectionStart,textInput.selectionEnd),caret1X,this.height/2);
+                    c.text(t.slice(/* textInput */UI.inputData.selectionStart, /* textInput */UI.inputData.selectionEnd), caret1X, this.height / 2);
                 }
             }else{
                 if(c.textWidth(t)>this.width-5){
@@ -131,7 +132,7 @@ class UI{
                 }
                 c.text(t,xAnchor,this.height/2);
             }
-            image(c,0,0);
+            image(c, 0, 0, this.width, this.height);
         };
         return s;
     }
@@ -238,6 +239,30 @@ UI.renderAll = function(){
 
 UI.mouseOver = undefined;
 UI.focusedInput = undefined;
+UI.inputData = {
+    value: '',
+    cursor: 0,
+    selectionStart: 0,
+    selectionEnd: 0,
+    maxLength: undefined,
+    insert: ''
+};
+
+UI.setInputCursorPosition = function(i, isSelecting){
+    let anchor;
+    if(UI.inputData.cursor === UI.inputData.selectionEnd)
+        anchor = UI.inputData.selectionStart;
+    else
+        anchor = UI.inputData.selectionEnd;
+    UI.inputData.cursor = i;
+    if(isSelecting){
+        UI.inputData.selectionStart = Math.min(i, anchor);
+        UI.inputData.selectionEnd = Math.max(i, anchor);
+    }else{
+        UI.inputData.selectionStart = i;
+        UI.inputData.selectionEnd = i;
+    }
+};
 
 UI.updateMouseOver = function(){
     for(let i=UI.elements.length-1;i>=0;i--){
@@ -254,6 +279,12 @@ UI.updateMouseOver = function(){
 
 UI.click = function(){
     UI.updateMouseOver();
+    if(UI.mouseOver === UI.focusedInput)
+        return false;
+    else if(UI.focusedInput){
+        UI.focusedInput.value = UI.inputData.value;
+        UI.focusedInput = undefined;
+    }
     if(UI.mouseOver){
         UI.mouseOver.clicked();
         return true;
@@ -1400,7 +1431,7 @@ UI.init = function(){
     }]);
 
     dateNavYearInput.append(false,80,0,20,20,function(s){
-        let v = UI.focusedInput === dateNavYearInput ? textInput.value : dateNavYearInput.value;
+        let v = UI.focusedInput === dateNavYearInput ? /* textInput */UI.inputData.value : dateNavYearInput.value;
         let grey;
         if(Number.isNaN(parseInt(v))) grey = true;
         s.button('',false,15,grey);
@@ -2187,7 +2218,7 @@ UI.init = function(){
     }]);
 
     saveBasinAsTextBox.append(false,0,30,saveBasinAsPanel.width-10,25,function(s){
-        let n = UI.focusedInput===saveBasinAsTextBox ? textInput.value : saveBasinAsTextBox.value;
+        let n = UI.focusedInput===saveBasinAsTextBox ? /* textInput */UI.inputData.value : saveBasinAsTextBox.value;
         let grey = n==='' || n===AUTOSAVE_SAVE_NAME;
         s.button('Ok',false,15,grey);
     },function(){
@@ -2203,8 +2234,10 @@ UI.init = function(){
     seedBox = primaryWrapper.append(false,WIDTH/2-100,HEIGHT/2-15,200,30,[18,undefined,function(){  // textbox for copying the basin seed
         this.value = UI.viewBasin.seed.toString();
     }],function(){
-        textInput.value = this.value = UI.viewBasin.seed.toString();
-        textInput.setSelectionRange(0,textInput.value.length);
+        /* textInput */UI.inputData.value = this.value = UI.viewBasin.seed.toString();
+        // textInput.setSelectionRange(0,textInput.value.length);
+        UI.inputData.selectionStart = 0;
+        UI.inputData.selectionEnd = UI.inputData.value.length;
     },false);
 
     helpBox = primaryWrapper.append(false,WIDTH/8,HEIGHT/8,3*WIDTH/4,3*HEIGHT/4,function(s){
@@ -2244,70 +2277,194 @@ function selectStorm(s){
 
 function keyPressed(){
     // console.log("keyPressed: " + key + " / " + keyCode);
-    if(document.activeElement === textInput){
-        if(keyCode === ESCAPE){
-            textInput.value = UI.focusedInput.value;
-            textInput.blur();
-            return false;
-        }
-        if(keyCode === ENTER){
-            let u = UI.focusedInput;
-            textInput.blur();
-            if(u.enterFunc) u.enterFunc();
-            return false;
-        }
-        return;
-    }
+    const k = key.toLowerCase();
     keyRepeatFrameCounter = -1;
-    switch(key){
-        case " ":
-            if(UI.viewBasin && primaryWrapper.showing){
-                paused = !paused;
-                lastUpdateTimestamp = performance.now();
-            }
-            break;
-        case "a":
-            if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
-            break;
-        case "w":
-            simSettings.setShowStrength("toggle");
-            break;
-        case "e":
-            if(UI.viewBasin) UI.viewBasin.env.displayNext();
-            break;
-        case "t":
-            simSettings.setTrackMode("incmod",4);
-            refreshTracks(true);
-            break;
-        case "m":
-            simSettings.setShowMagGlass("toggle");
-            if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-            break;
-        case 'u':
-            simSettings.setSpeedUnit("incmod", 3);
-            break;
-        case 'c':
-            simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
-            refreshTracks(true);
-            break;
-        default:
-            switch(keyCode){
-                case KEY_LEFT_BRACKET:
-                if(simSpeed > MIN_SPEED)
-                    simSpeed--;
+    if(/* document.activeElement === textInput */ UI.focusedInput){
+        switch(keyCode){
+            case ESCAPE:
+                // textInput.value = UI.focusedInput.value;
+                // textInput.blur();
+                UI.focusedInput = undefined;
                 break;
-                case KEY_RIGHT_BRACKET:
-                if(simSpeed < MAX_SPEED)
-                    simSpeed++;
+            case ENTER:
+                let u = UI.focusedInput;
+                // textInput.blur();
+                u.value = UI.inputData.value;
+                UI.focusedInput = undefined;
+                if(u.enterFunc) u.enterFunc();
                 break;
-                case KEY_F11:
-                toggleFullscreen();
+            case UP_ARROW:
+                UI.setInputCursorPosition(0, keyIsDown(SHIFT));
                 break;
-                default:
+            case DOWN_ARROW:
+                UI.setInputCursorPosition(UI.inputData.value.length, keyIsDown(SHIFT));
+                break;
+            // these are handled by keyRepeat(); break then return false so evt.preventDefault() is called
+            case LEFT_ARROW:
+            case RIGHT_ARROW:
+            case BACKSPACE:
+            case DELETE:
+                break;
+            default:
+                if(keyIsDown(CONTROL)){
+                    switch(k){
+                        case 'x':
+                            if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
+                                navigator.clipboard.writeText(UI.inputData.value.slice(UI.inputData.selectionStart, UI.inputData.selectionEnd));
+                                UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
+                                UI.setInputCursorPosition(UI.inputData.selectionStart);
+                            }
+                            break;
+                        case 'c':
+                            if(UI.inputData.selectionStart !== UI.inputData.selectionEnd)
+                                navigator.clipboard.writeText(UI.inputData.value.slice(UI.inputData.selectionStart, UI.inputData.selectionEnd));
+                            break;
+                        case 'v':
+                            navigator.clipboard.readText().then(v => {
+                                if(!UI.inputData.maxLength || UI.inputData.value.length + v.length - (UI.inputData.selectionEnd - UI.inputData.selectionStart) <= UI.inputData.maxLength){
+                                    UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + v + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
+                                    UI.setInputCursorPosition(UI.inputData.selectionStart + v.length);
+                                }
+                            });
+                            break;
+                        default:
+                            return;
+                    }
+                }
                 return;
-            }
+        }
+    }else{
+        switch(k){
+            case " ":
+                if(UI.viewBasin && primaryWrapper.showing){
+                    paused = !paused;
+                    lastUpdateTimestamp = performance.now();
+                }
+                break;
+            case "a":
+                if(UI.viewBasin && paused && primaryWrapper.showing) UI.viewBasin.advanceSim();
+                break;
+            case "w":
+                simSettings.setShowStrength("toggle");
+                break;
+            case "e":
+                if(UI.viewBasin) UI.viewBasin.env.displayNext();
+                break;
+            case "t":
+                simSettings.setTrackMode("incmod",4);
+                refreshTracks(true);
+                break;
+            case "m":
+                simSettings.setShowMagGlass("toggle");
+                if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+                break;
+            case 'u':
+                simSettings.setSpeedUnit("incmod", 3);
+                break;
+            case 'c':
+                simSettings.setColorScheme("incmod", COLOR_SCHEMES.length);
+                refreshTracks(true);
+                break;
+            default:
+                switch(keyCode){
+                    case KEY_LEFT_BRACKET:
+                    if(simSpeed > MIN_SPEED)
+                        simSpeed--;
+                    break;
+                    case KEY_RIGHT_BRACKET:
+                    if(simSpeed < MAX_SPEED)
+                        simSpeed++;
+                    break;
+                    case KEY_F11:
+                    toggleFullscreen();
+                    break;
+                    default:
+                    return;
+                }
+        }
     }
     return false;
+}
+
+function keyRepeat(){
+    if(UI.focusedInput){
+        switch(keyCode){
+            case LEFT_ARROW:
+                if(keyIsDown(LEFT_ARROW)){
+                    let i;
+                    if(keyIsDown(CONTROL))
+                        i = UI.inputData.value.lastIndexOf(' ', UI.inputData.cursor - 2) + 1;
+                    else if(UI.inputData.selectionStart !== UI.inputData.selectionEnd && !keyIsDown(SHIFT))
+                        i = UI.inputData.selectionStart;
+                    else
+                        i = UI.inputData.cursor - 1;
+                    UI.setInputCursorPosition(Math.max(0, i), keyIsDown(SHIFT));
+                }
+                break;
+            case RIGHT_ARROW:
+                if(keyIsDown(RIGHT_ARROW)){
+                    let i;
+                    if(keyIsDown(CONTROL)){
+                        i = UI.inputData.value.indexOf(' ', UI.inputData.cursor + 1);
+                        if(i === -1)
+                            i = UI.inputData.value.length;
+                    }else if(UI.inputData.selectionStart !== UI.inputData.selectionEnd && !keyIsDown(SHIFT))
+                        i = UI.inputData.selectionEnd;
+                    else
+                        i = UI.inputData.cursor + 1;
+                    UI.setInputCursorPosition(Math.min(UI.inputData.value.length, i), keyIsDown(SHIFT));
+                }
+                break;
+            case BACKSPACE:
+                if(keyIsDown(BACKSPACE)){
+                    if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
+                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
+                        UI.setInputCursorPosition(UI.inputData.selectionStart);
+                    }else if(UI.inputData.cursor > 0){
+                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.cursor - 1) + UI.inputData.value.slice(UI.inputData.cursor, UI.inputData.value.length);
+                        UI.setInputCursorPosition(UI.inputData.cursor - 1);
+                    }
+                }
+                break;
+            case DELETE:
+                if(keyIsDown(DELETE)){
+                    if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
+                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
+                        UI.setInputCursorPosition(UI.inputData.selectionStart);
+                    }else if(UI.inputData.cursor < UI.inputData.value.length){
+                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.cursor) + UI.inputData.value.slice(UI.inputData.cursor + 1, UI.inputData.value.length);
+                    }
+                }
+                break;
+            default:
+                if(UI.inputData.insert && (!UI.inputData.maxLength || UI.inputData.value.length + UI.inputData.insert.length - (UI.inputData.selectionEnd - UI.inputData.selectionStart) <= UI.inputData.maxLength)){
+                    UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.insert + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
+                    UI.setInputCursorPosition(UI.inputData.selectionStart + UI.inputData.insert.length);
+                }
+        }
+    }
+    else if(UI.viewBasin instanceof Basin && paused && primaryWrapper.showing){
+        if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
+            changeViewTick(ceil(viewTick/ADVISORY_TICKS-1)*ADVISORY_TICKS);
+        }else if(keyCode===RIGHT_ARROW){
+            let t;
+            if(viewTick<UI.viewBasin.tick-ADVISORY_TICKS) t = floor(viewTick/ADVISORY_TICKS+1)*ADVISORY_TICKS;
+            else t = UI.viewBasin.tick;
+            changeViewTick(t);
+        }
+    }
+}
+
+function keyTyped(){
+    // console.log(`keyTyped: ${key} / ${keyCode}`);
+    if(UI.focusedInput){
+        UI.inputData.insert = key;
+        return false;
+    }
+}
+
+function keyReleased(){
+    UI.inputData.insert = '';
 }
 
 function changeViewTick(t){
