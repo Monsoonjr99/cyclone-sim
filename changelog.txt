@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.20 (2024-09-07):
+    * Fixed text input boxes not working in fullscreen
+    * Fixed keybinds not working with caps lock enabled
+    * Storm icons now have consistent rotation speed regardless of framerate (now just choppy instead of slow on low framerates)
 v0.4.19 (2024-03-20):
     * Updated Eastern Pacific name list to reflect recent replacements for retired names
 v0.4.18 (2024-03-14):
