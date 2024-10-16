@@ -7,17 +7,17 @@
 * I should update this file whenever I plan a new addition
 * Plans here are flexible and may change
 * Plans here shouldn't be too detailed about implementation, since the actual implementation may easily be different
-* When an addition is completed (including partially), a note should be added saying:
+* When an addition is made, particularly if only partly complete, an implementation note may be added, which may include:
     * what is done
     * what is left to do
-    * and any differences in implementation from the plan
-    * multiple notes may be needed for any changes over following versions (more technical than changelog.txt; not as in-depth as in-code comments)
+    * and/or any differences in implementation from the plan
+    * multiple notes may be added for any changes over following versions (more technical than changelog.txt; not as in-depth as in-code comments)
 
 ### Planned Additions
 
 #### The Whole World
 
-* Instead of individual basin maps like v0.x, a single world map should be used, and it should contain:
+* Instead of individual basin maps like pre-v0.4, a single world map should be used, and it should contain:
     * Elevation data
     * Land/water data apart from sea-level elevation (real world has land below sea-level and lakes above sea-level)
     * Boundaries of tropical cyclone basins and their sub-regions for the whole world
@@ -46,7 +46,7 @@
 
 #### Environmental Factors
 
-* A module handles environmental factors which are used by [storm simulation algorithms](#storm-simulation-algorithm) to dictate how storms behave and by [spawn algorithms](#spawn-algorithm) to determine likelihood of a system spawn.
+* A module handles environmental factors which are used by [storm simulation algorithms](#storm-simulation-algorithm) to direct how storms behave and by [spawn algorithms](#spawn-algorithm) to determine likelihood of a system spawn.
 * Some environmental factors may be a "field" that depends on map location, while others may be simply a numerical value.
     * "Fields" may have an associated Map Mode for graphical representation (see [UI and Graphics](#ui-and-graphics)).
 * Environmental factors may inherit from other environmental factors (e.g. an "ENSO" numerical value may dictate the values of the "SSTA" field for the equatorial Pacific Ocean).
@@ -71,7 +71,8 @@
 * UI should use regular DOM elements separate from the canvas as not to require unnecessary boilerplate.
 * Keep a fancy map image of Earth handy so no need to render from a heightmap.
     * Procedurally-generated maps may still need rendering.
-* For anything that does require intensive rendering (e.g. Map Layers), use WebGL.
+    * Maybe render Earth from a heightmap too for that "Cyclone Simulator aesthetic".
+* For anything that does require intensive rendering (e.g. Generated maps, hi-res Map Layers), keep code optimized, use web workers if necessary.
 
 #### Saving/Loading
 
