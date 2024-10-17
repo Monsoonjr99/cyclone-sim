@@ -13,6 +13,16 @@
     * and/or any differences in implementation from the plan
     * multiple notes may be added for any changes over following versions (more technical than changelog.txt; not as in-depth as in-code comments)
 
+### Transition Plan
+
+The plan for phasing out the legacy Cyclone Simulator and replacing it with the rewrite:
+
+* First as a rough prototype with a rudimentary feature set, initially publicly release this edition as Cyclone Simulator Alpha under a /alpha URL and have it exist in parallel with the legacy Cyclone Simulator until the new codebase is ready to replace the old
+* During the Alpha development stage, there may be some updating of the legacy v0.x edition, though work should be prioritized on the rewrite
+* When the new codebase is ready (modest feature parity and more importantly [save compatibility](#backwards-compatibility)), transfer it to the main URL and call it Cyclone Simulator Beta
+* When Beta is released, retire the legacy codebase, move it to a /classic URL, and call it Cyclone Simulator Classic - v0.x updates should cease after this point
+    * An early development version of Cyclone Simulator from 2018, in /experiments, currently already has the name "Cyclone Simulator Classic", but should give up this designation in favor of the original "Very Sad HHW Thing"
+
 ### Planned Additions
 
 #### The Whole World
@@ -90,7 +100,19 @@
 
 #### Backwards Compatibility
 
-***WIP***
+* Support for loading at minimum Earth map type saves from v0.4 or later
+* May support saves dating back to v0.2, but probably no earlier than that
+    * Pre-v0.4 support would require implementing conversions of legacy XY coordinates to latitude/longitude for all map types
+* Possibly support loading saves of a procedurally generated map type, which could either be accomplished by:
+    * New v0.x version that fully saves procedurally generated map data rather than just the seed and map type
+        * Pros: less legacy-related code needed in the new Cyclone Simulator (i.e. cleaner slate)
+        * Cons: only supports loading non-Earth saves from at earliest the aforementioned version; Earth and non-Earth map types would have differing extents of support
+    * Reimplementing legacy map generation
+        * Pros: supports loading non-Earth saves from relatively older versions; parity in support regardless of map type
+        * Cons: more legacy-related code required in the rewrite, including a holdover from p5.js in emulating its octave noise implementation
+* Old saves when loaded should retain at minimum records of past storms and the states of active storms
+    * Records of legacy environmental fields (i.e. map layer history) need not be kept
+    * May adopt a [simulation mode](#simulation-modes) equivalent to the save's legacy simulation mode if it exists
 
 #### Statistics and Querying
 
