@@ -69,6 +69,7 @@
 #### UI and Graphics
 
 * UI should use regular DOM elements separate from the canvas as not to require unnecessary boilerplate.
+    * Exceptions being anything directly associated with the map (e.g. storm icons, cities) or anything complex enough to prefer canvas rendering (e.g. timelines).
 * Keep a fancy map image of Earth handy so no need to render from a heightmap.
     * Procedurally-generated maps may still need rendering.
     * Maybe render Earth from a heightmap too for that "Cyclone Simulator aesthetic".
@@ -76,7 +77,16 @@
 
 #### Saving/Loading
 
-***WIP***
+* Worlds should be saved to IndexedDB.
+* Save data shall include:
+    * Current simulation state (i.e. [active storms](#storm-simulation-algorithm), [environmental factors](#environmental-factors))
+    * Records of past storms, environmental data (for map layers), and [per-basin season statistics](#statistics-and-querying)
+    * Variable basin metadata (e.g. [name lists](#namingdesignations))
+    * [User customizations](#user-customization) specific to a world save
+    * Save-related metadata (i.e. version/save format, timestamp)
+* Ability to export save data to a file and import from a file.
+    * Should use some sort of binary serialization format as raw JSON text is space inefficient.
+* Support for loading and converting legacy v0.x saves (see [Backwards Compatibility](#backwards-compatibility)).
 
 #### Backwards Compatibility
 
