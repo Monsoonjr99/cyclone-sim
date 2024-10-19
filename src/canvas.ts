@@ -105,6 +105,7 @@ canvas.addEventListener('mousemove', e=>{
     updateMouseCoordinates(e);
     if(mouseIsDown && (mouseBeingDragged || Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) >= MOUSE_DRAG_THRESHOLD)){
         mouseBeingDragged = true;
+        canvas.style.cursor = 'grabbing';
         if(dragHandler)
             dragHandler(mouseMovementX, mouseMovementY, false);
     }
@@ -119,6 +120,7 @@ canvas.addEventListener('mouseup', e=>{
             clickHandler(mouseCanvasX, mouseCanvasY);
         mouseIsDown = false;
         mouseBeingDragged = false;
+        canvas.style.cursor = 'auto';
     }
 });
 
@@ -128,6 +130,7 @@ canvas.addEventListener('mouseleave', e=>{
         dragHandler(mouseMovementX, mouseMovementY, true);
         mouseIsDown = false;
         mouseBeingDragged = false;
+        canvas.style.cursor = 'auto';
     }
 });
 

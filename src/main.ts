@@ -1,10 +1,10 @@
 import * as canvas from "./canvas";
 import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
-import { loadImg } from "./util";
+import { loadMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 
-import mapImageURL from 'url:../resources/nasabluemarble.jpg';
+// import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 
 // This is currently preliminary testing code
 
@@ -12,11 +12,17 @@ console.log('Hello World!');
 console.log('This is an alpha');
 
 let mapImage : HTMLImageElement;
+let mapData : ImageData;
 let ready = false;
 
 (async ()=>{
-    mapImage = await loadImg(mapImageURL);
-    ready = true;
+    let maps = await loadMaps();
+    mapImage = maps.mapImage;
+    if(maps.mapData !== null){
+        mapData = maps.mapData;
+        ready = true;
+    }else
+        console.error("Map data failed to load");
 })();
 
 interface TestIcon{
@@ -24,11 +30,23 @@ interface TestIcon{
     lambda : number;
     sh : boolean;
     omega : number;
+    motion: {x : number, y : number};
 }
 
 let test : TestIcon[] = [];
 let selectedIcon : TestIcon | undefined;
 let spawnIcon: TestIcon | undefined;
+
+function getLand_test(phi : number, lambda : number){
+    const x = Math.floor(mapData.width * (lambda + 180) / 360);
+    const y = Math.floor(mapData.height * (-phi + 90) / 180);
+    const greenChannel = 1;
+    const val = mapData.data[4 * (mapData.width * y + x) + greenChannel];
+    if(val > 0)
+        return true;
+    else
+        return false;
+}
 
 function iconSize(){
     const BASE_ICON_SIZE = 40;
@@ -39,7 +57,7 @@ function iconSize(){
 let running = false;
 let lastUpdate = 0;
 let clock = <HTMLDivElement>document.querySelector('.clock');
-const TEST_START_YEAR = 2022;
+const TEST_START_YEAR = 2024;
 const TICK_FRAME_DELAY = 10; // real time milliseconds per simulated tick (has no bearing on rendering framerate)
 
 canvas.setDraw((ctx, time)=>{
@@ -48,9 +66,10 @@ canvas.setDraw((ctx, time)=>{
     if(ready){
         viewer.drawMap(ctx, mapImage);
         for(let i = 0; i < test.length; i++){
-            let coords = viewer.mapToCanvasCoordinates(test[i].phi, test[i].lambda, 1.5);
+            const coords = viewer.mapToCanvasCoordinates(test[i].phi, test[i].lambda, 1.5);
+            const overland = getLand_test(test[i].phi, test[i].lambda);
             for(let c of coords)
-                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), 2, '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
+                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, overland ? '#00F' : '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
         }
         if(spawnIcon){
             let mousePos = canvas.getMousePos();
@@ -65,13 +84,26 @@ canvas.setDraw((ctx, time)=>{
             // test "simulation"
             for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
                 for(let j = 0; j < test.length; j++){
-                    test[j].phi += Math.random() - 0.5;
-                    test[j].lambda += Math.random() -0.5;
-                    test[j].phi = Math.max(Math.min(test[j].phi, 90), -90);
-                    if(test[j].lambda >= 180)
-                        test[j].lambda -= 360;
-                    else if(test[j].lambda < -180)
-                        test[j].lambda += 360;
+                    const testIcon = test[j];
+                    testIcon.phi -= testIcon.motion.y;
+                    testIcon.lambda += testIcon.motion.x;
+                    if(testIcon.phi >= 90 || testIcon.phi <= -90){
+                        testIcon.motion.y *= -1;
+                        testIcon.lambda += 180;
+                    }
+                    testIcon.phi = Math.max(Math.min(testIcon.phi, 90), -90);
+                    if(testIcon.lambda >= 180)
+                        testIcon.lambda -= 360;
+                    else if(testIcon.lambda < -180)
+                        testIcon.lambda += 360;
+                    const rotateMotionBy = (Math.random() - 0.5) * (Math.PI / 8);
+                    testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
+                    const isOverLand = getLand_test(testIcon.phi, testIcon.lambda);
+                    if(isOverLand)
+                        testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
+                    else
+                        testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
+                    testIcon.omega = Math.max(Math.min(testIcon.omega, 4 * Math.PI), Math.PI / 6);
                 }
             }
         }
@@ -102,10 +134,10 @@ canvas.handleClick((x, y)=>{
                         else
                             selectedIcon = icon;
                         iconClicked = true;
-                        if(icon.omega >= 4 * Math.PI)
-                            icon.omega = Math.PI * 2 / 3;
-                        else
-                            icon.omega += Math.PI / 3;
+                        // if(icon.omega >= 4 * Math.PI)
+                        //     icon.omega = Math.PI * 2 / 3;
+                        // else
+                        //     icon.omega += Math.PI / 3;
                         break;
                     }
                 }
@@ -162,7 +194,11 @@ spawnModeButton.addEventListener('mouseup', e=>{
             phi: 0,
             lambda: 0,
             sh: false,
-            omega: Math.PI * 2 / 3
+            omega: Math.PI * 2 / 3,
+            motion: {
+                x: -0.2,
+                y: 0
+            }
         };
         spawnModeButton.innerText = 'Cancel Spawn';
     }

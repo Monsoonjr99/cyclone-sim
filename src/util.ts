@@ -17,6 +17,21 @@ export async function loadImg(src: string): Promise<HTMLImageElement>{
     });
 }
 
+export function extractImageData(img : HTMLImageElement){
+    const cvs = document.createElement('canvas');
+    cvs.width = img.width;
+    cvs.height = img.height;
+    const ctx = cvs.getContext('2d');
+    if(ctx !== null){
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, img.width, img.height);
+        return imgData;
+    }else{
+        console.warn("extractImageData: Failed to acquire canvas context");
+        return null;
+    }
+}
+
 // formats a number or string containing a number to a zero-padded string
 export function zeroPad(val: number | string, digits: number): string{
     let n: number;
