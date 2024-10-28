@@ -1,8 +1,8 @@
 import { deepClone } from "./util";
 
 interface StormData{
-    phi: number;
-    lambda: number;
+    latitude: number;
+    longitude: number;
     pressure: number;
     windSpeed: number;
 }

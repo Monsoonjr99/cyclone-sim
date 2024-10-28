@@ -1,29 +1,17 @@
 // this file defines the "camera" viewing the world map and
-// supplies conversions between latitude/longitude coordinates (PL for Phi-Lambda) and canvas coordinates (XY)
+// supplies conversions between latitude/longitude coordinates and canvas coordinates (XY)
 
 import {width as canvasWidth, height as canvasHeight} from "./canvas";
-import { mod } from "./util";
+import { clamp, mod } from "./util";
+import { LATITUDE_MAX, LONGITUDE_MAX, LatLongCoord, GeoCoordinate, normalizeLongitude } from "./geocoordinate";
 
-// definition constants of latitude/longitude scale bounds
-const PHI_MAX = 90;
-const LAMBDA_MAX = 180;
-
-// coordinate types
-interface PLCoord{
-    phi : number;
-    lambda : number;
-}
-
-interface XYCoord{
+interface CanvasCoord{
     x : number,
     y : number
 }
 
-// define PL of the center of the view window and zoom level
-let center : PLCoord = {
-    phi: 0,
-    lambda: 0
-};
+// define LatLong of the center of the view window and zoom level
+let center = new GeoCoordinate(0, 0);
 let zoomLvl = 0;
 
 // zoom-related constants
@@ -35,12 +23,7 @@ export function zoomAmt(){
     return Math.pow(ZOOM_SCALER_BASE, zoomLvl);
 }
 
-// normalize lambda for values outside of [-180, 180)
-function normalizeLambda(lambda : number){
-    return mod(lambda + LAMBDA_MAX, 2 * LAMBDA_MAX) - LAMBDA_MAX;
-}
-
-// boundaries and dimensions of view window in PL coordinates
+// boundaries and dimensions of view window in LatLong coordinates
 interface mapViewWindowBox{
     north : number;
     south : number;
@@ -52,48 +35,45 @@ interface mapViewWindowBox{
 
 function viewBox() : mapViewWindowBox{
     let windowRatio = canvasWidth / canvasHeight;
-    let height = zoomAmt() * 2 * PHI_MAX;
+    let height = zoomAmt() * 2 * LATITUDE_MAX;
     let width = height * windowRatio;
     return {
-        north: center.phi + height / 2,
-        south: center.phi - height / 2,
-        west: normalizeLambda(center.lambda - width / 2),
-        east: normalizeLambda(center.lambda + width / 2),
+        north: center.latitude + height / 2,
+        south: center.latitude - height / 2,
+        west: normalizeLongitude(center.longitude - width / 2),
+        east: normalizeLongitude(center.longitude + width / 2),
         width,
         height
     };
 }
 
 // constrain how far north/south the center may be so the edge of the view window doesn't go beyond the north/south pole
-function clipPhi(){
-    let limit = PHI_MAX * (1 - zoomAmt());
-    center.phi = Math.min(Math.max(center.phi, -limit), limit);
+function clampViewerLatitude(latitude: number){
+    let limit = LATITUDE_MAX * (1 - zoomAmt());
+    return clamp(latitude, -limit, limit);
 }
 
 // coordinate conversions
-export function canvasToMapCoordinate(x : number, y : number) : PLCoord{
+export function canvasToMapCoordinate(x : number, y : number){
     let box = viewBox();
-    return {
-        phi: box.north - box.height * y / canvasHeight,
-        lambda: normalizeLambda(box.west + box.width * x / canvasWidth)
-    };
+    return new GeoCoordinate(box.north - box.height * y / canvasHeight, box.west + box.width * x / canvasWidth);
 }
 
-export function mapToCanvasCoordinates(phi : number, lambda : number, clip = 1) : XYCoord[]{
-    let coords : XYCoord[] = [];
+export function mapToCanvasCoordinates(latitude : number, longitude : number, clip = 1) : CanvasCoord[]{
+    let coords : CanvasCoord[] = [];
     let box = viewBox();
-    let y = canvasHeight * (box.north - phi) / box.height;
+    let y = canvasHeight * (box.north - latitude) / box.height;
     // "clip" defines how far beyond the left/right edges of the canvas to return x values for, in terms of the canvas width
     // a clip of 1 returns x values only in the range [0, canvasWidth)
     // while 2 returns x values in the range [-canvasWidth/2, 3*canvasWidth/2)
-    let clipWest = normalizeLambda(box.west - box.width * (clip - 1) / 2);
+    let clipWest = normalizeLongitude(box.west - box.width * (clip - 1) / 2);
     let clipLeft = -canvasWidth * (clip - 1) / 2;
     let clipRight = canvasWidth * (clip + 1) / 2;
-    // loop through all x coordinates that match lambda
+    // loop through all x coordinates that match longitude
     for(
-        let x = clipLeft + canvasWidth * mod(lambda - clipWest, 2 * LAMBDA_MAX) / box.width;
+        let x = clipLeft + canvasWidth * mod(longitude - clipWest, 2 * LONGITUDE_MAX) / box.width;
         x < clipRight;
-        x += 2 * LAMBDA_MAX / box.width * canvasWidth
+        x += 2 * LONGITUDE_MAX / box.width * canvasWidth
         )
         coords.push({x, y});
     return coords;
@@ -103,19 +83,22 @@ export function mapToCanvasCoordinates(phi : number, lambda : number, clip = 1) 
 export function changeZoom(v : number, anchorX? : number, anchorY? : number){
     let box0 = viewBox();
     zoomLvl += v;
+    let lat = center.latitude;
+    let long = center.longitude;
     if(zoomLvl < 0)
         zoomLvl = 0;
     else if(zoomLvl > MAX_ZOOM_LEVEL)
         zoomLvl = MAX_ZOOM_LEVEL;
     else if(anchorX !== undefined && anchorY !== undefined){
         let box1 = viewBox();
-        let dwidth = box1.width - box0.width; // change in lambda width
-        let dheight = box1.height - box0.height; // change in phi height
-        center.phi += dheight * (anchorY - canvasHeight / 2) / canvasHeight;
-        center.lambda -= dwidth * (anchorX - canvasWidth / 2) / canvasWidth;
-        center.lambda = normalizeLambda(center.lambda);
+        let dwidth = box1.width - box0.width; // change in longitude width
+        let dheight = box1.height - box0.height; // change in latitude height
+        lat += dheight * (anchorY - canvasHeight / 2) / canvasHeight;
+        long -= dwidth * (anchorX - canvasWidth / 2) / canvasWidth;
     }
-    clipPhi();
+    lat = clampViewerLatitude(lat);
+    if(lat !== center.latitude || long !== center.longitude)
+        center = new GeoCoordinate(lat, long);
 }
 
 export function changeZoomByRatio(ratio : number){
@@ -126,27 +109,29 @@ export function changeZoomByRatio(ratio : number){
     changeZoom(LvlDiff);
 }
 
-export function panPL(dphi : number, dlambda : number){
-    center.phi += dphi;
-    clipPhi();
-    center.lambda = normalizeLambda(center.lambda + dlambda);
+export function focus(latitude: number, longitude: number){
+    center = new GeoCoordinate(clampViewerLatitude(latitude), longitude);
+}
+
+export function panLatLong(dlatitude : number, dlongitude : number){
+    center = new GeoCoordinate(clampViewerLatitude(center.latitude + dlatitude), center.longitude + dlongitude);
 }
 
 export function panXY(dx : number, dy : number){
     let box = viewBox();
-    let dlambda = box.width * -dx / canvasWidth;
-    let dphi = box.height * dy / canvasHeight;
-    panPL(dphi, dlambda);
+    let dlongitude = box.width * -dx / canvasWidth;
+    let dlatitude = box.height * dy / canvasHeight;
+    panLatLong(dlatitude, dlongitude);
 }
 
 // map rendering
 export function drawMap(ctx : CanvasRenderingContext2D, mapImg : HTMLImageElement){
     const box = viewBox();
-    const imgX = (lambda : number)=>(lambda + LAMBDA_MAX) / (2 * LAMBDA_MAX) * mapImg.width;
-    const imgY = (phi : number)=>(PHI_MAX - phi) / (2 * PHI_MAX) * mapImg.height;
+    const imgX = (longitude : number)=>(longitude + LONGITUDE_MAX) / (2 * LONGITUDE_MAX) * mapImg.width;
+    const imgY = (latitude : number)=>(LATITUDE_MAX - latitude) / (2 * LATITUDE_MAX) * mapImg.height;
     const srcY = imgY(box.north);
-    const srcH = box.height / (2 * PHI_MAX) * mapImg.height;
-    for(let x = -canvasWidth * (box.west + LAMBDA_MAX) / box.width; x < canvasWidth; x += 2 * LAMBDA_MAX / box.width * canvasWidth){
+    const srcH = box.height / (2 * LATITUDE_MAX) * mapImg.height;
+    for(let x = -canvasWidth * (box.west + LONGITUDE_MAX) / box.width; x < canvasWidth; x += 2 * LONGITUDE_MAX / box.width * canvasWidth){
         let dstX : number;
         let srcX : number;
         let dstW : number;
@@ -158,7 +143,7 @@ export function drawMap(ctx : CanvasRenderingContext2D, mapImg : HTMLImageElemen
             dstX = x;
             srcX = 0;
         }
-        const xRight = x + 2 * LAMBDA_MAX / box.width * canvasWidth;
+        const xRight = x + 2 * LONGITUDE_MAX / box.width * canvasWidth;
         if(xRight >= canvasWidth){
             dstW = canvasWidth - dstX;
             srcW = imgX(box.east) - srcX;

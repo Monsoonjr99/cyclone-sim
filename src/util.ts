@@ -5,6 +5,11 @@ export function mod(a: number, b: number){
     return (a % b + b) % b;
 }
 
+// clamps a value between a minimum and maximum bound
+export function clamp(v: number, min: number, max: number){
+    return Math.min(Math.max(v, min), max);
+}
+
 export async function loadImg(src: string): Promise<HTMLImageElement>{
     return new Promise((resolve, reject)=>{
         let img = document.createElement('img');

@@ -26,8 +26,8 @@ let ready = false;
 })();
 
 interface TestIcon{
-    phi : number;
-    lambda : number;
+    latitude : number;
+    longitude : number;
     sh : boolean;
     omega : number;
     motion: {x : number, y : number};
@@ -37,9 +37,9 @@ let test : TestIcon[] = [];
 let selectedIcon : TestIcon | undefined;
 let spawnIcon: TestIcon | undefined;
 
-function getLand_test(phi : number, lambda : number){
-    const x = Math.floor(mapData.width * (lambda + 180) / 360);
-    const y = Math.floor(mapData.height * (-phi + 90) / 180);
+function getLand_test(latitude : number, longitude : number){
+    const x = Math.floor(mapData.width * (longitude + 180) / 360);
+    const y = Math.floor(mapData.height * (-latitude + 90) / 180);
     const greenChannel = 1;
     const val = mapData.data[4 * (mapData.width * y + x) + greenChannel];
     if(val > 0)
@@ -66,15 +66,15 @@ canvas.setDraw((ctx, time)=>{
     if(ready){
         viewer.drawMap(ctx, mapImage);
         for(let i = 0; i < test.length; i++){
-            const coords = viewer.mapToCanvasCoordinates(test[i].phi, test[i].lambda, 1.5);
-            const overland = getLand_test(test[i].phi, test[i].lambda);
+            const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
+            const overland = getLand_test(test[i].latitude, test[i].longitude);
             for(let c of coords)
                 drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, overland ? '#00F' : '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
         }
         if(spawnIcon){
             let mousePos = canvas.getMousePos();
-            let phi = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y).phi;
-            drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), phi < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
+            let latitude = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y).latitude;
+            drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
         }
 
         if(running){
@@ -85,20 +85,20 @@ canvas.setDraw((ctx, time)=>{
             for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
                 for(let j = 0; j < test.length; j++){
                     const testIcon = test[j];
-                    testIcon.phi -= testIcon.motion.y;
-                    testIcon.lambda += testIcon.motion.x;
-                    if(testIcon.phi >= 90 || testIcon.phi <= -90){
+                    testIcon.latitude -= testIcon.motion.y;
+                    testIcon.longitude += testIcon.motion.x;
+                    if(testIcon.latitude >= 90 || testIcon.latitude <= -90){
                         testIcon.motion.y *= -1;
-                        testIcon.lambda += 180;
+                        testIcon.longitude += 180;
                     }
-                    testIcon.phi = Math.max(Math.min(testIcon.phi, 90), -90);
-                    if(testIcon.lambda >= 180)
-                        testIcon.lambda -= 360;
-                    else if(testIcon.lambda < -180)
-                        testIcon.lambda += 360;
+                    testIcon.latitude = Math.max(Math.min(testIcon.latitude, 90), -90);
+                    if(testIcon.longitude >= 180)
+                        testIcon.longitude -= 360;
+                    else if(testIcon.longitude < -180)
+                        testIcon.longitude += 360;
                     const rotateMotionBy = (Math.random() - 0.5) * (Math.PI / 8);
                     testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
-                    const isOverLand = getLand_test(testIcon.phi, testIcon.lambda);
+                    const isOverLand = getLand_test(testIcon.latitude, testIcon.longitude);
                     if(isOverLand)
                         testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
                     else
@@ -106,6 +106,8 @@ canvas.setDraw((ctx, time)=>{
                     testIcon.omega = Math.max(Math.min(testIcon.omega, 4 * Math.PI), Math.PI / 6);
                 }
             }
+            if(selectedIcon)
+                viewer.focus(selectedIcon.latitude, selectedIcon.longitude);
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
@@ -116,17 +118,17 @@ canvas.setDraw((ctx, time)=>{
 canvas.handleClick((x, y)=>{
     if(ready){
         if(spawnIcon){
-            let PL = viewer.canvasToMapCoordinate(x, y);
-            spawnIcon.phi = PL.phi;
-            spawnIcon.lambda = PL.lambda;
-            spawnIcon.sh = PL.phi < 0;
+            let LatLong = viewer.canvasToMapCoordinate(x, y);
+            spawnIcon.latitude = LatLong.latitude;
+            spawnIcon.longitude = LatLong.longitude;
+            spawnIcon.sh = LatLong.latitude < 0;
             test.push(spawnIcon);
             spawnIcon = undefined;
             spawnModeButton.innerText = 'Spawn';
         }else{
             let iconClicked = false;
             for(let icon of test){
-                let XY = viewer.mapToCanvasCoordinates(icon.phi, icon.lambda);
+                let XY = viewer.mapToCanvasCoordinates(icon.latitude, icon.longitude);
                 for(let c of XY){
                     if(Math.hypot(x - c.x, y - c.y) < iconSize() / 2){
                         if(selectedIcon === icon)
@@ -191,8 +193,8 @@ spawnModeButton.addEventListener('mouseup', e=>{
         spawnModeButton.innerText = 'Spawn';
     }else{
         spawnIcon = {
-            phi: 0,
-            lambda: 0,
+            latitude: 0,
+            longitude: 0,
             sh: false,
             omega: Math.PI * 2 / 3,
             motion: {
