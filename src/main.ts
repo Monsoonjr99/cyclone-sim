@@ -70,10 +70,14 @@ canvas.setDraw((ctx, time)=>{
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
-            const overland = getLand_test(test[i].latitude, test[i].longitude);
+            // const overland = getLand_test(test[i].latitude, test[i].longitude);
+            const bearingFromMouse = GeoCoordinate.bearing(test[i], mouseCoord);
             const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
-            const brightness = (distFromMouse > 9600 ? 255 : distFromMouse < 1200 ? 80 : Math.floor(distFromMouse / 120) + 120).toString(16).padStart(2, '0').toUpperCase();
-            const color = overland ? `#0000${brightness}` : `#${brightness}0000`;
+            const brightness = 0.3 + 0.7 * distFromMouse / (180 * 60);
+            const red = (Math.floor(brightness * (bearingFromMouse < 60 ? 255 : bearingFromMouse < 120 ? Math.floor((1 - (bearingFromMouse - 60) / 60) * 255) : bearingFromMouse < 240 ? 0 : bearingFromMouse < 300 ? Math.floor(((bearingFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
+            const green = (Math.floor(brightness * (bearingFromMouse < 60 ? Math.floor((bearingFromMouse / 60) * 255) : bearingFromMouse < 180 ? 255 : bearingFromMouse < 240 ? Math.floor((1 - (bearingFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
+            const blue = (Math.floor(brightness * (bearingFromMouse < 120 ? 0 : bearingFromMouse < 180 ? Math.floor(((bearingFromMouse - 120) / 60) * 255) : bearingFromMouse < 300 ? 255 : Math.floor((1 - (bearingFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
+            const color = `#${red}${green}${blue}`;
             for(let c of coords)
                 drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, color, selectedIcon === test[i] ? '#FFF' : undefined);
         }

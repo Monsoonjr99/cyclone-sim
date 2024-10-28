@@ -1,4 +1,5 @@
 // handles geographic (latitude/longitude) coordinates and associated vector operations on spherical geometry
+// formulas for calculations courtesy of Ed Williams - https://edwilliams.org/avform147.htm
 
 import { mod, clamp } from './util';
 
@@ -16,7 +17,7 @@ export class GeoCoordinate implements LatLongCoord{
     readonly longitude: number;
 
     constructor(latitude: number, longitude: number){
-        this.latitude = clamp(latitude, -LATITUDE_MAX, LATITUDE_MAX);
+        this.latitude = clampLatitude(latitude);
         this.longitude = normalizeLongitude(longitude);
 
         // make immutable
@@ -51,16 +52,18 @@ export class GeoCoordinate implements LatLongCoord{
     static dist(coord1: LatLongCoord, coord2: LatLongCoord): number;
     static dist(coord: LatLongCoord, latitude: number, longitude: number): number;
     static dist(coord1: LatLongCoord, latOrCoord: LatLongCoord | number, longitude?: number){
-        const lat1 = coord1.latitude * Math.PI / 180;
-        const lon1 = coord1.longitude * Math.PI / 180;
+        const lat1 = clampLatitude(coord1.latitude) * Math.PI / 180;
+        const lon1 = normalizeLongitude(coord1.longitude) * Math.PI / 180;
         let lat2 = 0, lon2 = 0;
         if(typeof latOrCoord === 'object'){
-            lat2 = latOrCoord.latitude * Math.PI / 180;
-            lon2 = latOrCoord.longitude * Math.PI / 180;
+            lat2 = latOrCoord.latitude;
+            lon2 = latOrCoord.longitude;
         }else if(longitude !== undefined){
             lat2 = latOrCoord;
             lon2 = longitude;
         }
+        lat2 = clampLatitude(lat2) * Math.PI / 180;
+        lon2 = normalizeLongitude(lon2) * Math.PI / 180;
         return Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)) * (180 / Math.PI) * 60;
     }
 
@@ -72,9 +75,54 @@ export class GeoCoordinate implements LatLongCoord{
         else if(typeof latOrCoord === 'number' && longitude !== undefined)
             return GeoCoordinate.dist(this, latOrCoord, longitude);
     }
+
+    // calculates the bearing from one coordinate toward another
+    static bearing(coord1: LatLongCoord, coord2: LatLongCoord): number;
+    static bearing(coord1: LatLongCoord, latitude: number, longitude: number): number;
+    static bearing(coord1: LatLongCoord, latOrCoord: LatLongCoord | number, longitude?: number){
+        const lat1 = clampLatitude(coord1.latitude) * Math.PI / 180;
+        const lon1 = normalizeLongitude(coord1.longitude) * Math.PI / 180;
+        let lat2 = 0, lon2 = 0;
+        if(typeof latOrCoord === 'object'){
+            lat2 = latOrCoord.latitude;
+            lon2 = latOrCoord.longitude;
+        }else if(longitude !== undefined){
+            lat2 = latOrCoord;
+            lon2 = longitude;
+        }
+        lat2 = clampLatitude(lat2) * Math.PI / 180;
+        lon2 = normalizeLongitude(lon2) * Math.PI / 180;
+
+        let h: number;
+
+        // heading from poles
+        if(Math.cos(lat1) < Number.EPSILON){
+            if(lat1 > 0)
+                h = Math.PI;
+            else
+                h = 2 * Math.PI;
+        }else
+            // heading elsewhere
+            h = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
+        
+        return (2 * Math.PI - h) * 180 / Math.PI;
+    }
+
+    bearing(otherCoord: LatLongCoord): number;
+    bearing(latitude: number, longitude: number): number;
+    bearing(latOrCoord: LatLongCoord | number, longitude?: number){
+        if(typeof latOrCoord === 'object' && longitude === undefined)
+            return GeoCoordinate.bearing(this, latOrCoord);
+        else if(typeof latOrCoord === 'number' && longitude !== undefined)
+            return GeoCoordinate.bearing(this, latOrCoord, longitude);
+    }
 }
 
 // normalize longitude for values outside of [-180, 180)
 export function normalizeLongitude(longitude : number){
     return mod(longitude + LONGITUDE_MAX, 2 * LONGITUDE_MAX) - LONGITUDE_MAX;
+}
+
+export function clampLatitude(latitude: number){
+    return clamp(latitude, -LATITUDE_MAX, LATITUDE_MAX);
 }
