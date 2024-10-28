@@ -46,6 +46,32 @@ export class GeoCoordinate implements LatLongCoord{
         else if(typeof latOrCoord === 'number' && longAmt !== undefined)
             return GeoCoordinate.add(this, latOrCoord, longAmt);
     }
+
+    // calculates great circle distance between two points in nautical miles
+    static dist(coord1: LatLongCoord, coord2: LatLongCoord): number;
+    static dist(coord: LatLongCoord, latitude: number, longitude: number): number;
+    static dist(coord1: LatLongCoord, latOrCoord: LatLongCoord | number, longitude?: number){
+        const lat1 = coord1.latitude * Math.PI / 180;
+        const lon1 = coord1.longitude * Math.PI / 180;
+        let lat2 = 0, lon2 = 0;
+        if(typeof latOrCoord === 'object'){
+            lat2 = latOrCoord.latitude * Math.PI / 180;
+            lon2 = latOrCoord.longitude * Math.PI / 180;
+        }else if(longitude !== undefined){
+            lat2 = latOrCoord;
+            lon2 = longitude;
+        }
+        return Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)) * (180 / Math.PI) * 60;
+    }
+
+    dist(otherCoord: LatLongCoord): number;
+    dist(latitude: number, longitude: number): number;
+    dist(latOrCoord: LatLongCoord | number, longitude?: number){
+        if(typeof latOrCoord === 'object' && longitude === undefined)
+            return GeoCoordinate.dist(this, latOrCoord);
+        else if(typeof latOrCoord === 'number' && longitude !== undefined)
+            return GeoCoordinate.dist(this, latOrCoord, longitude);
+    }
 }
 
 // normalize longitude for values outside of [-180, 180)

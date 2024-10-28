@@ -3,6 +3,7 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { loadMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
+import { GeoCoordinate } from "./geocoordinate";
 
 // import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 
@@ -65,15 +66,19 @@ canvas.setDraw((ctx, time)=>{
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     if(ready){
         viewer.drawMap(ctx, mapImage);
+        const mousePos = canvas.getMousePos();
+        const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
             const overland = getLand_test(test[i].latitude, test[i].longitude);
+            const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
+            const brightness = (distFromMouse > 9600 ? 255 : distFromMouse < 1200 ? 80 : Math.floor(distFromMouse / 120) + 120).toString(16).padStart(2, '0').toUpperCase();
+            const color = overland ? `#0000${brightness}` : `#${brightness}0000`;
             for(let c of coords)
-                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, overland ? '#00F' : '#F00', selectedIcon === test[i] ? '#FFF' : undefined);
+                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, color, selectedIcon === test[i] ? '#FFF' : undefined);
         }
         if(spawnIcon){
-            let mousePos = canvas.getMousePos();
-            let latitude = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y).latitude;
+            let latitude = mouseCoord.latitude;
             drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
         }
 
