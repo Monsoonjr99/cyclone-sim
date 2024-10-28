@@ -51,19 +51,12 @@ export class GeoCoordinate implements LatLongCoord{
     // calculates great circle distance between two points in nautical miles
     static dist(coord1: LatLongCoord, coord2: LatLongCoord): number;
     static dist(coord: LatLongCoord, latitude: number, longitude: number): number;
-    static dist(coord1: LatLongCoord, latOrCoord: LatLongCoord | number, longitude?: number){
-        const lat1 = clampLatitude(coord1.latitude) * Math.PI / 180;
-        const lon1 = normalizeLongitude(coord1.longitude) * Math.PI / 180;
-        let lat2 = 0, lon2 = 0;
-        if(typeof latOrCoord === 'object'){
-            lat2 = latOrCoord.latitude;
-            lon2 = latOrCoord.longitude;
-        }else if(longitude !== undefined){
-            lat2 = latOrCoord;
-            lon2 = longitude;
-        }
-        lat2 = clampLatitude(lat2) * Math.PI / 180;
-        lon2 = normalizeLongitude(lon2) * Math.PI / 180;
+    static dist(...args: (LatLongCoord | number)[]){
+        const {c1, c2} = resolveTwoCoords(...args);
+        const lat1 = c1.latitude * Math.PI / 180;
+        const lon1 = c1.longitude * Math.PI / 180;
+        const lat2 = c2.latitude * Math.PI / 180;
+        const lon2 = c2.longitude * Math.PI / 180;
         return Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)) * (180 / Math.PI) * 60;
     }
 
@@ -79,33 +72,26 @@ export class GeoCoordinate implements LatLongCoord{
     // calculates the bearing from one coordinate toward another
     static bearing(coord1: LatLongCoord, coord2: LatLongCoord): number;
     static bearing(coord1: LatLongCoord, latitude: number, longitude: number): number;
-    static bearing(coord1: LatLongCoord, latOrCoord: LatLongCoord | number, longitude?: number){
-        const lat1 = clampLatitude(coord1.latitude) * Math.PI / 180;
-        const lon1 = normalizeLongitude(coord1.longitude) * Math.PI / 180;
-        let lat2 = 0, lon2 = 0;
-        if(typeof latOrCoord === 'object'){
-            lat2 = latOrCoord.latitude;
-            lon2 = latOrCoord.longitude;
-        }else if(longitude !== undefined){
-            lat2 = latOrCoord;
-            lon2 = longitude;
-        }
-        lat2 = clampLatitude(lat2) * Math.PI / 180;
-        lon2 = normalizeLongitude(lon2) * Math.PI / 180;
+    static bearing(...args: (LatLongCoord | number)[]){
+        const {c1, c2} = resolveTwoCoords(...args);
+        const lat1 = c1.latitude * Math.PI / 180;
+        const lon1 = c1.longitude * Math.PI / 180;
+        const lat2 = c2.latitude * Math.PI / 180;
+        const lon2 = c2.longitude * Math.PI / 180;
 
-        let h: number;
+        let b: number;
 
-        // heading from poles
+        // bearing from poles
         if(Math.cos(lat1) < Number.EPSILON){
             if(lat1 > 0)
-                h = Math.PI;
+                b = Math.PI;
             else
-                h = 2 * Math.PI;
+                b = 2 * Math.PI;
         }else
-            // heading elsewhere
-            h = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
+            // bearing elsewhere
+            b = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
         
-        return (2 * Math.PI - h) * 180 / Math.PI;
+        return (2 * Math.PI - b) * 180 / Math.PI;
     }
 
     bearing(otherCoord: LatLongCoord): number;
@@ -125,4 +111,30 @@ export function normalizeLongitude(longitude : number){
 
 export function clampLatitude(latitude: number){
     return clamp(latitude, -LATITUDE_MAX, LATITUDE_MAX);
+}
+
+// helper function for overloads
+function resolveTwoCoords(...args: (LatLongCoord | number)[]): {c1: GeoCoordinate, c2: GeoCoordinate}{
+    let c1: GeoCoordinate, c2: GeoCoordinate;
+    if(typeof args[0] === 'number' && typeof args[1] === 'number'){
+        c1 = new GeoCoordinate(args[0], args[1]);
+        if(typeof args[2] === 'number' && typeof args[3] === 'number')
+            c2 = new GeoCoordinate(args[2], args[3]);
+        else if(typeof args[2] === 'object')
+            c2 = new GeoCoordinate(args[2].latitude, args[2].longitude);
+        else
+            c2 = new GeoCoordinate(0, 0);
+    }else if(typeof args[0] === 'object'){
+        c1 = new GeoCoordinate(args[0].latitude, args[0].longitude);
+        if(typeof args[1] === 'number' && typeof args[2] === 'number')
+            c2 = new GeoCoordinate(args[1], args[2]);
+        else if(typeof args[1] === 'object')
+            c2 = new GeoCoordinate(args[1].latitude, args[1].longitude);
+        else
+            c2 = new GeoCoordinate(0, 0);
+    }else{
+        c1 = new GeoCoordinate(0, 0);
+        c2 = new GeoCoordinate(0, 0);
+    }
+    return {c1, c2};
 }
