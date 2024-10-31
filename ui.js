@@ -344,7 +344,7 @@ UI.init = function(){
             }
             drawBuffer(landBuffer);
             if(simSettings.snowLayers){
-                if(land.snowDrawn) drawBuffer(snow[floor(map(seasonalSine(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
+                if(land.snowDrawn) drawBuffer(snow[floor(map(seasonCurve(viewTick,SNOW_SEASON_OFFSET),-1,1,0,simSettings.snowLayers*10))]);
                 else renderToDo = land.drawSnow();
             }
             if(simSettings.useShadows){
