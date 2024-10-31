@@ -882,3 +882,11 @@ function seasonalSine(t,off){
     off = off===undefined ? 5/12 : off;
     return sin((TAU*(t-YEAR_LENGTH*off))/YEAR_LENGTH);
 }
+
+// quick and sloppy copy-paste of spooky code for Halloween update
+// this, the regular season curve, and the wild mode season curve could all be implemented in a more concise way, but that can be done later and this codebase is being retired eventually anyway
+function spookySeasonCurve(t,off){
+    off = off===undefined ? 0 : off;
+    let n = (1+t/YEAR_LENGTH-off)%1;
+    return n<5/24 ? map(n,0,5/24,-0.2,-1) : n<5/12 ? map(n,5/24,5/12,-1,0) : n<3/4 ? map(n,5/12,3/4,0,1.2) : n<39/48 ? map(n,3/4,39/48,1.2,1.5) : n<302.5/365.25 ? map(n,39/48,302.5/365.25,1.5,2.2) : n<305/365.25 ? 2.2 : n<81/96 ? map(n,305/365.25,81/96,2.2,0.8) : map(n,81/96,1,0.8,-0.2);
+}
