@@ -49,6 +49,12 @@ function getLand_test(latitude : number, longitude : number){
         return false;
 }
 
+function testOffsetThing(coord1: GeoCoordinate){
+    const course = 45; // NE
+    const dist = 900; // About 15 degrees
+    return GeoCoordinate.addMovement(coord1, course, dist);
+}
+
 function iconSize(){
     const BASE_ICON_SIZE = 40;
     const MIN_ICON_SIZE = 15;
@@ -89,8 +95,11 @@ canvas.setDraw((ctx, time)=>{
             }
         }
         if(spawnIcon){
-            let latitude = mouseCoord.latitude;
-            drawStormIcon(ctx, mousePos.x, mousePos.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
+            const offsetCoord = testOffsetThing(mouseCoord);
+            const latitude = offsetCoord.latitude;
+            const canvasCoords = viewer.mapToCanvasCoordinates(offsetCoord.latitude, offsetCoord.longitude, 1.5);
+            for(let c of canvasCoords)
+                drawStormIcon(ctx, c.x, c.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
         }
 
         if(running){
@@ -135,6 +144,7 @@ canvas.handleClick((x, y)=>{
     if(ready){
         if(spawnIcon){
             let LatLong = viewer.canvasToMapCoordinate(x, y);
+            LatLong = testOffsetThing(LatLong);
             spawnIcon.latitude = LatLong.latitude;
             spawnIcon.longitude = LatLong.longitude;
             spawnIcon.sh = LatLong.latitude < 0;

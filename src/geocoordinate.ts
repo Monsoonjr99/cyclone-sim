@@ -110,6 +110,41 @@ export class GeoCoordinate implements LatLongCoord{
         else if(typeof latOrCoord === 'number' && longitude !== undefined)
             return GeoCoordinate.bearing(this, latOrCoord, longitude);
     }
+
+    // calculates the resulting coordinate from traveling along a great circle from a starting coordinate, given an initial course (bearing) and distance in nautical miles
+    // alternatively accepts an xy movement vector, which is used to define the course and distance
+    static addMovement(startCoord: LatLongCoord, course: number, distance: number): GeoCoordinate;
+    static addMovement(startCoord: LatLongCoord, movementVector: {x: number, y: number} | number[]): GeoCoordinate;
+    static addMovement(startCoord: LatLongCoord, arg1: {x: number, y: number} | number[] | number, dist?: number){
+        let c = 0, d = 0;
+        if(typeof arg1 === 'object'){
+            const movementVector = arg1 instanceof Array ? {x: arg1[0], y: arg1[1]} : arg1;
+            c = 2 * Math.PI - Math.atan2(movementVector.x, movementVector.y);
+            d = Math.hypot(movementVector.x, movementVector.y) * NM_TO_RAD;
+        }else if(dist !== undefined){
+            c = 2 * Math.PI - arg1 * DEG_TO_RAD;
+            d = dist * NM_TO_RAD;
+        }
+        const [course, distance] = [c, d];
+
+        const lat1 = startCoord.latitude * DEG_TO_RAD;
+        const lon1 = startCoord.longitude * DEG_TO_RAD;
+
+        const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance) + Math.cos(lat1) * Math.sin(distance) * Math.cos(course));
+        const dlon = Math.atan2(Math.sin(course) * Math.sin(distance) * Math.cos(lat1), Math.cos(distance) - Math.sin(lat1) * Math.sin(lat2));
+        const lon2 = mod(lon1 - dlon + Math.PI, 2 * Math.PI) - Math.PI;
+
+        return new GeoCoordinate(lat2 * RAD_TO_DEG, lon2 * RAD_TO_DEG);
+    }
+
+    addMovement(course: number, distance: number): GeoCoordinate;
+    addMovement(movementVector: {x: number, y: number} | number[]): GeoCoordinate;
+    addMovement(arg0: {x: number, y: number} | number[] | number, dist?: number){
+        if(typeof arg0 === 'object' && dist === undefined)
+            return GeoCoordinate.addMovement(this, arg0);
+        else if(typeof arg0 === 'number' && dist !== undefined)
+            return GeoCoordinate.addMovement(this, arg0, dist);
+    }
 }
 
 // normalize longitude for values outside of [-180, 180)
