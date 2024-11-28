@@ -7,6 +7,14 @@ import { mod, clamp } from './util';
 export const LATITUDE_MAX = 90;
 export const LONGITUDE_MAX = 180;
 
+// angle measurement conversions
+const DEG_TO_RAD = Math.PI / 180;
+const RAD_TO_DEG = 1 / DEG_TO_RAD;
+const DEG_TO_NM = 60;
+const NM_TO_DEG = 1 / DEG_TO_NM;
+const RAD_TO_NM = RAD_TO_DEG * DEG_TO_NM;
+const NM_TO_RAD = 1 / RAD_TO_NM;
+
 export interface LatLongCoord{
     latitude : number;
     longitude : number;
@@ -53,11 +61,11 @@ export class GeoCoordinate implements LatLongCoord{
     static dist(coord: LatLongCoord, latitude: number, longitude: number): number;
     static dist(...args: (LatLongCoord | number)[]){
         const {c1, c2} = resolveTwoCoords(...args);
-        const lat1 = c1.latitude * Math.PI / 180;
-        const lon1 = c1.longitude * Math.PI / 180;
-        const lat2 = c2.latitude * Math.PI / 180;
-        const lon2 = c2.longitude * Math.PI / 180;
-        return Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)) * (180 / Math.PI) * 60;
+        const lat1 = c1.latitude * DEG_TO_RAD;
+        const lon1 = c1.longitude * DEG_TO_RAD;
+        const lat2 = c2.latitude * DEG_TO_RAD;
+        const lon2 = c2.longitude * DEG_TO_RAD;
+        return Math.acos(Math.sin(lat1) * Math.sin(lat2) + Math.cos(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)) * RAD_TO_NM;
     }
 
     dist(otherCoord: LatLongCoord): number;
@@ -74,10 +82,10 @@ export class GeoCoordinate implements LatLongCoord{
     static bearing(coord1: LatLongCoord, latitude: number, longitude: number): number;
     static bearing(...args: (LatLongCoord | number)[]){
         const {c1, c2} = resolveTwoCoords(...args);
-        const lat1 = c1.latitude * Math.PI / 180;
-        const lon1 = c1.longitude * Math.PI / 180;
-        const lat2 = c2.latitude * Math.PI / 180;
-        const lon2 = c2.longitude * Math.PI / 180;
+        const lat1 = c1.latitude * DEG_TO_RAD;
+        const lon1 = c1.longitude * DEG_TO_RAD;
+        const lat2 = c2.latitude * DEG_TO_RAD;
+        const lon2 = c2.longitude * DEG_TO_RAD;
 
         let b: number;
 
@@ -91,7 +99,7 @@ export class GeoCoordinate implements LatLongCoord{
             // bearing elsewhere
             b = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
         
-        return (2 * Math.PI - b) * 180 / Math.PI;
+        return (2 * Math.PI - b) * RAD_TO_DEG;
     }
 
     bearing(otherCoord: LatLongCoord): number;

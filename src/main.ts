@@ -70,16 +70,23 @@ canvas.setDraw((ctx, time)=>{
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
-            // const overland = getLand_test(test[i].latitude, test[i].longitude);
-            const bearingFromMouse = GeoCoordinate.bearing(test[i], mouseCoord);
+            const overland = getLand_test(test[i].latitude, test[i].longitude);
+            const bearingFromMouse = GeoCoordinate.bearing(test[i], mouseCoord) * Math.PI / 180;
             const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
-            const brightness = 0.3 + 0.7 * distFromMouse / (180 * 60);
-            const red = (Math.floor(brightness * (bearingFromMouse < 60 ? 255 : bearingFromMouse < 120 ? Math.floor((1 - (bearingFromMouse - 60) / 60) * 255) : bearingFromMouse < 240 ? 0 : bearingFromMouse < 300 ? Math.floor(((bearingFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
-            const green = (Math.floor(brightness * (bearingFromMouse < 60 ? Math.floor((bearingFromMouse / 60) * 255) : bearingFromMouse < 180 ? 255 : bearingFromMouse < 240 ? Math.floor((1 - (bearingFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
-            const blue = (Math.floor(brightness * (bearingFromMouse < 120 ? 0 : bearingFromMouse < 180 ? Math.floor(((bearingFromMouse - 120) / 60) * 255) : bearingFromMouse < 300 ? 255 : Math.floor((1 - (bearingFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
-            const color = `#${red}${green}${blue}`;
-            for(let c of coords)
+            const brightness = Math.floor((0.3 + 0.7 * distFromMouse / (180 * 60)) * 255).toString(16).padStart(2, '0').toUpperCase();
+            // const red = (Math.floor(brightness * (bearingFromMouse < 60 ? 255 : bearingFromMouse < 120 ? Math.floor((1 - (bearingFromMouse - 60) / 60) * 255) : bearingFromMouse < 240 ? 0 : bearingFromMouse < 300 ? Math.floor(((bearingFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
+            // const green = (Math.floor(brightness * (bearingFromMouse < 60 ? Math.floor((bearingFromMouse / 60) * 255) : bearingFromMouse < 180 ? 255 : bearingFromMouse < 240 ? Math.floor((1 - (bearingFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
+            // const blue = (Math.floor(brightness * (bearingFromMouse < 120 ? 0 : bearingFromMouse < 180 ? Math.floor(((bearingFromMouse - 120) / 60) * 255) : bearingFromMouse < 300 ? 255 : Math.floor((1 - (bearingFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
+            const color = overland ? `#0000${brightness}` : `#${brightness}0000`; //`#${red}${green}${blue}`;
+            for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, color, selectedIcon === test[i] ? '#FFF' : undefined);
+                ctx.strokeStyle = '#0F0';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(c.x, c.y);
+                ctx.lineTo(c.x + 40 * Math.sin(bearingFromMouse), c.y - 40 * Math.cos(bearingFromMouse));
+                ctx.stroke();
+            }
         }
         if(spawnIcon){
             let latitude = mouseCoord.latitude;
@@ -226,4 +233,23 @@ runPauseButton.addEventListener('mouseup', e=>{
         running = true;
         runPauseButton.innerText = 'Pause';
     }
-})
+});
+
+const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
+
+debugButton.addEventListener('mouseup', e=>{
+    for(let i = test.length; i < 500; i++){
+        const lat = Math.random() * 180 - 90;
+        const dir = Math.random() * 2 * Math.PI;
+        test.push({
+            latitude: lat,
+            longitude: Math.random() * 360 - 180,
+            sh: lat < 0,
+            omega: Math.PI * 2 / 3,
+            motion: {
+                x: 0.2 * Math.cos(dir),
+                y: 0.2 * Math.sin(dir)
+            }
+        });
+    }
+});
