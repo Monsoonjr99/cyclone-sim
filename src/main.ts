@@ -50,9 +50,9 @@ function getLand_test(latitude : number, longitude : number){
 }
 
 function testOffsetThing(coord1: GeoCoordinate){
-    const course = 45; // NE
+    const dir = 0; // N
     const dist = 900; // About 15 degrees
-    return GeoCoordinate.addMovement(coord1, course, dist);
+    return GeoCoordinate.addMovement(coord1, dir, dist);
 }
 
 function iconSize(){

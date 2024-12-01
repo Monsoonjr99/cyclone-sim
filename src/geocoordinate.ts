@@ -26,7 +26,7 @@ export class GeoCoordinate implements LatLongCoord{
 
     constructor(latitude: number, longitude: number){
         this.latitude = clampLatitude(latitude);
-        this.longitude = normalizeLongitude(longitude);
+        this.longitude = Math.abs(this.latitude) >= LATITUDE_MAX ? 0 : normalizeLongitude(longitude);
 
         // make immutable
         Object.freeze(this);
@@ -87,19 +87,19 @@ export class GeoCoordinate implements LatLongCoord{
         const lat2 = c2.latitude * DEG_TO_RAD;
         const lon2 = c2.longitude * DEG_TO_RAD;
 
-        let b: number;
+        let dir: number;
 
-        // direction from poles
+        // direction from poles - provides the direction as the limit of a starting point approaching the pole from the prime meridian, which is a technically incorrect but useful definition of direction from the poles
         if(Math.cos(lat1) < Number.EPSILON){
             if(lat1 > 0)
-                b = Math.PI;
+                dir = lon2 + Math.PI;
             else
-                b = 2 * Math.PI;
+                dir = 2 * Math.PI - mod(lon2 + 2 * Math.PI, 2 * Math.PI);
         }else
             // direction elsewhere
-            b = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
+            dir = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
         
-        return (2 * Math.PI - b) * RAD_TO_DEG;
+        return (2 * Math.PI - dir) * RAD_TO_DEG;
     }
 
     directionToward(otherCoord: LatLongCoord): number;
@@ -131,8 +131,20 @@ export class GeoCoordinate implements LatLongCoord{
         const lon1 = startCoord.longitude * DEG_TO_RAD;
 
         const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance) + Math.cos(lat1) * Math.sin(distance) * Math.cos(direction));
-        const dlon = Math.atan2(Math.sin(direction) * Math.sin(distance) * Math.cos(lat1), Math.cos(distance) - Math.sin(lat1) * Math.sin(lat2));
-        const lon2 = mod(lon1 - dlon + Math.PI, 2 * Math.PI) - Math.PI;
+        let lon2: number;
+
+        // ending longitude when starting at a pole - uses direction defined as the limit of a starting point approaching the pole from the prime meridian
+        if(Math.cos(lat1) < Number.EPSILON){
+            if(lat1 > 0)
+                lon2 = direction - Math.PI;
+            else
+                lon2 = 2 * Math.PI - direction;
+        }else{
+            // ending longitude elsewhere
+            const dlon = Math.atan2(Math.sin(direction) * Math.sin(distance) * Math.cos(lat1), Math.cos(distance) - Math.sin(lat1) * Math.sin(lat2));
+            lon2 = lon1 - dlon;
+        }
+        lon2 = mod(lon2 + Math.PI, 2 * Math.PI) - Math.PI;
 
         return new GeoCoordinate(lat2 * RAD_TO_DEG, lon2 * RAD_TO_DEG);
     }
