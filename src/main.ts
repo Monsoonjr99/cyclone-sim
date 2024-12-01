@@ -77,12 +77,12 @@ canvas.setDraw((ctx, time)=>{
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
             const overland = getLand_test(test[i].latitude, test[i].longitude);
-            const bearingFromMouse = GeoCoordinate.bearing(test[i], mouseCoord) * Math.PI / 180;
+            const dirFromMouse = GeoCoordinate.directionToward(test[i], mouseCoord) * Math.PI / 180;
             const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
             const brightness = Math.floor((0.3 + 0.7 * distFromMouse / (180 * 60)) * 255).toString(16).padStart(2, '0').toUpperCase();
-            // const red = (Math.floor(brightness * (bearingFromMouse < 60 ? 255 : bearingFromMouse < 120 ? Math.floor((1 - (bearingFromMouse - 60) / 60) * 255) : bearingFromMouse < 240 ? 0 : bearingFromMouse < 300 ? Math.floor(((bearingFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
-            // const green = (Math.floor(brightness * (bearingFromMouse < 60 ? Math.floor((bearingFromMouse / 60) * 255) : bearingFromMouse < 180 ? 255 : bearingFromMouse < 240 ? Math.floor((1 - (bearingFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
-            // const blue = (Math.floor(brightness * (bearingFromMouse < 120 ? 0 : bearingFromMouse < 180 ? Math.floor(((bearingFromMouse - 120) / 60) * 255) : bearingFromMouse < 300 ? 255 : Math.floor((1 - (bearingFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
+            // const red = (Math.floor(brightness * (dirFromMouse < 60 ? 255 : dirFromMouse < 120 ? Math.floor((1 - (dirFromMouse - 60) / 60) * 255) : dirFromMouse < 240 ? 0 : dirFromMouse < 300 ? Math.floor(((dirFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
+            // const green = (Math.floor(brightness * (dirFromMouse < 60 ? Math.floor((dirFromMouse / 60) * 255) : dirFromMouse < 180 ? 255 : dirFromMouse < 240 ? Math.floor((1 - (dirFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
+            // const blue = (Math.floor(brightness * (dirFromMouse < 120 ? 0 : dirFromMouse < 180 ? Math.floor(((dirFromMouse - 120) / 60) * 255) : dirFromMouse < 300 ? 255 : Math.floor((1 - (dirFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
             const color = overland ? `#0000${brightness}` : `#${brightness}0000`; //`#${red}${green}${blue}`;
             for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, color, selectedIcon === test[i] ? '#FFF' : undefined);
@@ -90,7 +90,7 @@ canvas.setDraw((ctx, time)=>{
                 ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(c.x, c.y);
-                ctx.lineTo(c.x + 40 * Math.sin(bearingFromMouse), c.y - 40 * Math.cos(bearingFromMouse));
+                ctx.lineTo(c.x + 40 * Math.sin(dirFromMouse), c.y - 40 * Math.cos(dirFromMouse));
                 ctx.stroke();
             }
         }

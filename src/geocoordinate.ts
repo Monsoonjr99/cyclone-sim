@@ -77,10 +77,10 @@ export class GeoCoordinate implements LatLongCoord{
             return GeoCoordinate.dist(this, latOrCoord, longitude);
     }
 
-    // calculates the bearing from one coordinate toward another
-    static bearing(coord1: LatLongCoord, coord2: LatLongCoord): number;
-    static bearing(coord1: LatLongCoord, latitude: number, longitude: number): number;
-    static bearing(...args: (LatLongCoord | number)[]){
+    // calculates the compass direction from one coordinate toward another
+    static directionToward(coord1: LatLongCoord, coord2: LatLongCoord): number;
+    static directionToward(coord1: LatLongCoord, latitude: number, longitude: number): number;
+    static directionToward(...args: (LatLongCoord | number)[]){
         const {c1, c2} = resolveTwoCoords(...args);
         const lat1 = c1.latitude * DEG_TO_RAD;
         const lon1 = c1.longitude * DEG_TO_RAD;
@@ -89,55 +89,55 @@ export class GeoCoordinate implements LatLongCoord{
 
         let b: number;
 
-        // bearing from poles
+        // direction from poles
         if(Math.cos(lat1) < Number.EPSILON){
             if(lat1 > 0)
                 b = Math.PI;
             else
                 b = 2 * Math.PI;
         }else
-            // bearing elsewhere
+            // direction elsewhere
             b = mod(Math.atan2(Math.sin(lon1 - lon2) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon1 - lon2)), 2 * Math.PI);
         
         return (2 * Math.PI - b) * RAD_TO_DEG;
     }
 
-    bearing(otherCoord: LatLongCoord): number;
-    bearing(latitude: number, longitude: number): number;
-    bearing(latOrCoord: LatLongCoord | number, longitude?: number){
+    directionToward(otherCoord: LatLongCoord): number;
+    directionToward(latitude: number, longitude: number): number;
+    directionToward(latOrCoord: LatLongCoord | number, longitude?: number){
         if(typeof latOrCoord === 'object' && longitude === undefined)
-            return GeoCoordinate.bearing(this, latOrCoord);
+            return GeoCoordinate.directionToward(this, latOrCoord);
         else if(typeof latOrCoord === 'number' && longitude !== undefined)
-            return GeoCoordinate.bearing(this, latOrCoord, longitude);
+            return GeoCoordinate.directionToward(this, latOrCoord, longitude);
     }
 
-    // calculates the resulting coordinate from traveling along a great circle from a starting coordinate, given an initial course (bearing) and distance in nautical miles
-    // alternatively accepts an xy movement vector, which is used to define the course and distance
-    static addMovement(startCoord: LatLongCoord, course: number, distance: number): GeoCoordinate;
+    // calculates the resulting coordinate from traveling along a great circle from a starting coordinate, given an initial compass direction and distance in nautical miles
+    // alternatively accepts an xy movement vector, which is used to define the direction and distance
+    static addMovement(startCoord: LatLongCoord, direction: number, distance: number): GeoCoordinate;
     static addMovement(startCoord: LatLongCoord, movementVector: {x: number, y: number} | number[]): GeoCoordinate;
     static addMovement(startCoord: LatLongCoord, arg1: {x: number, y: number} | number[] | number, dist?: number){
-        let c = 0, d = 0;
+        let dir = 0, dist_ = 0;
         if(typeof arg1 === 'object'){
             const movementVector = arg1 instanceof Array ? {x: arg1[0], y: arg1[1]} : arg1;
-            c = 2 * Math.PI - Math.atan2(movementVector.x, movementVector.y);
-            d = Math.hypot(movementVector.x, movementVector.y) * NM_TO_RAD;
+            dir = 2 * Math.PI - Math.atan2(movementVector.x, movementVector.y);
+            dist_ = Math.hypot(movementVector.x, movementVector.y) * NM_TO_RAD;
         }else if(dist !== undefined){
-            c = 2 * Math.PI - arg1 * DEG_TO_RAD;
-            d = dist * NM_TO_RAD;
+            dir = 2 * Math.PI - arg1 * DEG_TO_RAD;
+            dist_ = dist * NM_TO_RAD;
         }
-        const [course, distance] = [c, d];
+        const [direction, distance] = [dir, dist_];
 
         const lat1 = startCoord.latitude * DEG_TO_RAD;
         const lon1 = startCoord.longitude * DEG_TO_RAD;
 
-        const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance) + Math.cos(lat1) * Math.sin(distance) * Math.cos(course));
-        const dlon = Math.atan2(Math.sin(course) * Math.sin(distance) * Math.cos(lat1), Math.cos(distance) - Math.sin(lat1) * Math.sin(lat2));
+        const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distance) + Math.cos(lat1) * Math.sin(distance) * Math.cos(direction));
+        const dlon = Math.atan2(Math.sin(direction) * Math.sin(distance) * Math.cos(lat1), Math.cos(distance) - Math.sin(lat1) * Math.sin(lat2));
         const lon2 = mod(lon1 - dlon + Math.PI, 2 * Math.PI) - Math.PI;
 
         return new GeoCoordinate(lat2 * RAD_TO_DEG, lon2 * RAD_TO_DEG);
     }
 
-    addMovement(course: number, distance: number): GeoCoordinate;
+    addMovement(direction: number, distance: number): GeoCoordinate;
     addMovement(movementVector: {x: number, y: number} | number[]): GeoCoordinate;
     addMovement(arg0: {x: number, y: number} | number[] | number, dist?: number){
         if(typeof arg0 === 'object' && dist === undefined)
