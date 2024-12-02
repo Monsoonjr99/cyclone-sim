@@ -49,12 +49,6 @@ function getLand_test(latitude : number, longitude : number){
         return false;
 }
 
-function testOffsetThing(coord1: GeoCoordinate){
-    const dir = 0; // N
-    const dist = 900; // About 15 degrees
-    return GeoCoordinate.addMovement(coord1, dir, dist);
-}
-
 function iconSize(){
     const BASE_ICON_SIZE = 40;
     const MIN_ICON_SIZE = 15;
@@ -95,9 +89,8 @@ canvas.setDraw((ctx, time)=>{
             }
         }
         if(spawnIcon){
-            const offsetCoord = testOffsetThing(mouseCoord);
-            const latitude = offsetCoord.latitude;
-            const canvasCoords = viewer.mapToCanvasCoordinates(offsetCoord.latitude, offsetCoord.longitude, 1.5);
+            const latitude = mouseCoord.latitude;
+            const canvasCoords = viewer.mapToCanvasCoordinates(mouseCoord.latitude, mouseCoord.longitude, 1.5);
             for(let c of canvasCoords)
                 drawStormIcon(ctx, c.x, c.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
         }
@@ -110,18 +103,23 @@ canvas.setDraw((ctx, time)=>{
             for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
                 for(let j = 0; j < test.length; j++){
                     const testIcon = test[j];
-                    testIcon.latitude -= testIcon.motion.y;
-                    testIcon.longitude += testIcon.motion.x;
-                    if(testIcon.latitude >= 90 || testIcon.latitude <= -90){
-                        testIcon.motion.y *= -1;
-                        testIcon.longitude += 180;
-                    }
-                    testIcon.latitude = Math.max(Math.min(testIcon.latitude, 90), -90);
-                    if(testIcon.longitude >= 180)
-                        testIcon.longitude -= 360;
-                    else if(testIcon.longitude < -180)
-                        testIcon.longitude += 360;
-                    const rotateMotionBy = (Math.random() - 0.5) * (Math.PI / 8);
+                    const newPos = GeoCoordinate.addMovement(testIcon, testIcon.motion);
+                    const newDir = Math.PI / 2 - GeoCoordinate.directionToward(newPos, testIcon) * Math.PI / 180 + Math.PI;
+                    const oldDir = Math.atan2(testIcon.motion.y, testIcon.motion.x);
+                    testIcon.latitude = newPos.latitude;
+                    testIcon.longitude = newPos.longitude;
+                    // testIcon.latitude -= testIcon.motion.y;
+                    // testIcon.longitude += testIcon.motion.x;
+                    // if(testIcon.latitude >= 90 || testIcon.latitude <= -90){
+                    //     testIcon.motion.y *= -1;
+                    //     testIcon.longitude += 180;
+                    // }
+                    // testIcon.latitude = Math.max(Math.min(testIcon.latitude, 90), -90);
+                    // if(testIcon.longitude >= 180)
+                    //     testIcon.longitude -= 360;
+                    // else if(testIcon.longitude < -180)
+                    //     testIcon.longitude += 360;
+                    const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
                     testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
                     const isOverLand = getLand_test(testIcon.latitude, testIcon.longitude);
                     if(isOverLand)
@@ -144,7 +142,6 @@ canvas.handleClick((x, y)=>{
     if(ready){
         if(spawnIcon){
             let LatLong = viewer.canvasToMapCoordinate(x, y);
-            LatLong = testOffsetThing(LatLong);
             spawnIcon.latitude = LatLong.latitude;
             spawnIcon.longitude = LatLong.longitude;
             spawnIcon.sh = LatLong.latitude < 0;
@@ -224,7 +221,7 @@ spawnModeButton.addEventListener('mouseup', e=>{
             sh: false,
             omega: Math.PI * 2 / 3,
             motion: {
-                x: -0.2,
+                x: -12,
                 y: 0
             }
         };
@@ -257,8 +254,8 @@ debugButton.addEventListener('mouseup', e=>{
             sh: lat < 0,
             omega: Math.PI * 2 / 3,
             motion: {
-                x: 0.2 * Math.cos(dir),
-                y: 0.2 * Math.sin(dir)
+                x: 12 * Math.cos(dir),
+                y: 12 * Math.sin(dir)
             }
         });
     }
