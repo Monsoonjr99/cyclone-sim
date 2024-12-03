@@ -4,6 +4,7 @@ import * as viewer from "./mapviewwindow";
 import { loadMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 import { GeoCoordinate } from "./geocoordinate";
+import { RAD_TO_DEG } from "./util";
 
 // import mapImageURL from 'url:../resources/nasabluemarble.jpg';
 
@@ -50,7 +51,7 @@ function getLand_test(latitude : number, longitude : number){
 }
 
 function randomSpawn_test(){
-    const lat = Math.random() * 180 - 90;
+    const lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
     const dir = Math.random() * 2 * Math.PI;
     test.push({
         latitude: lat,

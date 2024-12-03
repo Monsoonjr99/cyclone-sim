@@ -1,19 +1,11 @@
 // handles geographic (latitude/longitude) coordinates and associated vector operations on spherical geometry
 // formulas for calculations courtesy of Ed Williams - https://edwilliams.org/avform147.htm
 
-import { mod, clamp } from './util';
+import { mod, clamp, DEG_TO_RAD, RAD_TO_DEG, DEG_TO_NM, NM_TO_DEG, RAD_TO_NM, NM_TO_RAD } from './util';
 
 // definition constants of latitude/longitude scale bounds
 export const LATITUDE_MAX = 90;
 export const LONGITUDE_MAX = 180;
-
-// angle measurement conversions
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 1 / DEG_TO_RAD;
-const DEG_TO_NM = 60;
-const NM_TO_DEG = 1 / DEG_TO_NM;
-const RAD_TO_NM = RAD_TO_DEG * DEG_TO_NM;
-const NM_TO_RAD = 1 / RAD_TO_NM;
 
 export interface LatLongCoord{
     latitude : number;

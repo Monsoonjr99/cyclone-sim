@@ -1,4 +1,12 @@
-// miscellaneous utility functions
+// miscellaneous utility functions and constants
+
+// angle measurement conversions
+export const DEG_TO_RAD = Math.PI / 180;
+export const RAD_TO_DEG = 1 / DEG_TO_RAD;
+export const DEG_TO_NM = 60;
+export const NM_TO_DEG = 1 / DEG_TO_NM;
+export const RAD_TO_NM = RAD_TO_DEG * DEG_TO_NM;
+export const NM_TO_RAD = 1 / RAD_TO_NM;
 
 // proper modulus calculation
 export function mod(a: number, b: number){
