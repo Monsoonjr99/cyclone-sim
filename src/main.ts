@@ -70,29 +70,59 @@ canvas.setDraw((ctx, time)=>{
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
-            const overland = getLand_test(test[i].latitude, test[i].longitude);
-            const dirFromMouse = GeoCoordinate.directionToward(test[i], mouseCoord) * Math.PI / 180;
-            const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
-            const brightness = Math.floor((0.3 + 0.7 * distFromMouse / (180 * 60)) * 255).toString(16).padStart(2, '0').toUpperCase();
-            // const red = (Math.floor(brightness * (dirFromMouse < 60 ? 255 : dirFromMouse < 120 ? Math.floor((1 - (dirFromMouse - 60) / 60) * 255) : dirFromMouse < 240 ? 0 : dirFromMouse < 300 ? Math.floor(((dirFromMouse - 240) / 60) * 255) : 255))).toString(16).padStart(2, '0').toUpperCase();
-            // const green = (Math.floor(brightness * (dirFromMouse < 60 ? Math.floor((dirFromMouse / 60) * 255) : dirFromMouse < 180 ? 255 : dirFromMouse < 240 ? Math.floor((1 - (dirFromMouse - 180) / 60) * 255) : 0))).toString(16).padStart(2, '0').toUpperCase();
-            // const blue = (Math.floor(brightness * (dirFromMouse < 120 ? 0 : dirFromMouse < 180 ? Math.floor(((dirFromMouse - 120) / 60) * 255) : dirFromMouse < 300 ? 255 : Math.floor((1 - (dirFromMouse - 300) / 60) * 255)))).toString(16).padStart(2, '0').toUpperCase();
-            const color = overland ? `#0000${brightness}` : `#${brightness}0000`; //`#${red}${green}${blue}`;
+            // const overland = getLand_test(test[i].latitude, test[i].longitude);
+            // const dirFromMouse = GeoCoordinate.directionToward(test[i], mouseCoord) * Math.PI / 180;
+            // const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
+            // const brightness = Math.floor((0.3 + 0.7 * distFromMouse / (180 * 60)) * 255).toString(16).padStart(2, '0').toUpperCase();
+            const symbol = test[i].omega < Math.PI * 2 / 3 ? 'D' : test[i].omega < Math.PI * 1.8 ? 'S' : test[i].omega < Math.PI * 2.3 ? '1' : test[i].omega < Math.PI * 2.7 ? '2' : test[i].omega < Math.PI * 3.1 ? '3' : test[i].omega < Math.PI * 3.7 ? '4' : '5';
+            const color = ({
+                'D': 'rgb(20,20,230)',
+                'S': 'rgb(20,230,20)',
+                '1': 'rgb(230,230,20)',
+                '2': 'rgb(240,170,20)',
+                '3': 'rgb(240,20,20)',
+                '4': 'rgb(250,40,250)',
+                '5': 'rgb(250,140,250)'
+            })[symbol];
             for(let c of coords){
-                drawStormIcon(ctx, c.x, c.y, iconSize(), test[i].sh, anchorStormIconRotation(test[i], test[i].omega, time), (test[i].omega < Math.PI * 2 / 3) ? 0 : 2, color, selectedIcon === test[i] ? '#FFF' : undefined);
-                ctx.strokeStyle = '#0F0';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.moveTo(c.x, c.y);
-                ctx.lineTo(c.x + 40 * Math.sin(dirFromMouse), c.y - 40 * Math.cos(dirFromMouse));
-                ctx.stroke();
+                drawStormIcon(ctx, c.x, c.y, iconSize(), {
+                    shem: test[i].sh,
+                    rotation: anchorStormIconRotation(test[i], test[i].omega, time),
+                    arms: (test[i].omega < Math.PI * 2 / 3) ? 0 : 2,
+                    fill: color,
+                    stroke: selectedIcon === test[i] ? '#FFF' : undefined,
+                    classificationSymbol: {
+                        text: symbol
+                    },
+                    designationLabel: {
+                        text: 'Foo',
+                        fillColor: '#FFF'
+                    },
+                    indicatorLabel: {
+                        text: `${Math.round(test[i].omega * 100) / 100}`,
+                        fillColor: '#FFF'
+                    }
+                });
+                // ctx.strokeStyle = '#0F0';
+                // ctx.lineWidth = 3;
+                // ctx.beginPath();
+                // ctx.moveTo(c.x, c.y);
+                // ctx.lineTo(c.x + 40 * Math.sin(dirFromMouse), c.y - 40 * Math.cos(dirFromMouse));
+                // ctx.stroke();
             }
         }
         if(spawnIcon){
             const latitude = mouseCoord.latitude;
             const canvasCoords = viewer.mapToCanvasCoordinates(mouseCoord.latitude, mouseCoord.longitude, 1.5);
             for(let c of canvasCoords)
-                drawStormIcon(ctx, c.x, c.y, iconSize(), latitude < 0, anchorStormIconRotation(spawnIcon, spawnIcon.omega, time), 2, '#FFF');
+                drawStormIcon(ctx, c.x, c.y, iconSize(), {
+                    shem: latitude < 0,
+                    rotation: anchorStormIconRotation(spawnIcon, spawnIcon.omega, time),
+                    fill: '#FFF',
+                    classificationSymbol: {
+                        text: 'S'
+                    }
+                });
         }
 
         if(running){
@@ -134,7 +164,10 @@ canvas.setDraw((ctx, time)=>{
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
-        drawStormIcon(ctx, canvas.width/2, canvas.height/2, 300, false, 2 * Math.PI * time / 2500, 2, '#00F');
+        drawStormIcon(ctx, canvas.width/2, canvas.height/2, 300, {
+            rotation: 2 * Math.PI * time / 2500,
+            fill: '#00F'
+        });
     }
 });
 
