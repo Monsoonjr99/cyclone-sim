@@ -6,8 +6,6 @@ import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 import { GeoCoordinate } from "./geocoordinate";
 import { RAD_TO_DEG } from "./util";
 
-// import mapImageURL from 'url:../resources/nasabluemarble.jpg';
-
 // This is currently preliminary testing code
 
 console.log('Hello World!');
@@ -86,10 +84,6 @@ canvas.setDraw((ctx, time)=>{
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
-            // const overland = getLand_test(test[i].latitude, test[i].longitude);
-            // const dirFromMouse = GeoCoordinate.directionToward(test[i], mouseCoord) * Math.PI / 180;
-            // const distFromMouse = GeoCoordinate.dist(test[i], mouseCoord);
-            // const brightness = Math.floor((0.3 + 0.7 * distFromMouse / (180 * 60)) * 255).toString(16).padStart(2, '0').toUpperCase();
             const symbol = test[i].omega < Math.PI * 2 / 3 ? 'D' : test[i].omega < Math.PI * 1.8 ? 'S' : test[i].omega < Math.PI * 2.3 ? '1' : test[i].omega < Math.PI * 2.7 ? '2' : test[i].omega < Math.PI * 3.1 ? '3' : test[i].omega < Math.PI * 3.7 ? '4' : '5';
             const color = ({
                 'D': 'rgb(20,20,230)',
@@ -119,12 +113,6 @@ canvas.setDraw((ctx, time)=>{
                         fillColor: '#FFF'
                     }
                 });
-                // ctx.strokeStyle = '#0F0';
-                // ctx.lineWidth = 3;
-                // ctx.beginPath();
-                // ctx.moveTo(c.x, c.y);
-                // ctx.lineTo(c.x + 40 * Math.sin(dirFromMouse), c.y - 40 * Math.cos(dirFromMouse));
-                // ctx.stroke();
             }
         }
         if(spawnIcon){
@@ -154,17 +142,6 @@ canvas.setDraw((ctx, time)=>{
                     const oldDir = Math.atan2(testIcon.motion.y, testIcon.motion.x);
                     testIcon.latitude = newPos.latitude;
                     testIcon.longitude = newPos.longitude;
-                    // testIcon.latitude -= testIcon.motion.y;
-                    // testIcon.longitude += testIcon.motion.x;
-                    // if(testIcon.latitude >= 90 || testIcon.latitude <= -90){
-                    //     testIcon.motion.y *= -1;
-                    //     testIcon.longitude += 180;
-                    // }
-                    // testIcon.latitude = Math.max(Math.min(testIcon.latitude, 90), -90);
-                    // if(testIcon.longitude >= 180)
-                    //     testIcon.longitude -= 360;
-                    // else if(testIcon.longitude < -180)
-                    //     testIcon.longitude += 360;
                     const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
                     testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
                     const isOverLand = getLand_test(testIcon.latitude, testIcon.longitude);
@@ -212,10 +189,6 @@ canvas.handleClick((x, y)=>{
                         else
                             selectedIcon = icon;
                         iconClicked = true;
-                        // if(icon.omega >= 4 * Math.PI)
-                        //     icon.omega = Math.PI * 2 / 3;
-                        // else
-                        //     icon.omega += Math.PI / 3;
                         break;
                     }
                 }

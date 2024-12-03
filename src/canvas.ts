@@ -195,7 +195,7 @@ export function handleClick(handler : (x : number, y : number)=>void){
     clickHandler = handler;
 }
 
-export function handleDrag(handler : (/* beginX : number, beginY : number, xOffset : number, yOffset : number, */dx : number, dy : number, dragEnd : boolean)=>void){
+export function handleDrag(handler : (dx : number, dy : number, dragEnd : boolean)=>void){
     dragHandler = handler;
 }
 
