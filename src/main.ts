@@ -49,6 +49,21 @@ function getLand_test(latitude : number, longitude : number){
         return false;
 }
 
+function randomSpawn_test(){
+    const lat = Math.random() * 180 - 90;
+    const dir = Math.random() * 2 * Math.PI;
+    test.push({
+        latitude: lat,
+        longitude: Math.random() * 360 - 180,
+        sh: lat < 0,
+        omega: Math.PI * 2 / 3,
+        motion: {
+            x: 12 * Math.cos(dir),
+            y: 12 * Math.sin(dir)
+        }
+    });
+}
+
 function iconSize(){
     const BASE_ICON_SIZE = 40;
     const MIN_ICON_SIZE = 15;
@@ -131,7 +146,7 @@ canvas.setDraw((ctx, time)=>{
             lastUpdate += elapsedTicksSinceLastUpdate * TICK_FRAME_DELAY;
             // test "simulation"
             for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
-                for(let j = 0; j < test.length; j++){
+                for(let j = test.length - 1; j >= 0; j--){
                     const testIcon = test[j];
                     const newPos = GeoCoordinate.addMovement(testIcon, testIcon.motion);
                     const newDir = Math.PI / 2 - GeoCoordinate.directionToward(newPos, testIcon) * Math.PI / 180 + Math.PI;
@@ -156,8 +171,12 @@ canvas.setDraw((ctx, time)=>{
                         testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
                     else
                         testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
-                    testIcon.omega = Math.max(Math.min(testIcon.omega, 4 * Math.PI), Math.PI / 6);
+                    testIcon.omega = Math.min(testIcon.omega, 4 * Math.PI);
+                    if(testIcon.omega <= Math.PI / 6)
+                        test.splice(j, 1);
                 }
+                if(Math.random() < 0.01)
+                    randomSpawn_test();
             }
             if(selectedIcon)
                 viewer.focus(selectedIcon.latitude, selectedIcon.longitude);
@@ -278,18 +297,6 @@ runPauseButton.addEventListener('mouseup', e=>{
 const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
 
 debugButton.addEventListener('mouseup', e=>{
-    for(let i = test.length; i < 500; i++){
-        const lat = Math.random() * 180 - 90;
-        const dir = Math.random() * 2 * Math.PI;
-        test.push({
-            latitude: lat,
-            longitude: Math.random() * 360 - 180,
-            sh: lat < 0,
-            omega: Math.PI * 2 / 3,
-            motion: {
-                x: 12 * Math.cos(dir),
-                y: 12 * Math.sin(dir)
-            }
-        });
-    }
+    for(let i = test.length; i < 500; i++)
+        randomSpawn_test();
 });
