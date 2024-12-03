@@ -178,7 +178,7 @@ canvas.setDraw((ctx, time)=>{
                 if(Math.random() < 0.01)
                     randomSpawn_test();
             }
-            if(selectedIcon)
+            if(selectedIcon && test.includes(selectedIcon))
                 viewer.focus(selectedIcon.latitude, selectedIcon.longitude);
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
