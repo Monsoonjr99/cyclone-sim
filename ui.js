@@ -31,7 +31,19 @@ class UI{
                 UI.focusedInput = this;
                 if (hiddenInput) { // Ensure hiddenInput is defined
                     hiddenInput.value = UI.inputData.value;
+
+                    // Temporarily make it focusable for mobile
+                    const originalOpacity = hiddenInput.style.opacity;
+                    const originalZIndex = hiddenInput.style.zIndex;
+                    hiddenInput.style.opacity = '0.00001'; // Still effectively invisible but not display:none or opacity:0
+                    hiddenInput.style.zIndex = '1000';    // Bring to front temporarily to ensure it can receive focus
+                    
+                    // Attempt focus
                     hiddenInput.focus();
+
+                    // Revert styles
+                    hiddenInput.style.opacity = originalOpacity; 
+                    hiddenInput.style.zIndex = originalZIndex;   
                 }
                 if(onclick instanceof Function) onclick.call(this,UI.focusedInput===this);
             };
