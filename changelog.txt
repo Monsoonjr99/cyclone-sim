@@ -1,5 +1,9 @@
 About: A p5.js tropical cyclone simulation game
 
+v0.4.24 (2025-08-20):
+    % Dependencies now served locally rather than hotlinked from a CDN
+        > This should allow cyclone simulator to run offline (if running locally)
+    % Finally using minified p5.js (oops)
 v0.4.23 (2025-08-12):
     * Updated name lists for Western Pacific, PAGASA, North Atlantic, and Eastern Pacific
 v0.4.22 (2024-12-31):
