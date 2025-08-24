@@ -20,8 +20,31 @@ class UI{
                 // textInput.focus();
                 UI.inputData.value = this.value;
                 UI.inputData.maxLength = charLimit;
+                if (hiddenInput) { // Ensure hiddenInput is defined
+                    if (charLimit) {
+                        hiddenInput.maxLength = charLimit;
+                    } else {
+                        hiddenInput.removeAttribute('maxlength');
+                    }
+                }
                 UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
                 UI.focusedInput = this;
+                if (hiddenInput) { // Ensure hiddenInput is defined
+                    hiddenInput.value = UI.inputData.value;
+
+                    // Temporarily make it focusable for mobile
+                    const originalOpacity = hiddenInput.style.opacity;
+                    const originalZIndex = hiddenInput.style.zIndex;
+                    hiddenInput.style.opacity = '0.00001'; // Still effectively invisible but not display:none or opacity:0
+                    hiddenInput.style.zIndex = '1000';    // Bring to front temporarily to ensure it can receive focus
+                    
+                    // Attempt focus
+                    hiddenInput.focus();
+
+                    // Revert styles
+                    hiddenInput.style.opacity = originalOpacity; 
+                    hiddenInput.style.zIndex = originalZIndex;   
+                }
                 if(onclick instanceof Function) onclick.call(this,UI.focusedInput===this);
             };
             this.textCanvas = createBuffer(this.width,this.height);
@@ -283,6 +306,9 @@ UI.click = function(){
         return false;
     else if(UI.focusedInput){
         UI.focusedInput.value = UI.inputData.value;
+        if (hiddenInput) { // Ensure hiddenInput is defined
+            hiddenInput.blur();
+        }
         UI.focusedInput = undefined;
     }
     if(UI.mouseOver){
@@ -298,6 +324,23 @@ UI.viewBasin = undefined;
 // Definitions for all UI elements
 
 UI.init = function(){
+    let hiddenInput = document.getElementById('hidden-input');
+
+    if (hiddenInput) {
+        hiddenInput.addEventListener('input', function() {
+            if (UI.focusedInput && UI.focusedInput.isInput) {
+                UI.inputData.value = hiddenInput.value;
+                // If the canvas doesn't update automatically, we might need to force a re-render
+                // or ensure the main draw loop picks up changes in UI.inputData.value.
+                // For now, let's assume the existing rendering logic for inputs will handle it.
+                // We also need to update the cursor and selection properties in UI.inputData
+                // to match the hidden input's state.
+                UI.inputData.cursor = hiddenInput.selectionStart;
+                UI.inputData.selectionStart = hiddenInput.selectionStart;
+                UI.inputData.selectionEnd = hiddenInput.selectionEnd;
+            }
+        });
+    }
     // hoist!
 
     let yearselbox;
@@ -2284,12 +2327,18 @@ function keyPressed(){
             case ESCAPE:
                 // textInput.value = UI.focusedInput.value;
                 // textInput.blur();
+                if (hiddenInput) { // Ensure hiddenInput is defined
+                    hiddenInput.blur();
+                }
                 UI.focusedInput = undefined;
                 break;
             case ENTER:
                 let u = UI.focusedInput;
                 // textInput.blur();
                 u.value = UI.inputData.value;
+                if (hiddenInput) { // Ensure hiddenInput is defined
+                    hiddenInput.blur();
+                }
                 UI.focusedInput = undefined;
                 if(u.enterFunc) u.enterFunc();
                 break;
