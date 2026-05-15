@@ -375,9 +375,24 @@ UI.init = function(){
         seedBox.hide();
         if(UI.viewBasin instanceof Basin){
             let basin = UI.viewBasin;
-            if(basin.godMode && keyIsPressed && basin.viewingPresent()) {
-                if(['l','x','d','D','s','S','1','2','3','4','5','6','7','8','9','0','y'].includes(key))
-                    basin.spawnArchetype(key,getMouseX(),getMouseY());
+            if(basin.godMode && basin.viewingPresent() && (keyIsPressed || simSettings.mobileControls)) {
+                let archetype = keyIsPressed ? key : spawnSelector.selected;
+                if(['l','x','d','D','s','S','1','2','3','4','5','6','7','8','9','0','y'].includes(archetype)){
+                    let mVector = createVector(getMouseX(),getMouseY());
+                    let stormSelected = false;
+                    for(let i=basin.activeSystems.length-1;i>=0;i--){
+                        let s = basin.activeSystems[i].fetchStorm();
+                        let p = s.getStormDataByTick(viewTick,true).pos;
+                        if(p.dist(mVector)<DIAMETER){
+                            stormSelected = true;
+                            break;
+                        }
+                    }
+                    if(!stormSelected){
+                        basin.spawnArchetype(archetype,getMouseX(),getMouseY());
+                        return;
+                    }
+                }
                 // let g = {x: getMouseX(), y: getMouseY()};
                 // if(key === "l" || key === "L"){
                 //     g.sType = "l";
@@ -501,7 +516,7 @@ UI.init = function(){
         text("New Basin Settings",0,0);
     });
 
-    let basinCreationMenuButtonSpacing = 36;
+    let basinCreationMenuButtonSpacing = min(36, (HEIGHT - HEIGHT/8 - 100) / 5);
     let basinCreationMenuButtonHeights = 28;
     let basinCreationMenuButtonWidths = 400;
 
@@ -595,7 +610,7 @@ UI.init = function(){
         basinCreationMenuAdvanced.show();
     });
 
-    basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,7*HEIGHT/8-20,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // "Start" button
+    basinCreationMenu.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,HEIGHT - 80,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){    // "Start" button
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
@@ -632,7 +647,7 @@ UI.init = function(){
             basin.mount();
         });
         basinCreationMenu.hide();
-    }).append(false,0,basinCreationMenuButtonSpacing,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
+    }).append(false,0,32,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){ // "Cancel" button
         s.button("Cancel",true,20);
     },function(){
         yearselbox.value = '';
@@ -835,7 +850,7 @@ UI.init = function(){
 
     // Settings Menu
 
-    settingsMenu.append(false,WIDTH/2,HEIGHT/8,0,0,function(s){ // menu title text
+    settingsMenu.append(false,WIDTH/2,HEIGHT/12,0,0,function(s){ // menu title text
         fill(COLORS.UI.text);
         noStroke();
         textAlign(CENTER,CENTER);
@@ -843,40 +858,46 @@ UI.init = function(){
         text("Settings",0,0);
     });
 
-    settingsMenu.append(false, WIDTH / 2 - 150, 3 * HEIGHT / 16, 300, 30, function(s){   // storm intensity indicator
+    let settingsSpacing = min(37, (HEIGHT - HEIGHT/12 - 45 - 60) / 10);
+    settingsMenu.append(false, WIDTH / 2 - 150, HEIGHT/12 + 45, 300, 30, function(s){   // mobile controls
+        let b = simSettings.mobileControls ? "Enabled" : "Disabled";
+        s.button("Mobile Controls: "+b,true);
+    },function(){
+        simSettings.setMobileControls("toggle");
+    }).append(false,0,settingsSpacing,300,30,function(s){   // storm intensity indicator
         let b = simSettings.showStrength ? "Enabled" : "Disabled";
         s.button("Intensity Indicator: "+b,true);
     },function(){
         simSettings.setShowStrength("toggle");
-    }).append(false,0,37,300,30,function(s){     // autosaving
+    }).append(false,0,settingsSpacing,300,30,function(s){     // autosaving
         let b = simSettings.doAutosave ? "Enabled" : "Disabled";
         s.button("Autosaving: "+b,true);
     },function(){
         simSettings.setDoAutosave("toggle");
-    }).append(false,0,37,300,30,function(s){     // track mode
+    }).append(false,0,settingsSpacing,300,30,function(s){     // track mode
         let m = ["Active TC Tracks","Full Active Tracks","Season Summary","No Tracks"][simSettings.trackMode];
         s.button("Track Mode: "+m,true);
     },function(){
         simSettings.setTrackMode("incmod",4);
         refreshTracks(true);
-    }).append(false,0,37,300,30,function(s){     // snow
+    }).append(false,0,settingsSpacing,300,30,function(s){     // snow
         let b = simSettings.snowLayers ? (simSettings.snowLayers*10) + " layers" : "Disabled";
         s.button("Snow: "+b,true);
     },function(){
         simSettings.setSnowLayers("incmod",floor(MAX_SNOW_LAYERS/10)+1);
         if(land) land.clearSnow();
-    }).append(false,0,37,300,30,function(s){     // shadows (NOT a shader O~O)
+    }).append(false,0,settingsSpacing,300,30,function(s){     // shadows (NOT a shader O~O)
         let b = simSettings.useShadows ? "Enabled" : "Disabled";
         s.button("Land Shadows: "+b,true);
     },function(){
         simSettings.setUseShadows("toggle");
-    }).append(false,0,37,300,30,function(s){     // magnifying glass
+    }).append(false,0,settingsSpacing,300,30,function(s){     // magnifying glass
         let b = simSettings.showMagGlass ? "Enabled" : "Disabled";
         s.button("Magnifying Glass: "+b,true);
     },function(){
         simSettings.setShowMagGlass("toggle");
         if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
-    }).append(false,0,37,300,30,function(s){     // smooth land color
+    }).append(false,0,settingsSpacing,300,30,function(s){     // smooth land color
         let b = simSettings.smoothLandColor ? "Enabled" : "Disabled";
         s.button("Smooth Land Color: "+b,true);
     },function(){
@@ -885,12 +906,12 @@ UI.init = function(){
             // landBuffer.clear();
             land.drawn = false;
         }
-    }).append(false,0,37,300,30,function(s){     // speed unit
+    }).append(false,0,settingsSpacing,300,30,function(s){     // speed unit
         let u = ['kts', 'mph', 'km/h'][simSettings.speedUnit];
         s.button("Windspeed Unit: " + u, true);
     },function(){
         simSettings.setSpeedUnit("incmod", 3);
-    }).append(false,0,37,300,30,function(s){     // color scheme
+    }).append(false,0,settingsSpacing,300,30,function(s){     // color scheme
         let n = COLOR_SCHEMES[simSettings.colorScheme].name;
         s.button("Color Scheme: " + n, true);
     },function(){
@@ -898,7 +919,7 @@ UI.init = function(){
         refreshTracks(true);
     });
 
-    settingsMenu.append(false,WIDTH/2-150,7*HEIGHT/8-20,300,30,function(s){ // "Back" button
+    settingsMenu.append(false,WIDTH/2-150,HEIGHT - 40,300,30,function(s){ // "Back" button
         s.button("Back",true,20);
     },function(){
         settingsMenu.hide();
@@ -2262,6 +2283,68 @@ UI.init = function(){
     },function(){
         helpBox.hide();
     });
+
+    mobileControlsPanel = primaryWrapper.append(false, 10, HEIGHT - 120, 50, 60, function(s){
+        if(!simSettings.mobileControls) this.hide();
+        else this.show();
+    }, true);
+
+    mobileControlsPanel.append(false, 0, 0, 50, 25, function(s){
+        s.button("Step", true, 12, !paused);
+    }, function(){
+        if(UI.viewBasin && paused) UI.viewBasin.advanceSim();
+    }).append(false, 0, 30, 50, 25, function(s){
+        s.button("Tracks", true, 12);
+    }, function(){
+        simSettings.setTrackMode("incmod", 4);
+        refreshTracks(true);
+    });
+
+    mobileControlsPanel.append(false, 55, 0, 60, 25, function(s){
+        s.button("Intensity", true, 12);
+    }, function(){
+        simSettings.setShowStrength("toggle");
+    }).append(false, 0, 30, 60, 25, function(s){
+        s.button("Mag Glass", true, 11);
+    }, function(){
+        simSettings.setShowMagGlass("toggle");
+        if(UI.viewBasin) UI.viewBasin.env.updateMagGlass();
+    });
+
+    spawnSelector = primaryWrapper.append(false, WIDTH/2 - 150, HEIGHT - 65, 300, 60, function(s){
+        if(!simSettings.mobileControls || !UI.viewBasin || !UI.viewBasin.godMode || !UI.viewBasin.viewingPresent()) this.hide();
+        else this.show();
+    }, true);
+
+    spawnSelector.selected = 'd';
+
+    const spawnTypes = [
+        ['L', 'l'],
+        ['D', 'd'],
+        ['S', 's'],
+        ['1', '1'],
+        ['2', '2'],
+        ['3', '3'],
+        ['4', '4'],
+        ['5', '5'],
+        ['X', 'x']
+    ];
+
+    for(let i=0; i<spawnTypes.length; i++){
+        let x = (i % 5) * 25;
+        let y = floor(i / 5) * 30;
+        spawnSelector.append(false, x, y, 20, 25, function(s){
+            let sel = spawnSelector.selected === spawnTypes[i][1];
+            s.button(spawnTypes[i][0], true, 14, !sel);
+            if(sel){
+                stroke(255);
+                noFill();
+                rect(0, 0, this.width, this.height);
+            }
+        }, function(){
+            spawnSelector.selected = spawnTypes[i][1];
+        });
+    }
 };
 
 function mouseInCanvas(){

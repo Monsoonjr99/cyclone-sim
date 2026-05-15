@@ -26,7 +26,22 @@ var paused,
     renderToDo,
     oldMouseX,
     oldMouseY,
-    seasonCurve;
+    seasonCurve,
+    mainMenu,
+    basinCreationMenu,
+    basinCreationMenuAdvanced,
+    loadMenu,
+    settingsMenu,
+    primaryWrapper,
+    areYouSure,
+    dateNavigator,
+    stormInfoPanel,
+    sideMenu,
+    saveBasinAsPanel,
+    seedBox,
+    helpBox,
+    mobileControlsPanel,
+    spawnSelector;
 
 function setup(){
     setVersion(TITLE + " v",VERSION_NUMBER);
@@ -46,6 +61,7 @@ function setup(){
     simSettings = new Settings();
 
     textInput = document.createElement("input");
+    textInput.id = "textInput";
     textInput.type = "text";
     document.body.appendChild(textInput);
     textInput.style.position = "absolute";
@@ -237,11 +253,11 @@ class Settings{
     }
 
     static order(){
-        return ["colorScheme","speedUnit","smoothLandColor","showMagGlass","snowLayers","useShadows","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
+        return ["mobileControls","colorScheme","speedUnit","smoothLandColor","showMagGlass","snowLayers","useShadows","trackMode","showStrength","doAutosave"];    // add new settings to the beginning of this array
     }
 
     static defaults(){
-        return [0,0,true,false,2,false,0,false,true];  // add new defaults to the beginning of this array
+        return [false,0,0,true,false,2,false,0,false,true];  // add new defaults to the beginning of this array
     }
 
     save(){
