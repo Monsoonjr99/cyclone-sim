@@ -14,10 +14,10 @@ class UI{
             this.isInput = true;
             this.value = '';
             this.clickFunc = function(){
-                // textInput.value = this.value;
-                // if(charLimit) textInput.maxLength = charLimit;
-                // else textInput.removeAttribute('maxlength');
-                // textInput.focus();
+                textInput.value = this.value;
+                if(charLimit) textInput.maxLength = charLimit;
+                else textInput.removeAttribute('maxlength');
+                textInput.focus();
                 UI.inputData.value = this.value;
                 UI.inputData.maxLength = charLimit;
                 UI.inputData.cursor = UI.inputData.selectionStart = UI.inputData.selectionEnd = this.value.length;
@@ -230,6 +230,12 @@ class UI{
 UI.elements = [];
 
 UI.renderAll = function(){
+    if(UI.focusedInput){
+        UI.inputData.value = textInput.value;
+        UI.inputData.selectionStart = textInput.selectionStart;
+        UI.inputData.selectionEnd = textInput.selectionEnd;
+        UI.inputData.cursor = textInput.selectionDirection === 'backward' ? textInput.selectionStart : textInput.selectionEnd;
+    }
     for(let u of UI.elements){
         push();
         u.render();
@@ -282,8 +288,9 @@ UI.click = function(){
     if(UI.mouseOver === UI.focusedInput)
         return false;
     else if(UI.focusedInput){
-        UI.focusedInput.value = UI.inputData.value;
+        UI.focusedInput.value = textInput.value;
         UI.focusedInput = undefined;
+        textInput.blur();
     }
     if(UI.mouseOver){
         UI.mouseOver.clicked();
@@ -2279,58 +2286,21 @@ function keyPressed(){
     // console.log("keyPressed: " + key + " / " + keyCode);
     const k = key.toLowerCase();
     keyRepeatFrameCounter = -1;
-    if(/* document.activeElement === textInput */ UI.focusedInput){
+    if(document.activeElement === textInput && UI.focusedInput){
         switch(keyCode){
             case ESCAPE:
-                // textInput.value = UI.focusedInput.value;
-                // textInput.blur();
-                UI.focusedInput = undefined;
+                textInput.value = UI.focusedInput.value;
+                textInput.blur();
+                // UI.focusedInput = undefined; // handled by onblur
                 break;
             case ENTER:
                 let u = UI.focusedInput;
-                // textInput.blur();
-                u.value = UI.inputData.value;
-                UI.focusedInput = undefined;
+                textInput.blur();
+                // u.value = UI.inputData.value; // handled by onblur
+                // UI.focusedInput = undefined; // handled by onblur
                 if(u.enterFunc) u.enterFunc();
                 break;
-            case UP_ARROW:
-                UI.setInputCursorPosition(0, keyIsDown(SHIFT));
-                break;
-            case DOWN_ARROW:
-                UI.setInputCursorPosition(UI.inputData.value.length, keyIsDown(SHIFT));
-                break;
-            // these are handled by keyRepeat(); break then return false so evt.preventDefault() is called
-            case LEFT_ARROW:
-            case RIGHT_ARROW:
-            case BACKSPACE:
-            case DELETE:
-                break;
             default:
-                if(keyIsDown(CONTROL)){
-                    switch(k){
-                        case 'x':
-                            if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
-                                navigator.clipboard.writeText(UI.inputData.value.slice(UI.inputData.selectionStart, UI.inputData.selectionEnd));
-                                UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
-                                UI.setInputCursorPosition(UI.inputData.selectionStart);
-                            }
-                            break;
-                        case 'c':
-                            if(UI.inputData.selectionStart !== UI.inputData.selectionEnd)
-                                navigator.clipboard.writeText(UI.inputData.value.slice(UI.inputData.selectionStart, UI.inputData.selectionEnd));
-                            break;
-                        case 'v':
-                            navigator.clipboard.readText().then(v => {
-                                if(!UI.inputData.maxLength || UI.inputData.value.length + v.length - (UI.inputData.selectionEnd - UI.inputData.selectionStart) <= UI.inputData.maxLength){
-                                    UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + v + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
-                                    UI.setInputCursorPosition(UI.inputData.selectionStart + v.length);
-                                }
-                            });
-                            break;
-                        default:
-                            return;
-                    }
-                }
                 return;
         }
     }else{
@@ -2387,61 +2357,8 @@ function keyPressed(){
 }
 
 function keyRepeat(){
-    if(UI.focusedInput){
-        switch(keyCode){
-            case LEFT_ARROW:
-                if(keyIsDown(LEFT_ARROW)){
-                    let i;
-                    if(keyIsDown(CONTROL))
-                        i = UI.inputData.value.lastIndexOf(' ', UI.inputData.cursor - 2) + 1;
-                    else if(UI.inputData.selectionStart !== UI.inputData.selectionEnd && !keyIsDown(SHIFT))
-                        i = UI.inputData.selectionStart;
-                    else
-                        i = UI.inputData.cursor - 1;
-                    UI.setInputCursorPosition(Math.max(0, i), keyIsDown(SHIFT));
-                }
-                break;
-            case RIGHT_ARROW:
-                if(keyIsDown(RIGHT_ARROW)){
-                    let i;
-                    if(keyIsDown(CONTROL)){
-                        i = UI.inputData.value.indexOf(' ', UI.inputData.cursor + 1);
-                        if(i === -1)
-                            i = UI.inputData.value.length;
-                    }else if(UI.inputData.selectionStart !== UI.inputData.selectionEnd && !keyIsDown(SHIFT))
-                        i = UI.inputData.selectionEnd;
-                    else
-                        i = UI.inputData.cursor + 1;
-                    UI.setInputCursorPosition(Math.min(UI.inputData.value.length, i), keyIsDown(SHIFT));
-                }
-                break;
-            case BACKSPACE:
-                if(keyIsDown(BACKSPACE)){
-                    if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
-                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
-                        UI.setInputCursorPosition(UI.inputData.selectionStart);
-                    }else if(UI.inputData.cursor > 0){
-                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.cursor - 1) + UI.inputData.value.slice(UI.inputData.cursor, UI.inputData.value.length);
-                        UI.setInputCursorPosition(UI.inputData.cursor - 1);
-                    }
-                }
-                break;
-            case DELETE:
-                if(keyIsDown(DELETE)){
-                    if(UI.inputData.selectionStart !== UI.inputData.selectionEnd){
-                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
-                        UI.setInputCursorPosition(UI.inputData.selectionStart);
-                    }else if(UI.inputData.cursor < UI.inputData.value.length){
-                        UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.cursor) + UI.inputData.value.slice(UI.inputData.cursor + 1, UI.inputData.value.length);
-                    }
-                }
-                break;
-            default:
-                if(UI.inputData.insert && (!UI.inputData.maxLength || UI.inputData.value.length + UI.inputData.insert.length - (UI.inputData.selectionEnd - UI.inputData.selectionStart) <= UI.inputData.maxLength)){
-                    UI.inputData.value = UI.inputData.value.slice(0, UI.inputData.selectionStart) + UI.inputData.insert + UI.inputData.value.slice(UI.inputData.selectionEnd, UI.inputData.value.length);
-                    UI.setInputCursorPosition(UI.inputData.selectionStart + UI.inputData.insert.length);
-                }
-        }
+    if(document.activeElement === textInput && UI.focusedInput){
+        return;
     }
     else if(UI.viewBasin instanceof Basin && paused && primaryWrapper.showing){
         if(keyCode===LEFT_ARROW && viewTick>=ADVISORY_TICKS){
@@ -2457,9 +2374,8 @@ function keyRepeat(){
 
 function keyTyped(){
     // console.log(`keyTyped: ${key} / ${keyCode}`);
-    if(UI.focusedInput){
-        UI.inputData.insert = key;
-        return false;
+    if(document.activeElement === textInput && UI.focusedInput){
+        return;
     }
 }
 

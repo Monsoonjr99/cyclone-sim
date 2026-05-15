@@ -5,7 +5,7 @@ var paused,
     waitingDescs,
     waitingTCSymbolSHem,
     simSettings,
-    // textInput,
+    textInput,
     buffers,
     scaler,
     tracks,
@@ -45,15 +45,15 @@ function setup(){
     waitingTCSymbolSHem = false; // yes seriously, a global var for this
     simSettings = new Settings();
 
-    // textInput = document.createElement("input");
-    // textInput.type = "text";
-    // document.body.appendChild(textInput);
-    // textInput.style.position = "absolute";
-    // textInput.style.left = "-500px";
-    // textInput.onblur = ()=>{
-    //     if(UI.focusedInput) UI.focusedInput.value = textInput.value;
-    //     UI.focusedInput = undefined;
-    // };
+    textInput = document.createElement("input");
+    textInput.type = "text";
+    document.body.appendChild(textInput);
+    textInput.style.position = "absolute";
+    textInput.style.left = "-500px";
+    textInput.onblur = ()=>{
+        if(UI.focusedInput) UI.focusedInput.value = textInput.value;
+        UI.focusedInput = undefined;
+    };
 
     // landWorker = new CSWorker();
 
@@ -139,7 +139,7 @@ function draw(){
             }
 
             keyRepeatFrameCounter++;
-            if(keyIsPressed /* && document.activeElement!==textInput */ && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0)
+            if(keyIsPressed && document.activeElement!==textInput && (keyRepeatFrameCounter>=KEY_REPEAT_COOLDOWN || keyRepeatFrameCounter===0) && keyRepeatFrameCounter%KEY_REPEATER===0)
                 keyRepeat();
         
             UI.updateMouseOver();
