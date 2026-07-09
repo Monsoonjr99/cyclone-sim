@@ -116,7 +116,9 @@ The plan for phasing out the legacy Cyclone Simulator and replacing it with the 
 
 #### Statistics and Querying
 
-***WIP***
+* Tropical cyclone scales (e.g. Saffir-Simpson) to categorize storms by intensity
+* Querying system for various statistics (e.g. wind speed, pressure, cyclogenesis) given constraints (e.g. time period, location)
+    * May be used for both fetching generic statistics (i.e. per-basin [season stats panel](#ui-and-graphics)) and for the user to get more specific stats
 
 #### Naming/Designations
 
