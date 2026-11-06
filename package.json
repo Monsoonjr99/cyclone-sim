@@ -1,6 +1,6 @@
 {
   "name": "cyclone-sim",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0-pre-alpha",
   "description": "A browser-based tropical cyclone simulation game.",
   "private": true,
   "scripts": {
@@ -19,7 +19,6 @@
     "game"
   ],
   "author": "Ryan Lane (Monsoonjr99)",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/Monsoonjr99/cyclone-sim/issues"
   },
