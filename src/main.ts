@@ -9,7 +9,7 @@ import { RAD_TO_DEG } from "./util";
 // This is currently preliminary testing code
 
 console.log('Hello World!');
-console.log('This is an alpha');
+console.log('This is a pre-alpha (alpha v1.0 should be soon[tm])');
 
 let mapImage : HTMLImageElement;
 let mapData : ImageData;
@@ -72,7 +72,7 @@ function iconSize(){
 let running = false;
 let lastUpdate = 0;
 let clock = <HTMLDivElement>document.querySelector('.clock');
-const TEST_START_YEAR = 2024;
+const TEST_START_YEAR = 2026;
 const TICK_FRAME_DELAY = 10; // real time milliseconds per simulated tick (has no bearing on rendering framerate)
 
 canvas.setDraw((ctx, time)=>{
