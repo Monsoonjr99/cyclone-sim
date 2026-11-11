@@ -6,6 +6,8 @@ import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 import { GeoCoordinate } from "./geocoordinate";
 import { RAD_TO_DEG } from "./util";
 
+const VERSION = "Pre-Alpha";
+
 // This is currently preliminary testing code
 
 console.log('Hello World!');
@@ -219,6 +221,9 @@ canvas.handlePinch((ratio)=>{
 canvas.startAnimation();
 
 // UI stuff
+
+const versionLink = <HTMLAnchorElement>document.querySelector('.version-str');
+versionLink.innerHTML += VERSION;
 
 const panelCollapseButton = <HTMLButtonElement>document.querySelector('.panel-collapse');
 

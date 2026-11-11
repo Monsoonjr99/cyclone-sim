@@ -95,6 +95,23 @@ button.panel-collapse{
 	left: 0%;
 }
 
+.version-str{
+	position: absolute;
+	top: 0%;
+	right: 0%;
+	height: 5%;
+	user-select: none;
+	color: white;
+	margin-top: 5px;
+	margin-right: 1em;
+	font-size: 18px;
+	text-decoration: none;
+}
+
+.version-str:hover{
+	text-decoration: underline;
+}
+
 /* a{
 	display: inline-block;
 	text-decoration: none;
