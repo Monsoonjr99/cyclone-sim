@@ -111,6 +111,8 @@ export class GeoCoordinate implements LatLongCoord{
         let dir = 0, dist_ = 0;
         if(typeof arg1 === 'object'){
             const movementVector = arg1 instanceof Array ? {x: arg1[0], y: arg1[1]} : arg1;
+	    // x and y being in the "wrong order" in Math.atan2() is not an error
+	    // it is intended to flip the angle measurement to be from the north rather than from the east
             dir = 2 * Math.PI - Math.atan2(movementVector.x, movementVector.y);
             dist_ = Math.hypot(movementVector.x, movementVector.y) * NM_TO_RAD;
         }else if(dist !== undefined){
