@@ -1,10 +1,9 @@
 import * as canvas from "./canvas";
 import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
-import { loadMaps } from "./worldmap";
+import { getMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
-import { GeoCoordinate } from "./geocoordinate";
-import { RAD_TO_DEG } from "./util";
+import { simulationState_test, simulation_test, TestIcon, randomSpawn_test } from "./simulation";
 
 const VERSION = "Pre-Alpha";
 
@@ -14,56 +13,15 @@ console.log('Hello World!');
 console.log('This is a pre-alpha (alpha v1.0 should be soon[tm])');
 
 let mapImage : HTMLImageElement;
-let mapData : ImageData;
 let ready = false;
 
-(async ()=>{
-    let maps = await loadMaps();
+getMaps().then(maps => {
     mapImage = maps.mapImage;
-    if(maps.mapData !== null){
-        mapData = maps.mapData;
-        ready = true;
-    }else
-        console.error("Map data failed to load");
-})();
+    ready = true;
+});
 
-interface TestIcon{
-    latitude : number;
-    longitude : number;
-    sh : boolean;
-    omega : number;
-    motion: {x : number, y : number};
-}
-
-let test : TestIcon[] = [];
 let selectedIcon : TestIcon | undefined;
 let spawnIcon: TestIcon | undefined;
-
-function getLand_test(latitude : number, longitude : number){
-    const x = Math.floor(mapData.width * (longitude + 180) / 360);
-    const y = Math.floor(mapData.height * (-latitude + 90) / 180);
-    const greenChannel = 1;
-    const val = mapData.data[4 * (mapData.width * y + x) + greenChannel];
-    if(val > 0)
-        return true;
-    else
-        return false;
-}
-
-function randomSpawn_test(){
-    const lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
-    const dir = Math.random() * 2 * Math.PI;
-    test.push({
-        latitude: lat,
-        longitude: Math.random() * 360 - 180,
-        sh: lat < 0,
-        omega: Math.PI * 2 / 3,
-        motion: {
-            x: 12 * Math.cos(dir),
-            y: 12 * Math.sin(dir)
-        }
-    });
-}
 
 function iconSize(){
     const BASE_ICON_SIZE = 40;
@@ -84,25 +42,25 @@ canvas.setDraw((ctx, time)=>{
         viewer.drawMap(ctx, mapImage);
         const mousePos = canvas.getMousePos();
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
-        for(let i = 0; i < test.length; i++){
-            const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
+        for(let i = 0; i < simulationState_test.length; i++){
+            const coords = viewer.mapToCanvasCoordinates(simulationState_test[i].latitude, simulationState_test[i].longitude, 1.5);
             const symbol = (()=>{
-		let val = 'D';
-		for(let t of [
-		    {threshold: Math.PI * 2 / 3, val: 'S'},
-		    {threshold: Math.PI * 1.8, val: '1'},
-		    {threshold: Math.PI * 2.3, val: '2'},
-		    {threshold: Math.PI * 2.7, val: '3'},
-		    {threshold: Math.PI * 3.1, val: '4'},
-		    {threshold: Math.PI * 3.7, val: '5'},
-		]){
-		    if(test[i].omega >= t.threshold)
-			val = t.val;
-		    else
-			break;
-		}
-		return val;
-	    })();
+                let val = 'D';
+                for(let t of [
+                    {threshold: Math.PI * 2 / 3, val: 'S'},
+                    {threshold: Math.PI * 1.8, val: '1'},
+                    {threshold: Math.PI * 2.3, val: '2'},
+                    {threshold: Math.PI * 2.7, val: '3'},
+                    {threshold: Math.PI * 3.1, val: '4'},
+                    {threshold: Math.PI * 3.7, val: '5'},
+                ]){
+                    if(simulationState_test[i].omega >= t.threshold)
+                        val = t.val;
+                    else
+                        break;
+                }
+                return val;
+            })();
             const color = ({
                 'D': 'rgb(20,20,230)',
                 'S': 'rgb(20,230,20)',
@@ -114,11 +72,11 @@ canvas.setDraw((ctx, time)=>{
             })[symbol];
             for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {
-                    shem: test[i].sh,
-                    rotation: anchorStormIconRotation(test[i], test[i].omega, time),
-                    arms: (test[i].omega < Math.PI * 2 / 3) ? 0 : 2,
+                    shem: simulationState_test[i].sh,
+                    rotation: anchorStormIconRotation(simulationState_test[i], simulationState_test[i].omega, time),
+                    arms: (simulationState_test[i].omega < Math.PI * 2 / 3) ? 0 : 2,
                     fill: color,
-                    stroke: selectedIcon === test[i] ? '#FFF' : undefined,
+                    stroke: selectedIcon === simulationState_test[i] ? '#FFF' : undefined,
                     classificationSymbol: {
                         text: symbol
                     },
@@ -127,7 +85,7 @@ canvas.setDraw((ctx, time)=>{
                         fillColor: '#FFF'
                     },
                     indicatorLabel: {
-                        text: `${Math.round(test[i].omega * 100) / 100}`,
+                        text: `${Math.round(simulationState_test[i].omega * 100) / 100}`,
                         fillColor: '#FFF'
                     }
                 });
@@ -151,30 +109,8 @@ canvas.setDraw((ctx, time)=>{
             let elapsedTicksSinceLastUpdate = Math.floor((time - lastUpdate) / TICK_FRAME_DELAY);
             setLiveTick(liveTick + elapsedTicksSinceLastUpdate);
             lastUpdate += elapsedTicksSinceLastUpdate * TICK_FRAME_DELAY;
-            // test "simulation"
-            for(let i = 0; i < elapsedTicksSinceLastUpdate; i++){
-                for(let j = test.length - 1; j >= 0; j--){
-                    const testIcon = test[j];
-                    const newPos = GeoCoordinate.addMovement(testIcon, testIcon.motion);
-                    const newDir = Math.PI / 2 - GeoCoordinate.directionToward(newPos, testIcon) * Math.PI / 180 + Math.PI;
-                    const oldDir = Math.atan2(testIcon.motion.y, testIcon.motion.x);
-                    testIcon.latitude = newPos.latitude;
-                    testIcon.longitude = newPos.longitude;
-                    const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
-                    testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
-                    const isOverLand = getLand_test(testIcon.latitude, testIcon.longitude);
-                    if(isOverLand)
-                        testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
-                    else
-                        testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
-                    testIcon.omega = Math.min(testIcon.omega, 4 * Math.PI);
-                    if(testIcon.omega <= Math.PI / 6)
-                        test.splice(j, 1);
-                }
-                if(Math.random() < 0.01)
-                    randomSpawn_test();
-            }
-            if(selectedIcon && test.includes(selectedIcon))
+            simulation_test(elapsedTicksSinceLastUpdate);
+            if(selectedIcon && simulationState_test.includes(selectedIcon))
                 viewer.focus(selectedIcon.latitude, selectedIcon.longitude);
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
@@ -193,12 +129,12 @@ canvas.handleClick((x, y)=>{
             spawnIcon.latitude = LatLong.latitude;
             spawnIcon.longitude = LatLong.longitude;
             spawnIcon.sh = LatLong.latitude < 0;
-            test.push(spawnIcon);
+            simulationState_test.push(spawnIcon);
             spawnIcon = undefined;
             spawnModeButton.innerText = 'Spawn';
         }else{
             let iconClicked = false;
-            for(let icon of test){
+            for(let icon of simulationState_test){
                 let XY = viewer.mapToCanvasCoordinates(icon.latitude, icon.longitude);
                 for(let c of XY){
                     if(Math.hypot(x - c.x, y - c.y) < iconSize() / 2){
@@ -292,6 +228,6 @@ runPauseButton.addEventListener('mouseup', e=>{
 const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
 
 debugButton.addEventListener('mouseup', e=>{
-    for(let i = test.length; i < 500; i++)
+    for(let i = simulationState_test.length; i < 500; i++)
         randomSpawn_test();
 });
