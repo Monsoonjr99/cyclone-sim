@@ -86,7 +86,23 @@ canvas.setDraw((ctx, time)=>{
         const mouseCoord = viewer.canvasToMapCoordinate(mousePos.x, mousePos.y);
         for(let i = 0; i < test.length; i++){
             const coords = viewer.mapToCanvasCoordinates(test[i].latitude, test[i].longitude, 1.5);
-            const symbol = test[i].omega < Math.PI * 2 / 3 ? 'D' : test[i].omega < Math.PI * 1.8 ? 'S' : test[i].omega < Math.PI * 2.3 ? '1' : test[i].omega < Math.PI * 2.7 ? '2' : test[i].omega < Math.PI * 3.1 ? '3' : test[i].omega < Math.PI * 3.7 ? '4' : '5';
+            const symbol = (()=>{
+		let val = 'D';
+		for(let t of [
+		    {threshold: Math.PI * 2 / 3, val: 'S'},
+		    {threshold: Math.PI * 1.8, val: '1'},
+		    {threshold: Math.PI * 2.3, val: '2'},
+		    {threshold: Math.PI * 2.7, val: '3'},
+		    {threshold: Math.PI * 3.1, val: '4'},
+		    {threshold: Math.PI * 3.7, val: '5'},
+		]){
+		    if(test[i].omega >= t.threshold)
+			val = t.val;
+		    else
+			break;
+		}
+		return val;
+	    })();
             const color = ({
                 'D': 'rgb(20,20,230)',
                 'S': 'rgb(20,230,20)',
