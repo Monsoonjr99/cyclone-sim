@@ -41,13 +41,17 @@ export function stopAnimation(){
 
 // Dimensions and Auto-scaling //
 
-export const pixelRatio = Math.ceil(window.devicePixelRatio);
-export let width = canvas.width;
-export let height = canvas.height;
+export let pixelRatio = window.devicePixelRatio;
+export let width = window.innerWidth;
+export let height = window.innerHeight;
 
 function updateDimensions(){
-    width = canvas.width = window.innerWidth * pixelRatio;
-    height = canvas.height = window.innerHeight * pixelRatio;
+    pixelRatio = window.devicePixelRatio;
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = width * pixelRatio;
+    canvas.height = height * pixelRatio;
+    ctx.scale(pixelRatio, pixelRatio);
     drawFrame(performance.now());
 }
 
@@ -71,7 +75,7 @@ let pinchHandler : (ratio: number)=>void;
 let dragStartX : number;
 let dragStartY : number;
 
-// Canvas (clientXY * pixelRatio) mouse position for handlers and getMousePos()
+// Canvas mouse position for handlers and getMousePos()
 let mouseCanvasX = 0;
 let mouseCanvasY = 0;
 
@@ -85,8 +89,8 @@ let pinchDistance = 0;
 function updateMouseCoordinates(e: MouseEvent | Touch){
     let oldX = mouseCanvasX;
     let oldY = mouseCanvasY;
-    mouseCanvasX = e.clientX * pixelRatio;
-    mouseCanvasY = e.clientY * pixelRatio;
+    mouseCanvasX = e.clientX;
+    mouseCanvasY = e.clientY;
     mouseMovementX = mouseCanvasX - oldX;
     mouseMovementY = mouseCanvasY - oldY;
 }
