@@ -38,11 +38,18 @@ function getLand_test(latitude : number, longitude : number){
 }
 
 export function randomSpawn_test(){
-    const lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
+    let sanity = 10000;
+    let lat: number;
+    let long: number;
+    do{
+        lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
+	long = Math.random() * 360 - 180;
+	sanity--;
+    }while(getLand_test(lat, long) && sanity > 0);
     const dir = Math.random() * 2 * Math.PI;
     simulationState_test.push({
         latitude: lat,
-        longitude: Math.random() * 360 - 180,
+        longitude: long,
         sh: lat < 0,
         omega: Math.PI * 2 / 3,
         motion: {
