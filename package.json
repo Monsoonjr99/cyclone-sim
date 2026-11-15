@@ -7,6 +7,11 @@
     "start": "parcel serve src/index.html",
     "build": "parcel build src/index.html"
   },
+  "targets": {
+    "default": {
+      "publicUrl": "/alpha"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Monsoonjr99/cyclone-sim.git"
