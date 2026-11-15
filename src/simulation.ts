@@ -25,16 +25,20 @@ export interface TestIcon{
 export let simulationState_test : TestIcon[] = [];
 
 function getLand_test(latitude : number, longitude : number){
-    if(!ready) return false;
+    if(!ready) return 0;
 
     const x = Math.floor(mapData.width * (longitude + 180) / 360);
     const y = Math.floor(mapData.height * (-latitude + 90) / 180);
     const greenChannel = 1;
-    const val = mapData.data[4 * (mapData.width * y + x) + greenChannel];
-    if(val > 0)
-        return true;
+    const redChannel = 0;
+    const isLand = mapData.data[4 * (mapData.width * y + x) + greenChannel];
+    const elevation = mapData.data[4 * (mapData.width * y + x) + redChannel];
+    if(elevation >= 50)
+        return 2;
+    else if(isLand > 0)
+        return 1;
     else
-        return false;
+        return 0;
 }
 
 export function randomSpawn_test(){
@@ -45,7 +49,7 @@ export function randomSpawn_test(){
         lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
 	long = Math.random() * 360 - 180;
 	sanity--;
-    }while(getLand_test(lat, long) && sanity > 0);
+    }while(getLand_test(lat, long) > 0 && sanity > 0);
     const dir = Math.random() * 2 * Math.PI;
     simulationState_test.push({
         latitude: lat,
@@ -73,8 +77,10 @@ export function simulation_test(iterations: number){
             testIcon.longitude = newPos.longitude;
             const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
             testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
-            const isOverLand = getLand_test(testIcon.latitude, testIcon.longitude);
-            if(isOverLand)
+            const landVal = getLand_test(testIcon.latitude, testIcon.longitude);
+	    if(landVal === 2)
+                testIcon.omega += (Math.random() - 2) * (Math.PI / 12);
+            else if(landVal === 1)
                 testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
             else
                 testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
