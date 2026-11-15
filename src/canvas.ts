@@ -1,7 +1,13 @@
 // This module handles a canvas element that automatically resizes with the browser window, some basic animation control, and event handling for UI
 
-let canvas : HTMLCanvasElement = <HTMLCanvasElement>document.querySelector('.primary-canvas');
-let ctx : CanvasRenderingContext2D = <CanvasRenderingContext2D>canvas.getContext('2d');
+const canvas : HTMLCanvasElement = <HTMLCanvasElement>document.querySelector('.primary-canvas');
+const ctx = (()=>{
+    const ctx_ = canvas.getContext('2d');
+    if(ctx_ !== null)
+        return ctx_;
+    else
+        throw new Error("Failed to acquire canvas context");
+})();
 
 // Animations //
 
