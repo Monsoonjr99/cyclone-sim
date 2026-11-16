@@ -20,9 +20,42 @@ export interface TestIcon{
     sh : boolean;
     omega : number;
     motion: {x : number, y : number};
+    numeral? : number;
+    name? : string;
 }
 
 export let simulationState_test : TestIcon[] = [];
+let latestStormNumeral = 0;
+let latestNameIndex = 0;
+
+const nameList_test = [
+    "Able",
+    "Baker",
+    "Charlie",
+    "Dog",
+    "Easy",
+    "Fox",
+    "George",
+    "How",
+    "Item",
+    "Jig",
+    "King",
+    "Love",
+    "Mike",
+    "Nan",
+    "Oboe",
+    "Peter",
+    "Queen",
+    "Roger",
+    "Sugar",
+    "Tare",
+    "Uncle",
+    "Victor",
+    "William",
+    "Xray",
+    "Yoke",
+    "Zebra"
+];
 
 function getLand_test(latitude : number, longitude : number){
     if(!ready) return 0;
@@ -55,11 +88,12 @@ export function randomSpawn_test(){
         latitude: lat,
         longitude: long,
         sh: lat < 0,
-        omega: Math.PI * 2 / 3,
+        omega: Math.PI * 1 / 2,
         motion: {
             x: 12 * Math.cos(dir),
             y: 12 * Math.sin(dir)
-        }
+        },
+	numeral: latestStormNumeral++
     });
 }
 
@@ -85,6 +119,8 @@ export function simulation_test(iterations: number){
             else
                 testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
             testIcon.omega = Math.min(testIcon.omega, 4 * Math.PI);
+	    if(testIcon.name === undefined && testIcon.omega >= Math.PI * 2 / 3)
+                testIcon.name = nameList_test[(latestNameIndex++) % nameList_test.length];
             if(testIcon.omega <= Math.PI / 6)
                 simulationState_test.splice(j, 1);
         }

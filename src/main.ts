@@ -70,6 +70,14 @@ canvas.setDraw((ctx, time)=>{
                 '4': 'rgb(250,40,250)',
                 '5': 'rgb(250,140,250)'
             })[symbol];
+	    const desLabel = (()=>{
+                if(simulationState_test[i].name !== undefined)
+                    return <string>simulationState_test[i].name;
+                else if(simulationState_test[i].numeral !== undefined)
+                    return (<number>simulationState_test[i].numeral).toString().padStart(3, "0");
+                else
+                    return "Foo";
+	    })();
             for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {
                     shem: simulationState_test[i].sh,
@@ -81,7 +89,7 @@ canvas.setDraw((ctx, time)=>{
                         text: symbol
                     },
                     designationLabel: {
-                        text: 'Foo',
+                        text: desLabel,
                         fillColor: '#FFF'
                     },
                     indicatorLabel: {
