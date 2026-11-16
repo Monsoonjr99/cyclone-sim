@@ -26,6 +26,18 @@ a{
 	-ms-user-select: none;
 }
 
+#alphalink{
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	padding: 10px;
+	z-index: 100;
+	user-select: none;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+}
+
 a:after{
 	display: block;
 	content: '';
