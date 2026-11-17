@@ -19,6 +19,7 @@ export interface TestStorm{
     longitude : number;
     sh : boolean;
     wind : number;
+    mountainShredded? : boolean;
     motion: {x : number, y : number};
     numeral? : number;
     name? : string;
@@ -112,13 +113,19 @@ export function simulation_test(iterations: number){
             const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
             testStorm.motion = {x: testStorm.motion.x * Math.cos(rotateMotionBy) - testStorm.motion.y * Math.sin(rotateMotionBy), y: testStorm.motion.x * Math.sin(rotateMotionBy) + testStorm.motion.y * Math.cos(rotateMotionBy)};
             const landVal = getLand_test(testStorm.latitude, testStorm.longitude);
-	    if(landVal === 2)
-                testStorm.wind += (Math.random() - 2) * 4.375;
-            else if(landVal === 1)
+	    if(landVal === 2){
+                testStorm.wind += (Math.random() - 1.7) * 4.375;
+		testStorm.mountainShredded = true;
+	    }else if(landVal === 1)
                 testStorm.wind += (Math.random() - 0.7) * 4.375;
             else
                 testStorm.wind += (Math.random() - 0.48) * 4.375;
-            testStorm.wind = Math.min(testStorm.wind, 210);
+            if(testStorm.mountainShredded){
+                if(testStorm.wind > 50)
+                    testStorm.wind -= (testStorm.wind - 50) * 0.1;
+	        if(landVal === 0 && Math.random() < 0.001)
+                    testStorm.mountainShredded = false;
+	    }
 	    if(testStorm.numeral === undefined)
                 testStorm.numeral = latestStormNumeral++;
 	    if(testStorm.name === undefined && testStorm.wind >= 35)
