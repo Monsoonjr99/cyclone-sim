@@ -89,7 +89,7 @@ export function randomSpawn_test(){
         latitude: lat,
         longitude: long,
         sh: lat < 0,
-        wind: 30,
+        wind: 25 + Math.random() * 15,
         motion: {
             x: 12 * Math.cos(dir),
             y: 12 * Math.sin(dir)

@@ -7,10 +7,6 @@ import { simulationState_test, simulation_test, TestStorm, randomSpawn_test } fr
 
 const VERSION = "Pre-Alpha";
 
-// This is currently preliminary testing code
-
-console.log('Hello World!');
-console.log('This is a pre-alpha (alpha v1.0 should be soon[tm])');
 
 let mapImage : HTMLImageElement;
 let ready = false;
@@ -110,10 +106,7 @@ canvas.setDraw((ctx, time)=>{
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {
                     shem: latitude < 0,
                     rotation: anchorStormIconRotation(stormToSpawn, iconRotationRate(stormToSpawn.wind), time),
-                    fill: '#FFF',
-                    classificationSymbol: {
-                        text: 'S'
-                    }
+                    fill: '#FFF'
                 });
         }
 
@@ -141,6 +134,7 @@ canvas.handleClick((x, y)=>{
             stormToSpawn.latitude = LatLong.latitude;
             stormToSpawn.longitude = LatLong.longitude;
             stormToSpawn.sh = LatLong.latitude < 0;
+            stormToSpawn.wind = 25 + Math.random() * 15;
             simulationState_test.push(stormToSpawn);
             stormToSpawn = undefined;
             spawnModeButton.innerText = 'Spawn';
@@ -240,6 +234,6 @@ runPauseButton.addEventListener('mouseup', e=>{
 const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
 
 debugButton.addEventListener('mouseup', e=>{
-    for(let i = simulationState_test.length; i < 500; i++)
+    for(let i = 0; i < 5 && simulationState_test.length < 100; i++)
         randomSpawn_test();
 });
