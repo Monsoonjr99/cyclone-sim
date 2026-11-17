@@ -30,6 +30,9 @@ Cyclone Simulator Classic is hosted on Github Pages and you can access it right 
     * Alternatively `v1-dev` for the latest changes
 * Run `npm install`
 * Run `npm run start` to start the ParcelJS dev server
-    * Alternatively `npm run build` for a production build, then host a web server (such as http-server) from `./dist`
+    * Alternatively `npm run build` for a production build, though extra steps are required:
+        * create a subdirectory of `./dist` called `alpha`
+        * move the build artifacts to the `alpha` subdirectory
+        * host a web server (such as http-server) from `./dist` (NOT from `./dist/alpha`, it must be the parent directory)
 * Access from `localhost` in a web browser (port `:1234` for ParcelJS dev server)
     * Append `/alpha` to URL if using a production build (after port `:8080` if using http-server)
