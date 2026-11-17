@@ -76,7 +76,7 @@ canvas.setDraw((ctx, time)=>{
                 else if(simulationState_test[i].numeral !== undefined)
                     return (<number>simulationState_test[i].numeral).toString().padStart(3, "0");
                 else
-                    return "Foo";
+                    return "";
 	    })();
             for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {

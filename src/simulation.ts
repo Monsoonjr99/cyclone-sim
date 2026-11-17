@@ -119,6 +119,8 @@ export function simulation_test(iterations: number){
             else
                 testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
             testIcon.omega = Math.min(testIcon.omega, 4 * Math.PI);
+	    if(testIcon.numeral === undefined)
+                testIcon.numeral = latestStormNumeral++;
 	    if(testIcon.name === undefined && testIcon.omega >= Math.PI * 2 / 3)
                 testIcon.name = nameList_test[(latestNameIndex++) % nameList_test.length];
             if(testIcon.omega <= Math.PI / 6)
