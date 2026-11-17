@@ -81,20 +81,20 @@ export function randomSpawn_test(){
     let long: number;
     do{
         lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
-	long = Math.random() * 360 - 180;
-	sanity--;
+        long = Math.random() * 360 - 180;
+        sanity--;
     }while(getLand_test(lat, long) > 0 && sanity > 0);
     const dir = Math.random() * 2 * Math.PI;
     simulationState_test.push({
         latitude: lat,
         longitude: long,
         sh: lat < 0,
-	wind: 30,
+        wind: 30,
         motion: {
             x: 12 * Math.cos(dir),
             y: 12 * Math.sin(dir)
         },
-	numeral: latestStormNumeral++
+        numeral: latestStormNumeral++
     });
 }
 
@@ -113,22 +113,22 @@ export function simulation_test(iterations: number){
             const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
             testStorm.motion = {x: testStorm.motion.x * Math.cos(rotateMotionBy) - testStorm.motion.y * Math.sin(rotateMotionBy), y: testStorm.motion.x * Math.sin(rotateMotionBy) + testStorm.motion.y * Math.cos(rotateMotionBy)};
             const landVal = getLand_test(testStorm.latitude, testStorm.longitude);
-	    if(landVal === 2){
+            if(landVal === 2){
                 testStorm.wind += (Math.random() - 1.7) * 4.375;
-		testStorm.mountainShredded = true;
-	    }else if(landVal === 1)
+                testStorm.mountainShredded = true;
+            }else if(landVal === 1)
                 testStorm.wind += (Math.random() - 0.7) * 4.375;
             else
                 testStorm.wind += (Math.random() - 0.48) * 4.375;
             if(testStorm.mountainShredded){
                 if(testStorm.wind > 50)
                     testStorm.wind -= (testStorm.wind - 50) * 0.1;
-	        if(landVal === 0 && Math.random() < 0.001)
+                if(landVal === 0 && Math.random() < 0.001)
                     testStorm.mountainShredded = false;
-	    }
-	    if(testStorm.numeral === undefined)
+            }
+            if(testStorm.numeral === undefined)
                 testStorm.numeral = latestStormNumeral++;
-	    if(testStorm.name === undefined && testStorm.wind >= 35)
+            if(testStorm.name === undefined && testStorm.wind >= 35)
                 testStorm.name = nameList_test[(latestNameIndex++) % nameList_test.length];
             if(testStorm.wind <= 8.75)
                 simulationState_test.splice(j, 1);
