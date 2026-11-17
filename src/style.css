@@ -95,6 +95,14 @@ button.panel-collapse{
     left: 0%;
 }
 
+a{
+    text-decoration: none;
+}
+
+a:hover{
+    text-decoration: underline;
+}
+
 .version-str{
     position: absolute;
     top: 0%;
@@ -105,11 +113,20 @@ button.panel-collapse{
     margin-top: 5px;
     margin-right: 1em;
     font-size: 18px;
-    text-decoration: none;
 }
 
-.version-str:hover{
-    text-decoration: underline;
+#classic-link{
+    position: absolute;
+    display: block;
+    bottom: 3%;
+    left: 0%;
+    width: 25%;
+    text-align: center;
+    color: black;
+}
+
+.panel-collapsed #classic-link{
+    display: none;
 }
 
 /* a{

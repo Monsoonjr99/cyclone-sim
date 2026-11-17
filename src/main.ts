@@ -183,6 +183,10 @@ canvas.startAnimation();
 const versionLink = <HTMLAnchorElement>document.querySelector('.version-str');
 versionLink.innerHTML += VERSION;
 
+// Necessary to bypass ParcelJS bundling attempt if this were in index.html
+const classicLink = <HTMLAnchorElement>document.querySelector('#classic-link');
+classicLink.href = "../";
+
 const panelCollapseButton = <HTMLButtonElement>document.querySelector('.panel-collapse');
 
 panelCollapseButton.addEventListener('mouseup', e=>{
