@@ -14,17 +14,17 @@ let ready = false;
         console.error("Map data failed to load");
 })();
 
-export interface TestIcon{
+export interface TestStorm{
     latitude : number;
     longitude : number;
     sh : boolean;
-    omega : number;
+    wind : number;
     motion: {x : number, y : number};
     numeral? : number;
     name? : string;
 }
 
-export let simulationState_test : TestIcon[] = [];
+export let simulationState_test : TestStorm[] = [];
 let latestStormNumeral = 0;
 let latestNameIndex = 0;
 
@@ -88,7 +88,7 @@ export function randomSpawn_test(){
         latitude: lat,
         longitude: long,
         sh: lat < 0,
-        omega: Math.PI * 1 / 2,
+	wind: 30,
         motion: {
             x: 12 * Math.cos(dir),
             y: 12 * Math.sin(dir)
@@ -103,27 +103,27 @@ export function simulation_test(iterations: number){
 
     for(let i = 0; i < iterations; i++){
         for(let j = simulationState_test.length - 1; j >= 0; j--){
-            const testIcon = simulationState_test[j];
-            const newPos = GeoCoordinate.addMovement(testIcon, testIcon.motion);
-            const newDir = Math.PI / 2 - GeoCoordinate.directionToward(newPos, testIcon) * Math.PI / 180 + Math.PI;
-            const oldDir = Math.atan2(testIcon.motion.y, testIcon.motion.x);
-            testIcon.latitude = newPos.latitude;
-            testIcon.longitude = newPos.longitude;
+            const testStorm = simulationState_test[j];
+            const newPos = GeoCoordinate.addMovement(testStorm, testStorm.motion);
+            const newDir = Math.PI / 2 - GeoCoordinate.directionToward(newPos, testStorm) * Math.PI / 180 + Math.PI;
+            const oldDir = Math.atan2(testStorm.motion.y, testStorm.motion.x);
+            testStorm.latitude = newPos.latitude;
+            testStorm.longitude = newPos.longitude;
             const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
-            testIcon.motion = {x: testIcon.motion.x * Math.cos(rotateMotionBy) - testIcon.motion.y * Math.sin(rotateMotionBy), y: testIcon.motion.x * Math.sin(rotateMotionBy) + testIcon.motion.y * Math.cos(rotateMotionBy)};
-            const landVal = getLand_test(testIcon.latitude, testIcon.longitude);
+            testStorm.motion = {x: testStorm.motion.x * Math.cos(rotateMotionBy) - testStorm.motion.y * Math.sin(rotateMotionBy), y: testStorm.motion.x * Math.sin(rotateMotionBy) + testStorm.motion.y * Math.cos(rotateMotionBy)};
+            const landVal = getLand_test(testStorm.latitude, testStorm.longitude);
 	    if(landVal === 2)
-                testIcon.omega += (Math.random() - 2) * (Math.PI / 12);
+                testStorm.wind += (Math.random() - 2) * 4.375;
             else if(landVal === 1)
-                testIcon.omega += (Math.random() - 0.7) * (Math.PI / 12);
+                testStorm.wind += (Math.random() - 0.7) * 4.375;
             else
-                testIcon.omega += (Math.random() - 0.48) * (Math.PI / 12);
-            testIcon.omega = Math.min(testIcon.omega, 4 * Math.PI);
-	    if(testIcon.numeral === undefined)
-                testIcon.numeral = latestStormNumeral++;
-	    if(testIcon.name === undefined && testIcon.omega >= Math.PI * 2 / 3)
-                testIcon.name = nameList_test[(latestNameIndex++) % nameList_test.length];
-            if(testIcon.omega <= Math.PI / 6)
+                testStorm.wind += (Math.random() - 0.48) * 4.375;
+            testStorm.wind = Math.min(testStorm.wind, 210);
+	    if(testStorm.numeral === undefined)
+                testStorm.numeral = latestStormNumeral++;
+	    if(testStorm.name === undefined && testStorm.wind >= 35)
+                testStorm.name = nameList_test[(latestNameIndex++) % nameList_test.length];
+            if(testStorm.wind <= 8.75)
                 simulationState_test.splice(j, 1);
         }
         if(Math.random() < 0.01)

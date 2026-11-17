@@ -3,7 +3,7 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { getMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
-import { simulationState_test, simulation_test, TestIcon, randomSpawn_test } from "./simulation";
+import { simulationState_test, simulation_test, TestStorm, randomSpawn_test } from "./simulation";
 
 const VERSION = "Pre-Alpha";
 
@@ -20,13 +20,17 @@ getMaps().then(maps => {
     ready = true;
 });
 
-let selectedIcon : TestIcon | undefined;
-let spawnIcon: TestIcon | undefined;
+let selectedStorm : TestStorm | undefined;
+let stormToSpawn: TestStorm | undefined;
 
 function iconSize(){
     const BASE_ICON_SIZE = 40;
     const MIN_ICON_SIZE = 15;
     return Math.max(MIN_ICON_SIZE / viewer.zoomAmt(), BASE_ICON_SIZE);
+}
+
+function iconRotationRate(wind: number){
+    return wind * Math.PI / 52.5;
 }
 
 let running = false;
@@ -47,14 +51,14 @@ canvas.setDraw((ctx, time)=>{
             const symbol = (()=>{
                 let val = 'D';
                 for(let t of [
-                    {threshold: Math.PI * 2 / 3, val: 'S'},
-                    {threshold: Math.PI * 1.8, val: '1'},
-                    {threshold: Math.PI * 2.3, val: '2'},
-                    {threshold: Math.PI * 2.7, val: '3'},
-                    {threshold: Math.PI * 3.1, val: '4'},
-                    {threshold: Math.PI * 3.7, val: '5'},
+                    {threshold: 35, val: 'S'},
+                    {threshold: 65, val: '1'},
+                    {threshold: 85, val: '2'},
+                    {threshold: 100, val: '3'},
+                    {threshold: 115, val: '4'},
+                    {threshold: 140, val: '5'},
                 ]){
-                    if(simulationState_test[i].omega >= t.threshold)
+                    if(simulationState_test[i].wind >= t.threshold)
                         val = t.val;
                     else
                         break;
@@ -81,10 +85,10 @@ canvas.setDraw((ctx, time)=>{
             for(let c of coords){
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {
                     shem: simulationState_test[i].sh,
-                    rotation: anchorStormIconRotation(simulationState_test[i], simulationState_test[i].omega, time),
-                    arms: (simulationState_test[i].omega < Math.PI * 2 / 3) ? 0 : 2,
+                    rotation: anchorStormIconRotation(simulationState_test[i], iconRotationRate(simulationState_test[i].wind), time),
+                    arms: (simulationState_test[i].wind < 35) ? 0 : 2,
                     fill: color,
-                    stroke: selectedIcon === simulationState_test[i] ? '#FFF' : undefined,
+                    stroke: selectedStorm === simulationState_test[i] ? '#FFF' : undefined,
                     classificationSymbol: {
                         text: symbol
                     },
@@ -93,19 +97,19 @@ canvas.setDraw((ctx, time)=>{
                         fillColor: '#FFF'
                     },
                     indicatorLabel: {
-                        text: `${Math.round(simulationState_test[i].omega * 100) / 100}`,
+                        text: `${Math.round(simulationState_test[i].wind)}`,
                         fillColor: '#FFF'
                     }
                 });
             }
         }
-        if(spawnIcon){
+        if(stormToSpawn){
             const latitude = mouseCoord.latitude;
             const canvasCoords = viewer.mapToCanvasCoordinates(mouseCoord.latitude, mouseCoord.longitude, 1.5);
             for(let c of canvasCoords)
                 drawStormIcon(ctx, c.x, c.y, iconSize(), {
                     shem: latitude < 0,
-                    rotation: anchorStormIconRotation(spawnIcon, spawnIcon.omega, time),
+                    rotation: anchorStormIconRotation(stormToSpawn, iconRotationRate(stormToSpawn.wind), time),
                     fill: '#FFF',
                     classificationSymbol: {
                         text: 'S'
@@ -118,8 +122,8 @@ canvas.setDraw((ctx, time)=>{
             setLiveTick(liveTick + elapsedTicksSinceLastUpdate);
             lastUpdate += elapsedTicksSinceLastUpdate * TICK_FRAME_DELAY;
             simulation_test(elapsedTicksSinceLastUpdate);
-            if(selectedIcon && simulationState_test.includes(selectedIcon))
-                viewer.focus(selectedIcon.latitude, selectedIcon.longitude);
+            if(selectedStorm && simulationState_test.includes(selectedStorm))
+                viewer.focus(selectedStorm.latitude, selectedStorm.longitude);
         }
         clock.innerText = tickToFormattedDate(liveTick, TEST_START_YEAR);
     }else{
@@ -132,33 +136,33 @@ canvas.setDraw((ctx, time)=>{
 
 canvas.handleClick((x, y)=>{
     if(ready){
-        if(spawnIcon){
+        if(stormToSpawn){
             let LatLong = viewer.canvasToMapCoordinate(x, y);
-            spawnIcon.latitude = LatLong.latitude;
-            spawnIcon.longitude = LatLong.longitude;
-            spawnIcon.sh = LatLong.latitude < 0;
-            simulationState_test.push(spawnIcon);
-            spawnIcon = undefined;
+            stormToSpawn.latitude = LatLong.latitude;
+            stormToSpawn.longitude = LatLong.longitude;
+            stormToSpawn.sh = LatLong.latitude < 0;
+            simulationState_test.push(stormToSpawn);
+            stormToSpawn = undefined;
             spawnModeButton.innerText = 'Spawn';
         }else{
-            let iconClicked = false;
-            for(let icon of simulationState_test){
-                let XY = viewer.mapToCanvasCoordinates(icon.latitude, icon.longitude);
+            let stormIconClicked = false;
+            for(let storm of simulationState_test){
+                let XY = viewer.mapToCanvasCoordinates(storm.latitude, storm.longitude);
                 for(let c of XY){
                     if(Math.hypot(x - c.x, y - c.y) < iconSize() / 2){
-                        if(selectedIcon === icon)
-                            selectedIcon = undefined;
+                        if(selectedStorm === storm)
+                            selectedStorm = undefined;
                         else
-                            selectedIcon = icon;
-                        iconClicked = true;
+                            selectedStorm = storm;
+                        stormIconClicked = true;
                         break;
                     }
                 }
-                if(iconClicked)
+                if(stormIconClicked)
                     break;
             }
-            if(!iconClicked && selectedIcon)
-                selectedIcon = undefined;
+            if(!stormIconClicked && selectedStorm)
+                selectedStorm = undefined;
         }
     }
 });
@@ -202,15 +206,15 @@ panelCollapseButton.addEventListener('mouseup', e=>{
 const spawnModeButton = <HTMLButtonElement>document.querySelector('#spawn-button');
 
 spawnModeButton.addEventListener('mouseup', e=>{
-    if(spawnIcon){
-        spawnIcon = undefined;
+    if(stormToSpawn){
+        stormToSpawn = undefined;
         spawnModeButton.innerText = 'Spawn';
     }else{
-        spawnIcon = {
+        stormToSpawn = {
             latitude: 0,
             longitude: 0,
             sh: false,
-            omega: Math.PI * 2 / 3,
+	    wind: 35,
             motion: {
                 x: -12,
                 y: 0
