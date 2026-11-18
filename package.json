@@ -1,11 +1,12 @@
 {
   "name": "cyclone-sim",
   "version": "1.0.0-pre-alpha",
-  "description": "A browser-based tropical cyclone simulation game.",
+  "description": "Cyclone Simulator is a web-based simulation experiment aiming to visualize the life cycles of weather events namely tropical cyclones.",
   "private": true,
   "scripts": {
     "start": "parcel serve src/index.html",
-    "build": "parcel build src/index.html"
+    "build": "parcel build src/index.html",
+    "clean": "rm dist/* && rm .parcel-cache/*"
   },
   "targets": {
     "default": {
