@@ -3,7 +3,7 @@ import {anchorStormIconRotation, drawStormIcon} from "./drawing";
 import * as viewer from "./mapviewwindow";
 import { getMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
-import { simulationState_test, simulation_test, TestStorm, randomSpawn_test } from "./simulation";
+import { simulationState_test, simulation_test, TestStorm, randomSpawn_test, init as initSimulation } from "./simulation";
 
 const VERSION = "Pre-Alpha";
 
@@ -13,7 +13,13 @@ let ready = false;
 
 getMaps().then(maps => {
     mapImage = maps.mapImage;
-    ready = true;
+    if(maps.mapData !== null){
+	initSimulation({
+            mapData: maps.mapData
+	});
+	ready = true;
+    }else
+        console.error("Map data failed to load");
 });
 
 let selectedStorm : TestStorm | undefined;

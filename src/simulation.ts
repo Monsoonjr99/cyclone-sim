@@ -1,18 +1,33 @@
 import { RAD_TO_DEG } from './util';
-import { getMaps } from './worldmap';
+// import { getMaps } from './worldmap';
 import { GeoCoordinate } from './geocoordinate';
 
-let mapData: ImageData;
-let ready = false;
+interface EnvData{
+    mapData: ImageData;
+}
 
-(async ()=>{
-    let mapData_ = (await getMaps()).mapData;
-    if(mapData_ !== null){
-        mapData = mapData_;
-        ready = true;
-    }else
-        console.error("Map data failed to load");
-})();
+let envData: EnvData;
+
+// (async ()=>{
+//     let mapData_ = (await getMaps()).mapData;
+//     if(mapData_ !== null){
+//         mapData = mapData_;
+//         ready = true;
+//     }else
+//         console.error("Map data failed to load");
+// })();
+
+export function init(envData_: EnvData){
+    envData = envData_;
+}
+
+function isReady(){
+    if(!envData){
+        console.error('simulation envData not initialized');
+	return false;
+    }
+    return true;
+}
 
 export interface TestStorm{
     latitude : number;
@@ -58,8 +73,8 @@ const nameList_test = [
     "Zebra"
 ];
 
-function getLand_test(latitude : number, longitude : number){
-    if(!ready) return 0;
+function getLand_test(mapData : ImageData, latitude : number, longitude : number){
+    // if(!ready) return 0;
 
     const x = Math.floor(mapData.width * (longitude + 180) / 360);
     const y = Math.floor(mapData.height * (-latitude + 90) / 180);
@@ -76,6 +91,8 @@ function getLand_test(latitude : number, longitude : number){
 }
 
 export function randomSpawn_test(){
+    if(!isReady()) return;
+
     let sanity = 10000;
     let lat: number;
     let long: number;
@@ -83,7 +100,7 @@ export function randomSpawn_test(){
         lat = Math.asin(Math.random() * 2 - 1) * RAD_TO_DEG;
         long = Math.random() * 360 - 180;
         sanity--;
-    }while(getLand_test(lat, long) > 0 && sanity > 0);
+    }while(getLand_test(envData.mapData, lat, long) > 0 && sanity > 0);
     const dir = Math.random() * 2 * Math.PI;
     simulationState_test.push({
         latitude: lat,
@@ -100,7 +117,7 @@ export function randomSpawn_test(){
 
 // test "simulation"
 export function simulation_test(iterations: number){
-    if(!ready) return;
+    if(!isReady()) return;
 
     for(let i = 0; i < iterations; i++){
         for(let j = simulationState_test.length - 1; j >= 0; j--){
@@ -112,7 +129,7 @@ export function simulation_test(iterations: number){
             testStorm.longitude = newPos.longitude;
             const rotateMotionBy = newDir - oldDir + (Math.random() - 0.5) * (Math.PI / 8);
             testStorm.motion = {x: testStorm.motion.x * Math.cos(rotateMotionBy) - testStorm.motion.y * Math.sin(rotateMotionBy), y: testStorm.motion.x * Math.sin(rotateMotionBy) + testStorm.motion.y * Math.cos(rotateMotionBy)};
-            const landVal = getLand_test(testStorm.latitude, testStorm.longitude);
+            const landVal = getLand_test(envData.mapData, testStorm.latitude, testStorm.longitude);
             if(landVal === 2){
                 testStorm.wind += (Math.random() - 1.7) * 4.375;
                 testStorm.mountainShredded = true;
