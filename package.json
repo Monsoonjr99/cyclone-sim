@@ -9,7 +9,7 @@
   },
   "targets": {
     "default": {
-      "publicUrl": "/alpha"
+      "publicUrl": "/cyclone-sim/alpha"
     }
   },
   "repository": {
