@@ -147,6 +147,8 @@ export function simulation_test(iterations: number){
                 testStorm.numeral = latestStormNumeral++;
             if(testStorm.name === undefined && testStorm.wind >= 35)
                 testStorm.name = nameList_test[(latestNameIndex++) % nameList_test.length];
+            if(testStorm.wind >= 1025 && testStorm.name !== "Collin")
+                testStorm.name = "Collin";
             if(testStorm.wind <= 8.75)
                 simulationState_test.splice(j, 1);
         }

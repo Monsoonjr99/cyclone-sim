@@ -5,7 +5,7 @@ import { getMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 import { simulationState_test, simulation_test, TestStorm, randomSpawn_test, init as initSimulation } from "./simulation";
 
-const VERSION = "Pre-Alpha";
+const VERSION = "Alpha v1.0";
 
 
 let mapImage : HTMLImageElement;

@@ -1,14 +1,13 @@
 # Bespoke workflow for deploying both Cyclone Simulator Classic to monsoonjr99.github.io/cyclone-sim and
 # Cyclone Simulator Alpha to monsoonjr99.github.io/cyclone-sim/alpha
-name: Deploy Cyclone Simulator Classic and Alpha to Github Pages on root and /alpha directories respectively (DRY RUN)
+name: Deploy Cyclone Simulator Classic and Alpha to Github Pages
 
 on:
   # Runs on pushes targeting v0-primary (Classic) and v1-primary (Alpha)
-  # (commented out for testing purposes)
-  # push:
-  #   branches:
-  #     - 'v0-primary'
-  #     - 'v1-primary'
+  push:
+    branches:
+      - 'v0-primary'
+      - 'v1-primary'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -63,18 +62,15 @@ jobs:
           cp dist/* ../_site/alpha/
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
-        with:
-          name: github-pages-dry-run
 
   # Deployment job
-  # (commented out for testing purposes)
-  # deploy:
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v5
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

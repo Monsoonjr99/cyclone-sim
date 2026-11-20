@@ -1,5 +1,6 @@
-## Cyclone Simulator Rewrite Blueprint
-**Monsoonjr99's plan for the rewrite regarding features and implementation**
+## Cyclone Simulator v1.0 Blueprint
+
+**Monsoonjr99's plan for the rewrite (v1.0 to be) regarding features and implementation**
 
 * This file serves as a guide for rewriting Cyclone Simulator with planned features in mind
 * Code architecture should be flexible and ready to accomodate future additions including these planned features and other suggestions
@@ -11,17 +12,17 @@
     * what is done
     * what is left to do
     * and/or any differences in implementation from the plan
-    * multiple notes may be added for any changes over following versions (more technical than changelog.txt; not as in-depth as in-code comments)
+    * multiple notes may be added for any changes over following versions (more technical than changelog.md; not as in-depth as commit messages, in-code comments, or dedicated doc files)
 
 ### Transition Plan
 
-The plan for phasing out the legacy Cyclone Simulator and replacing it with the rewrite:
+The plan for phasing out the legacy Cyclone Simulator (Classic/v0.x) and replacing it with the rewrite (v1.x):
 
-* First as a rough prototype with a rudimentary feature set, initially publicly release this edition as Cyclone Simulator Alpha under a /alpha URL and have it exist in parallel with the legacy Cyclone Simulator until the new codebase is ready to replace the old
+* (CHECK) First as a rough prototype with a rudimentary feature set, initially publicly release this edition as Cyclone Simulator Alpha under a /alpha URL and have it exist in parallel with the legacy Cyclone Simulator until the new codebase is ready to replace the old
 * During the Alpha development stage, there may be some updating of the legacy v0.x edition, though work should be prioritized on the rewrite
 * When the new codebase is ready (modest feature parity and more importantly [save compatibility](#backwards-compatibility)), transfer it to the main URL and call it Cyclone Simulator Beta
-* When Beta is released, retire the legacy codebase, move it to a /classic URL, and call it Cyclone Simulator Classic - v0.x updates should cease after this point
-    * An early development version of Cyclone Simulator from 2018, in /experiments, currently already has the name "Cyclone Simulator Classic", but should give up this designation in favor of the original "Very Sad HHW Thing"
+* When Beta is released, retire the legacy codebase, and move Cyclone Simulator Classic to a /classic URL - v0.x updates should cease after this point
+    * An early development version of Cyclone Simulator from 2018, "Very Sad HHW Thing" in /experiments, also once had the alternative name "Cyclone Simulator Classic", but has since ceded that title to the latest v0.x and is now dubbed "Cyclone Simulator Pre-Classic"
 
 ### Planned Additions
 
@@ -41,11 +42,23 @@ The plan for phasing out the legacy Cyclone Simulator and replacing it with the 
 * Old real-world saves from v0.x may be converted to work in the new whole-world map (see [Backwards Compatibility](#backwards-compatibility))
 * Possibility for procedurally-generated and user-created (see [User Customization](#user-customization)) maps.
 
+##### Implementation Notes
+
+* Alpha v1.0 (2026-11-20)
+    * Most of the whole-world map is implemented in a1.0 off the bat
+    * Missing details include basin boundaries, any support for old saves, and custom/procedural maps
+    * Future support for custom/procedural maps will require a rework of how the map data is loaded, as a1.0 uses a simple implementation of a hard-coded Earth map
+
 #### Storm Simulation Algorithm
 
 * A module to handle active storm systems and how they are steered, strengthening/weakening, and multi-system (Fujiwhara) interactions.
 * Algorithm may be defined separately from the source code in a JSON file (see [User Customization](#user-customization)).
 * Different [simulation modes](#simulation-modes) may have their own storm simulation algorithms.
+
+##### Implementation Notes
+
+* Alpha v1.0 (2026-11-20)
+    * Implements a basic hard-coded simulation algorithm for testing purposes
 
 #### Spawn Algorithm
 
@@ -53,6 +66,11 @@ The plan for phasing out the legacy Cyclone Simulator and replacing it with the 
 * May be defined separately from source code in a JSON file.
 * Should behave in a way that makes [forecast models](#forecast-models) feel realistic.
 * Different [simulation modes](#simulation-modes) may have their own spawn algorithms.
+
+##### Implementation Notes
+
+* Alpha v1.0 (2026-11-20)
+    * Implements a basic hard-coded spawn algorithm for testing purposes
 
 #### Environmental Factors
 
@@ -62,6 +80,11 @@ The plan for phasing out the legacy Cyclone Simulator and replacing it with the 
 * Environmental factors may inherit from other environmental factors (e.g. an "ENSO" numerical value may dictate the values of the "SSTA" field for the equatorial Pacific Ocean).
 * May be defined separately from source code.
 * Different [simulation modes](#simulation-modes) may have their own environmental factors.
+
+##### Implementation Notes
+
+* Alpha v1.0 (2026-11-20)
+    * Only environmental factor present in test simulation is land interaction, with storms responding to three states: sea, land, or mountains
 
 #### Simulation Modes
 
@@ -84,6 +107,13 @@ The plan for phasing out the legacy Cyclone Simulator and replacing it with the 
     * Procedurally-generated maps may still need rendering.
     * Maybe render Earth from a heightmap too for that "Cyclone Simulator aesthetic".
 * For anything that does require intensive rendering (e.g. Generated maps, hi-res Map Layers), keep code optimized, use web workers if necessary.
+
+##### Implementation Notes
+
+* Alpha v1.0 (2026-11-20)
+    * Basic scrappy GUI with a NASA blue marble map and a side panel
+    * Future UI could definitely use a design upgrade
+    * Storm icons implemented; tracks not yet
 
 #### Saving/Loading
 

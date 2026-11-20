@@ -1,6 +1,6 @@
 {
   "name": "cyclone-sim",
-  "version": "1.0.0-pre-alpha",
+  "version": "1.0.0-alpha.1.0.0",
   "description": "Cyclone Simulator is a web-based simulation experiment aiming to visualize the life cycles of weather events namely tropical cyclones.",
   "private": true,
   "scripts": {

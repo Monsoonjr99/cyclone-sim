@@ -7,11 +7,11 @@ Cyclone Simulator is a web-based simulation experiment aiming to visualize the l
 There are two editions of Cyclone Simulator:
 
 * [Cyclone Simulator Classic](https://monsoonjr99.github.io/cyclone-sim) (v0.x) - The original p5.js project dating back to 2018, warts and all; development being phased out in favor of a ground-up rewrite and to be retired when the latter reaches Beta
-* Cyclone Simulator Pre-Alpha (future v1.0) - The new and improved rewrite of Cyclone Simulator in Typescript, planned with [cleaner code structure and extensibility in mind](./blueprint.md); to be initially released as Alpha v1.0 shortly and should eventually usurp v0.x upon reaching Beta
+* [Cyclone Simulator Alpha](https://monsoonjr99.github.io/cyclone-sim/alpha) (future v1.0) - The new and improved rewrite of Cyclone Simulator in Typescript, planned with [cleaner code structure and extensibility in mind](./blueprint.md); should eventually usurp v0.x upon reaching Beta
 
 ## How To Run
 
-Cyclone Simulator Classic is hosted on Github Pages and you can access it right now from the link above. To run it locally or to see the Pre-Alpha version, follow the steps below:
+Cyclone Simulator is hosted on Github Pages and you can access it right now from either of the links above. To run it locally, follow the steps below:
 
 ### Setup
 
@@ -24,7 +24,7 @@ Cyclone Simulator Classic is hosted on Github Pages and you can access it right 
 * Host a local web server, such as http-server (`npm install -g http-server`)
 * Access from `localhost` in a web browser (port `:8080` for http-server)
 
-### Cyclone Simulator Pre-Alpha
+### Cyclone Simulator Alpha
 
 * Switch to `v1-primary` branch (you may be here already)
     * Alternatively `v1-dev` for the latest changes
