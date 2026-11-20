@@ -228,9 +228,7 @@ spawnModeButton.addEventListener('mouseup', e=>{
     }
 });
 
-const runPauseButton = <HTMLButtonElement>document.querySelector('#run-pause-button');
-
-runPauseButton.addEventListener('mouseup', e=>{
+function togglePause(){
     if(running){
         running = false;
         runPauseButton.innerText = 'Run';
@@ -238,6 +236,19 @@ runPauseButton.addEventListener('mouseup', e=>{
         lastUpdate = performance.now();
         running = true;
         runPauseButton.innerText = 'Pause';
+    }
+}
+
+const runPauseButton = <HTMLButtonElement>document.querySelector('#run-pause-button');
+
+runPauseButton.addEventListener('mouseup', e=>{
+    togglePause();
+});
+
+document.body.addEventListener('keydown', e=>{
+    if(e.code === "Space"){
+        togglePause();
+	e.preventDefault();
     }
 });
 
