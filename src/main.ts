@@ -194,15 +194,15 @@ const classicLink = <HTMLAnchorElement>document.querySelector('#classic-link');
 classicLink.href = "../";
 
 const panelCollapseButton = <HTMLButtonElement>document.querySelector('#toggle-panel-collapse');
+const COLLAPSED = 'collapsed';
 
 panelCollapseButton.addEventListener('mouseup', e=>{
-    const PANEL_COLLAPSED = 'panel-collapsed';
     let panel = <HTMLDivElement>document.querySelector('.panel');
-    if(panel.classList.contains(PANEL_COLLAPSED)){
-        panel.classList.remove(PANEL_COLLAPSED);
+    if(panel.classList.contains(COLLAPSED)){
+        panel.classList.remove(COLLAPSED);
         panelCollapseButton.innerText = '<';
     }else{
-        panel.classList.add(PANEL_COLLAPSED);
+        panel.classList.add(COLLAPSED);
         panelCollapseButton.innerText = '>';
     }
 });
@@ -245,16 +245,51 @@ runPauseButton.addEventListener('mouseup', e=>{
     togglePause();
 });
 
+const debugCmdLine = <HTMLInputElement>document.querySelector('#debug-cmd-line');
+const debugTray = <HTMLDivElement>document.querySelector('#debug-tray');
+const debugTrayOutBox = <HTMLDivElement>document.querySelector('.cmd-line-out');
+const debugTrayOut = <HTMLUListElement>document.querySelector('.cmd-line-out ul');
+
+// Use user keyboard layout (e.key) for function/modifier keys
+// Use raw keycode (e.code) for all regular keys
 document.body.addEventListener('keydown', e=>{
-    if(e.code === "Space"){
+    if(e.target instanceof Element && e.target.matches('input[type="text"]'))
+        return;
+
+    if(e.key === " "){
         togglePause();
-	e.preventDefault();
-    }
+    }else if(e.code === "Slash"){
+        if(debugTray.classList.contains(COLLAPSED))
+            debugTray.classList.remove(COLLAPSED);
+        debugCmdLine.focus();
+    }else
+        return;
+
+    e.preventDefault();
+});
+
+debugCmdLine.addEventListener('keydown', e=>{
+    if(e.key === "Enter"){
+        const li = document.createElement('li');
+	li.innerText = debugCmdLine.value;
+
+	debugTrayOut.appendChild(li);
+	debugTrayOutBox.scrollTop = debugTrayOutBox.scrollHeight - debugTrayOutBox.clientHeight;
+    }else if(e.key !== "Escape")
+        return;
+
+    debugCmdLine.value = '';
+    debugCmdLine.blur();
+    e.preventDefault();
 });
 
 const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
 
 debugButton.addEventListener('mouseup', e=>{
-    for(let i = 0; i < 5 && simulationState_test.length < 100; i++)
-        randomSpawn_test();
+    if(!debugTray.classList.contains(COLLAPSED)){
+        debugTray.classList.add(COLLAPSED);
+    }else{
+        for(let i = 0; i < 5 && simulationState_test.length < 100; i++)
+            randomSpawn_test();
+    }
 });
