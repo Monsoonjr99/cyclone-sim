@@ -12,6 +12,15 @@ body{
     top: 0px;
 }
 
+.transparent-box *{
+    pointer-events: auto;
+}
+
+.transparent-box{
+    background-color: transparent;
+    pointer-events: none;
+}
+
 .ui-container{
     width: 100%;
     height: 100%;
@@ -19,35 +28,27 @@ body{
     position: absolute;
     left: 0px;
     top: 0px;
-    background-color: transparent;
-    pointer-events: none;
-}
-
-.ui-container *{
-    pointer-events: auto;
+    display: flex;
 }
 
 .panel{
     position: relative;
     background-color: rgba(204, 204, 204, 0.7);
-    width: 25%;
-    height: 100%;
+    flex: 0 0 25%;
     border-right: 1px solid black;
     user-select: none;
     -webkit-user-select: none;
+}
+
+.anti-panel{
+    position: relative;
+    flex: 1 1 0;
 }
 
 button{
     background-color: #AAA;
     border: none;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
-    position: relative;
-    left: 5%;
-    margin-top: 1em;
-    width: 90%;
-    padding-top: 1em;
-    padding-bottom: 1em;
-    
 }
 
 button:hover{
@@ -58,9 +59,18 @@ button:active{
     background-color: #AAA;
 }
 
-button.panel-collapse{
+.panel button{
+    position: relative;
+    left: 5%;
+    margin-top: 1em;
+    width: 90%;
+    padding-top: 1em;
+    padding-bottom: 1em;
+}
+
+#toggle-panel-collapse{
     position: absolute;
-    left: 100%;
+    left: 0%;
     top: 45%;
     width: 30px;
     height: 10%;
@@ -68,32 +78,19 @@ button.panel-collapse{
 }
 
 .panel.panel-collapsed{
-    width: 0%;
-}
-
-.panel.panel-collapsed *{
     display: none;
 }
 
-.panel-collapsed button.panel-collapse{
-    display: block;
-    left: 0%;
-}
-
-.clock{
+#clock{
     position: absolute;
     top: 0%;
-    left: 25%;
+    left: 0%;
     height: 5%;
     pointer-events: none;
     color: white;
     margin-top: 5px;
     margin-left: 1em;
     font-size: 18px;
-}
-
-.panel-collapsed + .clock{
-    left: 0%;
 }
 
 a{
@@ -119,16 +116,17 @@ a:hover{
 #classic-link{
     position: absolute;
     display: block;
-    bottom: 3%;
+    bottom: 0%;
     left: 0%;
+    margin-bottom: 5px;
     width: 100%;
     text-align: center;
     color: black;
 }
 
-.panel-collapsed #classic-link{
-    display: none;
-}
+
+
+
 
 /* a{
     display: inline-block;

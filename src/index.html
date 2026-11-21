@@ -8,16 +8,18 @@
   </head>
   <body>
     <canvas class="primary-canvas"></canvas>
-    <div class="ui-container">
+    <div class="ui-container transparent-box">
       <div class="panel panel-collapsed">
         <button id="run-pause-button">Run</button>
         <button id="spawn-button">Spawn</button>
         <button id="debug-button">Debug Button</button>
-        <button class="panel-collapse">&gt;</button>
         <a id="classic-link">Return to Cyclone Simulator Classic</a>
       </div>
-      <div class="clock"></div>
-      <a class="version-str" href="./changelog.md">Cyclone Simulator </a>
+      <div class="anti-panel transparent-box">
+        <button id="toggle-panel-collapse">&gt;</button>
+        <div id="clock"></div>
+        <a class="version-str" href="./changelog.md">Cyclone Simulator </a>
+      </div>
     </div>
   </body>
 </html>

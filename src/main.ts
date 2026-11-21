@@ -37,7 +37,7 @@ function iconRotationRate(wind: number){
 
 let running = false;
 let lastUpdate = 0;
-let clock = <HTMLDivElement>document.querySelector('.clock');
+let clock = <HTMLDivElement>document.querySelector('#clock');
 const TEST_START_YEAR = 2026;
 const TICK_FRAME_DELAY = 10; // real time milliseconds per simulated tick (has no bearing on rendering framerate)
 
@@ -193,7 +193,7 @@ versionLink.innerHTML += VERSION;
 const classicLink = <HTMLAnchorElement>document.querySelector('#classic-link');
 classicLink.href = "../";
 
-const panelCollapseButton = <HTMLButtonElement>document.querySelector('.panel-collapse');
+const panelCollapseButton = <HTMLButtonElement>document.querySelector('#toggle-panel-collapse');
 
 panelCollapseButton.addEventListener('mouseup', e=>{
     const PANEL_COLLAPSED = 'panel-collapsed';
