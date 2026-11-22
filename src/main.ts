@@ -4,6 +4,7 @@ import * as viewer from "./mapviewwindow";
 import { getMaps } from "./worldmap";
 import { liveTick, setLiveTick, tickToFormattedDate } from "./simtime";
 import { simulationState_test, simulation_test, TestStorm, randomSpawn_test, init as initSimulation } from "./simulation";
+import doDebugCmd from "./debug-cmd";
 
 const VERSION = "Alpha v1.0";
 
@@ -271,7 +272,7 @@ document.body.addEventListener('keydown', e=>{
 debugCmdLine.addEventListener('keydown', e=>{
     if(e.key === "Enter"){
         const li = document.createElement('li');
-	li.innerText = debugCmdLine.value;
+	li.innerText = doDebugCmd(debugCmdLine.value);
 
 	debugTrayOut.appendChild(li);
 	debugTrayOutBox.scrollTop = debugTrayOutBox.scrollHeight - debugTrayOutBox.clientHeight;
