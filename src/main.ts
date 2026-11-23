@@ -269,13 +269,22 @@ document.body.addEventListener('keydown', e=>{
     e.preventDefault();
 });
 
-debugCmdLine.addEventListener('keydown', e=>{
-    if(e.key === "Enter"){
-        const li = document.createElement('li');
-	li.innerText = doDebugCmd(debugCmdLine.value);
+let prevCmd = '';
 
-	debugTrayOut.appendChild(li);
-	debugTrayOutBox.scrollTop = debugTrayOutBox.scrollHeight - debugTrayOutBox.clientHeight;
+debugCmdLine.addEventListener('keydown', e=>{
+    if(e.code === "ArrowUp"){
+        debugCmdLine.value = prevCmd;
+	return;
+    }else if(e.key === "Enter"){
+        prevCmd = debugCmdLine.value;
+        const cmdOut = doDebugCmd(debugCmdLine.value);
+	if(cmdOut !== ""){
+            const li = document.createElement('li');
+            li.innerText = cmdOut;
+
+            debugTrayOut.appendChild(li);
+            debugTrayOutBox.scrollTop = debugTrayOutBox.scrollHeight - debugTrayOutBox.clientHeight;
+	}
     }else if(e.key !== "Escape")
         return;
 
@@ -287,10 +296,6 @@ debugCmdLine.addEventListener('keydown', e=>{
 const debugButton = <HTMLButtonElement>document.querySelector('#debug-button');
 
 debugButton.addEventListener('mouseup', e=>{
-    if(!debugTray.classList.contains(COLLAPSED)){
-        debugTray.classList.add(COLLAPSED);
-    }else{
-        for(let i = 0; i < 5 && simulationState_test.length < 100; i++)
-            randomSpawn_test();
-    }
+    for(let i = 0; i < 5 && simulationState_test.length < 100; i++)
+        randomSpawn_test();
 });
