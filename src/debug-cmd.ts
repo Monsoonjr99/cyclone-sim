@@ -37,9 +37,9 @@ function tokenize(cmd: string): Token[] {
 
         if(i+1 < rawTokens.length){
             let token = rawTokens[i+1];
-	    if(token.charAt(0) !== '"' && token.charAt(0) !== "'")
+            if(token.charAt(0) !== '"' && token.charAt(0) !== "'")
                 token = token.toLowerCase();
-	    intermediateTokens.push(token);
+            intermediateTokens.push(token);
         }
     }
     for(let t of intermediateTokens){
@@ -81,12 +81,12 @@ Commands.nuke = function(args: Token[]){
 
     if(simulationState_test.length > 0){
         let target = simulationState_test[Math.floor(Math.random()*simulationState_test.length)];
-	let nukeAmt = 100 + Math.random() * 400;
-	if(args.length > 0)
+        let nukeAmt = 100 + Math.random() * 400;
+        if(args.length > 0)
             nukeAmt = parseFloat(args[0].val);
-	target.mountainShredded = false;
-	target.wind += nukeAmt;
-	return `Nuked storm #${target.numeral || "NULL"}${target.name !== undefined ? " (\"" + target.name + "\")" : ""} by ${Math.round(nukeAmt)} kt`;
+        target.mountainShredded = false;
+        target.wind += nukeAmt;
+        return `Nuked storm #${target.numeral || "NULL"}${target.name !== undefined ? " (\"" + target.name + "\")" : ""} by ${Math.round(nukeAmt)} kt`;
     }else
         return "Nuked 0 storms";
 }

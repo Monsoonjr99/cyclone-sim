@@ -24,7 +24,7 @@ export function init(envData_: EnvData){
 function isReady(){
     if(!envData){
         console.error('simulation envData not initialized');
-	return false;
+        return false;
     }
     return true;
 }

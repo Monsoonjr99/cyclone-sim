@@ -15,10 +15,10 @@ let ready = false;
 getMaps().then(maps => {
     mapImage = maps.mapImage;
     if(maps.mapData !== null){
-	initSimulation({
+        initSimulation({
             mapData: maps.mapData
-	});
-	ready = true;
+        });
+        ready = true;
     }else
         console.error("Map data failed to load");
 });
@@ -278,17 +278,17 @@ debugCmdLine.addEventListener('keydown', e=>{
     if(e.code === "ArrowUp"){
         debugCmdLine.value = prevCmd;
         e.preventDefault();
-	return;
+        return;
     }else if(e.key === "Enter"){
         prevCmd = debugCmdLine.value;
         const cmdOut = doDebugCmd(debugCmdLine.value);
-	if(cmdOut !== ""){
+        if(cmdOut !== ""){
             const li = document.createElement('li');
             li.innerText = cmdOut;
 
             debugTrayOut.appendChild(li);
             debugTrayOutBox.scrollTop = debugTrayOutBox.scrollHeight - debugTrayOutBox.clientHeight;
-	}
+        }
     }else if(e.key !== "Escape")
         return;
 
