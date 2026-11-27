@@ -259,6 +259,9 @@ document.body.addEventListener('keydown', e=>{
 
     if(e.key === " "){
         togglePause();
+    }else if(e.code === "ArrowUp" && !debugTray.classList.contains(COLLAPSED)){
+        debugCmdLine.focus();
+        debugCmdLine.value = prevCmd;
     }else if(e.code === "Slash"){
         if(debugTray.classList.contains(COLLAPSED))
             debugTray.classList.remove(COLLAPSED);
@@ -274,6 +277,7 @@ let prevCmd = '';
 debugCmdLine.addEventListener('keydown', e=>{
     if(e.code === "ArrowUp"){
         debugCmdLine.value = prevCmd;
+        e.preventDefault();
 	return;
     }else if(e.key === "Enter"){
         prevCmd = debugCmdLine.value;

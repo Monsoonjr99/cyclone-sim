@@ -62,6 +62,10 @@ body{
     list-style-type: none;
 }
 
+.cmd-line-out li{
+    padding-bottom: 0.25em;
+}
+
 .cmd-line-box{
     flex: 0 0 auto;
     display: flex;

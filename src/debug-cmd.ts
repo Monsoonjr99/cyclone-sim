@@ -104,5 +104,5 @@ Commands.collapse = function(args: Token[]){
 }
 
 Commands.help = function(args: Token[]){
-    return "(Early debug tray test; very preliminary and expect things to change)<br />help - shows debug tray help<br />clear - clears the debug tray output<br />collapse - collapses the debug tray<br />nuke - ???";
+    return "Early debug tray test; very preliminary and expect things to change:\nhelp - shows debug tray help\nclear - clears the debug tray output\ncollapse - collapses the debug tray\nnuke - ???";
 }
