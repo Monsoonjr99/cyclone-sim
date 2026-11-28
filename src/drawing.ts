@@ -126,3 +126,51 @@ export function anchorStormIconRotation(key : object, omega : number, time : num
     }
     return theta;
 }
+
+const trackDot = new Path2D();
+trackDot.arc(0, 0, 1/5, 0, 2 * Math.PI);
+
+export function drawTrack(ctx: CanvasRenderingContext2D, trackPoints: {
+    x: number,
+    y: number,
+    color?: string
+}[], size: number, drawDots: boolean = true){
+    ctx.save();
+
+    ctx.scale(size, size);
+    ctx.lineWidth = 0.1;
+    ctx.lineCap = 'round';
+
+    for(let i=0; i<trackPoints.length; i++){
+        const t = trackPoints[i];
+        const [x, y, color] = [t.x / size, t.y / size, t.color !== undefined ? t.color : "#FFF"];
+        if(i === 0){
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.strokeStyle = color;
+        }else if(i === trackPoints.length-1){
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }else if(color !== ctx.strokeStyle){
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.strokeStyle = color;
+        }else{
+            ctx.lineTo(x, y);
+        }
+    }
+
+    if(drawDots){
+        for(let t of trackPoints){
+            const [x, y, color] = [t.x / size, t.y / size, t.color !== undefined ? t.color : "#FFF"];
+            ctx.translate(x, y);
+            ctx.fillStyle = color;
+            ctx.fill(trackDot);
+            ctx.translate(-x, -y);
+        }
+    }
+
+    ctx.restore();
+}
